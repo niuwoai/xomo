@@ -142,14 +142,13 @@ extension ImageEditorViewModel {
             width: (targetSize.width - originalSize.width) * anchor.horizontalFactor,
             height: (targetSize.height - originalSize.height) * anchor.verticalFactor
         )
-        let transformedHotspots: [ImageEditorHotspot]
+        let hotspotTransform: ImageEditorHotspotCanvasTransform
         do {
-            transformedHotspots = try document.hotspots.compactMap { hotspot in
-                try hotspot.offsetForCanvasResize(
-                    offset: offset,
-                    targetCanvasSize: targetSize
-                )
-            }
+            hotspotTransform = try transformedHotspotsForCanvasResize(
+                offset: offset,
+                targetCanvasSize: targetSize,
+                allowsRemoval: true
+            )
         } catch {
             statusText = L10n.text("imageEditor.status.resizeInvalid")
             return
@@ -167,7 +166,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
-        document.hotspots = transformedHotspots
+        document.hotspots = hotspotTransform.hotspots
         document.selection = document.selection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,
@@ -185,10 +184,7 @@ extension ImageEditorViewModel {
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
         }
-        if let selectedHotspotID,
-           !transformedHotspots.contains(where: { $0.id == selectedHotspotID }) {
-            self.selectedHotspotID = transformedHotspots.first?.id
-        }
+        selectedHotspotID = hotspotTransform.selectedID
         canvasOffset = .zero
         syncSizeControlsFromDocument()
         appendHistory(L10n.text("imageEditor.history.canvasResize"))
@@ -247,15 +243,28 @@ extension ImageEditorViewModel {
     }
 
     func revealAllLayers() {
-        guard let revealRect = revealAllCanvasRect(),
-              let targetSize = normalizedEditorSize(revealRect.size)
-        else {
+        guard let revealRect = revealAllCanvasRect() else {
             statusText = L10n.text("imageEditor.status.revealAllNoHiddenPixels")
+            return
+        }
+        guard let targetSize = normalizedEditorSize(revealRect.size) else {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
             return
         }
 
         let originalSize = document.canvasSize
         let offset = CGSize(width: -revealRect.minX, height: -revealRect.minY)
+        let hotspotTransform: ImageEditorHotspotCanvasTransform
+        do {
+            hotspotTransform = try transformedHotspotsForCanvasResize(
+                offset: offset,
+                targetCanvasSize: targetSize,
+                allowsRemoval: false
+            )
+        } catch {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
         let transformedLayers = document.layers.map { layer in
             layer.offsetForCanvasSize(
                 oldCanvasSize: originalSize,
@@ -269,6 +278,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
+        document.hotspots = hotspotTransform.hotspots
         document.selection = document.selection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,
@@ -286,6 +296,7 @@ extension ImageEditorViewModel {
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
         }
+        selectedHotspotID = hotspotTransform.selectedID
         canvasOffset = .zero
         syncSizeControlsFromDocument()
         appendHistory(L10n.text("imageEditor.history.revealAll"))
@@ -311,6 +322,17 @@ extension ImageEditorViewModel {
 
         let targetSize = bounded.size
         let offset = CGSize(width: -bounded.minX, height: -bounded.minY)
+        let hotspotTransform: ImageEditorHotspotCanvasTransform
+        do {
+            hotspotTransform = try transformedHotspotsForCanvasResize(
+                offset: offset,
+                targetCanvasSize: targetSize,
+                allowsRemoval: true
+            )
+        } catch {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
         let transformedLayers = document.layers.map { layer in
             layer.offsetForCanvasSize(
                 oldCanvasSize: originalSize,
@@ -324,6 +346,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
+        document.hotspots = hotspotTransform.hotspots
         document.selection = .fullCanvas(size: targetSize)
         document.savedSelection = document.savedSelection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
@@ -337,6 +360,7 @@ extension ImageEditorViewModel {
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
         }
+        selectedHotspotID = hotspotTransform.selectedID
         canvasOffset = .zero
         syncSizeControlsFromDocument()
         appendHistory(historyTitle)
@@ -347,6 +371,40 @@ extension ImageEditorViewModel {
         let height = CGFloat(size.height.rounded())
         guard width >= 8, height >= 8, width <= 12_000, height <= 12_000 else { return nil }
         return CGSize(width: width, height: height)
+    }
+
+    private func transformedHotspotsForCanvasResize(
+        offset: CGSize,
+        targetCanvasSize: CGSize,
+        allowsRemoval: Bool
+    ) throws -> ImageEditorHotspotCanvasTransform {
+        var hotspots: [ImageEditorHotspot] = []
+        hotspots.reserveCapacity(document.hotspots.count)
+        for hotspot in document.hotspots {
+            guard let transformed = try hotspot.offsetForCanvasResize(
+                offset: offset,
+                targetCanvasSize: targetCanvasSize
+            ) else {
+                guard allowsRemoval else {
+                    throw ImageEditorHotspotCanvasTransformError.unexpectedRemoval
+                }
+                continue
+            }
+            hotspots.append(transformed)
+        }
+
+        let selectedID: UUID?
+        if let selectedHotspotID {
+            selectedID = hotspots.contains(where: { $0.id == selectedHotspotID })
+                ? selectedHotspotID
+                : hotspots.first?.id
+        } else {
+            selectedID = nil
+        }
+        return ImageEditorHotspotCanvasTransform(
+            hotspots: hotspots,
+            selectedID: selectedID
+        )
     }
 
     private func revealAllCanvasRect() -> CGRect? {
@@ -376,6 +434,15 @@ extension ImageEditorViewModel {
         else { return nil }
         return rect
     }
+}
+
+private struct ImageEditorHotspotCanvasTransform {
+    let hotspots: [ImageEditorHotspot]
+    let selectedID: UUID?
+}
+
+private enum ImageEditorHotspotCanvasTransformError: Error {
+    case unexpectedRemoval
 }
 
 private extension ImageEditorLayer {

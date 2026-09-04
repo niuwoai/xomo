@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1609 - 2026-09-05
+
+### Fixed
+- Crop、Crop Center、Crop to Selection 与 Trim Transparent 现在同步平移并裁切 Fireworks 风格热点；部分越界热点裁到新画布，完全越界或边界相切热点移除，存活项的 UUID、名称、URL 与顺序保持不变。
+- Reveal All 按图层决定的新画布原点平移全部热点，但热点本身不参与扩大画布；作为非破坏操作，任何损坏热点或意外完全越界都会在 Undo 前原子拒绝，不再静默丢失交付元数据。
+- Canvas Size、Crop 家族与 Reveal All 共用热点预计算和选择修复：nil 保持 nil，存活选择保持，被删除或悬空选择回退首项，无热点时清空；面板显隐不变。
+- Reveal All 将“没有隐藏像素”和“目标画布超过 12,000 或非法”分开报告，后者返回 Resize Invalid 且不改变文档、历史栈、画布偏移或尺寸控件。
+
+### Tests
+- 新增 direct crop、selection crop、trim、reveal、保留/裁切/删除、Reveal bounds 隔离、选择矩阵、单事务 Undo/Redo、损坏热点与超限目标原子性，以及四个 Automation 入口回归。独立评审在修复测试变量作用域和 Reveal 超限状态后复审通过。
+- 唯一冷测试构建成功；Canvas Commands 25/25、三代热点 Automation 6/6、热点 HTML 3/3、项目往返 1/1、组件库 cursor 1/1，合计 36/36，失败 0、跳过 0、基础设施重试 0。CLI/MCP 2/2、版本与发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1608 - 2026-09-05
 
 ### Fixed

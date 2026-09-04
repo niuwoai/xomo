@@ -598,6 +598,333 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func cropClipsAndRemovesHotspotsAsOneUndoableTransaction() throws {
+        let keptID = UUID()
+        let clippedID = UUID()
+        let removedID = UUID()
+        let trailingID = UUID()
+        let viewModel = ImageEditorViewModel(
+            sourceName: "crop-hotspot-transaction.png",
+            image: testImage(color: .systemGreen, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: keptID,
+                name: "  Kept CTA  ",
+                frame: CGRect(x: 25, y: 15, width: 10, height: 10),
+                url: "  https://example.com/kept  "
+            ),
+            ImageEditorHotspot(
+                id: clippedID,
+                name: "Clipped CTA",
+                frame: CGRect(x: 15, y: 15, width: 10, height: 10),
+                url: "https://example.com/clipped"
+            ),
+            ImageEditorHotspot(
+                id: removedID,
+                name: "Removed CTA",
+                frame: CGRect(x: 10, y: 10, width: 10, height: 10),
+                url: "https://example.com/removed"
+            ),
+            ImageEditorHotspot(
+                id: trailingID,
+                name: "Trailing CTA",
+                frame: CGRect(x: 60, y: 40, width: 10, height: 10),
+                url: "https://example.com/trailing"
+            )
+        ]
+        viewModel.selectedHotspotID = removedID
+        viewModel.isHotspotsPanelVisible = true
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+        let beforeCrop = try projectData(viewModel.document)
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+        #expect(!viewModel.redoStack.isEmpty)
+
+        viewModel.crop(to: CGRect(x: 20, y: 10, width: 50, height: 40))
+
+        #expect(viewModel.document.hotspots.map(\.id) == [keptID, clippedID, trailingID])
+        #expect(viewModel.document.hotspots.map(\.name) == ["  Kept CTA  ", "Clipped CTA", "Trailing CTA"])
+        #expect(viewModel.document.hotspots.map(\.url) == [
+            "  https://example.com/kept  ",
+            "https://example.com/clipped",
+            "https://example.com/trailing"
+        ])
+        #expect(viewModel.document.hotspots.map(\.frame) == [
+            CGRect(x: 5, y: 5, width: 10, height: 10),
+            CGRect(x: 0, y: 5, width: 5, height: 10),
+            CGRect(x: 40, y: 30, width: 10, height: 10)
+        ])
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.redoStack.isEmpty)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.crop"))
+
+        let afterCrop = try projectData(viewModel.document)
+        viewModel.undo()
+        #expect(try projectData(viewModel.document) == beforeCrop)
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+
+        viewModel.redo()
+        #expect(try projectData(viewModel.document) == afterCrop)
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    @Test
+    func cropPreservesNilHotspotSelectionAndRepairsStaleSelection() {
+        let hotspotID = UUID()
+        let staleID = UUID()
+        for selection in [nil, staleID] as [UUID?] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "crop-hotspot-selection.png",
+                image: testImage(color: .systemTeal, size: CGSize(width: 100, height: 80))
+            ) { _ in }
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: hotspotID,
+                    name: "Surviving CTA",
+                    frame: CGRect(x: 25, y: 15, width: 10, height: 10)
+                )
+            ]
+            viewModel.selectedHotspotID = selection
+            viewModel.isHotspotsPanelVisible = true
+
+            viewModel.crop(to: CGRect(x: 20, y: 10, width: 50, height: 40))
+
+            #expect(viewModel.selectedHotspotID == (selection == nil ? nil : hotspotID))
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+    }
+
+    @Test
+    func cropClearsHotspotSelectionWhenEveryHotspotIsRemoved() {
+        let hotspotID = UUID()
+        let viewModel = ImageEditorViewModel(
+            sourceName: "crop-removes-all-hotspots.png",
+            image: testImage(color: .systemPurple, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Removed CTA",
+                frame: CGRect(x: 10, y: 10, width: 10, height: 10)
+            )
+        ]
+        viewModel.selectedHotspotID = hotspotID
+        viewModel.isHotspotsPanelVisible = true
+
+        viewModel.crop(to: CGRect(x: 20, y: 10, width: 50, height: 40))
+
+        #expect(viewModel.document.hotspots.isEmpty)
+        #expect(viewModel.selectedHotspotID == nil)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    @Test
+    func cropAndRevealRejectInvalidOrUnexpectedlyRemovedHotspotsAtomically() throws {
+        let invalidFrames = [
+            CGRect(x: CGFloat.nan, y: 10, width: 10, height: 10),
+            CGRect(x: 10, y: CGFloat.infinity, width: 10, height: 10),
+            CGRect(x: 10, y: 10, width: 0, height: 10)
+        ]
+        for invalidFrame in invalidFrames {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "invalid-crop-hotspot.png",
+                image: testImage(color: .systemOrange, size: CGSize(width: 100, height: 80))
+            ) { _ in }
+            let selectedID = UUID()
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: selectedID,
+                    name: "Valid CTA",
+                    frame: CGRect(x: 25, y: 15, width: 10, height: 10)
+                ),
+                ImageEditorHotspot(name: "Invalid CTA", frame: invalidFrame)
+            ]
+            viewModel.selectedHotspotID = selectedID
+            viewModel.isHotspotsPanelVisible = true
+            viewModel.canvasOffset = CGSize(width: 7, height: -9)
+            viewModel.targetCanvasWidth = 321
+            viewModel.targetCanvasHeight = 654
+            let baseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.crop(to: CGRect(x: 20, y: 10, width: 50, height: 40))
+
+            #expect(try projectTransactionSnapshot(viewModel) == baseline)
+            #expect(viewModel.selectedHotspotID == selectedID)
+            #expect(viewModel.isHotspotsPanelVisible)
+            #expect(viewModel.canvasOffset == CGSize(width: 7, height: -9))
+            #expect(viewModel.targetCanvasWidth == 321)
+            #expect(viewModel.targetCanvasHeight == 654)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+        }
+
+        for rejectedHotspot in [
+            ImageEditorHotspot(
+                name: "Outside CTA",
+                frame: CGRect(x: 300, y: 10, width: 10, height: 10)
+            ),
+            ImageEditorHotspot(
+                name: "Invalid CTA",
+                frame: CGRect(x: CGFloat.nan, y: 10, width: 10, height: 10)
+            )
+        ] {
+            let viewModel = revealViewModel()
+            let selectedID = UUID()
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: selectedID,
+                    name: "Valid CTA",
+                    frame: CGRect(x: 10, y: 10, width: 10, height: 10)
+                ),
+                rejectedHotspot
+            ]
+            viewModel.selectedHotspotID = selectedID
+            viewModel.isHotspotsPanelVisible = true
+            viewModel.canvasOffset = CGSize(width: -3, height: 4)
+            let baseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.revealAllLayers()
+
+            #expect(try projectTransactionSnapshot(viewModel) == baseline)
+            #expect(viewModel.selectedHotspotID == selectedID)
+            #expect(viewModel.isHotspotsPanelVisible)
+            #expect(viewModel.canvasOffset == CGSize(width: -3, height: 4))
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+        }
+    }
+
+    @Test
+    func revealAvailabilityIgnoresHotspotsOutsideCanvas() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "hotspot-only-reveal.png",
+            image: testImage(color: .systemBlue, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                name: "Outside CTA",
+                frame: CGRect(x: -30, y: 10, width: 10, height: 10)
+            )
+        ]
+
+        #expect(!viewModel.canRevealAllLayers)
+        let canvasSize = viewModel.document.canvasSize
+        viewModel.revealAllLayers()
+        #expect(viewModel.document.canvasSize == canvasSize)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.revealAllNoHiddenPixels"))
+    }
+
+    @Test
+    func revealRejectsOversizedTargetAtomically() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "oversized-reveal.png",
+            image: NSImage.transparent(size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        var farLayer = ImageEditorLayer.blank(
+            name: "Far Visible Layer",
+            size: CGSize(width: 10, height: 10)
+        )
+        farLayer.image = NSImage.opaqueMask(size: CGSize(width: 10, height: 10))
+        farLayer.frame = CGRect(x: 12_000, y: 10, width: 10, height: 10)
+        viewModel.document.layers.append(farLayer)
+        let hotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Stable CTA",
+                frame: CGRect(x: 10, y: 10, width: 10, height: 10)
+            )
+        ]
+        viewModel.selectedHotspotID = hotspotID
+        viewModel.isHotspotsPanelVisible = true
+        viewModel.canvasOffset = CGSize(width: 13, height: -17)
+        viewModel.targetImageWidth = 222
+        viewModel.targetImageHeight = 333
+        viewModel.targetCanvasWidth = 444
+        viewModel.targetCanvasHeight = 555
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+        let baseline = try projectTransactionSnapshot(viewModel)
+
+        #expect(viewModel.canRevealAllLayers)
+        viewModel.revealAllLayers()
+
+        #expect(try projectTransactionSnapshot(viewModel) == baseline)
+        #expect(viewModel.selectedHotspotID == hotspotID)
+        #expect(viewModel.isHotspotsPanelVisible)
+        #expect(viewModel.canvasOffset == CGSize(width: 13, height: -17))
+        #expect(viewModel.targetImageWidth == 222)
+        #expect(viewModel.targetImageHeight == 333)
+        #expect(viewModel.targetCanvasWidth == 444)
+        #expect(viewModel.targetCanvasHeight == 555)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+    }
+
+    @Test
+    func revealPreservesNilHotspotSelectionAndRepairsStaleSelection() {
+        let hotspotID = UUID()
+        let staleID = UUID()
+        for selection in [nil, staleID] as [UUID?] {
+            let viewModel = revealViewModel()
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: hotspotID,
+                    name: "Reveal CTA",
+                    frame: CGRect(x: 10, y: 10, width: 10, height: 10)
+                )
+            ]
+            viewModel.selectedHotspotID = selection
+            viewModel.isHotspotsPanelVisible = true
+
+            viewModel.revealAllLayers()
+
+            #expect(viewModel.selectedHotspotID == (selection == nil ? nil : hotspotID))
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+    }
+
+    @Test
+    func revealAllOffsetsHotspotsForNegativeHorizontalAndVerticalBounds() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "reveal-hotspot-negative-origin.png",
+            image: NSImage.transparent(size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        var outsideLayer = ImageEditorLayer.blank(
+            name: "Visible Outside",
+            size: CGSize(width: 20, height: 16)
+        )
+        outsideLayer.image = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+        outsideLayer.frame = CGRect(x: -10, y: -6, width: 20, height: 16)
+        viewModel.document.layers.append(outsideLayer)
+        let hotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Offset CTA",
+                frame: CGRect(x: 12, y: 14, width: 10, height: 8),
+                url: "https://example.com/offset"
+            )
+        ]
+
+        viewModel.revealAllLayers()
+
+        #expect(viewModel.document.canvasSize == CGSize(width: 110, height: 86))
+        #expect(viewModel.document.hotspots.first?.id == hotspotID)
+        #expect(viewModel.document.hotspots.first?.frame == CGRect(x: 22, y: 20, width: 10, height: 8))
+    }
+
+    @Test
     func cropOffsetsLayersSelectionsChannelsAndGuidesIntoNewCanvasSpace() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -669,6 +996,16 @@ struct ImageEditorCanvasCommandTests {
             ImageEditorGuide(orientation: .horizontal, position: 15),
             ImageEditorGuide(orientation: .vertical, position: 90)
         ]
+        let hotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Selection CTA",
+                frame: CGRect(x: 25, y: 15, width: 12, height: 10),
+                url: "https://example.com/selection"
+            )
+        ]
+        viewModel.selectedHotspotID = hotspotID
 
         #expect(viewModel.canCropToSelection)
         viewModel.cropToSelection()
@@ -686,6 +1023,9 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.document.guides.count == 2)
         #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 5 })
         #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 5 })
+        #expect(viewModel.document.hotspots.first?.id == hotspotID)
+        #expect(viewModel.document.hotspots.first?.frame == CGRect(x: 5, y: 5, width: 12, height: 10))
+        #expect(viewModel.selectedHotspotID == hotspotID)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cropSelection"))
         #expect(!viewModel.canCropToSelection)
         #expect(viewModel.canUndo)
@@ -781,6 +1121,23 @@ struct ImageEditorCanvasCommandTests {
             ImageEditorGuide(orientation: .horizontal, position: 22),
             ImageEditorGuide(orientation: .vertical, position: 90)
         ]
+        let hotspotID = UUID()
+        let outsideHotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Trim CTA",
+                frame: CGRect(x: 35, y: 27, width: 10, height: 8),
+                url: "https://example.com/trim"
+            ),
+            ImageEditorHotspot(
+                id: outsideHotspotID,
+                name: "Does Not Expand Trim Bounds",
+                frame: CGRect(x: 80, y: 60, width: 10, height: 8),
+                url: "https://example.com/trim-outside"
+            )
+        ]
+        viewModel.selectedHotspotID = hotspotID
 
         viewModel.trimTransparentPixels()
 
@@ -796,6 +1153,9 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.document.guides.count == 2)
         #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 0 })
         #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 0 })
+        #expect(viewModel.document.hotspots.map(\.id) == [hotspotID])
+        #expect(viewModel.document.hotspots.first?.frame == CGRect(x: 5, y: 5, width: 10, height: 8))
+        #expect(viewModel.selectedHotspotID == hotspotID)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.trim"))
     }
 
@@ -828,6 +1188,27 @@ struct ImageEditorCanvasCommandTests {
             ImageEditorGuide(orientation: .vertical, position: 4),
             ImageEditorGuide(orientation: .horizontal, position: 20)
         ]
+        let firstHotspotID = UUID()
+        let selectedHotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: firstHotspotID,
+                name: "  Reveal Primary  ",
+                frame: CGRect(x: 6, y: 14, width: 10, height: 8),
+                url: "  https://example.com/reveal-primary  "
+            ),
+            ImageEditorHotspot(
+                id: selectedHotspotID,
+                name: "Reveal Secondary",
+                frame: CGRect(x: 70, y: 50, width: 12, height: 10),
+                url: "https://example.com/reveal-secondary"
+            )
+        ]
+        viewModel.selectedHotspotID = selectedHotspotID
+        viewModel.isHotspotsPanelVisible = true
+        let beforeReveal = try projectData(viewModel.document)
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
 
         #expect(viewModel.canRevealAllLayers)
         viewModel.revealAllLayers()
@@ -854,9 +1235,48 @@ struct ImageEditorCanvasCommandTests {
         #expect(revealedAlpha.alpha[79 * 130 + 109] == 255)
         #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 14 })
         #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 20 })
+        #expect(viewModel.document.hotspots.map(\.id) == [firstHotspotID, selectedHotspotID])
+        #expect(viewModel.document.hotspots.map(\.name) == ["  Reveal Primary  ", "Reveal Secondary"])
+        #expect(viewModel.document.hotspots.map(\.url) == [
+            "  https://example.com/reveal-primary  ",
+            "https://example.com/reveal-secondary"
+        ])
+        #expect(viewModel.document.hotspots.map(\.frame) == [
+            CGRect(x: 16, y: 14, width: 10, height: 8),
+            CGRect(x: 80, y: 50, width: 12, height: 10)
+        ])
+        #expect(viewModel.selectedHotspotID == selectedHotspotID)
+        #expect(viewModel.isHotspotsPanelVisible)
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.revealAll"))
         #expect(!viewModel.canRevealAllLayers)
         #expect(viewModel.canUndo)
+
+        let afterReveal = try projectData(viewModel.document)
+        viewModel.undo()
+        #expect(try projectData(viewModel.document) == beforeReveal)
+        #expect(viewModel.selectedHotspotID == selectedHotspotID)
+        #expect(viewModel.isHotspotsPanelVisible)
+        viewModel.redo()
+        #expect(try projectData(viewModel.document) == afterReveal)
+        #expect(viewModel.selectedHotspotID == selectedHotspotID)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    private func revealViewModel() -> ImageEditorViewModel {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "reveal-hotspot-atomic.png",
+            image: NSImage.transparent(size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        var leftLayer = ImageEditorLayer.blank(
+            name: "Visible Left",
+            size: CGSize(width: 20, height: 16)
+        )
+        leftLayer.image = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+        leftLayer.frame = CGRect(x: -10, y: 12, width: 20, height: 16)
+        viewModel.document.layers.append(leftLayer)
+        return viewModel
     }
 
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
