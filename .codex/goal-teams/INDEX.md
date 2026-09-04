@@ -8,4 +8,4 @@
 | `versions/2.12.0-rc1602/progress.md` | 2.12.0-rc1602 | Goal Lead | complete | 分轮进展和独立校验证据 |
 | `versions/2.12.0-rc1602/decisions.md` | 2.12.0-rc1602 | Goal Lead | complete | 用户与团队决策记录 |
 | `versions/2.12.0-rc1603/INDEX.md` | 2.12.0-rc1603 | Goal Lead | complete | Figma IMAGE Paint 诊断完整性里程碑文档索引 |
-| `versions/2.12.0-rc1604/INDEX.md` | 2.12.0-rc1604 | Goal Lead | active | Sketch 式 Figma 组件覆盖可见性与筛选里程碑文档索引 |
+| `versions/2.12.0-rc1604/INDEX.md` | 2.12.0-rc1604 | Goal Lead | complete | Sketch 式 Figma 组件覆盖可见性与筛选里程碑文档索引 |
