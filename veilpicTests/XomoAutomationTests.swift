@@ -4586,6 +4586,140 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history == noOpHistory)
     }
 
+    @Test func registryRejectsInvalidEnumeratedComponentPropertyWritesWithoutSideEffects() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Size": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "small-key",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "small-key", name: "Small"),
+                    XomoFigmaComponentPreferredValue(key: "large-key", name: "Large")
+                ]
+            ),
+            "Icon": XomoFigmaComponentProperty(
+                type: "INSTANCE_SWAP",
+                value: "Shared",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "first-icon", name: "Shared"),
+                    XomoFigmaComponentPreferredValue(key: "second-icon", name: "Shared")
+                ]
+            ),
+            "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        ]
+
+        let setByKey = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Size"),
+                "value": .string(" large-key ")
+            ]
+        ))
+        #expect(setByKey.ok)
+        #expect(
+            setByKey.result?.objectValue?["properties"]?.objectValue?["Size"]?
+                .objectValue?["value"] == .string("Large")
+        )
+
+        let noOpUndoCount = viewModel.undoStack.count
+        let noOpHistory = viewModel.document.history
+        let noOpByName = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Size"),
+                "value": .string("Large")
+            ]
+        ))
+        #expect(noOpByName.ok)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.document.history == noOpHistory)
+
+        let ambiguousSwap = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Icon"),
+                "value": .string("Shared")
+            ]
+        ))
+        #expect(!ambiguousSwap.ok)
+        #expect(ambiguousSwap.error?.contains("Invalid argument") == true)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Icon"]?.value == "Shared")
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.document.history == noOpHistory)
+
+        let swapByKey = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Icon"),
+                "value": .string("second-icon")
+            ]
+        ))
+        #expect(swapByKey.ok)
+        #expect(
+            swapByKey.result?.objectValue?["properties"]?.objectValue?["Icon"]?
+                .objectValue?["value"] == .string("second-icon")
+        )
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Icon"]?.value == "Shared")
+        let afterUndo = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(afterUndo.ok)
+        #expect(
+            afterUndo.result?.objectValue?["properties"]?.objectValue?["Icon"]?
+                .objectValue?["value"] == .string("Shared")
+        )
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Icon"]?.value == "second-icon")
+        let afterRedo = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(afterRedo.ok)
+        #expect(
+            afterRedo.result?.objectValue?["properties"]?.objectValue?["Icon"]?
+                .objectValue?["value"] == .string("second-icon")
+        )
+
+        for (key, value) in [("Size", "large"), ("Size", ""), ("Enabled", "TRUE")] {
+            let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+            let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+            let undoCountBefore = viewModel.undoStack.count
+            let redoCountBefore = viewModel.redoStack.count
+            let historyBefore = viewModel.document.history
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.figma.component_properties",
+                arguments: [
+                    "action": .string("set"),
+                    "key": .string(key),
+                    "value": .string(value)
+                ]
+            ))
+            #expect(!invalid.ok)
+            #expect(invalid.error?.contains("Invalid argument") == true)
+            #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+            #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.redoStack.count == redoCountBefore)
+            #expect(viewModel.document.history == historyBefore)
+        }
+    }
+
     @Test func registryAggregatesFigmaComponentPropertyDefaultsAcrossActions() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -4604,7 +4738,8 @@ struct XomoAutomationTests {
             type: "VARIANT",
             value: "Continue",
             preferredValues: [
-                XomoFigmaComponentPreferredValue(key: "local", name: "Local choice")
+                XomoFigmaComponentPreferredValue(key: "local", name: "Local choice"),
+                XomoFigmaComponentPreferredValue(key: "buy", name: "Buy now")
             ]
         )
         let importedEnabled = XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")

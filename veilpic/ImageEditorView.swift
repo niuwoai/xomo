@@ -12508,15 +12508,24 @@ struct ImageEditorView: View {
                     L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
                     selection: Binding(
                         get: {
-                            property.preferredValues.first {
-                                $0.name == property.value || $0.key == property.value
-                            }?.name ?? property.value
+                            if let keyMatch = property.preferredValues.first(where: {
+                                $0.key == property.value
+                            }) {
+                                return keyMatch.key
+                            }
+                            let nameMatches = property.preferredValues.filter {
+                                $0.name == property.value
+                            }
+                            if nameMatches.count == 1, let nameMatch = nameMatches.first {
+                                return nameMatch.key
+                            }
+                            return property.value
                         },
                         set: { viewModel.updateSelectedFigmaComponentProperty(key, value: $0) }
                     )
                 ) {
                     ForEach(property.preferredValues, id: \.key) { preferredValue in
-                        Text(preferredValue.name).tag(preferredValue.name)
+                        Text(preferredValue.name).tag(preferredValue.key)
                     }
                 }
                 .pickerStyle(.menu)

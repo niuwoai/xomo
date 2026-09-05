@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1623 - 2026-09-05
+
+### Changed
+- Figma BOOLEAN、VARIANT 与 INSTANCE_SWAP 组件属性写入新增结构化校验结果；非法值不再产生不可表示状态，Automation 会返回 invalid argument。
+- VARIANT 要求候选 key/name 均唯一并规范存为 name；INSTANCE_SWAP 规范存为 key，允许候选重名但仅可用明确 key 选择重名项；两类候选都拒绝跨候选 key/name 命名空间碰撞。
+- Inspector Picker 改用稳定 key 作为 selection tag，且只将唯一 name 反解为 key；旧项目孤儿值或重复 name 不会被猜测选择或自动迁移。
+
+### Tests
+- 新增 ViewModel、Automation 与 Inspector 合同回归，覆盖分类型存储、重复 name、跨候选 key/name 碰撞、语义 no-op、INSTANCE_SWAP Undo/Redo 快照、BOOLEAN 大小写、损坏候选、孤儿值和失败零副作用；独立评审最终 PASS，Figma provenance 26/26、Automation 321/321、cursor 128/128、CLI/MCP 2/2、发布契约 9/9（27 条断言）及隔离测试器契约全部通过。
+
 ## 2.12.0-rc1622 - 2026-09-05
 
 ### Fixed

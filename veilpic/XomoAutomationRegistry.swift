@@ -1694,19 +1694,23 @@ final class XomoAutomationRegistry {
             }
         case "set":
             let key = try requiredString("key", in: arguments)
-            guard layer.xomoFigmaComponentProperties[key] != nil else {
-                throw XomoAutomationCallError.notFound("Figma component property \(key)")
-            }
             guard let value = arguments["value"]?.stringValue else {
                 throw XomoAutomationCallError.invalidArgument("Missing string argument: value")
             }
-            guard viewModel.canEditSelectedFigmaComponentProperties else {
+            switch viewModel.updateSelectedFigmaComponentProperty(key, value: value) {
+            case .changed, .unchanged:
+                return result()
+            case .invalid:
+                throw XomoAutomationCallError.invalidArgument(
+                    "Invalid Figma component property value for \(key)"
+                )
+            case .locked:
                 throw XomoAutomationCallError.operationFailed(
                     "Selected Figma component properties are locked"
                 )
+            case .notFound:
+                throw XomoAutomationCallError.notFound("Figma component property \(key)")
             }
-            viewModel.updateSelectedFigmaComponentProperty(key, value: value)
-            return result()
         case "reset":
             let key = try requiredString("key", in: arguments)
             guard layer.xomoFigmaComponentProperties[key] != nil else {

@@ -3922,6 +3922,7 @@
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "没有已覆盖的属性";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
+"imageEditor.status.figmaComponentPropertyInvalidValue" = "该 Figma 组件属性值不可用";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "还原全部 Figma 组件属性覆盖";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "已还原 %d 个 Figma 组件属性覆盖";
 "imageEditor.history.figmaComponentPropertyOverridesPasted" = "粘贴 %d 个 Figma 组件属性覆盖值";

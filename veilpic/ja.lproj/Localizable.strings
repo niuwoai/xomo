@@ -3922,6 +3922,7 @@
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "上書きされたプロパティはありません";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
+"imageEditor.status.figmaComponentPropertyInvalidValue" = "この Figma コンポーネントプロパティ値は使用できません";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Figma コンポーネントプロパティの上書きをすべてリセット";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Figma コンポーネントプロパティの上書きを %d 件リセットしました";
 "imageEditor.history.figmaComponentPropertyOverridesPasted" = "Figma コンポーネントプロパティの上書きを %d 件ペースト";

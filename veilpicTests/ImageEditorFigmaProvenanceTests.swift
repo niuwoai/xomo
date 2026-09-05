@@ -313,6 +313,226 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Compact")
     }
 
+    @Test func enumeratedComponentPropertyWritesValidateAndCanonicalizeWithoutMigratingOrphans() throws {
+        let image = NSImage.transparent(size: CGSize(width: 80, height: 40))
+        var document = ImageEditorDocument(sourceName: "figma-enum-validation.png", image: image)
+        var layer = document.layers[0]
+        layer.isLocked = false
+        let sizeCandidates = [
+            XomoFigmaComponentPreferredValue(key: "small-key", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "roomy-key", name: "Roomy")
+        ]
+        layer.xomoFigmaComponentProperties = [
+            "Size": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "small-key",
+                preferredValues: sizeCandidates
+            ),
+            "Duplicate": XomoFigmaComponentProperty(
+                type: "INSTANCE_SWAP",
+                value: "Same",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "first-key", name: "Same"),
+                    XomoFigmaComponentPreferredValue(key: "second-key", name: "Same")
+                ]
+            ),
+            "Unique Swap": XomoFigmaComponentProperty(
+                type: "INSTANCE_SWAP",
+                value: "unique-key",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "unique-key", name: "Unique")
+                ]
+            ),
+            "Duplicate Variant": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "legacy-variant",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "variant-first", name: "Duplicate"),
+                    XomoFigmaComponentPreferredValue(key: "variant-second", name: "Duplicate")
+                ]
+            ),
+            "Variant Namespace Collision": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "b",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "a", name: "b"),
+                    XomoFigmaComponentPreferredValue(key: "b", name: "c")
+                ]
+            ),
+            "Swap Namespace Collision": XomoFigmaComponentProperty(
+                type: "INSTANCE_SWAP",
+                value: "b",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "a", name: "b"),
+                    XomoFigmaComponentPreferredValue(key: "b", name: "c")
+                ]
+            ),
+            "Empty Candidate": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "", name: "Available")
+                ]
+            ),
+            "Duplicate Key": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "same-key", name: "First"),
+                    XomoFigmaComponentPreferredValue(key: "same-key", name: "Second")
+                ]
+            ),
+            "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Free Variant": XomoFigmaComponentProperty(type: "VARIANT", value: "Legacy"),
+            "Unknown": XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = layer.xomoFigmaComponentProperties
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        let semanticNoOpProperties = viewModel.selectedLayerFigmaComponentProperties
+        let semanticNoOpUndoCount = viewModel.undoStack.count
+        let semanticNoOpHistory = viewModel.document.history
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Size", value: "Small")
+                == .unchanged
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties == semanticNoOpProperties)
+        #expect(viewModel.undoStack.count == semanticNoOpUndoCount)
+        #expect(viewModel.document.history == semanticNoOpHistory)
+
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Size", value: " roomy-key ")
+                == .changed
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Roomy")
+        let defaultsAfterChange = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let uniqueNoOpUndoCount = viewModel.undoStack.count
+        let uniqueNoOpHistory = viewModel.document.history
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Size", value: "roomy-key")
+                == .unchanged
+        )
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Unique Swap", value: "Unique")
+                == .unchanged
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Roomy")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Unique Swap"]?.value == "unique-key")
+        #expect(viewModel.undoStack.count == uniqueNoOpUndoCount)
+        #expect(viewModel.document.history == uniqueNoOpHistory)
+
+        for invalidInput in ["Unknown", "roomy", "   "] {
+            let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+            let undoCountBefore = viewModel.undoStack.count
+            let redoCountBefore = viewModel.redoStack.count
+            let historyBefore = viewModel.document.history
+            #expect(
+                viewModel.updateSelectedFigmaComponentProperty("Size", value: invalidInput)
+                    == .invalid
+            )
+            #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+            #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsAfterChange)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.redoStack.count == redoCountBefore)
+            #expect(viewModel.document.history == historyBefore)
+        }
+
+        let orphanBefore = viewModel.selectedLayerFigmaComponentProperties["Duplicate"]
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Duplicate", value: "Same")
+                == .invalid
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Duplicate"] == orphanBefore)
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Duplicate", value: "second-key")
+                == .changed
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Duplicate"]?.value == "second-key")
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Duplicate"]?.value == "Same")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Duplicate"]?.value == "second-key")
+        for value in ["Duplicate", "variant-first"] {
+            let propertyBefore = viewModel.selectedLayerFigmaComponentProperties["Duplicate Variant"]
+            let undoCountBefore = viewModel.undoStack.count
+            let historyBefore = viewModel.document.history
+            #expect(
+                viewModel.updateSelectedFigmaComponentProperty(
+                    "Duplicate Variant",
+                    value: value
+                ) == .invalid
+            )
+            #expect(viewModel.selectedLayerFigmaComponentProperties["Duplicate Variant"] == propertyBefore)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.document.history == historyBefore)
+        }
+        for key in ["Variant Namespace Collision", "Swap Namespace Collision"] {
+            let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+            let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+            let undoCountBefore = viewModel.undoStack.count
+            let redoCountBefore = viewModel.redoStack.count
+            let historyBefore = viewModel.document.history
+            #expect(
+                viewModel.updateSelectedFigmaComponentProperty(key, value: "a") == .invalid
+            )
+            #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+            #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.redoStack.count == redoCountBefore)
+            #expect(viewModel.document.history == historyBefore)
+        }
+        for (key, value) in [("Empty Candidate", "Available"), ("Duplicate Key", "same-key")] {
+            let propertyBefore = viewModel.selectedLayerFigmaComponentProperties[key]
+            let undoCountBefore = viewModel.undoStack.count
+            let historyBefore = viewModel.document.history
+            #expect(
+                viewModel.updateSelectedFigmaComponentProperty(key, value: value) == .invalid
+            )
+            #expect(viewModel.selectedLayerFigmaComponentProperties[key] == propertyBefore)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.document.history == historyBefore)
+        }
+
+        let invalidBooleanProperties = viewModel.selectedLayerFigmaComponentProperties
+        let invalidBooleanUndoCount = viewModel.undoStack.count
+        let invalidBooleanHistory = viewModel.document.history
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Enabled", value: " TRUE ")
+                == .invalid
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties == invalidBooleanProperties)
+        #expect(viewModel.undoStack.count == invalidBooleanUndoCount)
+        #expect(viewModel.document.history == invalidBooleanHistory)
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Enabled", value: " false ")
+                == .changed
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Enabled"]?.value == "false")
+
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Free Variant", value: " Open ")
+                == .changed
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Free Variant"]?.value == "Open")
+        let unknownBefore = viewModel.selectedLayerFigmaComponentProperties["Unknown"]
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Unknown", value: "Changed")
+                == .invalid
+        )
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Unknown"] == unknownBefore)
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
+        )
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Missing", value: "Anything")
+                == .notFound
+        )
+    }
+
     @Test func resettingSingleComponentPropertyRestoresImportedObjectAtomically() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-single-reset-metadata.png", image: image)
@@ -1586,6 +1806,11 @@ struct ImageEditorFigmaProvenanceTests {
                 separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
             ).count - 1 == 4
         )
+        #expect(editorSource.contains("$0.key == property.value"))
+        #expect(editorSource.contains("$0.name == property.value"))
+        #expect(editorSource.contains("if nameMatches.count == 1"))
+        #expect(editorSource.components(separatedBy: ".first(where:").count - 1 == 1)
+        #expect(editorSource.contains("Text(preferredValue.name).tag(preferredValue.key)"))
         for localizationDirectory in ["en.lproj", "zh-Hans.lproj", "ja.lproj"] {
             let localization = try String(
                 contentsOf: repositoryRoot
@@ -1606,6 +1831,7 @@ struct ImageEditorFigmaProvenanceTests {
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteInvalid\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyInvalidValue\""))
             #expect(localization.contains("\"imageEditor.history.figmaComponentPropertyOverridesResetAll\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesResetAll\""))
         }

@@ -3922,6 +3922,7 @@
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "No overridden properties";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
+"imageEditor.status.figmaComponentPropertyInvalidValue" = "The Figma component property value is not available";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Reset all Figma component property overrides";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Reset %d Figma component property overrides";
 "imageEditor.history.figmaComponentPropertyOverridesPasted" = "Pasted %d Figma component property overrides";

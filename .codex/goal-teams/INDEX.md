@@ -27,3 +27,4 @@
 | `versions/2.12.0-rc1620/INDEX.md` | 2.12.0-rc1620 | Goal Lead | complete | Figma 组件属性跨实例原子粘贴覆盖值工作流文档索引 |
 | `versions/2.12.0-rc1621/INDEX.md` | 2.12.0-rc1621 | Goal Lead | complete | Figma 组件属性还原的类型安全文本同步文档索引 |
 | `versions/2.12.0-rc1622/INDEX.md` | 2.12.0-rc1622 | Goal Lead | complete | Figma TEXT 组件属性空白保真文档索引 |
+| `versions/2.12.0-rc1623/INDEX.md` | 2.12.0-rc1623 | Goal Lead | complete | Figma 枚举组件属性安全写入文档索引 |
