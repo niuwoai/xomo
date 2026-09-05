@@ -168,6 +168,7 @@ struct ImageEditorView: View {
     @State private var isTemporaryEyedropperGestureActive = false
     @State private var showsOnlyFigmaComponentPropertyOverrides = false
     @State private var showsOnlyFigmaComponentPropertyDiagnostics = false
+    @State private var figmaComponentPropertySearchQuery = ""
     @State private var eyedropperGestureTarget: ImageEditorColorSampleTarget?
     @State private var eyedropperSamplingRing: ImageEditorEyedropperSamplingRingState?
     @State private var isEraserHistoryGestureActive = false
@@ -13160,14 +13161,63 @@ struct ImageEditorView: View {
                             .accessibilityIdentifier("image-editor-figma-component-diagnostics-only")
                         }
 
+                        HStack(spacing: 5) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            TextField(
+                                L10n.text("imageEditor.properties.figmaComponentPropertySearchPlaceholder"),
+                                text: $figmaComponentPropertySearchQuery
+                            )
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 10))
+                            .accessibilityIdentifier("image-editor-figma-component-property-search")
+                            if !figmaComponentPropertySearchQuery.isEmpty {
+                                Button {
+                                    figmaComponentPropertySearchQuery = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .focusable(false)
+                                .help(
+                                    L10n.text(
+                                        "imageEditor.properties.figmaComponentPropertySearchClear"
+                                    )
+                                )
+                                .accessibilityLabel(
+                                    L10n.text(
+                                        "imageEditor.properties.figmaComponentPropertySearchClear"
+                                    )
+                                )
+                                .accessibilityIdentifier(
+                                    "image-editor-figma-component-property-search-clear"
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 5)
+                        .background(Color.black.opacity(0.16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .stroke(editorBorder, lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
                         let visibleFigmaComponentPropertyKeys = viewModel
                             .selectedLayerFigmaComponentPropertyKeys(
                                 onlyOverrides: showsOnlyFigmaComponentPropertyOverrides,
-                                onlyDiagnostics: showsOnlyFigmaComponentPropertyDiagnostics
+                                onlyDiagnostics: showsOnlyFigmaComponentPropertyDiagnostics,
+                                searchQuery: figmaComponentPropertySearchQuery
                             )
                         if visibleFigmaComponentPropertyKeys.isEmpty,
                            showsOnlyFigmaComponentPropertyOverrides
-                            || showsOnlyFigmaComponentPropertyDiagnostics {
+                            || showsOnlyFigmaComponentPropertyDiagnostics
+                            || !figmaComponentPropertySearchQuery.trimmingCharacters(
+                                in: .whitespacesAndNewlines
+                            ).isEmpty {
                             Text(L10n.text("imageEditor.properties.figmaComponentPropertyFiltersEmpty"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1625
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1626
+
+v2.12.0-rc1626 为大型 Figma 组件的属性 Inspector 增加轻量本地搜索：属性 key 或当前已提交值均可命中，并统一忽略大小写、首尾空白和变音符号。搜索可与“仅看已覆盖”“仅显示有问题”组成严格交集，列表仍按 key 稳定排序；查询只存在于当前 Inspector 视图生命周期，不写项目、不进入 History/Undo，也不改变复制、粘贴、还原、Automation、导入格式或 cursor。三语搜索与清除文案、稳定辅助功能标识及无结果空态同步补齐。独立复审最终 PASS；唯一冷测试构建完成，Figma provenance 30/30、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9 全部通过；本轮不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1625 把 rc1624 的逐项诊断提升为大型组件可用的问题定位视图。健康摘要分别统计全部问题与数据级阻塞，图层锁不会污染统计；Inspector 新增独立“仅显示有问题”开关，可与覆盖筛选取交集并保持 key 稳定排序，筛选不影响复制、粘贴或还原。Automation 所有成功 action 的根结果追加同口径 `diagnosticCount`、`blockedCount`，旧字段、actions 与 `pasteOverrides` 不变。独立复审最终 PASS；唯一冷测试构建完成，Figma provenance 29/29、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9 全部通过；本轮不执行 Release 或 `/Applications` 覆盖。
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1626 - 2026-09-05
+
+### Added
+- Figma 组件属性 Inspector 新增本地搜索，可按属性 key 或当前已提交值进行包含匹配；搜索忽略大小写、首尾空白与变音符号。
+- 搜索与“仅看已覆盖”“仅显示有问题”严格取交集，结果继续按原始 key 稳定排序；清除按钮和无结果空态提供三语文案及稳定辅助功能标识。
+
+### Tests
+- 新增 1 个 Figma provenance 测试并扩写既有 Inspector 源码合同，覆盖 key/value、大小写、空白、变音符号、无命中、默认值/候选值/type/diagnosis 不误命中、三重 AND、稳定排序与查询零项目副作用；独立复审最终 PASS，Figma provenance 30/30、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2、发布契约 9/9（27 条断言）及隔离运行器契约全部通过。
+
 ## 2.12.0-rc1625 - 2026-09-05
 
 ### Added

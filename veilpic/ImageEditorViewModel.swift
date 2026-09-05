@@ -2253,9 +2253,11 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectedLayerFigmaComponentPropertyKeys(
         onlyOverrides: Bool,
-        onlyDiagnostics: Bool = false
+        onlyDiagnostics: Bool = false,
+        searchQuery: String = ""
     ) -> [String] {
-        selectedLayerFigmaComponentProperties.compactMap { key, property in
+        let normalizedQuery = normalizedFigmaComponentPropertySearchText(searchQuery)
+        return selectedLayerFigmaComponentProperties.compactMap { key, property in
             if onlyOverrides,
                !hasSelectedFigmaComponentPropertyOverride(key, property: property) {
                 return nil
@@ -2263,9 +2265,23 @@ final class ImageEditorViewModel: ObservableObject {
             if onlyDiagnostics, property.diagnosis.diagnostic == nil {
                 return nil
             }
+            if !normalizedQuery.isEmpty,
+               !normalizedFigmaComponentPropertySearchText(key).contains(normalizedQuery),
+               !normalizedFigmaComponentPropertySearchText(property.value).contains(normalizedQuery) {
+                return nil
+            }
             return key
         }
         .sorted()
+    }
+
+    private func normalizedFigmaComponentPropertySearchText(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
     }
 
     func hasSelectedFigmaComponentPropertyOverride(
