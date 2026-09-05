@@ -3920,6 +3920,9 @@
 "imageEditor.properties.figmaComponentPropertyOverrideCount" = "已覆盖 %d / 总计 %d";
 "imageEditor.properties.figmaComponentPropertyOverridesOnly" = "仅看已覆盖";
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "没有已覆盖的属性";
+"imageEditor.properties.figmaComponentPropertyHealthSummary" = "问题 %d / 阻塞 %d";
+"imageEditor.properties.figmaComponentPropertyDiagnosticsOnly" = "仅显示有问题";
+"imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "没有符合当前筛选条件的属性";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "该 Figma 组件属性值不可用";

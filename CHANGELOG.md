@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1625 - 2026-09-05
+
+### Added
+- Figma 组件属性新增纯派生健康摘要，分别统计全部诊断与数据级不可写属性；Inspector 显示“问题/阻塞”汇总，并支持与“仅看已覆盖”取交集的“仅显示有问题”筛选及通用无结果空态。
+- `xomo.figma.component_properties` 的全部成功结果在保留旧根字段、逐属性字段、actions 与 `pasteOverrides` 行为的同时，追加 `diagnosticCount` 与 `blockedCount`。
+
+### Tests
+- 新增 1 个 Figma provenance 测试与 1 个 Automation 测试，并扩写既有 Inspector 静态合同、锁定回归及六条成功 Automation action 的计数断言；独立复审最终 PASS，Figma provenance 29/29、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2、发布契约 9/9（27 条断言）及隔离运行器契约全部通过。
+
 ## 2.12.0-rc1624 - 2026-09-05
 
 ### Added

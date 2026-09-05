@@ -83,6 +83,27 @@ struct XomoFigmaComponentPropertyDiagnosis: Equatable, Sendable {
     var selectionKey: String?
 }
 
+struct XomoFigmaComponentPropertyHealthSummary: Equatable, Sendable {
+    let diagnosticCount: Int
+    let blockedCount: Int
+
+    init(properties: [String: XomoFigmaComponentProperty]) {
+        var diagnosticCount = 0
+        var blockedCount = 0
+        for property in properties.values {
+            let diagnosis = property.diagnosis
+            if diagnosis.diagnostic != nil {
+                diagnosticCount += 1
+            }
+            if !diagnosis.writable {
+                blockedCount += 1
+            }
+        }
+        self.diagnosticCount = diagnosticCount
+        self.blockedCount = blockedCount
+    }
+}
+
 enum XomoFigmaComponentPropertyWriteResolution: Equatable, Sendable {
     case accepted(value: String, semanticallyUnchanged: Bool)
     case rejected

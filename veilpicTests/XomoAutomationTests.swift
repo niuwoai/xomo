@@ -4852,6 +4852,116 @@ struct XomoAutomationTests {
         )
     }
 
+    @Test func registryReportsComponentPropertyHealthCountsAcrossMutatingActions() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let preferredValues = [
+            XomoFigmaComponentPreferredValue(key: "small", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "large", name: "Large")
+        ]
+        let noncanonicalBoolean = XomoFigmaComponentProperty(type: "BOOLEAN", value: "TRUE")
+        let orphanVariant = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Legacy",
+            preferredValues: preferredValues
+        )
+        let blockedUnknown = XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved")
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Enabled": noncanonicalBoolean,
+            "Size": orphanVariant,
+            "Unknown": blockedUnknown
+        ]
+        viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults =
+            viewModel.document.layers[layerIndex].xomoFigmaComponentProperties
+
+        func call(
+            _ action: String,
+            key: String? = nil,
+            value: String? = nil
+        ) -> XomoAutomationWireResponse {
+            var arguments: [String: XomoJSONValue] = ["action": .string(action)]
+            if let key {
+                arguments["key"] = .string(key)
+            }
+            if let value {
+                arguments["value"] = .string(value)
+            }
+            return registry.execute(request(
+                operation: "call",
+                name: "xomo.figma.component_properties",
+                arguments: arguments
+            ))
+        }
+
+        func expectCounts(
+            _ response: XomoAutomationWireResponse,
+            diagnosticCount: Double,
+            blockedCount: Double,
+            overrideCount: Double
+        ) throws {
+            #expect(response.ok)
+            let root = try #require(response.result?.objectValue)
+            #expect(root["layerId"] == .string(layerID.uuidString))
+            #expect(root["editable"] == .bool(true))
+            #expect(root["propertyCount"] == .number(3))
+            #expect(root["overrideCount"] == .number(overrideCount))
+            #expect(root["diagnosticCount"] == .number(diagnosticCount))
+            #expect(root["blockedCount"] == .number(blockedCount))
+            #expect(root["properties"]?.objectValue?.count == 3)
+            #expect(
+                root["properties"]?.objectValue?["Enabled"]?.objectValue?["diagnostic"]
+                    != nil
+            )
+            #expect(root["properties"]?.objectValue?["Enabled"]?.objectValue?["type"] != nil)
+            #expect(root["properties"]?.objectValue?["Enabled"]?.objectValue?["value"] != nil)
+            #expect(
+                root["properties"]?.objectValue?["Enabled"]?.objectValue?["preferredValues"]
+                    != nil
+            )
+            #expect(
+                root["properties"]?.objectValue?["Enabled"]?.objectValue?["importedDefault"]
+                    != nil
+            )
+            #expect(root["properties"]?.objectValue?["Enabled"]?.objectValue?["defaultValue"] != nil)
+            #expect(root["properties"]?.objectValue?["Enabled"]?.objectValue?["overridden"] != nil)
+        }
+
+        try expectCounts(
+            call("list"),
+            diagnosticCount: 3,
+            blockedCount: 1,
+            overrideCount: 0
+        )
+        try expectCounts(
+            call("set", key: "Enabled", value: "true"),
+            diagnosticCount: 2,
+            blockedCount: 1,
+            overrideCount: 1
+        )
+        try expectCounts(
+            call("reset", key: "Enabled"),
+            diagnosticCount: 3,
+            blockedCount: 1,
+            overrideCount: 0
+        )
+        _ = call("set", key: "Enabled", value: "false")
+        try expectCounts(
+            call("set", key: "Size", value: "large"),
+            diagnosticCount: 1,
+            blockedCount: 1,
+            overrideCount: 2
+        )
+        try expectCounts(
+            call("resetAll"),
+            diagnosticCount: 3,
+            blockedCount: 1,
+            overrideCount: 0
+        )
+    }
+
     @Test func registryAggregatesFigmaComponentPropertyDefaultsAcrossActions() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -4945,6 +5055,19 @@ struct XomoAutomationTests {
             #expect(root["editable"] == .bool(true))
             #expect(root["propertyCount"] == .number(3))
             #expect(root["overrideCount"] == .number(overrideCount))
+            let healthSummary = XomoFigmaComponentPropertyHealthSummary(properties: [
+                "Label": label,
+                "Enabled": enabled,
+                "Custom": customProperty
+            ])
+            #expect(
+                root["diagnosticCount"]
+                    == .number(Double(healthSummary.diagnosticCount))
+            )
+            #expect(
+                root["blockedCount"]
+                    == .number(Double(healthSummary.blockedCount))
+            )
             #expect(root["properties"] == .object([
                 "Label": propertySnapshot(
                     current: label,
@@ -5169,6 +5292,8 @@ struct XomoAutomationTests {
         ))
         #expect(listed.ok)
         #expect(listed.result?.objectValue?["editable"] == .bool(false))
+        #expect(listed.result?.objectValue?["diagnosticCount"] == .number(0))
+        #expect(listed.result?.objectValue?["blockedCount"] == .number(0))
         #expect(listed.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["value"] == .string("Buy now"))
 
         let copied = registry.execute(request(
@@ -5179,6 +5304,8 @@ struct XomoAutomationTests {
         #expect(copied.ok)
         #expect(copied.result?.objectValue?["editable"] == .bool(false))
         #expect(copied.result?.objectValue?["overrideCount"] == .number(1))
+        #expect(copied.result?.objectValue?["diagnosticCount"] == .number(0))
+        #expect(copied.result?.objectValue?["blockedCount"] == .number(0))
         let copiedData = try #require(NSPasteboard.general.data(forType: .string))
         let copiedProperties = try JSONDecoder().decode(
             [String: XomoFigmaComponentProperty].self,

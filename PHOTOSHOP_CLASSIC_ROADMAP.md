@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-05 ｜ 当前版本：v2.12.0-rc1624 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+> 最后更新：2026-09-05 ｜ 当前版本：v2.12.0-rc1625 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+
+- `v2.12.0-rc1625`：Figma 组件属性增加问题/阻塞健康摘要与“仅显示有问题”筛选，覆盖筛选和问题筛选取交集并稳定排序；图层锁只影响既有编辑能力，不进入数据健康统计。Automation 成功结果根对象追加同口径计数，旧字段、actions、`pasteOverrides` 与项目格式保持不变。独立复审最终 PASS；唯一冷测试构建完成，Figma provenance 29/29、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9 全部通过。本版不执行 Release 或安装覆盖。
 
 - `v2.12.0-rc1624`：Figma 组件属性增加共享读侧诊断与安全 Inspector。合法 TEXT、BOOLEAN、VARIANT/INSTANCE_SWAP 保持既有写语义；损坏候选、非规范 BOOLEAN 与未知 type 原值只读展示。合法候选中的孤儿值和 INSTANCE_SWAP 重名歧义不自动选择或迁移，仍可由用户明确选择带 key 候选修复；重复 key 不再进入 SwiftUI Picker。Automation 保留原响应字段并追加诊断，区分数据健康与图层锁定；`set` 继续共享 ViewModel，`pasteOverrides` 不变。独立复审最终 PASS；Figma provenance 28/28、Automation 322/322、cursor 128/128、CLI/MCP 2/2 和全部发布契约通过。本版不执行 Release 或安装覆盖。
 

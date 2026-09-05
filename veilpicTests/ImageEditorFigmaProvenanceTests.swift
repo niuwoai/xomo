@@ -1264,6 +1264,86 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
     }
 
+    @Test func componentPropertyHealthSummaryAndCombinedFiltersStayDerivedAndSorted() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-component-health.png", image: image)
+        var layer = document.layers[0]
+        let preferredValues = [
+            XomoFigmaComponentPreferredValue(key: "small", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "large", name: "Large")
+        ]
+        layer.xomoFigmaComponentProperties = [
+            "Golf": XomoFigmaComponentProperty(type: "TEXT", value: "Current"),
+            "Echo": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "same", name: "First"),
+                    XomoFigmaComponentPreferredValue(key: "same", name: "Second")
+                ]
+            ),
+            "Charlie": XomoFigmaComponentProperty(type: "BOOLEAN", value: "TRUE"),
+            "Alpha": XomoFigmaComponentProperty(type: "TEXT", value: "Healthy"),
+            "Foxtrot": XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved"),
+            "Delta": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: preferredValues
+            ),
+            "Bravo": XomoFigmaComponentProperty(type: "TEXT", value: "Override")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Golf": XomoFigmaComponentProperty(type: "TEXT", value: "Current"),
+            "Echo": layer.xomoFigmaComponentProperties["Echo"]!,
+            "Charlie": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Alpha": XomoFigmaComponentProperty(type: "TEXT", value: "Healthy"),
+            "Foxtrot": layer.xomoFigmaComponentProperties["Foxtrot"]!,
+            "Delta": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Small",
+                preferredValues: preferredValues
+            ),
+            "Bravo": XomoFigmaComponentProperty(type: "TEXT", value: "Imported")
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        #expect(viewModel.selectedLayerFigmaComponentProperties.count == 7)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 3)
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyHealthSummary
+                == XomoFigmaComponentPropertyHealthSummary(
+                    properties: layer.xomoFigmaComponentProperties
+                )
+        )
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDiagnosticCount == 4)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyBlockedCount == 2)
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(onlyOverrides: false)
+                == ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf"]
+        )
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(
+                onlyOverrides: true,
+                onlyDiagnostics: false
+            ) == ["Bravo", "Charlie", "Delta"]
+        )
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(
+                onlyOverrides: false,
+                onlyDiagnostics: true
+            ) == ["Charlie", "Delta", "Echo", "Foxtrot"]
+        )
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(
+                onlyOverrides: true,
+                onlyDiagnostics: true
+            ) == ["Charlie", "Delta"]
+        )
+    }
+
     @Test func copyingComponentPropertyOverridesUsesAnExactBaselineDerivedSubsetAndNoOpsWhenEmpty() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-copy-overrides.png", image: image)
@@ -1911,16 +1991,21 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("selectedLayerFigmaComponentPropertyKeys"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverrideCount"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesOnly"))
-        #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesEmpty"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyHealthSummary"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyDiagnosticsOnly"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyFiltersEmpty"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyResetAll"))
         #expect(source.contains("image-editor-figma-component-override-summary"))
         #expect(source.contains("image-editor-figma-component-overrides-only"))
-        #expect(source.contains("image-editor-figma-component-overrides-empty"))
+        #expect(source.contains("image-editor-figma-component-property-health-summary"))
+        #expect(source.contains("image-editor-figma-component-diagnostics-only"))
+        #expect(source.contains("image-editor-figma-component-property-filters-empty"))
         #expect(source.contains("image-editor-figma-component-reset-all"))
         #expect(source.contains("image-editor-copy-figma-component-property-overrides"))
         #expect(source.contains("image-editor-paste-figma-component-property-overrides"))
         #expect(source.contains("imageEditor.action.pasteFigmaComponentPropertyOverrides"))
         #expect(source.contains("viewModel.pasteSelectedFigmaComponentPropertyOverrides()"))
+        #expect(source.contains("onlyDiagnostics: showsOnlyFigmaComponentPropertyDiagnostics"))
         let pasteOverridesStart = try #require(
             source.range(
                 of: "Button(L10n.text(\"imageEditor.action.pasteFigmaComponentPropertyOverrides\"))"
@@ -2012,7 +2097,9 @@ struct ImageEditorFigmaProvenanceTests {
             )
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverrideCount\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesOnly\""))
-            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesEmpty\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyHealthSummary\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyDiagnosticsOnly\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyFiltersEmpty\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyResetAll\""))
             #expect(localization.contains("\"imageEditor.action.copyFigmaComponentPropertyOverrides\""))
             #expect(localization.contains("\"imageEditor.action.pasteFigmaComponentPropertyOverrides\""))

@@ -2237,11 +2237,35 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerFigmaComponentPropertyOverrideKeys.count
     }
 
-    func selectedLayerFigmaComponentPropertyKeys(onlyOverrides: Bool) -> [String] {
-        if onlyOverrides {
-            return selectedLayerFigmaComponentPropertyOverrideKeys
+    var selectedLayerFigmaComponentPropertyHealthSummary: XomoFigmaComponentPropertyHealthSummary {
+        XomoFigmaComponentPropertyHealthSummary(
+            properties: selectedLayerFigmaComponentProperties
+        )
+    }
+
+    var selectedLayerFigmaComponentPropertyDiagnosticCount: Int {
+        selectedLayerFigmaComponentPropertyHealthSummary.diagnosticCount
+    }
+
+    var selectedLayerFigmaComponentPropertyBlockedCount: Int {
+        selectedLayerFigmaComponentPropertyHealthSummary.blockedCount
+    }
+
+    func selectedLayerFigmaComponentPropertyKeys(
+        onlyOverrides: Bool,
+        onlyDiagnostics: Bool = false
+    ) -> [String] {
+        selectedLayerFigmaComponentProperties.compactMap { key, property in
+            if onlyOverrides,
+               !hasSelectedFigmaComponentPropertyOverride(key, property: property) {
+                return nil
+            }
+            if onlyDiagnostics, property.diagnosis.diagnostic == nil {
+                return nil
+            }
+            return key
         }
-        return selectedLayerFigmaComponentProperties.keys.sorted()
+        .sorted()
     }
 
     func hasSelectedFigmaComponentPropertyOverride(

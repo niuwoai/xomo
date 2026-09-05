@@ -1615,6 +1615,9 @@ final class XomoAutomationRegistry {
 
         func result(appliedCount: Int? = nil) -> XomoJSONValue {
             let currentLayer = viewModel.document.layers[layerIndex]
+            let healthSummary = XomoFigmaComponentPropertyHealthSummary(
+                properties: currentLayer.xomoFigmaComponentProperties
+            )
 
             func encodedProperty(
                 _ property: XomoFigmaComponentProperty
@@ -1662,6 +1665,8 @@ final class XomoAutomationRegistry {
                 "editable": .bool(viewModel.canEditSelectedFigmaComponentProperties),
                 "propertyCount": .number(Double(properties.count)),
                 "overrideCount": .number(Double(overrideCount)),
+                "diagnosticCount": .number(Double(healthSummary.diagnosticCount)),
+                "blockedCount": .number(Double(healthSummary.blockedCount)),
                 "properties": .object(properties)
             ]
             if let appliedCount {

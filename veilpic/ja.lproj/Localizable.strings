@@ -3920,6 +3920,9 @@
 "imageEditor.properties.figmaComponentPropertyOverrideCount" = "上書き済み %d / 合計 %d";
 "imageEditor.properties.figmaComponentPropertyOverridesOnly" = "上書きのみ表示";
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "上書きされたプロパティはありません";
+"imageEditor.properties.figmaComponentPropertyHealthSummary" = "問題 %d / ブロック %d";
+"imageEditor.properties.figmaComponentPropertyDiagnosticsOnly" = "問題のみ表示";
+"imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "現在のフィルターに一致するプロパティはありません";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "この Figma コンポーネントプロパティ値は使用できません";

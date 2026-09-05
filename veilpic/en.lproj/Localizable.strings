@@ -3920,6 +3920,9 @@
 "imageEditor.properties.figmaComponentPropertyOverrideCount" = "Overridden %d / %d total";
 "imageEditor.properties.figmaComponentPropertyOverridesOnly" = "Show overrides only";
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "No overridden properties";
+"imageEditor.properties.figmaComponentPropertyHealthSummary" = "%d issues / %d blocked";
+"imageEditor.properties.figmaComponentPropertyDiagnosticsOnly" = "Show issues only";
+"imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "No properties match the active filters";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "The Figma component property value is not available";
