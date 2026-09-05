@@ -3927,6 +3927,12 @@
 "imageEditor.properties.figmaComponentPropertyFilterSummary" = "Showing %d of %d properties";
 "imageEditor.properties.figmaComponentPropertyFiltersClear" = "Clear filters";
 "imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "No properties match the active filters";
+"imageEditor.properties.figmaComponentPropertyType.text" = "Text";
+"imageEditor.properties.figmaComponentPropertyType.boolean" = "Toggle";
+"imageEditor.properties.figmaComponentPropertyType.variant" = "Variant";
+"imageEditor.properties.figmaComponentPropertyType.instanceSwap" = "Instance swap";
+"imageEditor.properties.figmaComponentPropertyType.unknown" = "Unknown type";
+"imageEditor.properties.figmaComponentPropertyType.rawHelp" = "Figma raw type: %@";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "The Figma component property value is not available";

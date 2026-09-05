@@ -12476,9 +12476,10 @@ struct ImageEditorView: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                 Spacer(minLength: 0)
-                Text(property.type)
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                figmaComponentPropertyTypeBadge(
+                    key: key,
+                    presentation: property.typePresentation
+                )
                 if viewModel.hasSelectedFigmaComponentPropertyOverride(key, property: property) {
                     Button(L10n.text("imageEditor.properties.figmaComponentPropertyReset")) {
                         viewModel.resetSelectedFigmaComponentProperty(key)
@@ -12561,6 +12562,35 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-figma-property-diagnostic-\(key)")
             }
         }
+    }
+
+    @ViewBuilder
+    private func figmaComponentPropertyTypeBadge(
+        key: String,
+        presentation: XomoFigmaComponentPropertyTypePresentation
+    ) -> some View {
+        let label: String = switch presentation {
+        case let .localized(localizationKey, _):
+            L10n.text(localizationKey)
+        case let .raw(rawType):
+            rawType
+        }
+        Text(label)
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .lineLimit(1)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(Color(nsColor: ImageEditorTheme.panelRaised))
+            )
+            .help(L10n.format(
+                "imageEditor.properties.figmaComponentPropertyType.rawHelp",
+                presentation.rawType
+            ))
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-figma-property-type-\(key)")
     }
 
     private func figmaImageFillRow(

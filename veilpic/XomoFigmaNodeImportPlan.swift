@@ -52,6 +52,20 @@ struct XomoFigmaComponentProperty: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+enum XomoFigmaComponentPropertyTypePresentation: Equatable, Sendable {
+    case localized(key: String, rawType: String)
+    case raw(String)
+
+    var rawType: String {
+        switch self {
+        case let .localized(_, rawType):
+            return rawType
+        case let .raw(rawType):
+            return rawType
+        }
+    }
+}
+
 enum XomoFigmaComponentPropertyEditorKind: String, Equatable, Sendable {
     case text
     case boolean
@@ -110,6 +124,39 @@ enum XomoFigmaComponentPropertyWriteResolution: Equatable, Sendable {
 }
 
 extension XomoFigmaComponentProperty {
+    var typePresentation: XomoFigmaComponentPropertyTypePresentation {
+        switch type {
+        case "TEXT":
+            return .localized(
+                key: "imageEditor.properties.figmaComponentPropertyType.text",
+                rawType: type
+            )
+        case "BOOLEAN":
+            return .localized(
+                key: "imageEditor.properties.figmaComponentPropertyType.boolean",
+                rawType: type
+            )
+        case "VARIANT":
+            return .localized(
+                key: "imageEditor.properties.figmaComponentPropertyType.variant",
+                rawType: type
+            )
+        case "INSTANCE_SWAP":
+            return .localized(
+                key: "imageEditor.properties.figmaComponentPropertyType.instanceSwap",
+                rawType: type
+            )
+        default:
+            if type.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.unknown",
+                    rawType: type
+                )
+            }
+            return .raw(type)
+        }
+    }
+
     var diagnosis: XomoFigmaComponentPropertyDiagnosis {
         switch type {
         case "TEXT":

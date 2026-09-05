@@ -3927,6 +3927,12 @@
 "imageEditor.properties.figmaComponentPropertyFilterSummary" = "当前显示 %d / 共 %d 个属性";
 "imageEditor.properties.figmaComponentPropertyFiltersClear" = "清除筛选";
 "imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "没有符合当前筛选条件的属性";
+"imageEditor.properties.figmaComponentPropertyType.text" = "文本";
+"imageEditor.properties.figmaComponentPropertyType.boolean" = "开关";
+"imageEditor.properties.figmaComponentPropertyType.variant" = "变体";
+"imageEditor.properties.figmaComponentPropertyType.instanceSwap" = "实例交换";
+"imageEditor.properties.figmaComponentPropertyType.unknown" = "未知类型";
+"imageEditor.properties.figmaComponentPropertyType.rawHelp" = "Figma 原始类型：%@";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "该 Figma 组件属性值不可用";

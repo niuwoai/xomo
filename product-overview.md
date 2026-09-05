@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1627
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1628
+
+v2.12.0-rc1628 让 Figma 组件属性的原始机器类型在 Inspector 中成为可读、紧凑且只读的类型徽标：标准 `TEXT`、`BOOLEAN`、`VARIANT`、`INSTANCE_SWAP` 映射为三语产品文案；未知非空值逐字显示，空或纯空白值使用本地化未知类型兜底，辅助说明始终保留未经处理的 Figma 原始值。类型展示不进入属性搜索，也不改变 Codable、诊断、编辑、Automation、导入、项目、History/Undo、选择或 cursor 语义。独立复审最终 PASS；Figma provenance 32/32、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9 全部通过。本轮不是 rc1640 完整构建门禁，不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1627 为 rc1626 的大型 Figma 组件属性筛选补齐明确状态反馈：任一有效筛选激活时，Inspector 使用同一份纯派生过滤结果显示“当前显示 n / 共 m 个属性”，并提供一次清除覆盖筛选、问题筛选和搜索词的本地动作。纯空白搜索不算激活；筛选未缩小列表或结果为空时摘要仍准确显示。该动作不还原组件属性，不写项目、History/Undo、Automation、剪贴板、导入协议或 cursor。独立复审最终 PASS；Figma provenance 31/31、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9 全部通过；本轮不是 rc1640 完整构建门禁，不执行 Release 或 `/Applications` 覆盖。
 

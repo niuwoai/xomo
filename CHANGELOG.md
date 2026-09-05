@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1628 - 2026-09-05
+
+### Added
+- Figma 组件属性在 Inspector 中新增紧凑只读类型徽标，以三语可读名称展示四种标准类型，并通过辅助说明保留原始 Figma type。
+- 未识别的非空类型逐字显示，空或纯空白类型显示本地化“未知类型”；原始值不做大小写或空白归一化。
+
+### Tests
+- 新增 1 个 Figma provenance 测试，覆盖标准类型映射、未知值逐字保真、空白兜底、JSON 往返与搜索语义不受类型标签影响；并扩写 Inspector 静态合同锁定只读徽标、原始类型说明和三语资源。独立复审最终 PASS；Figma provenance 32/32、Automation 323/323、Localization 46/46、cursor 128/128、CLI/MCP 2/2 与发布契约 9/9（27 条断言）全部通过。
+
 ## 2.12.0-rc1627 - 2026-09-05
 
 ### Added

@@ -713,7 +713,250 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("property.displayName(for: preferredValue)"))
         #expect(source.contains("image-editor-figma-property-read-only-\\(key)"))
         #expect(source.contains("image-editor-figma-property-diagnostic-\\(key)"))
+        #expect(source.contains("presentation: property.typePresentation"))
+        #expect(source.contains("private func figmaComponentPropertyTypeBadge("))
+        #expect(source.contains("image-editor-figma-property-type-\\(key)"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyType.rawHelp"))
+        #expect(source.contains("presentation.rawType"))
+        #expect(!source.contains("Text(property.type)"))
         #expect(!source.contains("} else if !property.preferredValues.isEmpty {"))
+
+        let badgeStart = try #require(
+            source.range(of: "private func figmaComponentPropertyTypeBadge(")
+        )
+        let badgeEnd = try #require(
+            source.range(of: "\n    private func figmaImageFillRow", range: badgeStart.upperBound..<source.endIndex)
+        )
+        let badgeSource = source[badgeStart.lowerBound..<badgeEnd.lowerBound]
+        #expect(badgeSource.contains("Capsule()"))
+        #expect(badgeSource.contains(".focusable(false)"))
+        #expect(!badgeSource.contains("Button"))
+        #expect(!badgeSource.contains("onTapGesture"))
+        #expect(!badgeSource.contains("Binding"))
+        #expect(!badgeSource.contains("viewModel"))
+        #expect(!badgeSource.contains("updateSelected"))
+        #expect(!badgeSource.contains("resetSelected"))
+        #expect(!badgeSource.lowercased().contains("search"))
+    }
+
+    @Test func componentPropertyTypePresentationLocalizesExactKnownTypesAndPreservesRawProtocolData() throws {
+        let cases: [(
+            property: XomoFigmaComponentProperty,
+            presentation: XomoFigmaComponentPropertyTypePresentation,
+            diagnosis: XomoFigmaComponentPropertyDiagnosis
+        )] = [
+            (
+                XomoFigmaComponentProperty(type: "TEXT", value: "Neutral"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.text",
+                    rawType: "TEXT"
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .text,
+                    writable: true,
+                    diagnostic: nil,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.boolean",
+                    rawType: "BOOLEAN"
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .boolean,
+                    writable: true,
+                    diagnostic: nil,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "VARIANT", value: "Neutral"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.variant",
+                    rawType: "VARIANT"
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .text,
+                    writable: true,
+                    diagnostic: .preferredValuesMissing,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "INSTANCE_SWAP", value: "Neutral"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.instanceSwap",
+                    rawType: "INSTANCE_SWAP"
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .text,
+                    writable: true,
+                    diagnostic: .preferredValuesMissing,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "text", value: "Neutral"),
+                .raw("text"),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: .unknownType,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: " Text ", value: "Neutral"),
+                .raw(" Text "),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: .unknownType,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "FUTURE_WIDGET", value: "Neutral"),
+                .raw("FUTURE_WIDGET"),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: .unknownType,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: "", value: "Neutral"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.unknown",
+                    rawType: ""
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: .unknownType,
+                    selectionKey: nil
+                )
+            ),
+            (
+                XomoFigmaComponentProperty(type: " \t\n ", value: "Neutral"),
+                .localized(
+                    key: "imageEditor.properties.figmaComponentPropertyType.unknown",
+                    rawType: " \t\n "
+                ),
+                XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: .unknownType,
+                    selectionKey: nil
+                )
+            )
+        ]
+
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        for testCase in cases {
+            #expect(testCase.property.typePresentation == testCase.presentation)
+            #expect(testCase.property.typePresentation.rawType == testCase.property.type)
+            #expect(testCase.property.diagnosis == testCase.diagnosis)
+            let restored = try decoder.decode(
+                XomoFigmaComponentProperty.self,
+                from: encoder.encode(testCase.property)
+            )
+            #expect(restored == testCase.property)
+            #expect(restored.typePresentation == testCase.presentation)
+            #expect(restored.diagnosis == testCase.diagnosis)
+        }
+
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-type-presentation.png", image: image)
+        var layer = document.layers[0]
+        layer.xomoFigmaComponentProperties = Dictionary(
+            uniqueKeysWithValues: cases.enumerated().map { index, testCase in
+                ("Property \(index)", testCase.property)
+            }
+        )
+        layer.xomoFigmaComponentPropertyDefaults = layer.xomoFigmaComponentProperties
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let historyBefore = viewModel.document.history
+
+        for excludedPresentationQuery in [
+            "TEXT",
+            "FUTURE_WIDGET",
+            "unknown_type",
+            "imageEditor.properties.figmaComponentPropertyType.text",
+            "Toggle",
+            "开关",
+            "切り替え"
+        ] {
+            #expect(
+                viewModel.selectedLayerFigmaComponentPropertyKeys(
+                    onlyOverrides: false,
+                    searchQuery: excludedPresentationQuery
+                ).isEmpty
+            )
+        }
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.undoStack.isEmpty)
+        #expect(viewModel.redoStack.isEmpty)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let localizationExpectations: [(
+            path: String,
+            entries: [(key: String, value: String)]
+        )] = [
+            (
+                "veilpic/en.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertyType.text", "Text"),
+                    ("imageEditor.properties.figmaComponentPropertyType.boolean", "Toggle"),
+                    ("imageEditor.properties.figmaComponentPropertyType.variant", "Variant"),
+                    ("imageEditor.properties.figmaComponentPropertyType.instanceSwap", "Instance swap"),
+                    ("imageEditor.properties.figmaComponentPropertyType.unknown", "Unknown type"),
+                    ("imageEditor.properties.figmaComponentPropertyType.rawHelp", "Figma raw type: %@")
+                ]
+            ),
+            (
+                "veilpic/zh-Hans.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertyType.text", "文本"),
+                    ("imageEditor.properties.figmaComponentPropertyType.boolean", "开关"),
+                    ("imageEditor.properties.figmaComponentPropertyType.variant", "变体"),
+                    ("imageEditor.properties.figmaComponentPropertyType.instanceSwap", "实例交换"),
+                    ("imageEditor.properties.figmaComponentPropertyType.unknown", "未知类型"),
+                    ("imageEditor.properties.figmaComponentPropertyType.rawHelp", "Figma 原始类型：%@")
+                ]
+            ),
+            (
+                "veilpic/ja.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertyType.text", "テキスト"),
+                    ("imageEditor.properties.figmaComponentPropertyType.boolean", "切り替え"),
+                    ("imageEditor.properties.figmaComponentPropertyType.variant", "バリアント"),
+                    ("imageEditor.properties.figmaComponentPropertyType.instanceSwap", "インスタンス入れ替え"),
+                    ("imageEditor.properties.figmaComponentPropertyType.unknown", "不明な型"),
+                    ("imageEditor.properties.figmaComponentPropertyType.rawHelp", "Figma 元の型：%@")
+                ]
+            )
+        ]
+        for expectation in localizationExpectations {
+            let localizationSource = try String(
+                contentsOf: repositoryRoot.appendingPathComponent(expectation.path),
+                encoding: .utf8
+            )
+            for entry in expectation.entries {
+                #expect(localizationSource.contains("\"\(entry.key)\" = \"\(entry.value)\";"))
+            }
+        }
     }
 
     @Test func resettingSingleComponentPropertyRestoresImportedObjectAtomically() throws {
