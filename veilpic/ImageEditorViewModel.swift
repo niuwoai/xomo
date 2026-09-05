@@ -2316,7 +2316,9 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         let textOverrideIndices: [Int]
-        if currentProperty.type == "TEXT", currentProperty.value != defaultProperty.value {
+        if currentProperty.type == "TEXT",
+           defaultProperty.type == "TEXT",
+           currentProperty.value != defaultProperty.value {
             let descendantIDs = document.layers[index].isGroup
                 ? groupDescendantIDs(for: document.layers[index].id)
                 : []
@@ -2382,7 +2384,10 @@ final class ImageEditorViewModel: ObservableObject {
             for (key, defaultProperty) in resetProperties {
                 let currentProperty = document.layers[index].xomoFigmaComponentProperties[key]
                 let textIndices: [Int]
-                if currentProperty?.type == "TEXT", let previousValue = currentProperty?.value {
+                if currentProperty?.type == "TEXT",
+                   defaultProperty.type == "TEXT",
+                   currentProperty?.value != defaultProperty.value,
+                   let previousValue = currentProperty?.value {
                     textIndices = document.layers.indices.filter { candidateIndex in
                         let candidate = document.layers[candidateIndex]
                         let belongsToSelectedComponent = candidateIndex == index

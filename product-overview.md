@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1620
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1621
+
+v2.12.0-rc1621 收紧 Figma 组件属性还原的文本绑定边界：只有当前属性与 imported default 都为 TEXT 且文案改变时才同步匹配后代；TEXT→VARIANT/BOOLEAN/INSTANCE_SWAP、非 TEXT→TEXT 和同值 metadata-only 还原只恢复完整属性对象，不再意外重建文本层。锁定、Custom、排序消费、Undo/Redo、History 和 Automation 路径不变。独立评审最终 PASS；Figma 24/24、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布契约通过；本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1620 为 Figma 组件属性补齐“粘贴覆盖值”：rc1619 的纯文本 JSON 保持兼容，同时由版本化私有 sidecar 携带源 imported defaults，只有 baseline 完整相同的实例才能恢复 type、value 与 preferredValues，包括 metadata-only 覆盖。载荷在写入前整单校验，多属性和匹配 TEXT 后代只产生一次 Undo/History；任何损坏、不兼容、Custom 或歧义输入都零项目副作用。Automation 新增 `pasteOverrides`。独立评审最终 PASS；Figma 22/22、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布契约通过。项目格式与 cursor 不变；本版不执行 Release 或 `/Applications` 覆盖。
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1621 - 2026-09-05
+
+### Fixed
+- Figma 组件属性单项和批量还原现在仅在当前值与导入默认都为 TEXT 且文案变化时同步文本后代，跨类型与同值 metadata-only 还原不再误写、重排或重命名文本层。
+- 属性对象仍完整恢复，锁定、Custom、排序消费、单次 Undo/History 与 Automation 共享路径保持不变。
+
+### Tests
+- 新增单项跨类型与批量四象限类型矩阵回归；独立评审最终 PASS，Figma provenance 24/24、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布/隔离测试器契约全部通过。
+
 ## 2.12.0-rc1620 - 2026-09-05
 
 ### Added

@@ -364,6 +364,199 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[2].textContent?.text == "Buy now")
     }
 
+    @Test func resettingSingleTextPropertyToVariantLeavesDescendantLayerUntouched() throws {
+        let image = NSImage.transparent(size: CGSize(width: 180, height: 80))
+        var document = ImageEditorDocument(sourceName: "figma-single-reset-type.png", image: image)
+        var component = ImageEditorLayer.group(name: "Button", size: image.size)
+        let current = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Buy now",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "buy", name: "Buy now")]
+        )
+        let imported = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Primary",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "primary", name: "Primary")]
+        )
+        component.xomoFigmaComponentProperties = ["Label": current]
+        component.xomoFigmaComponentPropertyDefaults = ["Label": imported]
+        var label = ImageEditorLayer.text(
+            name: "Buy now",
+            origin: CGPoint(x: 12, y: 12),
+            content: ImageEditorTextContent(
+                text: "Buy now",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        label.groupID = component.id
+        document.layers = [component, label]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let labelBefore = try encoder.encode(ImageEditorProjectLayer(layer: label))
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        viewModel.resetSelectedFigmaComponentProperty("Label")
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == imported)
+        #expect(try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[1])) == labelBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == current)
+        #expect(try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[1])) == labelBefore)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == imported)
+        #expect(try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[1])) == labelBefore)
+    }
+
+    @Test func resettingAllComponentPropertiesUsesTypeSafeTextPropagationMatrix() throws {
+        let image = NSImage.transparent(size: CGSize(width: 260, height: 160))
+        var document = ImageEditorDocument(sourceName: "figma-reset-type-matrix.png", image: image)
+        var component = ImageEditorLayer.group(name: "Card", size: image.size)
+        let textDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Imported text")
+        let variantDefault = XomoFigmaComponentProperty(type: "VARIANT", value: "Primary")
+        let fromVariantDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Imported variant label")
+        let metadataDefault = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Same text",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "imported", name: "Imported")]
+        )
+        let custom = XomoFigmaComponentProperty(type: "TEXT", value: "Custom stays")
+        component.xomoFigmaComponentProperties = [
+            "A Text to Text": XomoFigmaComponentProperty(type: "TEXT", value: "Local text"),
+            "B Text to Variant": XomoFigmaComponentProperty(type: "TEXT", value: "Local variant label"),
+            "C Variant to Text": XomoFigmaComponentProperty(type: "VARIANT", value: "Local variant"),
+            "D Same Text Metadata": XomoFigmaComponentProperty(
+                type: "TEXT",
+                value: "Same text",
+                preferredValues: [XomoFigmaComponentPreferredValue(key: "local", name: "Local")]
+            ),
+            "Custom": custom
+        ]
+        component.xomoFigmaComponentPropertyDefaults = [
+            "A Text to Text": textDefault,
+            "B Text to Variant": variantDefault,
+            "C Variant to Text": fromVariantDefault,
+            "D Same Text Metadata": metadataDefault
+        ]
+
+        func textLayer(_ text: String, y: CGFloat, locked: Bool = false) -> ImageEditorLayer {
+            var layer = ImageEditorLayer.text(
+                name: text,
+                origin: CGPoint(x: 12, y: y),
+                content: ImageEditorTextContent(
+                    text: text,
+                    color: .white,
+                    fontSize: 14,
+                    point: CGPoint(
+                        x: ImageEditorTextContent.drawingPadding,
+                        y: ImageEditorTextContent.drawingPadding
+                    )
+                )
+            )
+            layer.groupID = component.id
+            layer.locksPixels = locked
+            return layer
+        }
+
+        let editableText = textLayer("Local text", y: 8)
+        let lockedText = textLayer("Local text", y: 36, locked: true)
+        let textToVariant = textLayer("Local variant label", y: 64)
+        let variantToText = textLayer("Local variant", y: 92)
+        let metadataOnlyText = textLayer("Same text", y: 120)
+        document.layers = [
+            component,
+            editableText,
+            lockedText,
+            textToVariant,
+            variantToText,
+            metadataOnlyText
+        ]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let descendantSignaturesBefore = try viewModel.document.layers.dropFirst().map {
+            try encoder.encode(ImageEditorProjectLayer(layer: $0))
+        }
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties["A Text to Text"] == textDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["B Text to Variant"] == variantDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["C Variant to Text"] == fromVariantDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["D Same Text Metadata"] == metadataDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Custom"] == custom)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.layers[1].textContent?.text == "Imported text")
+        for index in 2..<viewModel.document.layers.count {
+            #expect(
+                try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[index]))
+                    == descendantSignaturesBefore[index - 1]
+            )
+        }
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        let descendantSignaturesAfter = try viewModel.document.layers.dropFirst().map {
+            try encoder.encode(ImageEditorProjectLayer(layer: $0))
+        }
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        for index in 1..<viewModel.document.layers.count {
+            #expect(
+                try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[index]))
+                    == descendantSignaturesBefore[index - 1]
+            )
+        }
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["A Text to Text"] == textDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["B Text to Variant"] == variantDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["C Variant to Text"] == fromVariantDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["D Same Text Metadata"] == metadataDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Custom"] == custom)
+        for index in 1..<viewModel.document.layers.count {
+            #expect(
+                try encoder.encode(ImageEditorProjectLayer(layer: viewModel.document.layers[index]))
+                    == descendantSignaturesAfter[index - 1]
+            )
+        }
+
+        let noOpProperties = viewModel.selectedLayerFigmaComponentProperties
+        let noOpDefaults = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let noOpDescendantSignatures = try viewModel.document.layers.dropFirst().map {
+            try encoder.encode(ImageEditorProjectLayer(layer: $0))
+        }
+        let noOpUndoCount = viewModel.undoStack.count
+        let noOpRedoCount = viewModel.redoStack.count
+        let noOpHistory = viewModel.document.history
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+        #expect(viewModel.selectedLayerFigmaComponentProperties == noOpProperties)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == noOpDefaults)
+        #expect(try viewModel.document.layers.dropFirst().map {
+            try encoder.encode(ImageEditorProjectLayer(layer: $0))
+        } == noOpDescendantSignatures)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.redoStack.count == noOpRedoCount)
+        #expect(viewModel.document.history == noOpHistory)
+    }
+
     @Test func componentPropertyEditingRejectsOwnAndAncestorContentLocksWithoutSideEffects() throws {
         enum LockCase: CaseIterable {
             case ownFull
