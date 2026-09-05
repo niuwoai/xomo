@@ -1493,6 +1493,184 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.redoStack.isEmpty)
     }
 
+    @Test func componentPropertyFilterResultReportsSharedCountsAndActivationWithoutSideEffects() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-component-filter-result.png", image: image)
+        var layer = document.layers[0]
+        let preferredValues = [
+            XomoFigmaComponentPreferredValue(key: "small", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "large", name: "Large")
+        ]
+        layer.xomoFigmaComponentProperties = [
+            "Shared Golf": XomoFigmaComponentProperty(type: "TEXT", value: "Current"),
+            "Shared Echo Focus": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "same", name: "First"),
+                    XomoFigmaComponentPreferredValue(key: "same", name: "Second")
+                ]
+            ),
+            "Shared Charlie": XomoFigmaComponentProperty(type: "BOOLEAN", value: "FOCUS"),
+            "Shared Alpha": XomoFigmaComponentProperty(type: "TEXT", value: "Healthy"),
+            "Shared Foxtrot": XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved"),
+            "Shared Delta": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Focus Legacy",
+                preferredValues: preferredValues
+            ),
+            "Shared Bravo Focus": XomoFigmaComponentProperty(type: "TEXT", value: "Override")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Shared Golf": layer.xomoFigmaComponentProperties["Shared Golf"]!,
+            "Shared Echo Focus": layer.xomoFigmaComponentProperties["Shared Echo Focus"]!,
+            "Shared Charlie": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Shared Alpha": layer.xomoFigmaComponentProperties["Shared Alpha"]!,
+            "Shared Foxtrot": layer.xomoFigmaComponentProperties["Shared Foxtrot"]!,
+            "Shared Delta": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Small",
+                preferredValues: preferredValues
+            ),
+            "Shared Bravo Focus": XomoFigmaComponentProperty(type: "TEXT", value: "Imported")
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let historyBefore = viewModel.document.history
+        let statusBefore = viewModel.statusText
+        let undoCountBefore = viewModel.undoStack.count
+        let redoCountBefore = viewModel.redoStack.count
+        let overrideCountBefore = viewModel.selectedLayerFigmaComponentPropertyOverrideCount
+        let diagnosticCountBefore = viewModel.selectedLayerFigmaComponentPropertyDiagnosticCount
+        let blockedCountBefore = viewModel.selectedLayerFigmaComponentPropertyBlockedCount
+        let allKeys = [
+            "Shared Alpha",
+            "Shared Bravo Focus",
+            "Shared Charlie",
+            "Shared Delta",
+            "Shared Echo Focus",
+            "Shared Foxtrot",
+            "Shared Golf"
+        ]
+
+        let inactiveResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false
+        )
+        #expect(
+            inactiveResult
+                == XomoFigmaComponentPropertyFilterResult(
+                    visibleKeys: allKeys,
+                    totalCount: 7,
+                    isActive: false
+                )
+        )
+        #expect(inactiveResult.visibleCount == 7)
+
+        let whitespaceResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false,
+            searchQuery: " \t\n "
+        )
+        #expect(whitespaceResult == inactiveResult)
+
+        let overrideResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: true
+        )
+        #expect(
+            overrideResult.visibleKeys
+                == ["Shared Bravo Focus", "Shared Charlie", "Shared Delta"]
+        )
+        #expect(overrideResult.visibleCount == 3)
+        #expect(overrideResult.totalCount == 7)
+        #expect(overrideResult.isActive)
+
+        let diagnosticResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false,
+            onlyDiagnostics: true
+        )
+        #expect(
+            diagnosticResult.visibleKeys
+                == ["Shared Charlie", "Shared Delta", "Shared Echo Focus", "Shared Foxtrot"]
+        )
+        #expect(diagnosticResult.visibleCount == 4)
+        #expect(diagnosticResult.totalCount == 7)
+        #expect(diagnosticResult.isActive)
+
+        let matchingAllResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false,
+            searchQuery: "  SHARED  "
+        )
+        #expect(matchingAllResult.visibleKeys == allKeys)
+        #expect(matchingAllResult.visibleCount == matchingAllResult.totalCount)
+        #expect(matchingAllResult.isActive)
+
+        let searchResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false,
+            searchQuery: "focus"
+        )
+        #expect(
+            searchResult.visibleKeys
+                == ["Shared Bravo Focus", "Shared Charlie", "Shared Delta", "Shared Echo Focus"]
+        )
+        #expect(searchResult.visibleCount == 4)
+        #expect(searchResult.totalCount == 7)
+        #expect(searchResult.isActive)
+
+        let combinedResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: true,
+            onlyDiagnostics: true,
+            searchQuery: "focus"
+        )
+        #expect(combinedResult.visibleKeys == ["Shared Charlie", "Shared Delta"])
+        #expect(combinedResult.visibleCount == 2)
+        #expect(combinedResult.totalCount == 7)
+        #expect(combinedResult.isActive)
+
+        let emptyResult = viewModel.selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: false,
+            searchQuery: "not present"
+        )
+        #expect(emptyResult.visibleKeys.isEmpty)
+        #expect(emptyResult.visibleCount == 0)
+        #expect(emptyResult.totalCount == 7)
+        #expect(emptyResult.isActive)
+
+        for (result, onlyOverrides, onlyDiagnostics, searchQuery) in [
+            (inactiveResult, false, false, ""),
+            (whitespaceResult, false, false, " \t\n "),
+            (overrideResult, true, false, ""),
+            (diagnosticResult, false, true, ""),
+            (matchingAllResult, false, false, "  SHARED  "),
+            (searchResult, false, false, "focus"),
+            (combinedResult, true, true, "focus"),
+            (emptyResult, false, false, "not present")
+        ] {
+            #expect(
+                viewModel.selectedLayerFigmaComponentPropertyKeys(
+                    onlyOverrides: onlyOverrides,
+                    onlyDiagnostics: onlyDiagnostics,
+                    searchQuery: searchQuery
+                ) == result.visibleKeys
+            )
+        }
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.statusText == statusBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+        #expect(viewModel.redoStack.count == redoCountBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == overrideCountBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDiagnosticCount == diagnosticCountBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyBlockedCount == blockedCountBefore)
+        #expect(viewModel.undoStack.isEmpty)
+        #expect(viewModel.redoStack.isEmpty)
+    }
+
     @Test func copyingComponentPropertyOverridesUsesAnExactBaselineDerivedSubsetAndNoOpsWhenEmpty() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-copy-overrides.png", image: image)
@@ -2137,13 +2315,15 @@ struct ImageEditorFigmaProvenanceTests {
         )
 
         #expect(source.contains("selectedLayerFigmaComponentPropertyOverrideCount"))
-        #expect(source.contains("selectedLayerFigmaComponentPropertyKeys"))
+        #expect(source.contains("selectedLayerFigmaComponentPropertyFilterResult"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverrideCount"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesOnly"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyHealthSummary"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyDiagnosticsOnly"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertySearchPlaceholder"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertySearchClear"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyFilterSummary"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyFiltersClear"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyFiltersEmpty"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyResetAll"))
         #expect(source.contains("image-editor-figma-component-override-summary"))
@@ -2152,6 +2332,8 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-figma-component-diagnostics-only"))
         #expect(source.contains("image-editor-figma-component-property-search"))
         #expect(source.contains("image-editor-figma-component-property-search-clear"))
+        #expect(source.contains("image-editor-figma-component-property-filter-summary"))
+        #expect(source.contains("image-editor-figma-component-property-filters-clear"))
         #expect(source.contains("image-editor-figma-component-property-filters-empty"))
         #expect(source.contains("image-editor-figma-component-reset-all"))
         #expect(source.contains("image-editor-copy-figma-component-property-overrides"))
@@ -2162,7 +2344,7 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("onlyDiagnostics: showsOnlyFigmaComponentPropertyDiagnostics"))
         #expect(source.contains("searchQuery: figmaComponentPropertySearchQuery"))
         #expect(source.contains("figmaComponentPropertySearchQuery = \"\""))
-        #expect(source.contains("figmaComponentPropertySearchQuery.trimmingCharacters("))
+        #expect(source.contains("if figmaComponentPropertyFilterResult.isActive {"))
 
         let searchFieldStart = try #require(
             source.range(
@@ -2187,6 +2369,59 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(clearSearchSource.contains("imageEditor.properties.figmaComponentPropertySearchClear"))
         #expect(clearSearchSource.contains("image-editor-figma-component-property-search-clear"))
         #expect(clearSearchSource.contains(".focusable(false)"))
+
+        let filterSummaryStart = try #require(
+            source.range(of: "if figmaComponentPropertyFilterResult.isActive {")
+        )
+        let filterSummaryTail = source[filterSummaryStart.lowerBound...]
+        let filterSummaryEnd = try #require(
+            filterSummaryTail.range(
+                of: "if figmaComponentPropertyFilterResult.visibleKeys.isEmpty,"
+            )
+        )
+        let filterSummarySource = String(filterSummaryTail[..<filterSummaryEnd.lowerBound])
+        #expect(filterSummarySource.contains("imageEditor.properties.figmaComponentPropertyFilterSummary"))
+        #expect(filterSummarySource.contains("figmaComponentPropertyFilterResult.visibleCount"))
+        #expect(filterSummarySource.contains("figmaComponentPropertyFilterResult.totalCount"))
+        #expect(filterSummarySource.contains("image-editor-figma-component-property-filter-summary"))
+
+        let clearFiltersStart = try #require(
+            filterSummarySource.range(
+                of: "Button(\n                                    L10n.text(\n                                        \"imageEditor.properties.figmaComponentPropertyFiltersClear\""
+            )
+        )
+        let clearFiltersTail = filterSummarySource[clearFiltersStart.lowerBound...]
+        let clearFiltersEnd = try #require(clearFiltersTail.range(of: ".buttonStyle("))
+        let clearFiltersSource = String(clearFiltersTail[..<clearFiltersEnd.lowerBound])
+        #expect(clearFiltersSource.contains("showsOnlyFigmaComponentPropertyOverrides = false"))
+        #expect(clearFiltersSource.contains("showsOnlyFigmaComponentPropertyDiagnostics = false"))
+        #expect(clearFiltersSource.contains("figmaComponentPropertySearchQuery = \"\""))
+        #expect(!clearFiltersSource.contains("viewModel."))
+        #expect(filterSummarySource.contains("image-editor-figma-component-property-filters-clear"))
+        #expect(filterSummarySource.contains(".focusable(false)"))
+
+        let filteredEmptyStateStart = try #require(
+            source.range(
+                of: "if figmaComponentPropertyFilterResult.visibleKeys.isEmpty,\n                           figmaComponentPropertyFilterResult.isActive {"
+            )
+        )
+        let filteredEmptyStateTail = source[filteredEmptyStateStart.lowerBound...]
+        let filteredEmptyStateEnd = try #require(
+            filteredEmptyStateTail.range(
+                of: "ForEach(figmaComponentPropertyFilterResult.visibleKeys, id: \\.self)"
+            )
+        )
+        let filteredEmptyStateSource = String(
+            filteredEmptyStateTail[..<filteredEmptyStateEnd.lowerBound]
+        )
+        #expect(filteredEmptyStateSource.contains("figmaComponentPropertyFilterResult.visibleKeys.isEmpty"))
+        #expect(filteredEmptyStateSource.contains("figmaComponentPropertyFilterResult.isActive"))
+        #expect(filteredEmptyStateSource.contains("imageEditor.properties.figmaComponentPropertyFiltersEmpty"))
+        #expect(filteredEmptyStateSource.contains("image-editor-figma-component-property-filters-empty"))
+        #expect(
+            source.contains("ForEach(figmaComponentPropertyFilterResult.visibleKeys, id: \\.self)")
+        )
+
         let pasteOverridesStart = try #require(
             source.range(
                 of: "Button(L10n.text(\"imageEditor.action.pasteFigmaComponentPropertyOverrides\"))"
@@ -2284,6 +2519,8 @@ struct ImageEditorFigmaProvenanceTests {
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyDiagnosticsOnly\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertySearchPlaceholder\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertySearchClear\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyFilterSummary\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyFiltersClear\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyFiltersEmpty\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyResetAll\""))
             #expect(localization.contains("\"imageEditor.action.copyFigmaComponentPropertyOverrides\""))

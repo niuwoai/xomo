@@ -3924,6 +3924,8 @@
 "imageEditor.properties.figmaComponentPropertyDiagnosticsOnly" = "Show issues only";
 "imageEditor.properties.figmaComponentPropertySearchPlaceholder" = "Search properties";
 "imageEditor.properties.figmaComponentPropertySearchClear" = "Clear property search";
+"imageEditor.properties.figmaComponentPropertyFilterSummary" = "Showing %d of %d properties";
+"imageEditor.properties.figmaComponentPropertyFiltersClear" = "Clear filters";
 "imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "No properties match the active filters";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";

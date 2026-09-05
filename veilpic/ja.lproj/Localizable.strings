@@ -3924,6 +3924,8 @@
 "imageEditor.properties.figmaComponentPropertyDiagnosticsOnly" = "問題のみ表示";
 "imageEditor.properties.figmaComponentPropertySearchPlaceholder" = "コンポーネントプロパティを検索";
 "imageEditor.properties.figmaComponentPropertySearchClear" = "プロパティ検索をクリア";
+"imageEditor.properties.figmaComponentPropertyFilterSummary" = "%d / %d 件のプロパティを表示";
+"imageEditor.properties.figmaComponentPropertyFiltersClear" = "フィルターをクリア";
 "imageEditor.properties.figmaComponentPropertyFiltersEmpty" = "現在のフィルターに一致するプロパティはありません";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";

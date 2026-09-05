@@ -31,3 +31,4 @@
 | `versions/2.12.0-rc1624/INDEX.md` | 2.12.0-rc1624 | Goal Lead | complete | Figma 组件属性共享诊断与安全展示文档索引 |
 | `versions/2.12.0-rc1625/INDEX.md` | 2.12.0-rc1625 | Goal Lead | complete | Figma 组件属性健康汇总与问题筛选文档索引 |
 | `versions/2.12.0-rc1626/INDEX.md` | 2.12.0-rc1626 | Goal Lead | complete | Figma 组件属性本地搜索文档索引 |
+| `versions/2.12.0-rc1627/INDEX.md` | 2.12.0-rc1627 | Goal Lead | complete | Figma 组件属性筛选状态反馈与清除文档索引 |

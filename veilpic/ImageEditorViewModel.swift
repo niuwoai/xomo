@@ -24,6 +24,16 @@ enum XomoFigmaComponentPropertyUpdateResult: Equatable {
     case notFound
 }
 
+struct XomoFigmaComponentPropertyFilterResult: Equatable {
+    let visibleKeys: [String]
+    let totalCount: Int
+    let isActive: Bool
+
+    var visibleCount: Int {
+        visibleKeys.count
+    }
+}
+
 enum ImageEditorColorSampleTarget: Equatable {
     case foreground
     case background
@@ -2256,8 +2266,21 @@ final class ImageEditorViewModel: ObservableObject {
         onlyDiagnostics: Bool = false,
         searchQuery: String = ""
     ) -> [String] {
+        selectedLayerFigmaComponentPropertyFilterResult(
+            onlyOverrides: onlyOverrides,
+            onlyDiagnostics: onlyDiagnostics,
+            searchQuery: searchQuery
+        ).visibleKeys
+    }
+
+    func selectedLayerFigmaComponentPropertyFilterResult(
+        onlyOverrides: Bool,
+        onlyDiagnostics: Bool = false,
+        searchQuery: String = ""
+    ) -> XomoFigmaComponentPropertyFilterResult {
         let normalizedQuery = normalizedFigmaComponentPropertySearchText(searchQuery)
-        return selectedLayerFigmaComponentProperties.compactMap { key, property in
+        let properties = selectedLayerFigmaComponentProperties
+        let visibleKeys: [String] = properties.compactMap { key, property in
             if onlyOverrides,
                !hasSelectedFigmaComponentPropertyOverride(key, property: property) {
                 return nil
@@ -2273,6 +2296,11 @@ final class ImageEditorViewModel: ObservableObject {
             return key
         }
         .sorted()
+        return XomoFigmaComponentPropertyFilterResult(
+            visibleKeys: visibleKeys,
+            totalCount: properties.count,
+            isActive: onlyOverrides || onlyDiagnostics || !normalizedQuery.isEmpty
+        )
     }
 
     private func normalizedFigmaComponentPropertySearchText(_ value: String) -> String {

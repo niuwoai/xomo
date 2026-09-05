@@ -13206,25 +13206,54 @@ struct ImageEditorView: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
-                        let visibleFigmaComponentPropertyKeys = viewModel
-                            .selectedLayerFigmaComponentPropertyKeys(
+                        let figmaComponentPropertyFilterResult = viewModel
+                            .selectedLayerFigmaComponentPropertyFilterResult(
                                 onlyOverrides: showsOnlyFigmaComponentPropertyOverrides,
                                 onlyDiagnostics: showsOnlyFigmaComponentPropertyDiagnostics,
                                 searchQuery: figmaComponentPropertySearchQuery
                             )
-                        if visibleFigmaComponentPropertyKeys.isEmpty,
-                           showsOnlyFigmaComponentPropertyOverrides
-                            || showsOnlyFigmaComponentPropertyDiagnostics
-                            || !figmaComponentPropertySearchQuery.trimmingCharacters(
-                                in: .whitespacesAndNewlines
-                            ).isEmpty {
+
+                        if figmaComponentPropertyFilterResult.isActive {
+                            HStack(spacing: 8) {
+                                Text(
+                                    L10n.format(
+                                        "imageEditor.properties.figmaComponentPropertyFilterSummary",
+                                        figmaComponentPropertyFilterResult.visibleCount,
+                                        figmaComponentPropertyFilterResult.totalCount
+                                    )
+                                )
+                                .font(.system(size: 10))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .accessibilityIdentifier(
+                                    "image-editor-figma-component-property-filter-summary"
+                                )
+                                Spacer(minLength: 4)
+                                Button(
+                                    L10n.text(
+                                        "imageEditor.properties.figmaComponentPropertyFiltersClear"
+                                    )
+                                ) {
+                                    showsOnlyFigmaComponentPropertyOverrides = false
+                                    showsOnlyFigmaComponentPropertyDiagnostics = false
+                                    figmaComponentPropertySearchQuery = ""
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                .focusable(false)
+                                .accessibilityIdentifier(
+                                    "image-editor-figma-component-property-filters-clear"
+                                )
+                            }
+                        }
+
+                        if figmaComponentPropertyFilterResult.visibleKeys.isEmpty,
+                           figmaComponentPropertyFilterResult.isActive {
                             Text(L10n.text("imageEditor.properties.figmaComponentPropertyFiltersEmpty"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                                 .accessibilityIdentifier("image-editor-figma-component-property-filters-empty")
                         }
 
-                        ForEach(visibleFigmaComponentPropertyKeys, id: \.self) { key in
+                        ForEach(figmaComponentPropertyFilterResult.visibleKeys, id: \.self) { key in
                             if let property = viewModel.selectedLayerFigmaComponentProperties[key] {
                                 figmaComponentPropertyEditor(key: key, property: property)
                             }
