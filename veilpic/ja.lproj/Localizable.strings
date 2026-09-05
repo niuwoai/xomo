@@ -3909,6 +3909,7 @@
 "imageEditor.properties.figmaComponentProperties" = "Figma コンポーネントプロパティ";
 "imageEditor.action.copyFigmaComponentProperties" = "コンポーネントプロパティをコピー";
 "imageEditor.action.copyFigmaComponentPropertyOverrides" = "上書きをコピー";
+"imageEditor.action.pasteFigmaComponentPropertyOverrides" = "上書きをペースト";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma コンポーネントプロパティをコピーしました";
 "imageEditor.status.figmaComponentPropertyOverridesCopied" = "Figma コンポーネントプロパティの上書きをコピーしました";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Figma コンポーネントプロパティのコピーに失敗しました";
@@ -3923,6 +3924,11 @@
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Figma コンポーネントプロパティの上書きをすべてリセット";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Figma コンポーネントプロパティの上書きを %d 件リセットしました";
+"imageEditor.history.figmaComponentPropertyOverridesPasted" = "Figma コンポーネントプロパティの上書きを %d 件ペースト";
+"imageEditor.status.figmaComponentPropertyOverridesPasted" = "Figma コンポーネントプロパティの上書きを %d 件ペーストしました";
+"imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges" = "コンポーネントプロパティの上書きはすでに一致しています";
+"imageEditor.status.figmaComponentPropertyOverridesPasteInvalid" = "クリップボードに有効なコンポーネントプロパティの上書きがありません";
+"imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible" = "コンポーネントプロパティの上書きは選択中のコンポーネントと互換性がありません";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧形式リンク）";
 "xomo.figma.resource.prototype" = "Figma プロトタイプ";

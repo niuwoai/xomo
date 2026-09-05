@@ -52,6 +52,31 @@ struct XomoFigmaComponentProperty: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+struct XomoFigmaComponentPropertyOverridesPasteboardPayload: Codable, Equatable, Sendable {
+    static let currentVersion = 1
+    static let pasteboardType = "im.some.xomo.figma-component-property-overrides.v1"
+
+    var version: Int
+    var overrides: [String: XomoFigmaComponentProperty]
+    var importedDefaults: [String: XomoFigmaComponentProperty]
+
+    init(
+        version: Int = currentVersion,
+        overrides: [String: XomoFigmaComponentProperty],
+        importedDefaults: [String: XomoFigmaComponentProperty]
+    ) {
+        self.version = version
+        self.overrides = overrides
+        self.importedDefaults = importedDefaults
+    }
+}
+
+enum XomoFigmaComponentPropertyOverridesPasteError: Error, Equatable {
+    case invalidPayload
+    case incompatiblePayload
+    case locked
+}
+
 enum XomoFigmaNodeMappingFidelity: String, CaseIterable, Sendable {
     case exact
     case partial

@@ -71,7 +71,7 @@ enum XomoToolCatalog {
                     "properties": [
                         "action": [
                             "type": "string",
-                            "enum": ["list", "copyOverrides", "set", "reset", "resetAll"]
+                            "enum": ["list", "copyOverrides", "pasteOverrides", "set", "reset", "resetAll"]
                         ],
                         "key": ["type": "string"],
                         "value": ["type": "string"]

@@ -13062,6 +13062,14 @@ struct ImageEditorView: View {
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             Spacer(minLength: 4)
+                            Button(L10n.text("imageEditor.action.pasteFigmaComponentPropertyOverrides")) {
+                                viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-paste-figma-component-property-overrides")
+                            .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
+
                             Button(L10n.text("imageEditor.action.copyFigmaComponentProperties")) {
                                 viewModel.copySelectedFigmaComponentProperties()
                             }

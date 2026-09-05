@@ -3909,6 +3909,7 @@
 "imageEditor.properties.figmaComponentProperties" = "Figma 组件属性";
 "imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
 "imageEditor.action.copyFigmaComponentPropertyOverrides" = "复制覆盖值";
+"imageEditor.action.pasteFigmaComponentPropertyOverrides" = "粘贴覆盖值";
 "imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";
 "imageEditor.status.figmaComponentPropertyOverridesCopied" = "已复制 Figma 组件属性覆盖值";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "复制 Figma 组件属性失败";
@@ -3923,6 +3924,11 @@
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "还原全部 Figma 组件属性覆盖";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "已还原 %d 个 Figma 组件属性覆盖";
+"imageEditor.history.figmaComponentPropertyOverridesPasted" = "粘贴 %d 个 Figma 组件属性覆盖值";
+"imageEditor.status.figmaComponentPropertyOverridesPasted" = "已粘贴 %d 个 Figma 组件属性覆盖值";
+"imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges" = "组件属性覆盖值已经一致";
+"imageEditor.status.figmaComponentPropertyOverridesPasteInvalid" = "剪贴板中没有有效的组件属性覆盖值";
+"imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible" = "组件属性覆盖值与当前组件不兼容";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧版链接）";
 "xomo.figma.resource.prototype" = "Figma 原型";

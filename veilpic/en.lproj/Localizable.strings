@@ -3909,6 +3909,7 @@
 "imageEditor.properties.figmaComponentProperties" = "Figma component properties";
 "imageEditor.action.copyFigmaComponentProperties" = "Copy component properties";
 "imageEditor.action.copyFigmaComponentPropertyOverrides" = "Copy overrides";
+"imageEditor.action.pasteFigmaComponentPropertyOverrides" = "Paste overrides";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma component properties copied";
 "imageEditor.status.figmaComponentPropertyOverridesCopied" = "Figma component property overrides copied";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Failed to copy Figma component properties";
@@ -3923,6 +3924,11 @@
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Reset all Figma component property overrides";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Reset %d Figma component property overrides";
+"imageEditor.history.figmaComponentPropertyOverridesPasted" = "Pasted %d Figma component property overrides";
+"imageEditor.status.figmaComponentPropertyOverridesPasted" = "Pasted %d Figma component property overrides";
+"imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges" = "Component property overrides already match";
+"imageEditor.status.figmaComponentPropertyOverridesPasteInvalid" = "Clipboard does not contain valid component property overrides";
+"imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible" = "Component property overrides do not match the selected component";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

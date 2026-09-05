@@ -440,7 +440,7 @@ struct XomoAutomationTests {
         #expect(
             componentPropertiesTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["action"]?.objectValue?["enum"] == .array([
-                    .string("list"), .string("copyOverrides"), .string("set"),
+                    .string("list"), .string("copyOverrides"), .string("pasteOverrides"), .string("set"),
                     .string("reset"), .string("resetAll")
                 ])
         )
@@ -4719,6 +4719,36 @@ struct XomoAutomationTests {
                 == L10n.text("imageEditor.status.figmaComponentPropertyOverridesCopied")
         )
 
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Label"] = importedLabel
+        let pasted = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("pasteOverrides")]
+        ))
+        try expectSnapshot(
+            pasted,
+            label: metadataOnlyOverride,
+            enabled: importedEnabled,
+            overrideCount: 1
+        )
+        #expect(pasted.result?.objectValue?["appliedCount"] == .number(1))
+
+        let sidecarType = NSPasteboard.PasteboardType(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+        )
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString("{\"Label\":{\"type\":\"TEXT\",\"value\":\"raw\"}}", forType: .string)
+        NSPasteboard.general.setData(Data("broken-sidecar".utf8), forType: sidecarType)
+        let malformedPaste = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("pasteOverrides")]
+        ))
+        #expect(!malformedPaste.ok)
+        #expect(malformedPaste.error?.contains("valid Figma component property overrides") == true)
+
+        #expect(viewModel.copySelectedFigmaComponentPropertyOverrides())
+
         let set = registry.execute(request(
             operation: "call",
             name: "xomo.figma.component_properties",
@@ -4927,6 +4957,9 @@ struct XomoAutomationTests {
             ],
             [
                 "action": XomoJSONValue.string("resetAll")
+            ],
+            [
+                "action": XomoJSONValue.string("pasteOverrides")
             ]
         ] {
             let response = registry.execute(request(

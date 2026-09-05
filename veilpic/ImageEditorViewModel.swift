@@ -2671,7 +2671,8 @@ final class ImageEditorViewModel: ObservableObject {
         guard hasSelectedLayerFigmaComponentProperties else { return }
         copyFigmaComponentProperties(
             selectedLayerFigmaComponentProperties,
-            successStatusKey: "imageEditor.status.figmaComponentPropertiesCopied"
+            successStatusKey: "imageEditor.status.figmaComponentPropertiesCopied",
+            sidecar: nil
         )
     }
 
@@ -2684,24 +2685,215 @@ final class ImageEditorViewModel: ObservableObject {
             }
         )
         guard !overrides.isEmpty else { return false }
+        let defaults = selectedLayerFigmaComponentPropertyDefaults
+        let importedDefaults = Dictionary(uniqueKeysWithValues: overrides.keys.compactMap { key in
+            defaults[key].map { (key, $0) }
+        })
+        guard importedDefaults.count == overrides.count else { return false }
         return copyFigmaComponentProperties(
             overrides,
-            successStatusKey: "imageEditor.status.figmaComponentPropertyOverridesCopied"
+            successStatusKey: "imageEditor.status.figmaComponentPropertyOverridesCopied",
+            sidecar: XomoFigmaComponentPropertyOverridesPasteboardPayload(
+                overrides: overrides,
+                importedDefaults: importedDefaults
+            )
         )
+    }
+
+    @discardableResult
+    func pasteSelectedFigmaComponentPropertyOverrides(
+        from pasteboard: NSPasteboard = .general
+    )
+        -> Result<Int, XomoFigmaComponentPropertyOverridesPasteError> {
+        guard let index = document.selectedLayerIndex,
+              !document.layers[index].xomoFigmaComponentProperties.isEmpty
+        else {
+            statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteInvalid")
+            return .failure(.invalidPayload)
+        }
+        guard canEditSelectedFigmaComponentProperties else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return .failure(.locked)
+        }
+
+        let sidecarType = NSPasteboard.PasteboardType(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+        )
+        let properties: [String: XomoFigmaComponentProperty]
+        let sourceDefaults: [String: XomoFigmaComponentProperty]?
+        if pasteboard.types?.contains(sidecarType) == true {
+            guard let data = pasteboard.data(forType: sidecarType),
+                  let payload = try? JSONDecoder().decode(
+                    XomoFigmaComponentPropertyOverridesPasteboardPayload.self,
+                    from: data
+                  ),
+                  payload.version == XomoFigmaComponentPropertyOverridesPasteboardPayload.currentVersion,
+                  !payload.overrides.isEmpty,
+                  Set(payload.overrides.keys) == Set(payload.importedDefaults.keys)
+            else {
+                statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteInvalid")
+                return .failure(.invalidPayload)
+            }
+            properties = payload.overrides
+            sourceDefaults = payload.importedDefaults
+        } else {
+            guard let data = pasteboard.data(forType: .string),
+                  let decoded = try? JSONDecoder().decode(
+                    [String: XomoFigmaComponentProperty].self,
+                    from: data
+                  ),
+                  !decoded.isEmpty
+            else {
+                statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteInvalid")
+                return .failure(.invalidPayload)
+            }
+            properties = decoded
+            sourceDefaults = nil
+        }
+
+        let selectedLayer = document.layers[index]
+        for (key, property) in properties {
+            guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  isValidFigmaComponentProperty(property),
+                  selectedLayer.xomoFigmaComponentProperties[key] != nil,
+                  let targetDefault = selectedLayer.xomoFigmaComponentPropertyDefaults[key]
+            else {
+                statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible")
+                return .failure(.incompatiblePayload)
+            }
+            if let sourceDefaults {
+                guard let sourceDefault = sourceDefaults[key],
+                      isValidFigmaComponentProperty(sourceDefault),
+                      sourceDefault == targetDefault
+                else {
+                    statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible")
+                    return .failure(.incompatiblePayload)
+                }
+            } else {
+                guard property.type == targetDefault.type,
+                      property.preferredValues == targetDefault.preferredValues
+                else {
+                    statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible")
+                    return .failure(.incompatiblePayload)
+                }
+            }
+        }
+
+        let changedProperties = properties.filter { key, property in
+            selectedLayer.xomoFigmaComponentProperties[key] != property
+        }
+        guard !changedProperties.isEmpty else {
+            statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges")
+            return .success(0)
+        }
+
+        var textReplacements: [String: String] = [:]
+        for (key, property) in changedProperties {
+            guard let current = selectedLayer.xomoFigmaComponentProperties[key],
+                  current.type == "TEXT",
+                  property.type == "TEXT",
+                  current.value != property.value
+            else { continue }
+            if let existing = textReplacements[current.value], existing != property.value {
+                statusText = L10n.text("imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible")
+                return .failure(.incompatiblePayload)
+            }
+            textReplacements[current.value] = property.value
+        }
+
+        let descendantIDs = selectedLayer.isGroup
+            ? groupDescendantIDs(for: selectedLayer.id)
+            : []
+        let textUpdates: [(index: Int, value: String)] = document.layers.indices.compactMap {
+            candidateIndex in
+            let candidate = document.layers[candidateIndex]
+            let belongsToSelectedComponent = candidateIndex == index
+                || descendantIDs.contains(candidate.id)
+            guard belongsToSelectedComponent,
+                  candidate.isText,
+                  !document.isEffectivelyPixelsLocked(candidate),
+                  let previousValue = candidate.textContent?.text,
+                  let replacement = textReplacements[previousValue]
+            else { return nil }
+            return (candidateIndex, replacement)
+        }
+
+        pushUndo()
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            for (key, property) in changedProperties {
+                document.layers[index].xomoFigmaComponentProperties[key] = property
+            }
+            for update in textUpdates {
+                guard var content = document.layers[update.index].textContent else { continue }
+                content.text = update.value
+                let layerSize = content.layerSize()
+                if let mask = document.layers[update.index].mask, mask.size != layerSize {
+                    document.layers[update.index].mask = mask.resized(to: layerSize)
+                }
+                document.layers[update.index].image = NSImage.transparent(size: layerSize)
+                document.layers[update.index].frame.size = layerSize
+                document.layers[update.index].kind = .text(content)
+                document.layers[update.index].name = L10n.format(
+                    "imageEditor.layer.textName",
+                    textLayerNameFragment(content.text)
+                )
+            }
+        }
+        appendHistory(L10n.format(
+            "imageEditor.history.figmaComponentPropertyOverridesPasted",
+            changedProperties.count
+        ))
+        statusText = L10n.format(
+            "imageEditor.status.figmaComponentPropertyOverridesPasted",
+            changedProperties.count
+        )
+        return .success(changedProperties.count)
+    }
+
+    private func isValidFigmaComponentProperty(_ property: XomoFigmaComponentProperty) -> Bool {
+        let supportedTypes = Set(["TEXT", "BOOLEAN", "VARIANT", "INSTANCE_SWAP"])
+        guard supportedTypes.contains(property.type) else { return false }
+        var preferredValueKeys: Set<String> = []
+        for preferredValue in property.preferredValues {
+            guard !preferredValue.key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !preferredValue.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  preferredValueKeys.insert(preferredValue.key).inserted
+            else { return false }
+        }
+        switch property.type {
+        case "TEXT":
+            return true
+        case "BOOLEAN":
+            return property.value == "true" || property.value == "false"
+        case "VARIANT", "INSTANCE_SWAP":
+            return !property.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        default:
+            return false
+        }
     }
 
     @discardableResult
     private func copyFigmaComponentProperties(
         _ properties: [String: XomoFigmaComponentProperty],
-        successStatusKey: String
+        successStatusKey: String,
+        sidecar: XomoFigmaComponentPropertyOverridesPasteboardPayload?
     ) -> Bool {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         do {
             let data = try encoder.encode(properties)
             guard let value = String(data: data, encoding: .utf8) else { return false }
+            let item = NSPasteboardItem()
+            guard item.setString(value, forType: .string) else { return false }
+            if let sidecar {
+                let sidecarData = try encoder.encode(sidecar)
+                let sidecarType = NSPasteboard.PasteboardType(
+                    XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+                )
+                guard item.setData(sidecarData, forType: sidecarType) else { return false }
+            }
             NSPasteboard.general.clearContents()
-            guard NSPasteboard.general.setString(value, forType: .string) else {
+            guard NSPasteboard.general.writeObjects([item]) else {
                 statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopyFailed")
                 return false
             }

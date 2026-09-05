@@ -91,7 +91,7 @@ struct XomoMCPServerTests {
             componentProperties["action"] as? [String: Any]
         )
         #expect(componentPropertiesAction["enum"] as? [String] == [
-            "list", "copyOverrides", "set", "reset", "resetAll"
+            "list", "copyOverrides", "pasteOverrides", "set", "reset", "resetAll"
         ])
         #expect((componentProperties["key"] as? [String: Any])?["type"] as? String == "string")
         #expect((componentProperties["value"] as? [String: Any])?["type"] as? String == "string")

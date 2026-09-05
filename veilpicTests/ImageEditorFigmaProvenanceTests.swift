@@ -647,6 +647,17 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(overrides["Size"]?.preferredValues == metadataOnlySize.preferredValues)
         #expect(overrides["Enabled"]?.value == "false")
         #expect(overrides["Custom"] == nil)
+        let sidecarType = NSPasteboard.PasteboardType(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+        )
+        let sidecarData = try #require(NSPasteboard.general.data(forType: sidecarType))
+        let sidecar = try JSONDecoder().decode(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.self,
+            from: sidecarData
+        )
+        #expect(sidecar.version == XomoFigmaComponentPropertyOverridesPasteboardPayload.currentVersion)
+        #expect(sidecar.overrides == expectedOverrides)
+        #expect(Set(sidecar.importedDefaults.keys) == Set(expectedOverrides.keys))
         #expect(
             viewModel.statusText
                 == L10n.text("imageEditor.status.figmaComponentPropertyOverridesCopied")
@@ -669,6 +680,402 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(pasteboard.changeCount == changeCountBefore)
         #expect(pasteboard.string(forType: .string) == "copy-overrides-sentinel")
         #expect(viewModel.statusText == "copy-overrides-status-sentinel")
+    }
+
+    @Test func pastingComponentPropertyOverridesIsCrossInstanceAtomicAndSchemaSafe() throws {
+        let image = NSImage.transparent(size: CGSize(width: 240, height: 100))
+        let labelDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        let modeDefault = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Continue",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "base", name: "Base")]
+        )
+        let metadataOnlyMode = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Continue",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "local", name: "Local")]
+        )
+
+        var sourceDocument = ImageEditorDocument(sourceName: "figma-source.png", image: image)
+        var source = ImageEditorLayer.group(name: "Source", size: image.size)
+        source.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now"),
+            "Mode": metadataOnlyMode
+        ]
+        source.xomoFigmaComponentPropertyDefaults = ["Label": labelDefault, "Mode": modeDefault]
+        sourceDocument.layers = [source]
+        sourceDocument.selectedLayerID = source.id
+        sourceDocument.selectedLayerIDs = [source.id]
+        let sourceViewModel = ImageEditorViewModel(document: sourceDocument) { _ in }
+        #expect(sourceViewModel.copySelectedFigmaComponentPropertyOverrides())
+
+        var targetDocument = ImageEditorDocument(sourceName: "figma-target.png", image: image)
+        var target = ImageEditorLayer.group(name: "Target", size: image.size)
+        target.xomoFigmaComponentProperties = ["Label": labelDefault, "Mode": modeDefault]
+        target.xomoFigmaComponentPropertyDefaults = ["Label": labelDefault, "Mode": modeDefault]
+        var label = ImageEditorLayer.text(
+            name: "Continue",
+            origin: .zero,
+            content: ImageEditorTextContent(
+                text: "Continue",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        label.groupID = target.id
+        targetDocument.layers = [target, label]
+        targetDocument.selectedLayerID = target.id
+        targetDocument.selectedLayerIDs = [target.id]
+        let viewModel = ImageEditorViewModel(document: targetDocument) { _ in }
+        let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        let pasted = viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .success(let pastedCount) = pasted else {
+            Issue.record("Expected compatible cross-instance overrides to paste")
+            return
+        }
+        #expect(pastedCount == 2)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Mode"] == metadataOnlyMode)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == labelDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Mode"] == modeDefault)
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Mode"] == metadataOnlyMode)
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+
+        let noOpUndoCount = viewModel.undoStack.count
+        let noOpHistory = viewModel.document.history
+        let noOpPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .success(let noOpCount) = noOpPaste else {
+            Issue.record("Expected an identical override paste to succeed")
+            return
+        }
+        #expect(noOpCount == 0)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.document.history == noOpHistory)
+
+        let incompatiblePayload = XomoFigmaComponentPropertyOverridesPasteboardPayload(
+            overrides: [
+                "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Rejected"),
+                "Mode": metadataOnlyMode
+            ],
+            importedDefaults: [
+                "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Different baseline"),
+                "Mode": modeDefault
+            ]
+        )
+        let encoder = JSONEncoder()
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("im.some.xomo.tests.figma-component-overrides.atomic")
+        )
+        let sidecarType = NSPasteboard.PasteboardType(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+        )
+        pasteboard.clearContents()
+        pasteboard.setData(try encoder.encode(incompatiblePayload), forType: sidecarType)
+        let propertiesBeforeFailure = viewModel.selectedLayerFigmaComponentProperties
+        let failureUndoCount = viewModel.undoStack.count
+        let failureRedoCount = viewModel.redoStack.count
+        let failureHistory = viewModel.document.history
+        let incompatiblePaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides(
+            from: pasteboard
+        )
+        guard case .failure(let incompatibleError) = incompatiblePaste else {
+            Issue.record("Expected the incompatible override batch to be rejected")
+            return
+        }
+        #expect(incompatibleError == .incompatiblePayload)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBeforeFailure)
+        #expect(viewModel.undoStack.count == failureUndoCount)
+        #expect(viewModel.redoStack.count == failureRedoCount)
+        #expect(viewModel.document.history == failureHistory)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+
+        let invalidBooleanPayload = XomoFigmaComponentPropertyOverridesPasteboardPayload(
+            overrides: [
+                "Label": XomoFigmaComponentProperty(type: "BOOLEAN", value: "yes"),
+                "Mode": metadataOnlyMode
+            ],
+            importedDefaults: ["Label": labelDefault, "Mode": modeDefault]
+        )
+        pasteboard.clearContents()
+        pasteboard.setData(try encoder.encode(invalidBooleanPayload), forType: sidecarType)
+        let invalidBooleanPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides(
+            from: pasteboard
+        )
+        guard case .failure(let invalidBooleanError) = invalidBooleanPaste else {
+            Issue.record("Expected an invalid BOOLEAN override batch to be rejected")
+            return
+        }
+        #expect(invalidBooleanError == .incompatiblePayload)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBeforeFailure)
+        #expect(viewModel.undoStack.count == failureUndoCount)
+        #expect(viewModel.redoStack.count == failureRedoCount)
+        #expect(viewModel.document.history == failureHistory)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+
+        let validPayload = XomoFigmaComponentPropertyOverridesPasteboardPayload(
+            overrides: ["Label": XomoFigmaComponentProperty(type: "TEXT", value: "Checkout")],
+            importedDefaults: ["Label": labelDefault]
+        )
+        pasteboard.clearContents()
+        pasteboard.setData(try encoder.encode(validPayload), forType: sidecarType)
+        viewModel.document.layers[0].locksPixels = true
+        let lockedPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides(from: pasteboard)
+        guard case .failure(let lockedError) = lockedPaste else {
+            Issue.record("Expected a pixel-locked component to reject paste")
+            return
+        }
+        #expect(lockedError == .locked)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBeforeFailure)
+    }
+
+    @Test func rawComponentPropertyOverridePasteRequiresImportedSchemaMetadata() throws {
+        let image = NSImage.transparent(size: CGSize(width: 80, height: 40))
+        var document = ImageEditorDocument(sourceName: "figma-raw-paste.png", image: image)
+        var layer = ImageEditorLayer.group(name: "Raw target", size: image.size)
+        let imported = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Compact",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "compact", name: "Compact")]
+        )
+        layer.xomoFigmaComponentProperties = ["Size": imported]
+        layer.xomoFigmaComponentPropertyDefaults = ["Size": imported]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("im.some.xomo.tests.figma-component-overrides.raw")
+        )
+        pasteboard.clearContents()
+        let compatible = [
+            "Size": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Roomy",
+                preferredValues: imported.preferredValues
+            )
+        ]
+        let compatibleJSON = try #require(
+            String(data: JSONEncoder().encode(compatible), encoding: .utf8)
+        )
+        #expect(pasteboard.setString(compatibleJSON, forType: .string))
+        let compatiblePaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides(from: pasteboard)
+        guard case .success(let compatibleCount) = compatiblePaste else {
+            Issue.record("Expected schema-compatible raw overrides to paste, got \(compatiblePaste)")
+            return
+        }
+        #expect(compatibleCount == 1)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Roomy")
+
+        let undoCount = viewModel.undoStack.count
+        let incompatible = [
+            "Size": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Dense",
+                preferredValues: [XomoFigmaComponentPreferredValue(key: "dense", name: "Dense")]
+            )
+        ]
+        let incompatibleJSON = try #require(
+            String(data: JSONEncoder().encode(incompatible), encoding: .utf8)
+        )
+        #expect(pasteboard.setString(incompatibleJSON, forType: .string))
+        let incompatiblePaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides(from: pasteboard)
+        guard case .failure(let incompatibleError) = incompatiblePaste else {
+            Issue.record("Expected raw metadata drift to be rejected")
+            return
+        }
+        #expect(incompatibleError == .incompatiblePayload)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Roomy")
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func componentOverridePasteHonorsTextTypeLockInheritanceAndAmbiguityBoundaries() throws {
+        let image = NSImage.transparent(size: CGSize(width: 200, height: 90))
+        let labelDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        let swapDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Old swap")
+        let pastedLabel = XomoFigmaComponentProperty(type: "TEXT", value: "Buy now")
+        let pastedSwap = XomoFigmaComponentProperty(type: "INSTANCE_SWAP", value: "node-2")
+        let payload = XomoFigmaComponentPropertyOverridesPasteboardPayload(
+            overrides: ["Label": pastedLabel, "Swap": pastedSwap],
+            importedDefaults: ["Label": labelDefault, "Swap": swapDefault]
+        )
+        let pasteboard = NSPasteboard.general
+        let sidecarType = NSPasteboard.PasteboardType(
+            XomoFigmaComponentPropertyOverridesPasteboardPayload.pasteboardType
+        )
+        pasteboard.clearContents()
+        pasteboard.setData(try JSONEncoder().encode(payload), forType: sidecarType)
+
+        var document = ImageEditorDocument(sourceName: "figma-paste-locks.png", image: image)
+        var parent = ImageEditorLayer.group(name: "Parent", size: image.size)
+        parent.locksPosition = true
+        parent.locksTransparentPixels = true
+        var component = ImageEditorLayer.group(name: "Instance", size: image.size)
+        component.groupID = parent.id
+        component.xomoFigmaComponentProperties = ["Label": labelDefault, "Swap": swapDefault]
+        component.xomoFigmaComponentPropertyDefaults = ["Label": labelDefault, "Swap": swapDefault]
+        var lockedLabel = ImageEditorLayer.text(
+            name: "Continue",
+            origin: .zero,
+            content: ImageEditorTextContent(
+                text: "Continue",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        lockedLabel.groupID = component.id
+        lockedLabel.locksPixels = true
+        var swapLabel = ImageEditorLayer.text(
+            name: "Old swap",
+            origin: CGPoint(x: 0, y: 30),
+            content: ImageEditorTextContent(
+                text: "Old swap",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        swapLabel.groupID = component.id
+        document.layers = [parent, component, lockedLabel, swapLabel]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let historyCountBefore = viewModel.document.history.count
+        let undoCountBefore = viewModel.undoStack.count
+
+        viewModel.document.layers[0].locksPixels = true
+        let pixelLockedPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .failure(let pixelLockedError) = pixelLockedPaste else {
+            Issue.record("Expected an ancestor pixel lock to reject paste")
+            return
+        }
+        #expect(pixelLockedError == .locked)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.history.count == historyCountBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+
+        viewModel.document.layers[0].locksPixels = false
+        viewModel.document.layers[0].isLocked = true
+        let fullyLockedPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .failure(let fullyLockedError) = fullyLockedPaste else {
+            Issue.record("Expected an ancestor full lock to reject paste")
+            return
+        }
+        #expect(fullyLockedError == .locked)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.history.count == historyCountBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+
+        viewModel.document.layers[0].isLocked = false
+        let allowedPaste = viewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .success(let allowedCount) = allowedPaste else {
+            Issue.record("Expected ancestor position and transparency locks to allow paste")
+            return
+        }
+        #expect(allowedCount == 2)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == pastedLabel)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Swap"] == pastedSwap)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.layers[2].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[3].textContent?.text == "Old swap")
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.layers[2].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[3].textContent?.text == "Old swap")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == pastedLabel)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Swap"] == pastedSwap)
+        #expect(viewModel.document.layers[2].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[3].textContent?.text == "Old swap")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+
+        let alphaDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Alpha")
+        let betaDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Beta")
+        var ambiguousDocument = ImageEditorDocument(
+            sourceName: "figma-paste-ambiguous.png",
+            image: image
+        )
+        var ambiguousComponent = ImageEditorLayer.group(name: "Ambiguous", size: image.size)
+        ambiguousComponent.xomoFigmaComponentProperties = [
+            "Alpha": XomoFigmaComponentProperty(type: "TEXT", value: "Shared"),
+            "Beta": XomoFigmaComponentProperty(type: "TEXT", value: "Shared")
+        ]
+        ambiguousComponent.xomoFigmaComponentPropertyDefaults = [
+            "Alpha": alphaDefault,
+            "Beta": betaDefault
+        ]
+        var ambiguousLabel = ImageEditorLayer.text(
+            name: "Shared",
+            origin: .zero,
+            content: ImageEditorTextContent(
+                text: "Shared",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        ambiguousLabel.groupID = ambiguousComponent.id
+        ambiguousDocument.layers = [ambiguousComponent, ambiguousLabel]
+        ambiguousDocument.selectedLayerID = ambiguousComponent.id
+        ambiguousDocument.selectedLayerIDs = [ambiguousComponent.id]
+        let ambiguousViewModel = ImageEditorViewModel(document: ambiguousDocument) { _ in }
+        let ambiguousPropertiesBefore = ambiguousViewModel.selectedLayerFigmaComponentProperties
+        let ambiguousDefaultsBefore = ambiguousViewModel.selectedLayerFigmaComponentPropertyDefaults
+        let ambiguousHistoryBefore = ambiguousViewModel.document.history
+        let ambiguousPayload = XomoFigmaComponentPropertyOverridesPasteboardPayload(
+            overrides: [
+                "Alpha": XomoFigmaComponentProperty(type: "TEXT", value: "One"),
+                "Beta": XomoFigmaComponentProperty(type: "TEXT", value: "Two")
+            ],
+            importedDefaults: ["Alpha": alphaDefault, "Beta": betaDefault]
+        )
+        pasteboard.clearContents()
+        pasteboard.setData(try JSONEncoder().encode(ambiguousPayload), forType: sidecarType)
+        let ambiguousPaste = ambiguousViewModel.pasteSelectedFigmaComponentPropertyOverrides()
+        guard case .failure(let ambiguousError) = ambiguousPaste else {
+            Issue.record("Expected conflicting TEXT replacements to reject the whole batch")
+            return
+        }
+        #expect(ambiguousError == .incompatiblePayload)
+        #expect(ambiguousViewModel.selectedLayerFigmaComponentProperties == ambiguousPropertiesBefore)
+        #expect(ambiguousViewModel.selectedLayerFigmaComponentPropertyDefaults == ambiguousDefaultsBefore)
+        #expect(ambiguousViewModel.document.layers[1].textContent?.text == "Shared")
+        #expect(ambiguousViewModel.document.history == ambiguousHistoryBefore)
+        #expect(ambiguousViewModel.undoStack.isEmpty)
     }
 
     @Test func resettingAllComponentPropertyOverridesIsAtomicAndRestoresImportedObjectsAndText() throws {
@@ -831,6 +1238,23 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-figma-component-overrides-empty"))
         #expect(source.contains("image-editor-figma-component-reset-all"))
         #expect(source.contains("image-editor-copy-figma-component-property-overrides"))
+        #expect(source.contains("image-editor-paste-figma-component-property-overrides"))
+        #expect(source.contains("imageEditor.action.pasteFigmaComponentPropertyOverrides"))
+        #expect(source.contains("viewModel.pasteSelectedFigmaComponentPropertyOverrides()"))
+        let pasteOverridesStart = try #require(
+            source.range(
+                of: "Button(L10n.text(\"imageEditor.action.pasteFigmaComponentPropertyOverrides\"))"
+            )
+        )
+        let pasteOverridesTail = source[pasteOverridesStart.lowerBound...]
+        let pasteOverridesEnd = try #require(
+            pasteOverridesTail.range(
+                of: "Button(L10n.text(\"imageEditor.action.copyFigmaComponentProperties\"))"
+            )
+        )
+        let pasteOverridesSource = String(pasteOverridesTail[..<pasteOverridesEnd.lowerBound])
+        #expect(pasteOverridesSource.contains(".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"))
+        #expect(pasteOverridesSource.contains(".focusable(false)"))
 
         let resetAllStart = try #require(
             source.range(
@@ -898,7 +1322,13 @@ struct ImageEditorFigmaProvenanceTests {
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesEmpty\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyResetAll\""))
             #expect(localization.contains("\"imageEditor.action.copyFigmaComponentPropertyOverrides\""))
+            #expect(localization.contains("\"imageEditor.action.pasteFigmaComponentPropertyOverrides\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesCopied\""))
+            #expect(localization.contains("\"imageEditor.history.figmaComponentPropertyOverridesPasted\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasted\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteNoChanges\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteInvalid\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesPasteIncompatible\""))
             #expect(localization.contains("\"imageEditor.history.figmaComponentPropertyOverridesResetAll\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesResetAll\""))
         }

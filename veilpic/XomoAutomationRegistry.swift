@@ -1613,7 +1613,7 @@ final class XomoAutomationRegistry {
             )
         }
 
-        func result() -> XomoJSONValue {
+        func result(appliedCount: Int? = nil) -> XomoJSONValue {
             let currentLayer = viewModel.document.layers[layerIndex]
 
             func encodedProperty(
@@ -1647,13 +1647,17 @@ final class XomoAutomationRegistry {
                 encodedCurrent["overridden"] = .bool(isOverridden)
                 properties[key] = .object(encodedCurrent)
             }
-            return .object([
+            var response: [String: XomoJSONValue] = [
                 "layerId": .string(currentLayer.id.uuidString),
                 "editable": .bool(viewModel.canEditSelectedFigmaComponentProperties),
                 "propertyCount": .number(Double(properties.count)),
                 "overrideCount": .number(Double(overrideCount)),
                 "properties": .object(properties)
-            ])
+            ]
+            if let appliedCount {
+                response["appliedCount"] = .number(Double(appliedCount))
+            }
+            return .object(response)
         }
 
         switch action {
@@ -1671,6 +1675,23 @@ final class XomoAutomationRegistry {
                 )
             }
             return result()
+        case "pasteOverrides":
+            switch viewModel.pasteSelectedFigmaComponentPropertyOverrides() {
+            case .success(let appliedCount):
+                return result(appliedCount: appliedCount)
+            case .failure(.locked):
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma component properties are locked"
+                )
+            case .failure(.invalidPayload):
+                throw XomoAutomationCallError.invalidArgument(
+                    "Clipboard does not contain valid Figma component property overrides"
+                )
+            case .failure(.incompatiblePayload):
+                throw XomoAutomationCallError.invalidArgument(
+                    "Clipboard Figma component property overrides are incompatible"
+                )
+            }
         case "set":
             let key = try requiredString("key", in: arguments)
             guard layer.xomoFigmaComponentProperties[key] != nil else {
@@ -7419,8 +7440,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage.", [
             "url": XomoAutomationSchema.string(description: "Figma design, file, prototype, board, or other supported resource URL")
         ], required: ["url"]),
-        tool("xomo.figma.component_properties", "List, copy overrides, locally override, reset one, or reset all preserved Figma component properties on the selected layer.", [
-            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "copyOverrides", "set", "reset", "resetAll"]),
+        tool("xomo.figma.component_properties", "List, copy or paste overrides, locally override, reset one, or reset all preserved Figma component properties on the selected layer.", [
+            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "copyOverrides", "pasteOverrides", "set", "reset", "resetAll"]),
             "key": XomoAutomationSchema.string(description: "Figma component property name required by set and reset"),
             "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1620 - 2026-09-05
+
+### Added
+- Figma 组件属性 Inspector 新增“粘贴覆盖值”，可把 rc1619 复制的完整覆盖原子应用到 imported baseline 相同的另一实例。
+- `xomo.figma.component_properties` 新增 `pasteOverrides` 动作，并报告本次实际应用的属性数量。
+
+### Changed
+- “复制覆盖值”在兼容纯文本 JSON 之外增加版本化私有 sidecar，用源默认快照校验跨实例兼容性；旧纯文本走保守 schema 校验。
+- 多属性及匹配 TEXT 后代统一在单一 Undo/History 事务内更新；损坏、不兼容、Custom 或歧义载荷整单拒绝，目标 imported defaults 始终不变。
+
+### Tests
+- 新增跨实例、metadata-only、baseline、原子失败、no-op、内容锁、Undo/Redo、Automation 与 CLI/MCP schema 回归；独立评审最终 PASS，Figma provenance 22/22、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布/隔离测试器契约全部通过。
+
 ## 2.12.0-rc1619 - 2026-09-05
 
 ### Added

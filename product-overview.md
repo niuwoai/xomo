@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1619
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1620
+
+v2.12.0-rc1620 为 Figma 组件属性补齐“粘贴覆盖值”：rc1619 的纯文本 JSON 保持兼容，同时由版本化私有 sidecar 携带源 imported defaults，只有 baseline 完整相同的实例才能恢复 type、value 与 preferredValues，包括 metadata-only 覆盖。载荷在写入前整单校验，多属性和匹配 TEXT 后代只产生一次 Undo/History；任何损坏、不兼容、Custom 或歧义输入都零项目副作用。Automation 新增 `pasteOverrides`。独立评审最终 PASS；Figma 22/22、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布契约通过。项目格式与 cursor 不变；本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1619 在 Figma 组件属性 Inspector 中增加独立的“复制覆盖值”交付入口；输出继续使用既有属性字典 JSON，但只包含真实覆盖项。元数据差异也会收录，无导入基线的 Custom 排除；只读复制不受自身/祖先内容锁影响，也不受 Inspector 筛选影响。Automation 新增 `copyOverrides`，无覆盖时不改剪贴板并明确失败。项目格式、Undo/Redo、History 与 cursor 不变；本版不执行 Release 或 `/Applications` 覆盖。
 

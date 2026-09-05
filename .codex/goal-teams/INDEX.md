@@ -24,3 +24,4 @@
 | `versions/2.12.0-rc1617/INDEX.md` | 2.12.0-rc1617 | Goal Lead | complete | Figma 组件属性单项精确还原里程碑文档索引 |
 | `versions/2.12.0-rc1618/INDEX.md` | 2.12.0-rc1618 | Goal Lead | complete | Figma 组件属性 Automation 完整默认快照里程碑文档索引 |
 | `versions/2.12.0-rc1619/INDEX.md` | 2.12.0-rc1619 | Goal Lead | complete | Figma 组件属性“复制覆盖值”工作流文档索引 |
+| `versions/2.12.0-rc1620/INDEX.md` | 2.12.0-rc1620 | Goal Lead | complete | Figma 组件属性跨实例原子粘贴覆盖值工作流文档索引 |
