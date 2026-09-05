@@ -52,6 +52,195 @@ struct XomoFigmaComponentProperty: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+enum XomoFigmaComponentPropertyEditorKind: String, Equatable, Sendable {
+    case text
+    case boolean
+    case picker
+    case readOnly
+}
+
+enum XomoFigmaComponentPropertyDiagnosticCode: String, Equatable, Sendable {
+    case preferredValuesMissing = "preferred_values_missing"
+    case preferredValueKeyEmpty = "preferred_value_key_empty"
+    case preferredValueNameEmpty = "preferred_value_name_empty"
+    case preferredValueKeyDuplicate = "preferred_value_key_duplicate"
+    case variantNameDuplicate = "variant_name_duplicate"
+    case preferredValueNamespaceCollision = "preferred_value_namespace_collision"
+    case booleanValueNonCanonical = "boolean_value_non_canonical"
+    case currentValueOrphan = "current_value_orphan"
+    case currentValueAmbiguous = "current_value_ambiguous"
+    case unknownType = "unknown_type"
+
+    var localizationKey: String {
+        "imageEditor.properties.figmaComponentPropertyDiagnostic.\(rawValue)"
+    }
+}
+
+struct XomoFigmaComponentPropertyDiagnosis: Equatable, Sendable {
+    var editor: XomoFigmaComponentPropertyEditorKind
+    var writable: Bool
+    var diagnostic: XomoFigmaComponentPropertyDiagnosticCode?
+    var selectionKey: String?
+}
+
+enum XomoFigmaComponentPropertyWriteResolution: Equatable, Sendable {
+    case accepted(value: String, semanticallyUnchanged: Bool)
+    case rejected
+}
+
+extension XomoFigmaComponentProperty {
+    var diagnosis: XomoFigmaComponentPropertyDiagnosis {
+        switch type {
+        case "TEXT":
+            return XomoFigmaComponentPropertyDiagnosis(
+                editor: .text,
+                writable: true,
+                diagnostic: nil,
+                selectionKey: nil
+            )
+        case "BOOLEAN":
+            let isCanonical = value == "true" || value == "false"
+            return XomoFigmaComponentPropertyDiagnosis(
+                editor: isCanonical ? .boolean : .readOnly,
+                writable: true,
+                diagnostic: isCanonical ? nil : .booleanValueNonCanonical,
+                selectionKey: nil
+            )
+        case "VARIANT", "INSTANCE_SWAP":
+            guard !preferredValues.isEmpty else {
+                return XomoFigmaComponentPropertyDiagnosis(
+                    editor: .text,
+                    writable: true,
+                    diagnostic: .preferredValuesMissing,
+                    selectionKey: nil
+                )
+            }
+            if let structuralIssue = preferredValuesStructuralIssue {
+                return XomoFigmaComponentPropertyDiagnosis(
+                    editor: .readOnly,
+                    writable: false,
+                    diagnostic: structuralIssue,
+                    selectionKey: nil
+                )
+            }
+            if let keyMatch = preferredValues.first(where: { $0.key == value }) {
+                return XomoFigmaComponentPropertyDiagnosis(
+                    editor: .picker,
+                    writable: true,
+                    diagnostic: nil,
+                    selectionKey: keyMatch.key
+                )
+            }
+            let nameMatches = preferredValues.filter { $0.name == value }
+            if nameMatches.count == 1, let nameMatch = nameMatches.first {
+                return XomoFigmaComponentPropertyDiagnosis(
+                    editor: .picker,
+                    writable: true,
+                    diagnostic: nil,
+                    selectionKey: nameMatch.key
+                )
+            }
+            return XomoFigmaComponentPropertyDiagnosis(
+                editor: .picker,
+                writable: true,
+                diagnostic: nameMatches.isEmpty ? .currentValueOrphan : .currentValueAmbiguous,
+                selectionKey: nil
+            )
+        default:
+            return XomoFigmaComponentPropertyDiagnosis(
+                editor: .readOnly,
+                writable: false,
+                diagnostic: .unknownType,
+                selectionKey: nil
+            )
+        }
+    }
+
+    func resolvingWrite(_ proposedValue: String) -> XomoFigmaComponentPropertyWriteResolution {
+        let diagnosis = diagnosis
+        guard diagnosis.writable else { return .rejected }
+        let trimmedValue = proposedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch type {
+        case "TEXT":
+            return .accepted(value: proposedValue, semanticallyUnchanged: value == proposedValue)
+        case "BOOLEAN":
+            guard trimmedValue == "true" || trimmedValue == "false" else { return .rejected }
+            return .accepted(value: trimmedValue, semanticallyUnchanged: value == trimmedValue)
+        case "VARIANT", "INSTANCE_SWAP":
+            guard !trimmedValue.isEmpty else { return .rejected }
+            guard !preferredValues.isEmpty else {
+                return .accepted(value: trimmedValue, semanticallyUnchanged: value == trimmedValue)
+            }
+            let keyMatches = preferredValues.filter { $0.key == trimmedValue }
+            let candidate: XomoFigmaComponentPreferredValue
+            if keyMatches.count == 1, let keyMatch = keyMatches.first {
+                candidate = keyMatch
+            } else {
+                let nameMatches = preferredValues.filter { $0.name == trimmedValue }
+                guard nameMatches.count == 1, let nameMatch = nameMatches.first else {
+                    return .rejected
+                }
+                candidate = nameMatch
+            }
+            let candidateNameIsUnique = preferredValues.lazy.filter {
+                $0.name == candidate.name
+            }.prefix(2).count == 1
+            let normalizedValue = type == "VARIANT" ? candidate.name : candidate.key
+            let semanticallyUnchanged = value == candidate.key
+                || (candidateNameIsUnique && value == candidate.name)
+            return .accepted(
+                value: normalizedValue,
+                semanticallyUnchanged: semanticallyUnchanged
+            )
+        default:
+            return .rejected
+        }
+    }
+
+    func displayName(for preferredValue: XomoFigmaComponentPreferredValue) -> String {
+        guard type == "INSTANCE_SWAP" else { return preferredValue.name }
+        let hasDuplicateName = preferredValues.lazy.filter {
+            $0.name == preferredValue.name
+        }.prefix(2).count > 1
+        guard hasDuplicateName else { return preferredValue.name }
+        return L10n.format(
+            "imageEditor.properties.figmaComponentPropertyCandidateWithKey",
+            preferredValue.name,
+            preferredValue.key
+        )
+    }
+
+    private var preferredValuesStructuralIssue: XomoFigmaComponentPropertyDiagnosticCode? {
+        if preferredValues.contains(where: {
+            $0.key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) {
+            return .preferredValueKeyEmpty
+        }
+        if preferredValues.contains(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) {
+            return .preferredValueNameEmpty
+        }
+        let keys = preferredValues.map(\.key)
+        if Set(keys).count != keys.count {
+            return .preferredValueKeyDuplicate
+        }
+        if type == "VARIANT" {
+            let names = preferredValues.map(\.name)
+            if Set(names).count != names.count {
+                return .variantNameDuplicate
+            }
+        }
+        let keySet = Set(keys)
+        if preferredValues.contains(where: { candidate in
+            candidate.key != candidate.name && keySet.contains(candidate.name)
+        }) {
+            return .preferredValueNamespaceCollision
+        }
+        return nil
+    }
+}
+
 struct XomoFigmaComponentPropertyOverridesPasteboardPayload: Codable, Equatable, Sendable {
     static let currentVersion = 1
     static let pasteboardType = "im.some.xomo.figma-component-property-overrides.v1"

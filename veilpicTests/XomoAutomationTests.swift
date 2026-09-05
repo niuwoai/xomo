@@ -4720,6 +4720,138 @@ struct XomoAutomationTests {
         }
     }
 
+    @Test func registryListsComponentPropertyDiagnosticsWithoutDroppingLegacyFields() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let healthyPreferredValues = [
+            XomoFigmaComponentPreferredValue(key: "small-key", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "large-key", name: "Large")
+        ]
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Healthy": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Large",
+                preferredValues: healthyPreferredValues
+            ),
+            "Orphan": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: healthyPreferredValues
+            ),
+            "Ambiguous Swap": XomoFigmaComponentProperty(
+                type: "INSTANCE_SWAP",
+                value: "Shared",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "first-key", name: "Shared"),
+                    XomoFigmaComponentPreferredValue(key: "second-key", name: "Shared")
+                ]
+            ),
+            "Broken": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Legacy",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "same", name: "First"),
+                    XomoFigmaComponentPreferredValue(key: "same", name: "Second")
+                ]
+            ),
+            "Noncanonical Boolean": XomoFigmaComponentProperty(type: "BOOLEAN", value: "TRUE"),
+            "Free": XomoFigmaComponentProperty(type: "INSTANCE_SWAP", value: "Local component"),
+            "Unknown": XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved")
+        ]
+        viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults = [
+            "Healthy": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Small",
+                preferredValues: healthyPreferredValues
+            )
+        ]
+
+        func listedProperties() throws -> [String: XomoJSONValue] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.figma.component_properties",
+                arguments: ["action": .string("list")]
+            ))
+            #expect(response.ok)
+            return try #require(response.result?.objectValue?["properties"]?.objectValue)
+        }
+
+        var properties = try listedProperties()
+        let healthy = try #require(properties["Healthy"]?.objectValue)
+        #expect(healthy["type"] == .string("VARIANT"))
+        #expect(healthy["value"] == .string("Large"))
+        #expect(healthy["preferredValues"] == .array(healthyPreferredValues.map { candidate in
+            .object(["key": .string(candidate.key), "name": .string(candidate.name)])
+        }))
+        #expect(healthy["defaultValue"] == .string("Small"))
+        #expect(healthy["importedDefault"] != nil)
+        #expect(healthy["overridden"] == .bool(true))
+        #expect(healthy["diagnostic"]?.objectValue?["editor"] == .string("picker"))
+        #expect(healthy["diagnostic"]?.objectValue?["writable"] == .bool(true))
+        #expect(healthy["diagnostic"]?.objectValue?["dataWritable"] == .bool(true))
+        #expect(healthy["diagnostic"]?.objectValue?["code"] == .null)
+        #expect(healthy["diagnostic"]?.objectValue?["selectionKey"] == .string("large-key"))
+
+        #expect(
+            properties["Orphan"]?.objectValue?["diagnostic"]?.objectValue?["code"]
+                == .string("current_value_orphan")
+        )
+        #expect(
+            properties["Orphan"]?.objectValue?["diagnostic"]?.objectValue?["selectionKey"]
+                == .null
+        )
+        #expect(
+            properties["Ambiguous Swap"]?.objectValue?["diagnostic"]?.objectValue?["code"]
+                == .string("current_value_ambiguous")
+        )
+        #expect(
+            properties["Broken"]?.objectValue?["diagnostic"]?.objectValue?["editor"]
+                == .string("readOnly")
+        )
+        #expect(
+            properties["Broken"]?.objectValue?["diagnostic"]?.objectValue?["code"]
+                == .string("preferred_value_key_duplicate")
+        )
+        #expect(
+            properties["Noncanonical Boolean"]?.objectValue?["diagnostic"]?.objectValue?["code"]
+                == .string("boolean_value_non_canonical")
+        )
+        #expect(
+            properties["Noncanonical Boolean"]?.objectValue?["diagnostic"]?.objectValue?["writable"]
+                == .bool(true)
+        )
+        #expect(
+            properties["Noncanonical Boolean"]?.objectValue?["diagnostic"]?.objectValue?["dataWritable"]
+                == .bool(true)
+        )
+        #expect(
+            properties["Free"]?.objectValue?["diagnostic"]?.objectValue?["code"]
+                == .string("preferred_values_missing")
+        )
+        #expect(
+            properties["Unknown"]?.objectValue?["diagnostic"]?.objectValue?["dataWritable"]
+                == .bool(false)
+        )
+        #expect(properties["Unknown"]?.objectValue?["value"] == .string("Preserved"))
+
+        viewModel.document.layers[layerIndex].isLocked = true
+        properties = try listedProperties()
+        #expect(
+            properties["Healthy"]?.objectValue?["diagnostic"]?.objectValue?["writable"]
+                == .bool(false)
+        )
+        #expect(
+            properties["Healthy"]?.objectValue?["diagnostic"]?.objectValue?["dataWritable"]
+                == .bool(true)
+        )
+        #expect(
+            properties["Broken"]?.objectValue?["diagnostic"]?.objectValue?["dataWritable"]
+                == .bool(false)
+        )
+    }
+
     @Test func registryAggregatesFigmaComponentPropertyDefaultsAcrossActions() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -4785,11 +4917,19 @@ struct XomoAutomationTests {
             overridden: Bool
         ) -> XomoJSONValue {
             var fields = encodedProperty(current)
+            let diagnosis = current.diagnosis
             fields["importedDefault"] = importedDefault.map {
                 .object(encodedProperty($0))
             } ?? .null
             fields["defaultValue"] = importedDefault.map { .string($0.value) } ?? .null
             fields["overridden"] = .bool(overridden)
+            fields["diagnostic"] = .object([
+                "editor": .string(diagnosis.editor.rawValue),
+                "writable": .bool(diagnosis.writable),
+                "dataWritable": .bool(diagnosis.writable),
+                "code": diagnosis.diagnostic.map { .string($0.rawValue) } ?? .null,
+                "selectionKey": diagnosis.selectionKey.map(XomoJSONValue.string) ?? .null
+            ])
             return .object(fields)
         }
 

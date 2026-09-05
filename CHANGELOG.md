@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1624 - 2026-09-05
+
+### Added
+- Figma 组件属性新增共享、纯派生的读侧诊断，统一报告编辑器类型、数据健康度、稳定诊断码与可选 selection key；Automation 在保留全部旧字段与 action 的同时为每个属性追加诊断对象。
+
+### Fixed
+- Inspector 不再仅凭非空候选构造 Picker：重复/空白 key、空白 name、VARIANT 重名、跨候选 key/name 冲突改为原值只读展示，非规范 BOOLEAN 与未知 type 也不会被错误 Toggle 或文本框解释。
+- 合法候选中的孤儿值与 INSTANCE_SWAP 重名歧义值保持原样且不默认首项，用户仍可明确选择稳定 key 修复；INSTANCE_SWAP 重名候选标签附 key 区分，无候选枚举继续支持非空自由值。
+- ViewModel 写入复用同一诊断与解析规则；Automation `set` 继续只走 ViewModel，`pasteOverrides` 校验路径未改。
+
+### Tests
+- 新增 2 个 Figma provenance 测试与 1 个 Automation 测试，覆盖诊断矩阵、写入归一化、异常原值保留、Inspector 静态合同、旧响应字段兼容和锁定/数据健康分离；独立复审最终 PASS，Figma provenance 28/28、Automation 322/322、cursor 128/128、CLI/MCP 2/2、发布契约 9/9（27 条断言）及隔离运行器契约全部通过。
+- 首次动态执行暴露两处仍按 rc1623 结构断言的既有精确源码/响应快照；补齐共享诊断期望后重新构建并完整复跑通过。
+
 ## 2.12.0-rc1623 - 2026-09-05
 
 ### Changed

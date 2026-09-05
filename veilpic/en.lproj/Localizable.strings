@@ -3923,6 +3923,17 @@
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "The Figma component property value is not available";
+"imageEditor.properties.figmaComponentPropertyCandidateWithKey" = "%@ (%@)";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_values_missing" = "No preferred values were imported; enter a non-empty value.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_key_empty" = "A preferred value has an empty key. This property is read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_name_empty" = "A preferred value has an empty name. This property is read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_key_duplicate" = "Preferred value keys are duplicated. This property is read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.variant_name_duplicate" = "Variant names are duplicated. This property is read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_namespace_collision" = "A preferred value name conflicts with another key. This property is read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.boolean_value_non_canonical" = "This Boolean value is not true or false and is shown read-only.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.current_value_orphan" = "The current value is no longer in the preferred values; choose one to repair it.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.current_value_ambiguous" = "The current name matches multiple preferred values; choose an explicit keyed option.";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.unknown_type" = "This component property type is not supported and is shown read-only.";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Reset all Figma component property overrides";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Reset %d Figma component property overrides";
 "imageEditor.history.figmaComponentPropertyOverridesPasted" = "Pasted %d Figma component property overrides";

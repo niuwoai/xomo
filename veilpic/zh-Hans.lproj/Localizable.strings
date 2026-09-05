@@ -3923,6 +3923,17 @@
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "该 Figma 组件属性值不可用";
+"imageEditor.properties.figmaComponentPropertyCandidateWithKey" = "%@（%@）";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_values_missing" = "未导入候选值；仍可输入非空值。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_key_empty" = "存在空白候选 key，该属性仅供查看。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_name_empty" = "存在空白候选名称，该属性仅供查看。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_key_duplicate" = "候选 key 重复，该属性仅供查看。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.variant_name_duplicate" = "Variant 候选名称重复，该属性仅供查看。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.preferred_value_namespace_collision" = "候选名称与另一候选 key 冲突，该属性仅供查看。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.boolean_value_non_canonical" = "该布尔值不是 true 或 false，现按原值只读显示。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.current_value_orphan" = "当前值已不在候选中；可明确选择候选来修复。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.current_value_ambiguous" = "当前名称匹配多个候选；请选择带 key 的明确选项。";
+"imageEditor.properties.figmaComponentPropertyDiagnostic.unknown_type" = "暂不支持该组件属性类型，现按原值只读显示。";
 "imageEditor.history.figmaComponentPropertyOverridesResetAll" = "还原全部 Figma 组件属性覆盖";
 "imageEditor.status.figmaComponentPropertyOverridesResetAll" = "已还原 %d 个 Figma 组件属性覆盖";
 "imageEditor.history.figmaComponentPropertyOverridesPasted" = "粘贴 %d 个 Figma 组件属性覆盖值";

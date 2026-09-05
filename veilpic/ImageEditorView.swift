@@ -12467,6 +12467,7 @@ struct ImageEditorView: View {
         key: String,
         property: XomoFigmaComponentProperty
     ) -> some View {
+        let diagnosis = property.diagnosis
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 7) {
                 Text(key)
@@ -12486,15 +12487,18 @@ struct ImageEditorView: View {
                     .focusable(false)
                     .xomoFocusEffectDisabled()
                     .accessibilityIdentifier("image-editor-figma-property-reset-\(key)")
-                    .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
+                    .disabled(
+                        !viewModel.canEditSelectedFigmaComponentProperties || !diagnosis.writable
+                    )
                 }
             }
 
-            if property.type == "BOOLEAN" {
+            switch diagnosis.editor {
+            case .boolean:
                 Toggle(
                     L10n.text("imageEditor.properties.figmaComponentPropertyEnabled"),
                     isOn: Binding(
-                        get: { property.value.lowercased() == "true" },
+                        get: { property.value == "true" },
                         set: { viewModel.updateSelectedFigmaComponentBooleanProperty(key, isEnabled: $0) }
                     )
                 )
@@ -12503,36 +12507,30 @@ struct ImageEditorView: View {
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-figma-property-boolean-\(key)")
                 .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
-            } else if !property.preferredValues.isEmpty {
+            case .picker:
                 Picker(
                     L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
-                    selection: Binding(
-                        get: {
-                            if let keyMatch = property.preferredValues.first(where: {
-                                $0.key == property.value
-                            }) {
-                                return keyMatch.key
-                            }
-                            let nameMatches = property.preferredValues.filter {
-                                $0.name == property.value
-                            }
-                            if nameMatches.count == 1, let nameMatch = nameMatches.first {
-                                return nameMatch.key
-                            }
-                            return property.value
-                        },
-                        set: { viewModel.updateSelectedFigmaComponentProperty(key, value: $0) }
+                    selection: Binding<String?>(
+                        get: { diagnosis.selectionKey },
+                        set: { selectionKey in
+                            guard let selectionKey else { return }
+                            viewModel.updateSelectedFigmaComponentProperty(key, value: selectionKey)
+                        }
                     )
                 ) {
+                    if diagnosis.selectionKey == nil {
+                        Text(property.value).tag(Optional<String>.none)
+                    }
                     ForEach(property.preferredValues, id: \.key) { preferredValue in
-                        Text(preferredValue.name).tag(preferredValue.key)
+                        Text(property.displayName(for: preferredValue))
+                            .tag(Optional(preferredValue.key))
                     }
                 }
                 .pickerStyle(.menu)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-figma-property-picker-\(key)")
                 .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
-            } else {
+            case .text:
                 TextField(
                     L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
                     text: figmaComponentPropertyDraftBinding(key)
@@ -12545,6 +12543,20 @@ struct ImageEditorView: View {
                 }
                 .accessibilityIdentifier("image-editor-figma-property-text-\(key)")
                 .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
+            case .readOnly:
+                Text(property.value)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                    .textSelection(.enabled)
+                    .accessibilityIdentifier("image-editor-figma-property-read-only-\(key)")
+            }
+
+            if let diagnostic = diagnosis.diagnostic {
+                Text(L10n.text(diagnostic.localizationKey))
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("image-editor-figma-property-diagnostic-\(key)")
             }
         }
     }

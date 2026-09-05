@@ -1636,6 +1636,7 @@ final class XomoAutomationRegistry {
             for (key, property) in currentLayer.xomoFigmaComponentProperties {
                 let importedDefault = currentLayer.xomoFigmaComponentPropertyDefaults[key]
                 let isOverridden = importedDefault.map { $0 != property } ?? false
+                let diagnosis = property.diagnosis
                 if isOverridden {
                     overrideCount += 1
                 }
@@ -1645,6 +1646,15 @@ final class XomoAutomationRegistry {
                 } ?? .null
                 encodedCurrent["defaultValue"] = importedDefault.map { .string($0.value) } ?? .null
                 encodedCurrent["overridden"] = .bool(isOverridden)
+                encodedCurrent["diagnostic"] = .object([
+                    "editor": .string(diagnosis.editor.rawValue),
+                    "writable": .bool(
+                        diagnosis.writable && viewModel.canEditSelectedFigmaComponentProperties
+                    ),
+                    "dataWritable": .bool(diagnosis.writable),
+                    "code": diagnosis.diagnostic.map { .string($0.rawValue) } ?? .null,
+                    "selectionKey": diagnosis.selectionKey.map(XomoJSONValue.string) ?? .null
+                ])
                 properties[key] = .object(encodedCurrent)
             }
             var response: [String: XomoJSONValue] = [

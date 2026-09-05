@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-05 ｜ 当前版本：v2.12.0-rc1623 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+> 最后更新：2026-09-05 ｜ 当前版本：v2.12.0-rc1624 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+
+- `v2.12.0-rc1624`：Figma 组件属性增加共享读侧诊断与安全 Inspector。合法 TEXT、BOOLEAN、VARIANT/INSTANCE_SWAP 保持既有写语义；损坏候选、非规范 BOOLEAN 与未知 type 原值只读展示。合法候选中的孤儿值和 INSTANCE_SWAP 重名歧义不自动选择或迁移，仍可由用户明确选择带 key 候选修复；重复 key 不再进入 SwiftUI Picker。Automation 保留原响应字段并追加诊断，区分数据健康与图层锁定；`set` 继续共享 ViewModel，`pasteOverrides` 不变。独立复审最终 PASS；Figma provenance 28/28、Automation 322/322、cursor 128/128、CLI/MCP 2/2 和全部发布契约通过。本版不执行 Release 或安装覆盖。
 
 - `v2.12.0-rc1623`：Figma BOOLEAN/VARIANT/INSTANCE_SWAP 写入新增枚举安全边界；VARIANT 以唯一 key/name 解析并存 name，INSTANCE_SWAP 存 key、允许重名候选但重名项只能由明确 key 选择。两类候选拒绝跨候选 key/name 命名空间碰撞，非法、空白、歧义或损坏候选无副作用拒绝；Inspector 只将唯一 name 反解为稳定 key，Automation 返回结构化错误。无候选自由值与旧孤儿值保持兼容，TEXT 不回退 rc1622 保真。独立评审最终 PASS；Figma provenance 26/26、Automation 321/321、cursor 128/128、CLI/MCP 2/2 和全部发布契约通过。本版不执行 Release 或安装覆盖。
 
@@ -46,7 +48,7 @@
 
 - `v2.12.0-rc1602`：统一画布平移、内容工具与变换事务的指针所有权，Space/中键仅在空闲时取得平移，已有事务保持稳定；primary/range 工具不再于平移期间抢占或吞掉左键。组件库元件及 Move 空操作使用系统箭头，抓手只表示真实画布平移。新增 11 项定向回归并通过独立评审；唯一冷构建成功，新增测试 11/11、相关套件 197/197 通过，合计实际执行 208 项、22 个执行组，失败 0、跳过 0。
 
-现代能力短期队列：rc1623 完成 Figma 枚举属性安全写入边界，继续完善可预测的实例覆盖工作流。Figma 主组件身份、结构同步与真实 swap/detach、持久化响应式约束、Fill 级混合保真及其它高风险模型改造继续后置。下一个 40 版本完整编译、全量回归与安装版冒烟门禁为 rc1640。
+现代能力短期队列：rc1624 完成 Figma 枚举属性的安全读侧诊断，继续完善可预测的实例覆盖工作流。Figma 主组件身份、结构同步与真实 swap/detach、持久化响应式约束、Fill 级混合保真及其它高风险模型改造继续后置。下一个 40 版本完整编译、全量回归与安装版冒烟门禁为 rc1640。
 
 - `v2.12.0-rc1601`：修复完整回归发现的字符串表目录遗漏，统一三语文件清单与键检查，并验证三张字符串表的实际打包值；定向回归 51 项、61 次执行、CLI/MCP 2/2、发布契约 9/9（27 条断言）和隔离测试器契约通过。冻结修复版完整单元回归 181/181 套件、3316 项、3486 次执行全部通过，零失败、零跳过、零预期失败；Universal Release 构建、最终产物核验及可恢复安装完成。
 

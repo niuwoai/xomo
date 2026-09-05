@@ -383,6 +383,7 @@ struct ImageEditorFigmaProvenanceTests {
                 ]
             ),
             "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Legacy Boolean": XomoFigmaComponentProperty(type: "BOOLEAN", value: "TRUE"),
             "Free Variant": XomoFigmaComponentProperty(type: "VARIANT", value: "Legacy"),
             "Unknown": XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved")
         ]
@@ -511,6 +512,13 @@ struct ImageEditorFigmaProvenanceTests {
                 == .changed
         )
         #expect(viewModel.selectedLayerFigmaComponentProperties["Enabled"]?.value == "false")
+        #expect(
+            viewModel.updateSelectedFigmaComponentProperty("Legacy Boolean", value: "false")
+                == .changed
+        )
+        #expect(
+            viewModel.selectedLayerFigmaComponentProperties["Legacy Boolean"]?.value == "false"
+        )
 
         #expect(
             viewModel.updateSelectedFigmaComponentProperty("Free Variant", value: " Open ")
@@ -531,6 +539,181 @@ struct ImageEditorFigmaProvenanceTests {
             viewModel.updateSelectedFigmaComponentProperty("Missing", value: "Anything")
                 == .notFound
         )
+    }
+
+    @Test func componentPropertyDiagnosisKeepsHealthyEditorsAndSurfacesImportedDataDamage() {
+        let text = XomoFigmaComponentProperty(type: "TEXT", value: "  Buy now  ")
+        #expect(text.diagnosis.editor == .text)
+        #expect(text.diagnosis.writable)
+        #expect(text.diagnosis.diagnostic == nil)
+        #expect(
+            text.resolvingWrite("")
+                == .accepted(value: "", semanticallyUnchanged: false)
+        )
+
+        let boolean = XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        #expect(boolean.diagnosis.editor == .boolean)
+        #expect(boolean.diagnosis.writable)
+        #expect(
+            boolean.resolvingWrite(" false ")
+                == .accepted(value: "false", semanticallyUnchanged: false)
+        )
+        let nonCanonicalBoolean = XomoFigmaComponentProperty(type: "BOOLEAN", value: "TRUE")
+        #expect(nonCanonicalBoolean.diagnosis.editor == .readOnly)
+        #expect(nonCanonicalBoolean.diagnosis.writable)
+        #expect(nonCanonicalBoolean.diagnosis.diagnostic == .booleanValueNonCanonical)
+        #expect(
+            nonCanonicalBoolean.resolvingWrite("false")
+                == .accepted(value: "false", semanticallyUnchanged: false)
+        )
+
+        let freeVariant = XomoFigmaComponentProperty(type: "VARIANT", value: "Legacy")
+        #expect(freeVariant.diagnosis.editor == .text)
+        #expect(freeVariant.diagnosis.writable)
+        #expect(freeVariant.diagnosis.diagnostic == .preferredValuesMissing)
+        #expect(
+            freeVariant.resolvingWrite(" Open ")
+                == .accepted(value: "Open", semanticallyUnchanged: false)
+        )
+
+        let preferredValues = [
+            XomoFigmaComponentPreferredValue(key: "small-key", name: "Small"),
+            XomoFigmaComponentPreferredValue(key: "large-key", name: "Large")
+        ]
+        let variantByName = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Large",
+            preferredValues: preferredValues
+        )
+        #expect(variantByName.diagnosis.editor == .picker)
+        #expect(variantByName.diagnosis.selectionKey == "large-key")
+        #expect(variantByName.diagnosis.diagnostic == nil)
+        #expect(
+            variantByName.resolvingWrite("small-key")
+                == .accepted(value: "Small", semanticallyUnchanged: false)
+        )
+        let sameKeyAndName = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "same",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "same", name: "same")]
+        )
+        #expect(sameKeyAndName.diagnosis.selectionKey == "same")
+        #expect(sameKeyAndName.diagnosis.diagnostic == nil)
+
+        let orphan = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Legacy",
+            preferredValues: preferredValues
+        )
+        #expect(orphan.diagnosis.editor == .picker)
+        #expect(orphan.diagnosis.writable)
+        #expect(orphan.diagnosis.selectionKey == nil)
+        #expect(orphan.diagnosis.diagnostic == .currentValueOrphan)
+        #expect(orphan.value == "Legacy")
+
+        let duplicateSwapNames = XomoFigmaComponentProperty(
+            type: "INSTANCE_SWAP",
+            value: "Shared",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "first-key", name: "Shared"),
+                XomoFigmaComponentPreferredValue(key: "second-key", name: "Shared")
+            ]
+        )
+        #expect(duplicateSwapNames.diagnosis.editor == .picker)
+        #expect(duplicateSwapNames.diagnosis.writable)
+        #expect(duplicateSwapNames.diagnosis.selectionKey == nil)
+        #expect(duplicateSwapNames.diagnosis.diagnostic == .currentValueAmbiguous)
+        #expect(
+            duplicateSwapNames.resolvingWrite("second-key")
+                == .accepted(value: "second-key", semanticallyUnchanged: false)
+        )
+        #expect(duplicateSwapNames.resolvingWrite("Shared") == .rejected)
+        #expect(duplicateSwapNames.displayName(for: duplicateSwapNames.preferredValues[0]).contains("first-key"))
+
+        let malformedProperties: [(XomoFigmaComponentProperty, XomoFigmaComponentPropertyDiagnosticCode)] = [
+            (
+                XomoFigmaComponentProperty(
+                    type: "VARIANT",
+                    value: "Legacy",
+                    preferredValues: [XomoFigmaComponentPreferredValue(key: " ", name: "One")]
+                ),
+                .preferredValueKeyEmpty
+            ),
+            (
+                XomoFigmaComponentProperty(
+                    type: "VARIANT",
+                    value: "Legacy",
+                    preferredValues: [XomoFigmaComponentPreferredValue(key: "one", name: "\n")]
+                ),
+                .preferredValueNameEmpty
+            ),
+            (
+                XomoFigmaComponentProperty(
+                    type: "INSTANCE_SWAP",
+                    value: "first",
+                    preferredValues: [
+                        XomoFigmaComponentPreferredValue(key: "same", name: "One"),
+                        XomoFigmaComponentPreferredValue(key: "same", name: "Two")
+                    ]
+                ),
+                .preferredValueKeyDuplicate
+            ),
+            (
+                XomoFigmaComponentProperty(
+                    type: "VARIANT",
+                    value: "first",
+                    preferredValues: [
+                        XomoFigmaComponentPreferredValue(key: "one", name: "Same"),
+                        XomoFigmaComponentPreferredValue(key: "two", name: "Same")
+                    ]
+                ),
+                .variantNameDuplicate
+            ),
+            (
+                XomoFigmaComponentProperty(
+                    type: "INSTANCE_SWAP",
+                    value: "b",
+                    preferredValues: [
+                        XomoFigmaComponentPreferredValue(key: "a", name: "b"),
+                        XomoFigmaComponentPreferredValue(key: "b", name: "c")
+                    ]
+                ),
+                .preferredValueNamespaceCollision
+            )
+        ]
+        for (property, issue) in malformedProperties {
+            #expect(property.diagnosis.editor == .readOnly)
+            #expect(!property.diagnosis.writable)
+            #expect(property.diagnosis.diagnostic == issue)
+            #expect(property.diagnosis.selectionKey == nil)
+            #expect(property.resolvingWrite("one") == .rejected)
+        }
+
+        let unknown = XomoFigmaComponentProperty(type: "FUTURE", value: "Preserved")
+        #expect(unknown.diagnosis.editor == .readOnly)
+        #expect(!unknown.diagnosis.writable)
+        #expect(unknown.diagnosis.diagnostic == .unknownType)
+        #expect(unknown.value == "Preserved")
+    }
+
+    @Test func componentPropertyInspectorConsumesSharedDiagnosisAndPreservesUnselectedRawValues() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("let diagnosis = property.diagnosis"))
+        #expect(source.contains("switch diagnosis.editor"))
+        #expect(source.contains("Binding<String?>"))
+        #expect(source.contains("get: { diagnosis.selectionKey }"))
+        #expect(source.contains("Text(property.value).tag(Optional<String>.none)"))
+        #expect(source.contains("property.displayName(for: preferredValue)"))
+        #expect(source.contains("image-editor-figma-property-read-only-\\(key)"))
+        #expect(source.contains("image-editor-figma-property-diagnostic-\\(key)"))
+        #expect(!source.contains("} else if !property.preferredValues.isEmpty {"))
     }
 
     @Test func resettingSingleComponentPropertyRestoresImportedObjectAtomically() throws {
@@ -1797,20 +1980,28 @@ struct ImageEditorFigmaProvenanceTests {
             "image-editor-figma-property-reset-\\(key)",
             "image-editor-figma-property-boolean-\\(key)",
             "image-editor-figma-property-picker-\\(key)",
-            "image-editor-figma-property-text-\\(key)"
+            "image-editor-figma-property-text-\\(key)",
+            "image-editor-figma-property-read-only-\\(key)",
+            "image-editor-figma-property-diagnostic-\\(key)"
         ] {
             #expect(editorSource.contains(controlIdentifier))
         }
         #expect(
             editorSource.components(
                 separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
-            ).count - 1 == 4
+            ).count - 1 == 3
         )
-        #expect(editorSource.contains("$0.key == property.value"))
-        #expect(editorSource.contains("$0.name == property.value"))
-        #expect(editorSource.contains("if nameMatches.count == 1"))
-        #expect(editorSource.components(separatedBy: ".first(where:").count - 1 == 1)
-        #expect(editorSource.contains("Text(preferredValue.name).tag(preferredValue.key)"))
+        #expect(editorSource.contains("let diagnosis = property.diagnosis"))
+        #expect(editorSource.contains("switch diagnosis.editor"))
+        #expect(editorSource.contains("Binding<String?>"))
+        #expect(editorSource.contains("get: { diagnosis.selectionKey }"))
+        #expect(editorSource.contains("Text(property.value).tag(Optional<String>.none)"))
+        #expect(editorSource.contains("property.displayName(for: preferredValue)"))
+        #expect(
+            editorSource.contains(
+                "!viewModel.canEditSelectedFigmaComponentProperties || !diagnosis.writable"
+            )
+        )
         for localizationDirectory in ["en.lproj", "zh-Hans.lproj", "ja.lproj"] {
             let localization = try String(
                 contentsOf: repositoryRoot

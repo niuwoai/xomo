@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1623
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1624
 
-v2.12.0-rc1623 为 Figma 枚举组件属性增加安全写入边界：BOOLEAN 仅接受规范小写值；VARIANT 要求候选 key/name 均唯一并存 name，INSTANCE_SWAP 存 key、允许重名候选但只允许明确 key 选择重名项。两类候选都拒绝某项 name 与另一项 key 相等的跨命名空间碰撞，同一候选 key==name 仍合法。唯一 key/name 对应同一候选时保持语义 no-op；未知、空白、歧义和损坏候选均无副作用拒绝。无候选枚举继续兼容非空自由值，旧项目孤儿值和重复 name 不会由 Inspector 猜测选择或自动迁移，TEXT 保持 rc1622 空白保真。Automation 对非法写入返回明确错误。独立评审最终 PASS；Figma provenance 26/26、Automation 321/321、cursor 128/128、CLI/MCP 2/2 和全部发布契约通过。本版不是 rc1640 门禁，不执行 Release 或 `/Applications` 覆盖。
+v2.12.0-rc1624 为导入和旧项目中的 Figma 组件属性增加安全只读诊断。属性模型旁的纯派生规则统一给出 text、boolean、picker 或 readOnly 编辑器、数据健康度、稳定诊断码与 selection key，ViewModel 写入复用同一解析结果。Inspector 会原样展示非规范 BOOLEAN、未知 type 和损坏候选，不再把重复 key 送入 SwiftUI `ForEach`；合法候选中的孤儿值或 INSTANCE_SWAP 重名歧义值不默认首项，但仍允许用户明确选择带 key 候选修复。Automation `list` 保留旧字段并追加逐属性诊断，将数据健康度与图层锁定合并为最终 writable；`set` 仍只走 ViewModel，`pasteOverrides` 不变。独立复审最终 PASS；Figma provenance 28/28、Automation 322/322、cursor 128/128、CLI/MCP 2/2 及全部静态发布契约通过。本版不是 rc1640 门禁，不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1620 为 Figma 组件属性补齐“粘贴覆盖值”：rc1619 的纯文本 JSON 保持兼容，同时由版本化私有 sidecar 携带源 imported defaults，只有 baseline 完整相同的实例才能恢复 type、value 与 preferredValues，包括 metadata-only 覆盖。载荷在写入前整单校验，多属性和匹配 TEXT 后代只产生一次 Undo/History；任何损坏、不兼容、Custom 或歧义输入都零项目副作用。Automation 新增 `pasteOverrides`。独立评审最终 PASS；Figma 22/22、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布契约通过。项目格式与 cursor 不变；本版不执行 Release 或 `/Applications` 覆盖。
 

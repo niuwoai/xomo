@@ -2266,68 +2266,15 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return .locked
         }
-        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedValue: String
-        let semanticallyUnchanged: Bool
-        switch property.type {
-        case "TEXT":
-            normalizedValue = value
-            semanticallyUnchanged = property.value == value
-        case "BOOLEAN":
-            guard trimmedValue == "true" || trimmedValue == "false" else {
-                statusText = L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
-                return .invalid
-            }
-            normalizedValue = trimmedValue
-            semanticallyUnchanged = property.value == trimmedValue
-        case "VARIANT", "INSTANCE_SWAP":
-            guard !trimmedValue.isEmpty else {
-                statusText = L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
-                return .invalid
-            }
-            if property.preferredValues.isEmpty {
-                normalizedValue = trimmedValue
-                semanticallyUnchanged = property.value == trimmedValue
-            } else {
-                var preferredValueKeys: Set<String> = []
-                var preferredValueNames: Set<String> = []
-                guard property.preferredValues.allSatisfy({ preferredValue in
-                    !preferredValue.key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        && !preferredValue.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        && preferredValueKeys.insert(preferredValue.key).inserted
-                        && (property.type != "VARIANT"
-                            || preferredValueNames.insert(preferredValue.name).inserted)
-                }), property.preferredValues.allSatisfy({ preferredValue in
-                    preferredValue.key == preferredValue.name
-                        || !preferredValueKeys.contains(preferredValue.name)
-                }) else {
-                    statusText = L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
-                    return .invalid
-                }
-                let keyMatches = property.preferredValues.filter { $0.key == trimmedValue }
-                let candidate: XomoFigmaComponentPreferredValue
-                if keyMatches.count == 1, let keyMatch = keyMatches.first {
-                    candidate = keyMatch
-                } else {
-                    let nameMatches = property.preferredValues.filter { $0.name == trimmedValue }
-                    guard nameMatches.count == 1, let nameMatch = nameMatches.first else {
-                        statusText = L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
-                        return .invalid
-                    }
-                    candidate = nameMatch
-                }
-                let candidateNameIsUnique = property.preferredValues.lazy.filter {
-                    $0.name == candidate.name
-                }.prefix(2).count == 1
-                normalizedValue = property.type == "VARIANT" ? candidate.name : candidate.key
-                semanticallyUnchanged = property.value == candidate.key
-                    || (candidateNameIsUnique && property.value == candidate.name)
-            }
-        default:
+        switch property.resolvingWrite(value) {
+        case .accepted(let resolvedValue, let semanticallyUnchanged):
+            guard !semanticallyUnchanged else { return .unchanged }
+            normalizedValue = resolvedValue
+        case .rejected:
             statusText = L10n.text("imageEditor.status.figmaComponentPropertyInvalidValue")
             return .invalid
         }
-        guard !semanticallyUnchanged else { return .unchanged }
         pushUndo()
         let previousValue = property.value
         property.value = normalizedValue
