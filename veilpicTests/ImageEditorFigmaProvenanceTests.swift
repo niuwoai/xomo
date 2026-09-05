@@ -229,6 +229,90 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
 
+    @Test func textComponentPropertyPreservesWhitespaceWhileNonTextStillNormalizes() throws {
+        let image = NSImage.transparent(size: CGSize(width: 220, height: 100))
+        var document = ImageEditorDocument(sourceName: "figma-text-whitespace.png", image: image)
+        var component = ImageEditorLayer.group(name: "Button", size: image.size)
+        component.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+            "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Large")
+        ]
+        var label = ImageEditorLayer.text(
+            name: "Continue",
+            origin: CGPoint(x: 12, y: 12),
+            content: ImageEditorTextContent(
+                text: "Continue",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        label.groupID = component.id
+        document.layers = [component, label]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "  Buy now  ")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "  Buy now  ")
+        #expect(viewModel.document.layers[1].textContent?.text == "  Buy now  ")
+
+        let whitespaceOnly = "\t \n"
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: whitespaceOnly)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == whitespaceOnly)
+        #expect(viewModel.document.layers[1].textContent?.text == whitespaceOnly)
+        #expect(
+            viewModel.document.layers[1].name
+                == L10n.format(
+                    "imageEditor.layer.textName",
+                    L10n.text("imageEditor.layer.textFallbackName")
+                )
+        )
+
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "")
+        #expect(viewModel.document.layers[1].textContent?.text == "")
+        let textNoOpUndoCount = viewModel.undoStack.count
+        let textNoOpRedoCount = viewModel.redoStack.count
+        let textNoOpHistory = viewModel.document.history
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "")
+        #expect(viewModel.undoStack.count == textNoOpUndoCount)
+        #expect(viewModel.redoStack.count == textNoOpRedoCount)
+        #expect(viewModel.document.history == textNoOpHistory)
+
+        viewModel.updateSelectedFigmaComponentProperty("Size", value: "  Compact \n")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Compact")
+        #expect(viewModel.undoStack.count == undoCountBefore + 4)
+        #expect(viewModel.document.history.count == historyCountBefore + 4)
+        let variantNoOpUndoCount = viewModel.undoStack.count
+        let variantNoOpRedoCount = viewModel.redoStack.count
+        let variantNoOpHistory = viewModel.document.history
+        let propertiesBeforeRejectedBlank = viewModel.selectedLayerFigmaComponentProperties
+        viewModel.updateSelectedFigmaComponentProperty("Size", value: " \t\n ")
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBeforeRejectedBlank)
+        #expect(viewModel.undoStack.count == variantNoOpUndoCount)
+        #expect(viewModel.redoStack.count == variantNoOpRedoCount)
+        #expect(viewModel.document.history == variantNoOpHistory)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Large")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "")
+        #expect(viewModel.document.layers[1].textContent?.text == "")
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == whitespaceOnly)
+        #expect(viewModel.document.layers[1].textContent?.text == whitespaceOnly)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "")
+        #expect(viewModel.document.layers[1].textContent?.text == "")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Compact")
+    }
+
     @Test func resettingSingleComponentPropertyRestoresImportedObjectAtomically() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-single-reset-metadata.png", image: image)

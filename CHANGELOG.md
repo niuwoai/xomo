@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1622 - 2026-09-05
+
+### Fixed
+- Figma `TEXT` 组件属性现在逐字符保留首尾空白、纯空白与空字符串，并把同一原始值传播到匹配的可编辑文本后代。
+- 非 TEXT 属性继续 trim 首尾空白，并在归一化结果为空或未变化时保持 no-op；既有锁、默认快照、Undo/Redo 与 History 事务语义不变。
+
+### Tests
+- 新增 ViewModel 与 Automation 动态回归，覆盖 TEXT 空白保真、空文本、后代和名称更新、非 TEXT 归一化、no-op 及 Undo/Redo；独立评审 PASS，Figma provenance 25/25、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布/隔离运行器契约全部通过。
+
 ## 2.12.0-rc1621 - 2026-09-05
 
 ### Fixed

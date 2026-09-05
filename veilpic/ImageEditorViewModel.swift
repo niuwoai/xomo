@@ -2254,7 +2254,9 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
-        let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedValue = property.type == "TEXT"
+            ? value
+            : value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (property.type == "TEXT" || !normalizedValue.isEmpty),
               property.value != normalizedValue
         else { return }

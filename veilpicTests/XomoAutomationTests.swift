@@ -4483,11 +4483,15 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("set"),
                 "key": .string("Label"),
-                "value": .string("Buy now")
+                "value": .string("  Buy now  ")
             ]
         ))
         #expect(set.ok)
-        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "  Buy now  ")
+        #expect(
+            set.result?.objectValue?["properties"]?.objectValue?["Label"]?
+                .objectValue?["value"] == .string("  Buy now  ")
+        )
         #expect(set.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["overridden"] == .bool(true))
 
         let cleared = registry.execute(request(
