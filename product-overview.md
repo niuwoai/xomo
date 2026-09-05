@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1618
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1619
+
+v2.12.0-rc1619 在 Figma 组件属性 Inspector 中增加独立的“复制覆盖值”交付入口；输出继续使用既有属性字典 JSON，但只包含真实覆盖项。元数据差异也会收录，无导入基线的 Custom 排除；只读复制不受自身/祖先内容锁影响，也不受 Inspector 筛选影响。Automation 新增 `copyOverrides`，无覆盖时不改剪贴板并明确失败。项目格式、Undo/Redo、History 与 cursor 不变；本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1618 让 `xomo.figma.component_properties` 返回可完整解释的组件属性诊断：每个当前属性同时携带完整 `importedDefault`，无导入基线的 Custom 明确为 null；既有 `defaultValue` 保留兼容。根级 `propertyCount` 与 `overrideCount` 让 list、set、reset、resetAll 的返回值直接对应 Inspector 的总数/覆盖数；type、value 与 preferredValues 可用于定位 value 相同但元数据漂移的覆盖。本版不改变 UI、输入 schema 或项目格式，不执行 Release 或 `/Applications` 覆盖。
 

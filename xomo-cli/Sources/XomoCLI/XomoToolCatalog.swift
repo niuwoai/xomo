@@ -65,6 +65,21 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             }
+            if name == "xomo.figma.component_properties" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": [
+                            "type": "string",
+                            "enum": ["list", "copyOverrides", "set", "reset", "resetAll"]
+                        ],
+                        "key": ["type": "string"],
+                        "value": ["type": "string"]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": true
+                ]
+            }
             if name == "xomo.figma.size_constraints" {
                 tool["inputSchema"] = [
                     "type": "object",
@@ -214,7 +229,7 @@ enum XomoToolCatalog {
         ("xomo.object.select_at", "Select the frontmost visible canvas object at a point using Xomo's alpha-aware component and layer hit testing."),
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),
-        ("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer."),
+        ("xomo.figma.component_properties", "List, copy overrides, locally override, or reset preserved Figma component properties on the selected layer."),
         ("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, locally set, clear or reset fields, or explicitly resolve a conflicting axis by using its minimum."),
         ("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill."),
         ("xomo.layer.select", "Select a layer by UUID."),

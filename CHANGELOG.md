@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1619 - 2026-09-05
+
+### Added
+- Figma 组件属性 Inspector 新增独立“复制覆盖值”入口，以与“复制全部”兼容的 JSON 子集交付当前覆盖。
+- `xomo.figma.component_properties` 新增 `copyOverrides` 动作，复制后仍返回完整的导入默认与覆盖诊断快照。
+
+### Changed
+- 复制覆盖值统一复用完整属性对象比较：元数据差异也会收录，无导入基线的 Custom 属性不误报；锁定图层仍可执行只读复制。
+
+### Tests
+- 独立评审关闭剪贴板失败分流和 CLI/MCP fallback schema 两个 P2，最终 PASS；Figma provenance 19/19、Automation 320/320、cursor 128/128、CLI/MCP 2/2 及发布/隔离测试器契约全部通过。
+
 ## 2.12.0-rc1618 - 2026-09-05
 
 ### Added

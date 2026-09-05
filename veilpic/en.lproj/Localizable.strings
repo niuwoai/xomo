@@ -3908,7 +3908,9 @@
 "imageEditor.status.figmaImageFillFiltersDisabled" = "Figma image fill filters disabled";
 "imageEditor.properties.figmaComponentProperties" = "Figma component properties";
 "imageEditor.action.copyFigmaComponentProperties" = "Copy component properties";
+"imageEditor.action.copyFigmaComponentPropertyOverrides" = "Copy overrides";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma component properties copied";
+"imageEditor.status.figmaComponentPropertyOverridesCopied" = "Figma component property overrides copied";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Failed to copy Figma component properties";
 "imageEditor.properties.figmaComponentPropertyValue" = "Value";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "Enabled";

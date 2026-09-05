@@ -77,7 +77,24 @@ struct XomoMCPServerTests {
         let objectSelectMode = try #require(objectSelectProperties["mode"] as? [String: Any])
         #expect(objectSelectMode["enum"] as? [String] == ["auto", "component", "deep"])
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.bindings" })
-        #expect(tools.contains { $0["name"] as? String == "xomo.figma.component_properties" })
+        let componentPropertiesTool = try #require(tools.first {
+            $0["name"] as? String == "xomo.figma.component_properties"
+        })
+        let componentPropertiesSchema = try #require(
+            componentPropertiesTool["inputSchema"] as? [String: Any]
+        )
+        #expect(componentPropertiesSchema["required"] as? [String] == ["action"])
+        let componentProperties = try #require(
+            componentPropertiesSchema["properties"] as? [String: Any]
+        )
+        let componentPropertiesAction = try #require(
+            componentProperties["action"] as? [String: Any]
+        )
+        #expect(componentPropertiesAction["enum"] as? [String] == [
+            "list", "copyOverrides", "set", "reset", "resetAll"
+        ])
+        #expect((componentProperties["key"] as? [String: Any])?["type"] as? String == "string")
+        #expect((componentProperties["value"] as? [String: Any])?["type"] as? String == "string")
         let sizeConstraintsTool = try #require(tools.first {
             $0["name"] as? String == "xomo.figma.size_constraints"
         })

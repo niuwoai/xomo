@@ -1659,6 +1659,18 @@ final class XomoAutomationRegistry {
         switch action {
         case "list":
             return result()
+        case "copyOverrides":
+            guard viewModel.selectedLayerFigmaComponentPropertyOverrideCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "No selected Figma component property overrides"
+                )
+            }
+            guard viewModel.copySelectedFigmaComponentPropertyOverrides() else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Failed to copy Figma component property overrides"
+                )
+            }
+            return result()
         case "set":
             let key = try requiredString("key", in: arguments)
             guard layer.xomoFigmaComponentProperties[key] != nil else {
@@ -7407,8 +7419,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage.", [
             "url": XomoAutomationSchema.string(description: "Figma design, file, prototype, board, or other supported resource URL")
         ], required: ["url"]),
-        tool("xomo.figma.component_properties", "List, locally override, reset one, or reset all preserved Figma component properties on the selected layer.", [
-            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset", "resetAll"]),
+        tool("xomo.figma.component_properties", "List, copy overrides, locally override, reset one, or reset all preserved Figma component properties on the selected layer.", [
+            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "copyOverrides", "set", "reset", "resetAll"]),
             "key": XomoAutomationSchema.string(description: "Figma component property name required by set and reset"),
             "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),

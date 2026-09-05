@@ -13082,6 +13082,13 @@ struct ImageEditorView: View {
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             Spacer(minLength: 4)
                             if viewModel.selectedLayerFigmaComponentPropertyOverrideCount > 0 {
+                                Button(L10n.text("imageEditor.action.copyFigmaComponentPropertyOverrides")) {
+                                    viewModel.copySelectedFigmaComponentPropertyOverrides()
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                .focusable(false)
+                                .accessibilityIdentifier("image-editor-copy-figma-component-property-overrides")
+
                                 Button(L10n.text("imageEditor.properties.figmaComponentPropertyResetAll")) {
                                     viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
                                 }

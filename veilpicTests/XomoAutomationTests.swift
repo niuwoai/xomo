@@ -440,7 +440,8 @@ struct XomoAutomationTests {
         #expect(
             componentPropertiesTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["action"]?.objectValue?["enum"] == .array([
-                    .string("list"), .string("set"), .string("reset"), .string("resetAll")
+                    .string("list"), .string("copyOverrides"), .string("set"),
+                    .string("reset"), .string("resetAll")
                 ])
         )
         #expect(componentPropertiesTool["inputSchema"]?.objectValue?["required"] == .array([
@@ -4696,6 +4697,28 @@ struct XomoAutomationTests {
             overrideCount: 1
         )
 
+        let copied = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("copyOverrides")]
+        ))
+        try expectSnapshot(
+            copied,
+            label: metadataOnlyOverride,
+            enabled: importedEnabled,
+            overrideCount: 1
+        )
+        let copiedData = try #require(NSPasteboard.general.data(forType: .string))
+        let copiedProperties = try JSONDecoder().decode(
+            [String: XomoFigmaComponentProperty].self,
+            from: copiedData
+        )
+        #expect(copiedProperties == ["Label": metadataOnlyOverride])
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.figmaComponentPropertyOverridesCopied")
+        )
+
         let set = registry.execute(request(
             operation: "call",
             name: "xomo.figma.component_properties",
@@ -4777,6 +4800,24 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Enabled"] == importedEnabled)
         #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Custom"] == customProperty)
         #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == importedDefaults)
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString("automation-copy-overrides-sentinel", forType: .string)
+        let changeCountBeforeEmptyCopy = NSPasteboard.general.changeCount
+        let statusBeforeEmptyCopy = viewModel.statusText
+        let emptyCopy = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("copyOverrides")]
+        ))
+        #expect(!emptyCopy.ok)
+        #expect(emptyCopy.error?.contains("No selected Figma component property overrides") == true)
+        #expect(NSPasteboard.general.changeCount == changeCountBeforeEmptyCopy)
+        #expect(
+            NSPasteboard.general.string(forType: .string)
+                == "automation-copy-overrides-sentinel"
+        )
+        #expect(viewModel.statusText == statusBeforeEmptyCopy)
     }
 
     @Test func registryKeepsLockedFigmaComponentPropertiesReadableButRejectsWrites() throws {
@@ -4789,7 +4830,7 @@ struct XomoAutomationTests {
             "No Default": XomoFigmaComponentProperty(type: "TEXT", value: "Local")
         ]
         viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults = [
-            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now")
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
         ]
         viewModel.document.layers[layerIndex].locksPixels = true
         viewModel.pushUndo()
@@ -4820,6 +4861,23 @@ struct XomoAutomationTests {
         #expect(listed.ok)
         #expect(listed.result?.objectValue?["editable"] == .bool(false))
         #expect(listed.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["value"] == .string("Buy now"))
+
+        let copied = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("copyOverrides")]
+        ))
+        #expect(copied.ok)
+        #expect(copied.result?.objectValue?["editable"] == .bool(false))
+        #expect(copied.result?.objectValue?["overrideCount"] == .number(1))
+        let copiedData = try #require(NSPasteboard.general.data(forType: .string))
+        let copiedProperties = try JSONDecoder().decode(
+            [String: XomoFigmaComponentProperty].self,
+            from: copiedData
+        )
+        #expect(copiedProperties == [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now")
+        ])
 
         let missingValue = registry.execute(request(
             operation: "call",

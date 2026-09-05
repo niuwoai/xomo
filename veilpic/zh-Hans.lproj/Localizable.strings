@@ -3908,7 +3908,9 @@
 "imageEditor.status.figmaImageFillFiltersDisabled" = "已停用 Figma 图片填充滤镜";
 "imageEditor.properties.figmaComponentProperties" = "Figma 组件属性";
 "imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
+"imageEditor.action.copyFigmaComponentPropertyOverrides" = "复制覆盖值";
 "imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";
+"imageEditor.status.figmaComponentPropertyOverridesCopied" = "已复制 Figma 组件属性覆盖值";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "复制 Figma 组件属性失败";
 "imageEditor.properties.figmaComponentPropertyValue" = "值";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "启用";

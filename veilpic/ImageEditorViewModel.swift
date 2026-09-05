@@ -2669,16 +2669,47 @@ final class ImageEditorViewModel: ObservableObject {
 
     func copySelectedFigmaComponentProperties() {
         guard hasSelectedLayerFigmaComponentProperties else { return }
+        copyFigmaComponentProperties(
+            selectedLayerFigmaComponentProperties,
+            successStatusKey: "imageEditor.status.figmaComponentPropertiesCopied"
+        )
+    }
+
+    @discardableResult
+    func copySelectedFigmaComponentPropertyOverrides() -> Bool {
+        let properties = selectedLayerFigmaComponentProperties
+        let overrides = Dictionary(uniqueKeysWithValues:
+            selectedLayerFigmaComponentPropertyOverrideKeys.compactMap { key in
+                properties[key].map { (key, $0) }
+            }
+        )
+        guard !overrides.isEmpty else { return false }
+        return copyFigmaComponentProperties(
+            overrides,
+            successStatusKey: "imageEditor.status.figmaComponentPropertyOverridesCopied"
+        )
+    }
+
+    @discardableResult
+    private func copyFigmaComponentProperties(
+        _ properties: [String: XomoFigmaComponentProperty],
+        successStatusKey: String
+    ) -> Bool {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         do {
-            let data = try encoder.encode(selectedLayerFigmaComponentProperties)
-            guard let value = String(data: data, encoding: .utf8) else { return }
+            let data = try encoder.encode(properties)
+            guard let value = String(data: data, encoding: .utf8) else { return false }
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(value, forType: .string)
-            statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopied")
+            guard NSPasteboard.general.setString(value, forType: .string) else {
+                statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopyFailed")
+                return false
+            }
+            statusText = L10n.text(successStatusKey)
+            return true
         } catch {
             statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopyFailed")
+            return false
         }
     }
 

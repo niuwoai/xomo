@@ -439,6 +439,15 @@ struct ImageEditorFigmaProvenanceTests {
             }
 
             #expect(!viewModel.canEditSelectedFigmaComponentProperties)
+            #expect(viewModel.copySelectedFigmaComponentPropertyOverrides())
+            let copiedData = try #require(
+                NSPasteboard.general.data(forType: .string)
+            )
+            let copiedProperties = try JSONDecoder().decode(
+                [String: XomoFigmaComponentProperty].self,
+                from: copiedData
+            )
+            #expect(copiedProperties == propertiesBefore)
             viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
             viewModel.updateSelectedFigmaComponentBooleanProperty("Enabled", isEnabled: false)
             viewModel.updateSelectedFigmaComponentProperty("Size", value: "Small")
@@ -573,6 +582,93 @@ struct ImageEditorFigmaProvenanceTests {
         let restoredViewModel = ImageEditorViewModel(document: restored) { _ in }
         #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Size"])
         #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
+    }
+
+    @Test func copyingComponentPropertyOverridesUsesAnExactBaselineDerivedSubsetAndNoOpsWhenEmpty() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-copy-overrides.png", image: image)
+        var layer = document.layers[0]
+        let importedLabel = XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        let importedEnabled = XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        let importedSize = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Large",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "large", name: "Large"),
+                XomoFigmaComponentPreferredValue(key: "small", name: "Small")
+            ]
+        )
+        let metadataOnlySize = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Large",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "large", name: "Large"),
+                XomoFigmaComponentPreferredValue(key: "compact", name: "Compact")
+            ]
+        )
+        layer.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now"),
+            "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "false"),
+            "Size": metadataOnlySize,
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "Local only")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Label": importedLabel,
+            "Enabled": importedEnabled,
+            "Size": importedSize
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        viewModel.copySelectedFigmaComponentProperties()
+        let allData = try #require(NSPasteboard.general.data(forType: .string))
+        let allProperties = try JSONDecoder().decode(
+            [String: XomoFigmaComponentProperty].self,
+            from: allData
+        )
+        #expect(allProperties == layer.xomoFigmaComponentProperties)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaComponentPropertiesCopied"))
+
+        #expect(viewModel.copySelectedFigmaComponentPropertyOverrides())
+        let overridesData = try #require(NSPasteboard.general.data(forType: .string))
+        let overrides = try JSONDecoder().decode(
+            [String: XomoFigmaComponentProperty].self,
+            from: overridesData
+        )
+        let overriddenLabel = try #require(layer.xomoFigmaComponentProperties["Label"])
+        let expectedOverrides: [String: XomoFigmaComponentProperty] = [
+            "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "false"),
+            "Label": overriddenLabel,
+            "Size": metadataOnlySize
+        ]
+        #expect(overrides == expectedOverrides)
+        #expect(overrides["Size"]?.preferredValues == metadataOnlySize.preferredValues)
+        #expect(overrides["Enabled"]?.value == "false")
+        #expect(overrides["Custom"] == nil)
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.figmaComponentPropertyOverridesCopied")
+        )
+
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Label": importedLabel,
+            "Enabled": importedEnabled,
+            "Size": importedSize,
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "Local only")
+        ]
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString("copy-overrides-sentinel", forType: .string)
+        let changeCountBefore = pasteboard.changeCount
+        viewModel.statusText = "copy-overrides-status-sentinel"
+
+        #expect(!viewModel.copySelectedFigmaComponentPropertyOverrides())
+        #expect(pasteboard.changeCount == changeCountBefore)
+        #expect(pasteboard.string(forType: .string) == "copy-overrides-sentinel")
+        #expect(viewModel.statusText == "copy-overrides-status-sentinel")
     }
 
     @Test func resettingAllComponentPropertyOverridesIsAtomicAndRestoresImportedObjectsAndText() throws {
@@ -734,6 +830,7 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-figma-component-overrides-only"))
         #expect(source.contains("image-editor-figma-component-overrides-empty"))
         #expect(source.contains("image-editor-figma-component-reset-all"))
+        #expect(source.contains("image-editor-copy-figma-component-property-overrides"))
 
         let resetAllStart = try #require(
             source.range(
@@ -747,11 +844,29 @@ struct ImageEditorFigmaProvenanceTests {
             )
         )
         let resetAllSource = String(resetAllTail[..<resetAllEnd.lowerBound])
+        #expect(resetAllSource.contains("imageEditor.action.copyFigmaComponentPropertyOverrides"))
+        #expect(resetAllSource.contains("viewModel.copySelectedFigmaComponentPropertyOverrides()"))
+        #expect(resetAllSource.contains("image-editor-copy-figma-component-property-overrides"))
         #expect(resetAllSource.contains("imageEditor.properties.figmaComponentPropertyResetAll"))
         #expect(resetAllSource.contains("viewModel.resetAllSelectedFigmaComponentPropertyOverrides()"))
         #expect(resetAllSource.contains("image-editor-figma-component-reset-all"))
         #expect(resetAllSource.contains(".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"))
         #expect(resetAllSource.contains(".focusable(false)"))
+        let copyOverridesStart = try #require(
+            resetAllSource.range(
+                of: "Button(L10n.text(\"imageEditor.action.copyFigmaComponentPropertyOverrides\"))"
+            )
+        )
+        let copyOverridesTail = resetAllSource[copyOverridesStart.lowerBound...]
+        let copyOverridesEnd = try #require(
+            copyOverridesTail.range(
+                of: "Button(L10n.text(\"imageEditor.properties.figmaComponentPropertyResetAll\"))"
+            )
+        )
+        let copyOverridesSource = String(copyOverridesTail[..<copyOverridesEnd.lowerBound])
+        #expect(!copyOverridesSource.contains("showsOnlyFigmaComponentPropertyOverrides"))
+        #expect(!copyOverridesSource.contains("canEditSelectedFigmaComponentProperties"))
+        #expect(!copyOverridesSource.contains(".disabled("))
 
         let editorStart = try #require(source.range(of: "private func figmaComponentPropertyEditor("))
         let editorTail = source[editorStart.lowerBound...]
@@ -782,6 +897,8 @@ struct ImageEditorFigmaProvenanceTests {
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesOnly\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesEmpty\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyResetAll\""))
+            #expect(localization.contains("\"imageEditor.action.copyFigmaComponentPropertyOverrides\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesCopied\""))
             #expect(localization.contains("\"imageEditor.history.figmaComponentPropertyOverridesResetAll\""))
             #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesResetAll\""))
         }

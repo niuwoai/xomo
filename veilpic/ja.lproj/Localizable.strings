@@ -3908,7 +3908,9 @@
 "imageEditor.status.figmaImageFillFiltersDisabled" = "Figma 画像塗りつぶしフィルターを無効にしました";
 "imageEditor.properties.figmaComponentProperties" = "Figma コンポーネントプロパティ";
 "imageEditor.action.copyFigmaComponentProperties" = "コンポーネントプロパティをコピー";
+"imageEditor.action.copyFigmaComponentPropertyOverrides" = "上書きをコピー";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma コンポーネントプロパティをコピーしました";
+"imageEditor.status.figmaComponentPropertyOverridesCopied" = "Figma コンポーネントプロパティの上書きをコピーしました";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Figma コンポーネントプロパティのコピーに失敗しました";
 "imageEditor.properties.figmaComponentPropertyValue" = "値";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "有効";
