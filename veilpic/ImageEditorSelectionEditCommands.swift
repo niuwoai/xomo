@@ -205,6 +205,8 @@ private struct ImageEditorPatchEditResult {
     let layerIndex: Int
     let image: NSImage
     let resultingSelection: ImageEditorSelection
+    let hasSampleOverlap: Bool
+    let didChangePixels: Bool
 }
 
 private struct PatchTransparentTextureSampler {
@@ -960,6 +962,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        guard result.hasSampleOverlap, result.didChangePixels else {
+            statusText = L10n.text("imageEditor.status.selectionPatchNoChange")
+            return
+        }
 
         pushUndo()
         document.layers[result.layerIndex].image = result.image
@@ -1153,11 +1159,58 @@ extension ImageEditorViewModel {
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
             : output
+        let normalizedOutput = protectedOutput.normalizedBitmapImage()
+        let pixelWidth = max(1, Int(layer.image.size.width.rounded()))
+        let pixelHeight = max(1, Int(layer.image.size.height.rounded()))
+        let originalPixels = layer.image.rgbaPixels(width: pixelWidth, height: pixelHeight)
+        let outputPixels = normalizedOutput.rgbaPixels(width: pixelWidth, height: pixelHeight)
+        let didChangePixels = originalPixels != outputPixels
         return ImageEditorPatchEditResult(
             layerIndex: index,
-            image: protectedOutput.normalizedBitmapImage(),
-            resultingSelection: targetSelection
+            image: normalizedOutput,
+            resultingSelection: targetSelection,
+            hasSampleOverlap: patchHasSampleOverlap(
+                selection: targetSelection,
+                layerFrame: layer.frame,
+                layerSize: layer.image.size,
+                canvasSize: document.canvasSize,
+                offsetInCanvas: sampleOffset
+            ),
+            didChangePixels: didChangePixels
         )
+    }
+
+    private func patchHasSampleOverlap(
+        selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        layerSize: CGSize,
+        canvasSize: CGSize,
+        offsetInCanvas: CGSize
+    ) -> Bool {
+        guard let selectionMask = selection.layerMask(
+            layerFrame: layerFrame,
+            layerSize: layerSize,
+            canvasSize: canvasSize,
+            feather: feather
+        ) else { return false }
+        let width = max(1, Int(layerSize.width.rounded()))
+        let height = max(1, Int(layerSize.height.rounded()))
+        guard let alpha = selectionMask.alphaMask(width: width, height: height)?.alpha else {
+            return false
+        }
+        let sourceDeltaX = Int((offsetInCanvas.width * CGFloat(width) / layerFrame.width).rounded())
+        let sourceDeltaY = Int((offsetInCanvas.height * CGFloat(height) / layerFrame.height).rounded())
+        for y in 0..<height {
+            for x in 0..<width {
+                guard alpha[y * width + x] > 0 else { continue }
+                let sourceX = x + sourceDeltaX
+                let sourceY = y + sourceDeltaY
+                if sourceX >= 0, sourceX < width, sourceY >= 0, sourceY < height {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     func copySelectionToNewLayer() {
@@ -2385,7 +2438,7 @@ private extension NSImage {
         return ContentAwareColor(red: red / weightTotal, green: green / weightTotal, blue: blue / weightTotal, alpha: alpha / weightTotal)
     }
 
-    private func rgbaPixels(width: Int, height: Int) -> [UInt8]? {
+    fileprivate func rgbaPixels(width: Int, height: Int) -> [UInt8]? {
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)

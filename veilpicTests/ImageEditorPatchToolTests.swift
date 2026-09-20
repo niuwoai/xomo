@@ -278,6 +278,65 @@ struct ImageEditorPatchToolTests {
         #expect(restored.greenComponent < 0.1)
     }
 
+    @Test func patchCommitSkipsFullyOutOfBoundsOrUnchangedTransfersButKeepsPartialOverlap() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.patchMode = .source
+        viewModel.createRectSelection(from: fixture.blemishRect.origin, to: fixture.blemishRect.bottomRight)
+        let selectionBefore = try #require(viewModel.document.selection)
+        let pixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let historyBefore = viewModel.document.history.count
+        let undoBefore = viewModel.undoStack.count
+
+        viewModel.patchSelection(
+            from: fixture.blemishRect.center,
+            to: CGPoint(x: fixture.blemishRect.center.x + 100, y: fixture.blemishRect.center.y)
+        )
+
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == pixelsBefore)
+        #expect(viewModel.document.history.count == historyBefore)
+        #expect(viewModel.undoStack.count == undoBefore)
+        #expect(viewModel.document.selection == selectionBefore)
+
+        viewModel.patchSelection(
+            from: fixture.blemishRect.center,
+            to: CGPoint(x: fixture.blemishRect.center.x + 40, y: fixture.blemishRect.center.y)
+        )
+
+        #expect(viewModel.document.history.count == historyBefore + 1)
+        #expect(viewModel.undoStack.count == undoBefore + 1)
+        let partiallyPatchedLeft = try color(
+            in: viewModel,
+            at: CGPoint(x: fixture.blemishRect.minX + 4, y: fixture.blemishRect.midY)
+        )
+        let partiallyPatchedRight = try color(
+            in: viewModel,
+            at: CGPoint(x: fixture.blemishRect.maxX - 4, y: fixture.blemishRect.midY)
+        )
+        #expect(partiallyPatchedLeft.greenComponent > 0.75)
+        #expect(partiallyPatchedRight.greenComponent < 0.1)
+    }
+
+    @Test func patchCommitTreatsZeroOpacityAsNoOpWithoutMovingDestinationSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.patchMode = .destination
+        viewModel.opacity = 0
+        viewModel.createRectSelection(from: fixture.sampleRect.origin, to: fixture.sampleRect.bottomRight)
+        let selectionBefore = try #require(viewModel.document.selection)
+        let pixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let historyBefore = viewModel.document.history.count
+        let undoBefore = viewModel.undoStack.count
+
+        viewModel.patchSelection(from: fixture.sampleRect.center, to: fixture.blemishRect.center)
+
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == pixelsBefore)
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyBefore)
+        #expect(viewModel.undoStack.count == undoBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPatchNoChange"))
+    }
+
     @Test func destinationModeCopiesOriginalSelectionToDraggedTargetAndMovesSelection() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

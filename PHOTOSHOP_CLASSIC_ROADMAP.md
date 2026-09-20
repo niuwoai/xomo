@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-20 ｜ 当前版本：v2.12.0-rc1631 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+> 最后更新：2026-09-20 ｜ 当前版本：v2.12.0-rc1632 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+
+- `v2.12.0-rc1632`：Patch 工具区分有效采样重叠与最终像素变化；完全越界、零不透明度或透明锁后无实际变化时不提交 History/Undo，也不移动 destination selection，部分越界继续保留有效像素提交。新增事务回归；本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 
 - `v2.12.0-rc1631`：Spot Healing 在小画布、大笔刷或目标靠近边缘导致固定采样距离全部越界时，使用所有笔触点共同允许范围内最近的合法采样偏移；保留既有颜色评分、越界安全校验、History/Undo、Automation、项目格式与 cursor 语义。新增边界 fallback 单元回归；本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 

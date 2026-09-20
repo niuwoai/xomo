@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1632 - 2026-09-20
+
+### Fixed
+- Patch 工具在完全越界、零不透明度或输出像素未变化时不再伪造 History/Undo，也不会移动 destination selection；部分越界仍提交有效像素。
+
+### Tests
+- 新增 Patch 无效事务与部分重叠回归；本版不执行 rc1640 Release/安装门禁。
+
 ## 2.12.0-rc1631 - 2026-09-20
 
 ### Fixed
