@@ -1779,6 +1779,35 @@ struct ImageEditorBrushStrokeTests {
         }
     }
 
+    @Test func zeroOpacityLayerMaskPaintSkipsHistoryAndReportsNoChange() throws {
+        let size = CGSize(width: 24, height: 24)
+        let suiteName = "ImageEditorBrushStrokeTests.zeroOpacityLayerMask.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "zero-opacity-layer-mask.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let whiteMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        viewModel.document.layers[layerIndex].mask = whiteMask
+        viewModel.isEditingLayerMask = true
+        viewModel.brushSize = 8
+        viewModel.opacity = 0
+
+        let originalMaskData = try #require(viewModel.document.layers[layerIndex].mask?.qingtuPNGData())
+        let originalHistoryCount = viewModel.document.history.count
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8), CGPoint(x: 18, y: 18)])
+
+        #expect(viewModel.document.layers[layerIndex].mask?.qingtuPNGData() == originalMaskData)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func pencilPaintsCrispPixelsAsOneUndoableHistoryStep() throws {
         let size = CGSize(width: 24, height: 24)
         let suiteName = "ImageEditorBrushStrokeTests.pencil.\(UUID().uuidString)"

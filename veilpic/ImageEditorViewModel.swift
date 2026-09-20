@@ -10732,8 +10732,13 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
+        let clippedMask = clippedToSelection(original: mask, output: updated, layerFrame: maskFrame)
+        guard clippedMask.qingtuPNGData() != mask.qingtuPNGData() else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
         pushUndo()
-        document.layers[index].mask = clippedToSelection(original: mask, output: updated, layerFrame: maskFrame)
+        document.layers[index].mask = clippedMask
         appendHistory(reveal ? L10n.text("imageEditor.history.layerMaskReveal") : L10n.text("imageEditor.history.layerMaskHide"))
     }
 
