@@ -2,6 +2,7 @@
 
 | 文档 | 版本 | Owner | 状态 | 说明 |
 | --- | --- | --- | --- | --- |
+| `versions/2.12.0-rc1632/INDEX.md` | 2.12.0-rc1632 | Goal Lead | complete | Photoshop 修补工具无效事务文档索引 |
 | `versions/2.12.0-rc1631/INDEX.md` | 2.12.0-rc1631 | Goal Lead | complete | Photoshop Spot Healing 边界采样 fallback 文档索引 |
 | `versions/2.12.0-rc1629/INDEX.md` | 2.12.0-rc1629 | Goal Lead | complete | Figma 组件属性来源提示文档索引 |
 | `versions/2.12.0-rc1630/INDEX.md` | 2.12.0-rc1630 | Goal Lead | complete | Figma 尺寸约束来源提示文档索引 |
