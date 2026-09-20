@@ -11,3 +11,4 @@
 | 3 | 审查-Figma 来源提示回归 | done | 独立复审 P0/P1/P2=0，确认完整对象比较和 Custom 边界 | 动态门禁 |
 | 3 | Goal Lead | done | 版本 1629、Changelog、概览、路线图与发布契约期望已更新 | 动态门禁 |
 | 4 | Goal Lead | done | 构建通过；Figma 33/33、Automation 323/323、Localization 46/46、Cursor 128/128、CLI/MCP 2/2；静态契约与 diff 检查通过 | Git 收口 |
+| 5 | Goal Lead | done | 提交 `d5ec347f5`、推送功能分支、快进合并 main、tag 与远程 refs 验证完成 | 进入下一小版本 |

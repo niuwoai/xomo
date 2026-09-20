@@ -8,4 +8,4 @@
 | 实现模型、ViewModel、徽标和三语 | 开发-Figma 来源徽标收口 | done | 动态与静态目标通过 |
 | 版本与 SPEC 文档 | Goal Lead | done | 版本 1629、Changelog、概览、路线图同步 |
 | 独立复审 | 审查-Figma 来源提示回归 | done | P0/P1/P2=0 |
-| 串行门禁、提交、合并 main、tag | Goal Lead | in-progress | 动态门禁完成，待 Git 收口与远程 refs 验证 |
+| 串行门禁、提交、合并 main、tag | Goal Lead | done | 动态门禁完成；提交、推送、合并 main、tag 与远程 refs 可验证 |

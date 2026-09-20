@@ -11,5 +11,5 @@
 | `spec/PRD.md` | 需求分析-Figma 覆盖来源边界 | complete | 产品需求 |
 | `spec/architecture-design.md` | 架构-Figma 来源徽标模型 | complete | 纯派生来源模型 |
 | `spec/test-plan.md` | 测试-Figma 来源提示验收 | complete | 33 项测试目标与静态合同 |
-| `spec/acceptance.md` | 审查-Figma 来源提示回归 | in-progress | 功能与动态门禁 PASS，待 Git 收口 |
+| `spec/acceptance.md` | 审查-Figma 来源提示回归 | complete | 功能、动态门禁与 Git 收口 PASS |
 | `spec/HTML-prototype.html` | Goal Lead | not-applicable | 仅增加 Inspector 徽标，无新页面 |
