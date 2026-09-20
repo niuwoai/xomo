@@ -8,4 +8,4 @@
 | 实现约束来源徽标 | 开发-Figma 约束徽标 | done | 每个字段显示来源且只读 |
 | 版本与 SPEC 文档 | Goal Lead | done | rc1630 文档目录与计划已创建 |
 | 独立复审 | 审查-Figma 约束回归 | done | P0/P1/P2=0 |
-| 串行门禁、提交、合并 main、tag | Goal Lead | pending | Git refs 与工作树可验证 |
+| 串行门禁、提交、合并 main、tag | Goal Lead | done | 提交、推送 main/功能分支、tag 与远程 refs 可验证 |

@@ -11,4 +11,4 @@
 | `spec/PRD.md` | 需求分析-Figma 约束来源 | complete | 产品需求 |
 | `spec/architecture-design.md` | 架构-Figma 约束徽标 | complete | 纯派生来源模型 |
 | `spec/test-plan.md` | 测试-Figma 约束回归 | complete | 动态与静态验收 |
-| `spec/acceptance.md` | 审查-Figma 约束回归 | in-progress | 功能与动态门禁 PASS，待 Git 收口 |
+| `spec/acceptance.md` | 审查-Figma 约束回归 | complete | 功能、动态门禁与 Git 收口 PASS |

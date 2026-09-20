@@ -10,3 +10,4 @@
 | 3 | 审查-Figma 约束回归 | done | 独立复审 P0/P1/P2=0，确认协议/历史/cursor 中立 | Git 收口 |
 | 3 | Goal Lead | done | rc1630 版本号、Changelog、概览、路线图与发布契约同步 | Git 收口 |
 | 4 | Goal Lead | done | 冷构建与 Figma 34/34、Automation 323/323、Localization 46/46、Cursor 128/128、CLI/MCP 2/2 通过 | Git 收口 |
+| 5 | Goal Lead | done | 提交 `1bcd6f1c0`、推送 main/功能分支、tag 与远程 refs 验证完成 | 进入下一小版本 |
