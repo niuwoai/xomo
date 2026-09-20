@@ -319,6 +319,7 @@ enum ImageEditorHealingBrushKernel {
             CGVector(dx: 0.707, dy: 0.707)
         ]
         var best: (offset: CGSize, score: CGFloat)?
+        var hasLegalPreferredCandidate = false
 
         for distance in distances {
             for direction in directions {
@@ -333,6 +334,7 @@ enum ImageEditorHealingBrushKernel {
                     width: width,
                     height: height
                 ) else { continue }
+                hasLegalPreferredCandidate = true
                 let sourceCenter = CGPoint(
                     x: destinationReference.x + offset.width,
                     y: destinationReference.y + offset.height
@@ -349,6 +351,67 @@ enum ImageEditorHealingBrushKernel {
                 if best == nil || score < best!.score {
                     best = (offset, score)
                 }
+            }
+        }
+
+        if let best { return best.offset }
+        guard !hasLegalPreferredCandidate else { return nil }
+
+        // A large brush or a small canvas can make every preferred source
+        // distance invalid. Clamp those same candidates to the intersection
+        // of the legal source-offset ranges, keeping the source in bounds.
+        let inset = radius + 1
+        var minimumOffsetX = -CGFloat.infinity
+        var maximumOffsetX = CGFloat.infinity
+        var minimumOffsetY = -CGFloat.infinity
+        var maximumOffsetY = CGFloat.infinity
+        for point in points {
+            minimumOffsetX = max(minimumOffsetX, inset - point.x)
+            maximumOffsetX = min(maximumOffsetX, CGFloat(width) - inset - point.x)
+            minimumOffsetY = max(minimumOffsetY, inset - point.y)
+            maximumOffsetY = min(maximumOffsetY, CGFloat(height) - inset - point.y)
+        }
+        guard minimumOffsetX <= maximumOffsetX,
+              minimumOffsetY <= maximumOffsetY
+        else { return nil }
+
+        for direction in directions {
+            let requestedOffset = CGSize(
+                width: direction.dx * primaryDistance,
+                height: direction.dy * primaryDistance
+            )
+            let clampedOffset = CGSize(
+                width: min(max(requestedOffset.width, minimumOffsetX), maximumOffsetX),
+                height: min(max(requestedOffset.height, minimumOffsetY), maximumOffsetY)
+            )
+            let offset = CGSize(
+                width: clampedOffset.width.rounded(),
+                height: clampedOffset.height.rounded()
+            )
+            guard (abs(offset.width) > 0.0001 || abs(offset.height) > 0.0001),
+                  shiftedStrokeFits(
+                      points: points,
+                      offset: offset,
+                      radius: radius,
+                      width: width,
+                      height: height
+                  )
+            else { continue }
+            let sourceCenter = CGPoint(
+                x: destinationReference.x + offset.width,
+                y: destinationReference.y + offset.height
+            )
+            guard let sourceReference = averageColor(
+                pixels: pixels,
+                width: width,
+                height: height,
+                center: sourceCenter,
+                innerRadius: 0,
+                outerRadius: max(1, Int((brushDiameter * 0.45).rounded()))
+            ) else { continue }
+            let score = colorDistance(sourceReference, targetReference)
+            if best == nil || score < best!.score {
+                best = (offset, score)
             }
         }
         return best?.offset

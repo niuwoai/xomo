@@ -115,6 +115,29 @@ struct ImageEditorHealingBrushTests {
         #expect((offset?.width ?? 0) > 0)
     }
 
+    @Test func spotHealingFindsNearestLegalSourceWhenPreferredDistancesDoNotFit() {
+        let width = 40
+        let height = 40
+        let pixels = [UInt8](repeating: 255, count: width * height * 4)
+
+        let offset = ImageEditorHealingBrushKernel.spotSourceOffset(
+            pixels: pixels,
+            targetContextPixels: pixels,
+            width: width,
+            height: height,
+            points: [CGPoint(x: 20, y: 20)],
+            destinationReference: CGPoint(x: 20, y: 20),
+            brushDiameter: 18
+        )
+
+        #expect(offset != nil)
+        #expect(abs(offset?.width ?? 0) <= 10)
+        #expect(abs(offset?.height ?? 0) <= 10)
+        #expect(abs(offset?.width ?? 0) + abs(offset?.height ?? 0) > 0)
+        #expect(offset?.width.rounded() == offset?.width)
+        #expect(offset?.height.rounded() == offset?.height)
+    }
+
     @Test func sampledBrushPressureControlsSourceAndSpotHealingDiameter() throws {
         let canvasSize = NSSize(width: 80, height: 50)
         let sourceLight = configuredHealingViewModel(size: canvasSize, mode: .source)
