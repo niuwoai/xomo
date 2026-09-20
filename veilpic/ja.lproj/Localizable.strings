@@ -3936,6 +3936,10 @@
 "imageEditor.properties.figmaComponentPropertySource.importedDefault" = "インポートされたデフォルト";
 "imageEditor.properties.figmaComponentPropertySource.overridden" = "上書き済み";
 "imageEditor.properties.figmaComponentPropertySource.localOnly" = "ローカルのみ";
+"imageEditor.properties.figmaSizeConstraintSource.importedDefault" = "インポートされたデフォルト";
+"imageEditor.properties.figmaSizeConstraintSource.overridden" = "上書き済み";
+"imageEditor.properties.figmaSizeConstraintSource.localOnly" = "ローカルのみ";
+"imageEditor.properties.figmaSizeConstraintSource.unset" = "未設定";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "この Figma コンポーネントプロパティ値は使用できません";

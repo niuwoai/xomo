@@ -51,6 +51,26 @@ enum XomoFigmaComponentPropertySourcePresentation: Equatable, Sendable {
     }
 }
 
+enum XomoFigmaSizeConstraintSourcePresentation: Equatable, Sendable {
+    case importedDefault
+    case overridden
+    case localOnly
+    case unset
+
+    var localizationKey: String {
+        switch self {
+        case .importedDefault:
+            "imageEditor.properties.figmaSizeConstraintSource.importedDefault"
+        case .overridden:
+            "imageEditor.properties.figmaSizeConstraintSource.overridden"
+        case .localOnly:
+            "imageEditor.properties.figmaSizeConstraintSource.localOnly"
+        case .unset:
+            "imageEditor.properties.figmaSizeConstraintSource.unset"
+        }
+    }
+}
+
 enum ImageEditorColorSampleTarget: Equatable {
     case foreground
     case background
@@ -2337,6 +2357,18 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
         return defaultProperty != property
+    }
+
+    func selectedLayerFigmaSizeConstraintSourcePresentation(
+        _ field: XomoFigmaSizeConstraintField
+    ) -> XomoFigmaSizeConstraintSourcePresentation {
+        let currentValue = field.value(in: selectedLayerFigmaSizeConstraints ?? .empty)
+        guard selectedLayerFigmaSizeConstraintDefaults != nil else {
+            return currentValue == nil ? .unset : .localOnly
+        }
+        return hasSelectedFigmaSizeConstraintOverride(field)
+            ? .overridden
+            : .importedDefault
     }
 
     func selectedLayerFigmaComponentPropertySourcePresentation(

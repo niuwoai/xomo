@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-20 | 当前版本：v2.12.0-rc1629
+> 最后更新：2026-09-20 | 当前版本：v2.12.0-rc1630
+
+v2.12.0-rc1630 为 Figma 响应式尺寸约束 Inspector 增加四态来源可见性：未设置、导入默认值、已覆盖和仅本地值。来源徽标按每个字段纯派生，不改变约束写入、冲突修复、项目 Codable、Automation、History/Undo 或 cursor；本轮不是 rc1640 完整构建门禁，不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1629 为 Figma 组件属性 Inspector 增加来源可见性：有 imported default 且当前对象完整相等时显示“导入默认值”，任一 value/type/preferredValues 改变时显示“已覆盖”，没有默认快照的 Custom 显示“仅本地”。来源徽标纯派生、只读，不改变覆盖计数、reset、搜索、筛选、Codable、Automation、导入、项目、History/Undo 或 cursor。本轮不是 rc1640 完整构建门禁，不执行 Release 或 `/Applications` 覆盖。
 

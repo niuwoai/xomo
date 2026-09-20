@@ -3197,6 +3197,165 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
     }
 
+    @Test func figmaSizeConstraintSourcePresentationDistinguishesUnsetLocalAndImportedValues() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-size-source-presentation.png", image: image)
+        var layer = document.layers[0]
+        layer.xomoFigmaSizeConstraints = XomoFigmaSizeConstraints(
+            minWidth: 120,
+            maxWidth: 240,
+            minHeight: 80,
+            maxHeight: nil
+        )
+        layer.xomoFigmaSizeConstraintDefaults = XomoFigmaSizeConstraints(
+            minWidth: 120,
+            maxWidth: 200,
+            minHeight: 80,
+            maxHeight: nil
+        )
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        #expect(
+            viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.minWidth)
+                == .importedDefault
+        )
+        #expect(
+            viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.maxWidth)
+                == .overridden
+        )
+        #expect(
+            viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.minHeight)
+                == .importedDefault
+        )
+        #expect(
+            viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.maxHeight)
+                == .importedDefault
+        )
+        #expect(viewModel.hasSelectedFigmaSizeConstraintOverrides)
+
+        let propertiesBefore = viewModel.selectedLayerFigmaSizeConstraints
+        let defaultsBefore = viewModel.selectedLayerFigmaSizeConstraintDefaults
+        let historyBefore = viewModel.document.history
+        let statusBefore = viewModel.statusText
+        let undoBefore = viewModel.undoStack
+        let redoBefore = viewModel.redoStack
+        for field in XomoFigmaSizeConstraintField.allCases {
+            _ = viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(field)
+        }
+        #expect(viewModel.selectedLayerFigmaSizeConstraints == propertiesBefore)
+        #expect(viewModel.selectedLayerFigmaSizeConstraintDefaults == defaultsBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.statusText == statusBefore)
+        #expect(viewModel.undoStack.count == undoBefore.count)
+        #expect(viewModel.redoStack.count == redoBefore.count)
+
+        var localOnlyDocument = ImageEditorDocument(
+            sourceName: "figma-size-local-only.png",
+            image: image
+        )
+        var localOnlyLayer = localOnlyDocument.layers[0]
+        localOnlyLayer.xomoFigmaSizeConstraints = XomoFigmaSizeConstraints(
+            minWidth: 64,
+            maxWidth: nil,
+            minHeight: nil,
+            maxHeight: nil
+        )
+        localOnlyLayer.xomoFigmaSizeConstraintDefaults = nil
+        localOnlyDocument.layers = [localOnlyLayer]
+        localOnlyDocument.selectedLayerID = localOnlyLayer.id
+        localOnlyDocument.selectedLayerIDs = [localOnlyLayer.id]
+        let localOnlyViewModel = ImageEditorViewModel(document: localOnlyDocument) { _ in }
+        #expect(
+            localOnlyViewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.minWidth)
+                == .localOnly
+        )
+        #expect(
+            localOnlyViewModel.selectedLayerFigmaSizeConstraintSourcePresentation(.maxWidth)
+                == .unset
+        )
+        #expect(!localOnlyViewModel.hasSelectedFigmaSizeConstraintOverrides)
+
+        var emptyDocument = ImageEditorDocument(sourceName: "figma-size-unset.png", image: image)
+        var emptyLayer = emptyDocument.layers[0]
+        emptyLayer.xomoFigmaSizeConstraints = nil
+        emptyLayer.xomoFigmaSizeConstraintDefaults = nil
+        emptyDocument.layers = [emptyLayer]
+        emptyDocument.selectedLayerID = emptyLayer.id
+        emptyDocument.selectedLayerIDs = [emptyLayer.id]
+        let emptyViewModel = ImageEditorViewModel(document: emptyDocument) { _ in }
+        for field in XomoFigmaSizeConstraintField.allCases {
+            #expect(
+                emptyViewModel.selectedLayerFigmaSizeConstraintSourcePresentation(field)
+                    == .unset
+            )
+        }
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("figmaSizeConstraintSourceBadge("))
+        #expect(source.contains("viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(field)"))
+        #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-source"))
+        let badgeStart = try #require(source.range(of: "private func figmaSizeConstraintSourceBadge("))
+        let badgeEnd = try #require(
+            source.range(of: "\n    private var adjustmentValueControls", range: badgeStart.upperBound..<source.endIndex)
+        )
+        let badgeSource = source[badgeStart.lowerBound..<badgeEnd.lowerBound]
+        #expect(badgeSource.contains("Capsule()"))
+        #expect(badgeSource.contains(".focusable(false)"))
+        #expect(!badgeSource.contains("Button"))
+        #expect(!badgeSource.contains("Binding"))
+        #expect(!badgeSource.contains("viewModel"))
+        #expect(!badgeSource.contains("setSelected"))
+        #expect(!badgeSource.contains("resetSelected"))
+
+        let localizationExpectations: [(String, [(String, String)])] = [
+            (
+                "veilpic/en.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaSizeConstraintSource.importedDefault", "Imported default"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.overridden", "Overridden"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.localOnly", "Local only"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.unset", "Unset")
+                ]
+            ),
+            (
+                "veilpic/zh-Hans.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaSizeConstraintSource.importedDefault", "导入默认值"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.overridden", "已覆盖"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.localOnly", "仅本地"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.unset", "未设置")
+                ]
+            ),
+            (
+                "veilpic/ja.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaSizeConstraintSource.importedDefault", "インポートされたデフォルト"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.overridden", "上書き済み"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.localOnly", "ローカルのみ"),
+                    ("imageEditor.properties.figmaSizeConstraintSource.unset", "未設定")
+                ]
+            )
+        ]
+        for (path, entries) in localizationExpectations {
+            let localization = try String(
+                contentsOf: repositoryRoot.appendingPathComponent(path),
+                encoding: .utf8
+            )
+            for (key, value) in entries {
+                #expect(localization.contains("\"\(key)\" = \"\(value)\";"))
+            }
+        }
+    }
+
     @Test func figmaSizeConstraintInspectorUsesDraftedLocalizedEditors() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -3214,6 +3373,8 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("commitFigmaSizeConstraintDraft(field)"))
         #expect(source.contains("viewModel.setSelectedFigmaSizeConstraint(field, value: nil)"))
         #expect(source.contains("viewModel.hasSelectedFigmaSizeConstraintOverride(field)"))
+        #expect(source.contains("viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(field)"))
+        #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-source"))
         #expect(source.contains("viewModel.resetSelectedFigmaSizeConstraint(field)"))
         #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-field"))
         #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-clear"))

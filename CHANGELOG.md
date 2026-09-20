@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1630 - 2026-09-20
+
+### Added
+- Figma 响应式尺寸约束 Inspector 为每个字段增加来源徽标，区分未设置、导入默认值、已覆盖和仅本地值；空 imported baseline 仍按导入默认值处理。
+
+### Tests
+- 新增 1 个 Figma provenance 测试，覆盖四态、四个约束字段、无副作用和三语资源；本版不执行 rc1640 Release/安装门禁。
+
 ## 2.12.0-rc1629 - 2026-09-20
 
 ### Added

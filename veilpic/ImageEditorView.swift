@@ -12647,6 +12647,10 @@ struct ImageEditorView: View {
                 Text(L10n.text(field.localizationKey))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                figmaSizeConstraintSourceBadge(
+                    field: field,
+                    presentation: viewModel.selectedLayerFigmaSizeConstraintSourcePresentation(field)
+                )
                 if hasLocalOverride {
                     Circle()
                         .fill(Color(nsColor: ImageEditorTheme.selected))
@@ -12716,6 +12720,26 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-reset")
             }
         }
+    }
+
+    @ViewBuilder
+    private func figmaSizeConstraintSourceBadge(
+        field: XomoFigmaSizeConstraintField,
+        presentation: XomoFigmaSizeConstraintSourcePresentation
+    ) -> some View {
+        Text(L10n.text(presentation.localizationKey))
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .lineLimit(1)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(Color(nsColor: ImageEditorTheme.panelRaised))
+            )
+            .help(L10n.text(presentation.localizationKey))
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-source")
     }
 
     private var adjustmentValueControls: AnyView {

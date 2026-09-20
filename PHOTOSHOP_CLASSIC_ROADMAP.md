@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-20 ｜ 当前版本：v2.12.0-rc1629 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+> 最后更新：2026-09-20 ｜ 当前版本：v2.12.0-rc1630 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与 Figma 的现代工作流
+
+- `v2.12.0-rc1630`：Figma 响应式尺寸约束 Inspector 为每个字段增加四态来源徽标：未设置、导入默认值、已覆盖和仅本地值；按字段区分 nil baseline 与合法空默认快照，不改写入、冲突、Automation、Codable、History/Undo 或 cursor。本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 
 - `v2.12.0-rc1629`：Figma 组件属性 Inspector 增加三态来源徽标，区分导入默认值、本地覆盖和无 imported baseline 的仅本地属性；覆盖判定复用完整对象语义，metadata-only 变化不再隐身。来源展示不参与搜索/筛选，不改变 Codable、Automation、导入、History/Undo、项目格式或 cursor。本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 
