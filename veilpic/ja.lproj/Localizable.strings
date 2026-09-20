@@ -3933,6 +3933,9 @@
 "imageEditor.properties.figmaComponentPropertyType.instanceSwap" = "インスタンス入れ替え";
 "imageEditor.properties.figmaComponentPropertyType.unknown" = "不明な型";
 "imageEditor.properties.figmaComponentPropertyType.rawHelp" = "Figma 元の型：%@";
+"imageEditor.properties.figmaComponentPropertySource.importedDefault" = "インポートされたデフォルト";
+"imageEditor.properties.figmaComponentPropertySource.overridden" = "上書き済み";
+"imageEditor.properties.figmaComponentPropertySource.localOnly" = "ローカルのみ";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "この Figma コンポーネントプロパティ値は使用できません";

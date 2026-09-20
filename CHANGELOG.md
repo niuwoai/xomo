@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1629 - 2026-09-20
+
+### Added
+- Figma 组件属性 Inspector 新增三态来源徽标，区分导入默认值、本地覆盖和无导入基线的仅本地属性；metadata-only 覆盖仍按完整对象判定。
+
+### Tests
+- 新增 1 个 Figma provenance 测试，覆盖 value 与 metadata 覆盖、Custom、搜索中立、JSON 往返、零副作用和三语精确文案；独立复审最终 PASS。
+
 ## 2.12.0-rc1628 - 2026-09-05
 
 ### Added

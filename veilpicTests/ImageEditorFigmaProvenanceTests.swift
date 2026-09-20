@@ -715,6 +715,9 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-figma-property-diagnostic-\\(key)"))
         #expect(source.contains("presentation: property.typePresentation"))
         #expect(source.contains("private func figmaComponentPropertyTypeBadge("))
+        #expect(source.contains("private func figmaComponentPropertySourceBadge("))
+        #expect(source.contains("image-editor-figma-property-source-\\(key)"))
+        #expect(source.contains("presentation: viewModel.selectedLayerFigmaComponentPropertySourcePresentation("))
         #expect(source.contains("image-editor-figma-property-type-\\(key)"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyType.rawHelp"))
         #expect(source.contains("presentation.rawType"))
@@ -737,6 +740,23 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(!badgeSource.contains("updateSelected"))
         #expect(!badgeSource.contains("resetSelected"))
         #expect(!badgeSource.lowercased().contains("search"))
+
+        let sourceBadgeStart = try #require(
+            source.range(of: "private func figmaComponentPropertySourceBadge(")
+        )
+        let sourceBadgeEnd = try #require(
+            source.range(of: "\n    private func figmaImageFillRow", range: sourceBadgeStart.upperBound..<source.endIndex)
+        )
+        let sourceBadgeSource = source[sourceBadgeStart.lowerBound..<sourceBadgeEnd.lowerBound]
+        #expect(sourceBadgeSource.contains("Capsule()"))
+        #expect(sourceBadgeSource.contains(".focusable(false)"))
+        #expect(!sourceBadgeSource.contains("Button"))
+        #expect(!sourceBadgeSource.contains("onTapGesture"))
+        #expect(!sourceBadgeSource.contains("Binding"))
+        #expect(!sourceBadgeSource.contains("viewModel"))
+        #expect(!sourceBadgeSource.contains("updateSelected"))
+        #expect(!sourceBadgeSource.contains("resetSelected"))
+        #expect(!sourceBadgeSource.lowercased().contains("search"))
     }
 
     @Test func componentPropertyTypePresentationLocalizesExactKnownTypesAndPreservesRawProtocolData() throws {
@@ -955,6 +975,136 @@ struct ImageEditorFigmaProvenanceTests {
             )
             for entry in expectation.entries {
                 #expect(localizationSource.contains("\"\(entry.key)\" = \"\(entry.value)\";"))
+            }
+        }
+    }
+
+    @Test func componentPropertySourcePresentationSeparatesDefaultsOverridesAndLocalOnlyWithoutSideEffects() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-source-presentation.png", image: image)
+        var layer = document.layers[0]
+        let equal = XomoFigmaComponentProperty(type: "TEXT", value: "Imported")
+        let valueOnly = XomoFigmaComponentProperty(type: "TEXT", value: "Changed")
+        let metadataOnly = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Same",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "same", name: "Same")]
+        )
+        let valueAndMetadata = XomoFigmaComponentProperty(
+            type: "BOOLEAN",
+            value: "false",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "false", name: "False")]
+        )
+        let equalDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Imported")
+        let valueDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Original")
+        let metadataDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Same")
+        let valueAndMetadataDefault = XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        let custom = XomoFigmaComponentProperty(type: "TEXT", value: "Local")
+
+        layer.xomoFigmaComponentProperties = [
+            "Equal": equal,
+            "Value only": valueOnly,
+            "Metadata only": metadataOnly,
+            "Value and metadata": valueAndMetadata,
+            "Custom": custom
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Equal": equalDefault,
+            "Value only": valueDefault,
+            "Metadata only": metadataDefault,
+            "Value and metadata": valueAndMetadataDefault
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        let expected: [(String, XomoFigmaComponentPropertySourcePresentation)] = [
+            ("Equal", .importedDefault),
+            ("Value only", .overridden),
+            ("Metadata only", .overridden),
+            ("Value and metadata", .overridden),
+            ("Custom", .localOnly)
+        ]
+        for (key, presentation) in expected {
+            let property = try #require(viewModel.selectedLayerFigmaComponentProperties[key])
+            #expect(
+                viewModel.selectedLayerFigmaComponentPropertySourcePresentation(key, property: property)
+                    == presentation
+            )
+        }
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == [
+            "Metadata only", "Value and metadata", "Value only"
+        ])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 3)
+
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+        let historyBefore = viewModel.document.history
+        let statusBefore = viewModel.statusText
+        let selectionBefore = viewModel.document.selectedLayerIDs
+        let diagnosticsBefore = viewModel.selectedLayerFigmaComponentPropertyDiagnosticCount
+        let blockedBefore = viewModel.selectedLayerFigmaComponentPropertyBlockedCount
+        let undoBefore = viewModel.undoStack
+        let redoBefore = viewModel.redoStack
+        for query in ["Imported default", "Overridden", "Local only", "导入默认值", "已覆盖", "仅本地", "インポートされたデフォルト", "上書き済み", "ローカルのみ"] {
+            #expect(
+                viewModel.selectedLayerFigmaComponentPropertyKeys(
+                    onlyOverrides: false,
+                    searchQuery: query
+                ).isEmpty
+            )
+        }
+
+        let encoded = try JSONEncoder().encode(propertiesBefore)
+        let restored = try JSONDecoder().decode(
+            [String: XomoFigmaComponentProperty].self,
+            from: encoded
+        )
+        #expect(restored == propertiesBefore)
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.statusText == statusBefore)
+        #expect(viewModel.document.selectedLayerIDs == selectionBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyDiagnosticCount == diagnosticsBefore)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyBlockedCount == blockedBefore)
+        #expect(viewModel.undoStack.count == undoBefore.count)
+        #expect(viewModel.redoStack.count == redoBefore.count)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let localizationExpectations: [(String, [(String, String)])] = [
+            (
+                "veilpic/en.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertySource.importedDefault", "Imported default"),
+                    ("imageEditor.properties.figmaComponentPropertySource.overridden", "Overridden"),
+                    ("imageEditor.properties.figmaComponentPropertySource.localOnly", "Local only")
+                ]
+            ),
+            (
+                "veilpic/zh-Hans.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertySource.importedDefault", "导入默认值"),
+                    ("imageEditor.properties.figmaComponentPropertySource.overridden", "已覆盖"),
+                    ("imageEditor.properties.figmaComponentPropertySource.localOnly", "仅本地")
+                ]
+            ),
+            (
+                "veilpic/ja.lproj/Localizable.strings",
+                [
+                    ("imageEditor.properties.figmaComponentPropertySource.importedDefault", "インポートされたデフォルト"),
+                    ("imageEditor.properties.figmaComponentPropertySource.overridden", "上書き済み"),
+                    ("imageEditor.properties.figmaComponentPropertySource.localOnly", "ローカルのみ")
+                ]
+            )
+        ]
+        for (path, entries) in localizationExpectations {
+            let source = try String(contentsOf: repositoryRoot.appendingPathComponent(path), encoding: .utf8)
+            for (key, value) in entries {
+                #expect(source.contains("\"\(key)\" = \"\(value)\";"))
             }
         }
     }

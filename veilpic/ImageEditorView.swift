@@ -12480,6 +12480,13 @@ struct ImageEditorView: View {
                     key: key,
                     presentation: property.typePresentation
                 )
+                figmaComponentPropertySourceBadge(
+                    key: key,
+                    presentation: viewModel.selectedLayerFigmaComponentPropertySourcePresentation(
+                        key,
+                        property: property
+                    )
+                )
                 if viewModel.hasSelectedFigmaComponentPropertyOverride(key, property: property) {
                     Button(L10n.text("imageEditor.properties.figmaComponentPropertyReset")) {
                         viewModel.resetSelectedFigmaComponentProperty(key)
@@ -12591,6 +12598,26 @@ struct ImageEditorView: View {
             ))
             .focusable(false)
             .accessibilityIdentifier("image-editor-figma-property-type-\(key)")
+    }
+
+    @ViewBuilder
+    private func figmaComponentPropertySourceBadge(
+        key: String,
+        presentation: XomoFigmaComponentPropertySourcePresentation
+    ) -> some View {
+        Text(L10n.text(presentation.localizationKey))
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .lineLimit(1)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(Color(nsColor: ImageEditorTheme.panelRaised))
+            )
+            .help(L10n.text(presentation.localizationKey))
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-figma-property-source-\(key)")
     }
 
     private func figmaImageFillRow(

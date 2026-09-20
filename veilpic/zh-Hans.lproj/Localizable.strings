@@ -3933,6 +3933,9 @@
 "imageEditor.properties.figmaComponentPropertyType.instanceSwap" = "实例交换";
 "imageEditor.properties.figmaComponentPropertyType.unknown" = "未知类型";
 "imageEditor.properties.figmaComponentPropertyType.rawHelp" = "Figma 原始类型：%@";
+"imageEditor.properties.figmaComponentPropertySource.importedDefault" = "导入默认值";
+"imageEditor.properties.figmaComponentPropertySource.overridden" = "已覆盖";
+"imageEditor.properties.figmaComponentPropertySource.localOnly" = "仅本地";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyInvalidValue" = "该 Figma 组件属性值不可用";

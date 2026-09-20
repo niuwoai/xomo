@@ -34,6 +34,23 @@ struct XomoFigmaComponentPropertyFilterResult: Equatable {
     }
 }
 
+enum XomoFigmaComponentPropertySourcePresentation: Equatable, Sendable {
+    case importedDefault
+    case overridden
+    case localOnly
+
+    var localizationKey: String {
+        switch self {
+        case .importedDefault:
+            "imageEditor.properties.figmaComponentPropertySource.importedDefault"
+        case .overridden:
+            "imageEditor.properties.figmaComponentPropertySource.overridden"
+        case .localOnly:
+            "imageEditor.properties.figmaComponentPropertySource.localOnly"
+        }
+    }
+}
+
 enum ImageEditorColorSampleTarget: Equatable {
     case foreground
     case background
@@ -2320,6 +2337,18 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
         return defaultProperty != property
+    }
+
+    func selectedLayerFigmaComponentPropertySourcePresentation(
+        _ key: String,
+        property: XomoFigmaComponentProperty
+    ) -> XomoFigmaComponentPropertySourcePresentation {
+        guard selectedLayerFigmaComponentPropertyDefaults[key] != nil else {
+            return .localOnly
+        }
+        return hasSelectedFigmaComponentPropertyOverride(key, property: property)
+            ? .overridden
+            : .importedDefault
     }
 
     @discardableResult
