@@ -8716,12 +8716,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         cloneStampAlignedCanvasOffset = offsetResolution.nextAlignedOffset
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.cloneStamp"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.cloneStamped")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.cloneStamped")
+        }
     }
 
     func toneBrush(
@@ -8771,14 +8775,18 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: burn ? L10n.text("imageEditor.history.burn") : L10n.text("imageEditor.history.dodge"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = burn
-            ? L10n.text("imageEditor.status.burnApplied")
-            : L10n.text("imageEditor.status.dodgeApplied")
+        if didChange {
+            statusText = burn
+                ? L10n.text("imageEditor.status.burnApplied")
+                : L10n.text("imageEditor.status.dodgeApplied")
+        }
     }
 
     func spongeBrush(points: [CGPoint]) {
@@ -8811,12 +8819,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.sponge"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.spongeApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.spongeApplied")
+        }
     }
 
     func blurBrush(points: [CGPoint]) {
@@ -8849,12 +8861,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.blur"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.blurApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.blurApplied")
+        }
     }
 
     func sharpenBrush(points: [CGPoint]) {
@@ -8886,12 +8902,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.sharpen"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.sharpenApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.sharpenApplied")
+        }
     }
 
     func smudgeBrush(points: [CGPoint]) {
@@ -8937,12 +8957,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.smudge"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.smudgeApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.smudgeApplied")
+        }
     }
 
     func healingBrush(points: [CGPoint]) {
@@ -8981,12 +9005,16 @@ final class ImageEditorViewModel: ObservableObject {
                 statusText = L10n.text("imageEditor.status.operationFailed")
                 return
             }
-            replaceSelectedLayerRenderedPixels(
+            let didChange = replaceSelectedLayerRenderedPixels(
                 output,
                 historyTitle: L10n.text("imageEditor.history.spotHealingBrush"),
-                resetFrame: false
+                resetFrame: false,
+                skipIfUnchanged: true,
+                unchangedStatusKey: "imageEditor.status.retouchUnchanged"
             )
-            statusText = L10n.text("imageEditor.status.spotHealingApplied")
+            if didChange {
+                statusText = L10n.text("imageEditor.status.spotHealingApplied")
+            }
             return
         }
 
@@ -9029,12 +9057,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         healingBrushAlignedCanvasOffset = offsetResolution.nextAlignedOffset
 
-        replaceSelectedLayerRenderedPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.healingBrush"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.healingApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.healingApplied")
+        }
     }
 
     func setHealingSource(at point: CGPoint?) {

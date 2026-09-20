@@ -12,6 +12,63 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorToolSmokeTests {
+    @Test func sampledRetouchZeroOpacitySkipsHistoryForEverySampledTool() throws {
+        let operations: [(String, (ImageEditorViewModel) -> Void)] = [
+            ("clone", { viewModel in
+                viewModel.setCloneSource(at: CGPoint(x: 8, y: 14))
+                viewModel.cloneStamp(points: [CGPoint(x: 22, y: 14), CGPoint(x: 28, y: 14)])
+            }),
+            ("burn", { viewModel in
+                viewModel.toneBrush(
+                    points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)],
+                    burn: true
+                )
+            }),
+            ("sponge", { viewModel in
+                viewModel.spongeBrush(points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)])
+            }),
+            ("blur", { viewModel in
+                viewModel.blurBrush(points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)])
+            }),
+            ("sharpen", { viewModel in
+                viewModel.sharpenBrush(points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)])
+            }),
+            ("smudge", { viewModel in
+                viewModel.smudgeBrush(points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)])
+            }),
+            ("spot healing", { viewModel in
+                viewModel.healingBrushMode = .spot
+                viewModel.healingBrush(points: [CGPoint(x: 20, y: 14)])
+            }),
+            ("source healing", { viewModel in
+                viewModel.setHealingSource(at: CGPoint(x: 8, y: 14))
+                viewModel.healingBrush(points: [CGPoint(x: 20, y: 14)])
+            })
+        ]
+
+        for (name, operation) in operations {
+            let viewModel = makeEditableViewModel(image: verticalEdgeImage())
+            viewModel.brushSize = 12
+            viewModel.opacity = 0
+            let beforePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+            let beforeHistory = viewModel.document.history.count
+            let beforeUndo = viewModel.undoStack.count
+
+            operation(viewModel)
+
+            #expect(
+                viewModel.document.selectedLayer?.image.qingtuPNGData() == beforePixels,
+                "(name) changed pixels at zero opacity"
+            )
+            #expect(viewModel.document.history.count == beforeHistory, "(name) added history")
+            #expect(viewModel.undoStack.count == beforeUndo, "(name) added undo")
+            #expect(
+                viewModel.statusText == L10n.text("imageEditor.status.retouchUnchanged"),
+                "(name) overwrote the no-change status"
+            )
+        }
+    }
+
     @Test func lassoCreatesAUsablePolygonSelection() throws {
         let viewModel = makeViewModel(image: solidImage(color: .systemBlue))
 
