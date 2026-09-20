@@ -2524,6 +2524,7 @@
 "imageEditor.status.selectionEmpty" = "選択結果は空です";
 "imageEditor.status.selectionPatchNoChange" = "パッチによる変更はありません";
 "imageEditor.status.retouchUnchanged" = "レタッチによるピクセル変更はありません";
+"imageEditor.status.paintUnchanged" = "ペイントストロークによるピクセル変更はありません";
 "imageEditor.status.selectionUnchanged" = "選択範囲は変更されませんでした";
 "imageEditor.status.selectionFromLayer" = "現在のレイヤーの透明度から選択範囲を読み込みました";
 "imageEditor.status.selectionFromSelectedLayers" = "%d個のレイヤー透明度から選択範囲を読み込みました";

@@ -46,7 +46,7 @@ struct ImageEditorToolSmokeTests {
             })
         ]
 
-        for (name, operation) in operations {
+        for (_, operation) in operations {
             let viewModel = makeEditableViewModel(image: verticalEdgeImage())
             viewModel.brushSize = 12
             viewModel.opacity = 0

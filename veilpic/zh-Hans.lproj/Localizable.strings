@@ -2524,6 +2524,7 @@
 "imageEditor.status.selectionEmpty" = "选区结果为空";
 "imageEditor.status.selectionPatchNoChange" = "修补未产生变化";
 "imageEditor.status.retouchUnchanged" = "修饰未产生像素变化";
+"imageEditor.status.paintUnchanged" = "绘画笔触未产生像素变化";
 "imageEditor.status.selectionUnchanged" = "选区没有变化";
 "imageEditor.status.selectionFromLayer" = "已从当前图层透明度载入选区";
 "imageEditor.status.selectionFromSelectedLayers" = "已从 %d 个图层透明度载入选区";

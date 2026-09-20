@@ -2524,6 +2524,7 @@
 "imageEditor.status.selectionEmpty" = "Selection result is empty";
 "imageEditor.status.selectionPatchNoChange" = "Patch made no changes";
 "imageEditor.status.retouchUnchanged" = "Retouch made no pixel changes";
+"imageEditor.status.paintUnchanged" = "Paint stroke made no pixel changes";
 "imageEditor.status.selectionUnchanged" = "Selection did not change";
 "imageEditor.status.selectionFromLayer" = "Selection loaded from current layer transparency";
 "imageEditor.status.selectionFromSelectedLayers" = "Selection loaded from %d layer transparencies";

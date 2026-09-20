@@ -8228,7 +8228,9 @@ final class ImageEditorViewModel: ObservableObject {
                         ? "imageEditor.history.pencil"
                         : "imageEditor.history.brush"
             ),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.paintUnchanged"
         )
     }
 

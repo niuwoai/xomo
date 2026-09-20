@@ -1746,6 +1746,39 @@ struct ImageEditorBrushStrokeTests {
         #expect(undone.alphaComponent < 0.03)
     }
 
+    @Test func zeroOpacityPaintToolsSkipHistoryAndReportNoChange() throws {
+        let tools: [(String, (ImageEditorViewModel) -> Void)] = [
+            ("brush", { $0.drawBrush(points: [CGPoint(x: 10, y: 10), CGPoint(x: 40, y: 18)]) }),
+            ("pencil", { $0.drawPencil(samples: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 10.75, y: 10.75)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 40.25, y: 18.25))
+            ]) }),
+            ("eraser", { $0.drawBrush(points: [CGPoint(x: 10, y: 10), CGPoint(x: 40, y: 18)], erase: true) })
+        ]
+
+        for (name, operation) in tools {
+            let suiteName = "ImageEditorBrushStrokeTests.zeroOpacity.\(name).\(UUID().uuidString)"
+            let defaults = try #require(UserDefaults(suiteName: suiteName))
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            let viewModel = ImageEditorViewModel(
+                sourceName: "zero-opacity-\(name).png",
+                image: NSImage.transparent(size: CGSize(width: 64, height: 32)),
+                preferencesDefaults: defaults
+            ) { _ in }
+            viewModel.foregroundColor = .systemRed
+            viewModel.brushSize = 10
+            viewModel.opacity = 0
+
+            let originalData = try #require(viewModel.currentImage.qingtuPNGData())
+            let originalHistoryCount = viewModel.document.history.count
+            operation(viewModel)
+
+            #expect(viewModel.currentImage.qingtuPNGData() == originalData)
+            #expect(viewModel.document.history.count == originalHistoryCount)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.paintUnchanged"))
+        }
+    }
+
     @Test func pencilPaintsCrispPixelsAsOneUndoableHistoryStep() throws {
         let size = CGSize(width: 24, height: 24)
         let suiteName = "ImageEditorBrushStrokeTests.pencil.\(UUID().uuidString)"
