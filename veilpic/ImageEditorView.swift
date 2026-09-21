@@ -17881,7 +17881,7 @@ enum ImageEditorCanvasCursor {
     ) -> NSCursor {
         if isTemporaryEyedropperActive,
            ImageEditorTemporaryEyedropperPolicy.isAvailable(for: tool) {
-            return eyedropperCursor(target: .foreground)
+            return eyedropperCursor(target: eyedropperTarget)
         }
         let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
         switch family(for: tool) {

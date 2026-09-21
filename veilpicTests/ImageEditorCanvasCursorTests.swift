@@ -2648,12 +2648,14 @@ struct ImageEditorCanvasCursorTests {
             isSpacebarPanning: true,
             eyedropperTarget: .background
         ) === NSCursor.openHand)
-        #expect(ImageEditorCanvasCursor.cursor(
+        let temporaryBackground = ImageEditorCanvasCursor.cursor(
             for: .brush,
             brushDiameter: 18,
             isTemporaryEyedropperActive: true,
             eyedropperTarget: .background
-        ) === foreground)
+        )
+        #expect(temporaryBackground === background)
+        #expect(temporaryBackground !== foreground)
     }
 
     @Test func eyedropperGestureLatchesTargetAndRoutesItToSamplingAndCursor() throws {
