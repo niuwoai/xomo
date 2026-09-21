@@ -11,9 +11,10 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc1644", result["version"]
-    assert_equal ["2.12.0-rc1644"], result["project_versions"]
-    assert_equal ["1644"], result["build_versions"]
+    assert_equal "2.12.0-rc1645", result["version"]
+    assert_equal ["2.12.0-rc1645"], result["project_versions"]
+    assert_equal ["1645"], result["build_versions"]
+    assert result["checks"]["test_target_compilation_is_incremental"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
     assert result["checks"]["signing_script_has_required_file_access"]
@@ -99,6 +100,15 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_test_target_whole_module_optimization_fails_the_contract
+    with_fixture(test_compilation_strategy: false) do |root|
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["test_target_compilation_is_incremental"]
+    end
+  end
+
   def test_legacy_chinese_brand_fails_the_contract
     with_fixture do |root|
       write_fixture(root, chinese_brand: "像界")
@@ -113,8 +123,11 @@ class ReleaseContractTest < Minitest::Test
 
   private
 
-  def with_fixture
-    Dir.mktmpdir("xomo-release-contract") { |root| yield root }
+  def with_fixture(**options)
+    Dir.mktmpdir("xomo-release-contract") do |root|
+      write_fixture(root, **options)
+      yield root
+    end
   end
 
   def write_fixture(
@@ -127,7 +140,8 @@ class ReleaseContractTest < Minitest::Test
     secure_timestamp: true,
     chinese_brand: "Xomo",
     user_script_sandboxing: false,
-    ui_test_runner_guard: true
+    ui_test_runner_guard: true,
+    test_compilation_strategy: true
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
@@ -147,6 +161,8 @@ class ReleaseContractTest < Minitest::Test
         PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
         PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
         PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
+        #{"SWIFT_COMPILATION_MODE = incremental;" if test_compilation_strategy}
+        #{"SWIFT_OPTIMIZATION_LEVEL = \"-Onone\";" if test_compilation_strategy}
         #{"OTHER_CODE_SIGN_FLAGS = \"--timestamp\";" if secure_timestamp}
       };
     PBX

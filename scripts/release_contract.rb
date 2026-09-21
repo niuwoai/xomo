@@ -27,6 +27,9 @@ module XomoReleaseContract
     project_versions = project.scan(/MARKETING_VERSION = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     build_versions = project.scan(/CURRENT_PROJECT_VERSION = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     bundle_ids = project.scan(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
+    test_target_settings = project.scan(/buildSettings = \{\n(.*?)\n\s*\};/m).flatten.select do |settings|
+      settings.include?("PRODUCT_BUNDLE_IDENTIFIER = #{EXPECTED_BUNDLE_ID}Tests;")
+    end
     deployment_targets = project.scan(/MACOSX_DEPLOYMENT_TARGET = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     user_script_sandboxing = project.scan(/ENABLE_USER_SCRIPT_SANDBOXING = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     expected_build_version = app_version&.match(/-rc(\d+)\z/)&.[](1)
@@ -45,6 +48,10 @@ module XomoReleaseContract
       "chinese_app_name_is_xomo" =>
         chinese_strings.include?(%Q{"app.name" = "#{EXPECTED_CHINESE_BRAND}";}),
       "test_bundle_ids" => bundle_ids.include?("#{EXPECTED_BUNDLE_ID}Tests") && bundle_ids.include?("#{EXPECTED_BUNDLE_ID}UITests"),
+      "test_target_compilation_is_incremental" =>
+        test_target_settings.length == 2 && test_target_settings.all? {
+          |settings| settings.include?("SWIFT_COMPILATION_MODE = incremental;") && settings.include?(%q{SWIFT_OPTIMIZATION_LEVEL = "-Onone";})
+        },
       "minimum_macos_13" => !deployment_targets.empty? && deployment_targets.all? { |value| Gem::Version.new(value) >= MINIMUM_MACOS_VERSION },
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
