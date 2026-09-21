@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc1642 - 2026-09-21
+
+### Fixed
+- 为对称 Alpha 通道补充水平翻转 no-op 回归，确保不产生空 History/Undo。
+
 ## 2.12.0-rc1641 - 2026-09-21
 
 ### Fixed

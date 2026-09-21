@@ -491,6 +491,24 @@ struct ImageEditorChannelTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
     }
 
+    @Test func alphaChannelsDoNotRecordSymmetricFlips() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "symmetric-flip-no-op.png", image: splitChannelImage()) { _ in }
+        let channel = ImageEditorAlphaChannel(
+            name: "Symmetric Mask",
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [255, 0, 0, 255])
+        )
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+        let historyCountBeforeFlip = viewModel.document.history.count
+
+        viewModel.flipAlphaChannelHorizontal(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == channel.mask)
+        #expect(viewModel.document.history.count == historyCountBeforeFlip)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanCombineCurrentSelectionWithSavedMask() async throws {
         let canvasSize = NSSize(width: 4, height: 1)
         let image = NSImage.rendered(size: canvasSize) { rect in
