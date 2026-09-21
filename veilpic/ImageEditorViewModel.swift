@@ -10671,11 +10671,9 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    #if DEBUG
     func replaceSelectedLayerImageForTesting(_ image: NSImage, historyTitle: String) {
         replaceSelectedLayerImage(image, historyTitle: historyTitle)
     }
-    #endif
 
     private func paintSelectedLayerMask(
         samples: [ImageEditorBrushStrokeSample],
