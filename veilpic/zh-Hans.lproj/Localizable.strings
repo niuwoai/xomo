@@ -2410,6 +2410,7 @@
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
 "imageEditor.status.gradientUnchanged" = "渐变没有改变任何像素";
 "imageEditor.status.adjustmentFailed" = "调整失败";
+"imageEditor.status.adjustmentUnchanged" = "调整没有改变任何像素";
 "imageEditor.status.filter" = "已应用 %@";
 "imageEditor.status.filterFailed" = "滤镜失败";
 "imageEditor.status.lastFilterUnavailable" = "还没有应用滤镜";

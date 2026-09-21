@@ -5809,6 +5809,24 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorAutoColorSkipsHistoryWhenPixelsAreAlreadyNeutral() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 48, height: 36),
+            background: NSColor(calibratedWhite: 0.42, alpha: 1),
+            fills: [
+                (CGRect(x: 16, y: 0, width: 16, height: 36), NSColor(calibratedWhite: 0.68, alpha: 1))
+            ]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.autoColorSelectedLayer()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.adjustmentUnchanged"))
+    }
+
+    @MainActor
     @Test func imageEditorLevelsAdjustmentSupportsThreeParametersAndLayerState() async throws {
         let image = testBitmapImage(
             size: NSSize(width: 90, height: 60),

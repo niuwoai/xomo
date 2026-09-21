@@ -11167,7 +11167,8 @@ final class ImageEditorViewModel: ObservableObject {
             if let image = transform(document.layers[index].image) { result[index] = image }
         }
         guard !indices.isEmpty, outputs.count == indices.count else { statusText = L10n.text("imageEditor.status.adjustmentFailed"); return }
-        pushUndo()
+
+        var changedImages: [Int: NSImage] = [:]
         for index in indices {
             guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
             let original = document.layers[index].image
@@ -11176,10 +11177,24 @@ final class ImageEditorViewModel: ObservableObject {
                 output: normalized,
                 layerFrame: document.layers[index].frame
             )
-            document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index]) ? (clipped.preservingAlpha(from: original) ?? clipped) : clipped
+            let protected = document.isEffectivelyTransparencyLocked(document.layers[index])
+                ? (clipped.preservingAlpha(from: original) ?? clipped)
+                : clipped
+            if protected.qingtuPNGData() != original.qingtuPNGData() {
+                changedImages[index] = protected
+            }
         }
-        if indices.count == 1 { appendHistory(L10n.text(history)); statusText = L10n.text(status) }
-        else { appendHistory(L10n.text(selectedHistory)); statusText = L10n.format(selectedStatus, indices.count) }
+        guard !changedImages.isEmpty else {
+            statusText = L10n.text("imageEditor.status.adjustmentUnchanged")
+            return
+        }
+
+        pushUndo()
+        for (index, image) in changedImages {
+            document.layers[index].image = image
+        }
+        if changedImages.count == 1 { appendHistory(L10n.text(history)); statusText = L10n.text(status) }
+        else { appendHistory(L10n.text(selectedHistory)); statusText = L10n.format(selectedStatus, changedImages.count) }
     }
 
     private func smartObjectConversionCandidate(

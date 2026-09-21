@@ -2410,6 +2410,7 @@
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
 "imageEditor.status.gradientUnchanged" = "Gradient did not change any pixels";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
+"imageEditor.status.adjustmentUnchanged" = "Adjustment made no pixel changes";
 "imageEditor.status.filter" = "%@ applied";
 "imageEditor.status.filterFailed" = "Filter failed";
 "imageEditor.status.lastFilterUnavailable" = "No previously applied filter";

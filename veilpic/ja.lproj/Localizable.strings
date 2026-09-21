@@ -2410,6 +2410,7 @@
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
 "imageEditor.status.gradientUnchanged" = "グラデーションによるピクセルの変更はありません";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
+"imageEditor.status.adjustmentUnchanged" = "調整でピクセルは変更されませんでした";
 "imageEditor.status.filter" = "%@ を適用しました";
 "imageEditor.status.filterFailed" = "フィルターに失敗しました";
 "imageEditor.status.lastFilterUnavailable" = "適用済みのフィルターはありません";
