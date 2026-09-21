@@ -1009,6 +1009,24 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.redEye"))
     }
 
+    @Test func redEyeToolSkipsHistoryWhenNoRedPixelsChange() throws {
+        let image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceWhite: 0.35, alpha: 1).setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: canvasSize)
+        let viewModel = makeEditableViewModel(image: image)
+        viewModel.brushSize = 10
+        viewModel.opacity = 1
+        let historyBefore = viewModel.document.history
+        let undoCountBefore = viewModel.undoStack.count
+
+        viewModel.reduceRedEye(at: CGPoint(x: 20, y: 14))
+
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.retouchUnchanged"))
+    }
+
     @Test func shapeToolUsesTheCanvasTopLeftCoordinateSystem() throws {
         let viewModel = makeViewModel(image: NSImage.transparent(size: canvasSize))
         viewModel.foregroundColor = .systemRed

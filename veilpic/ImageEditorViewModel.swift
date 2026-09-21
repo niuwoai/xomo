@@ -9106,12 +9106,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerPixels(
+        let didChange = replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.redEye"),
-            resetFrame: false
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.retouchUnchanged"
         )
-        statusText = L10n.text("imageEditor.status.redEyeApplied")
+        if didChange {
+            statusText = L10n.text("imageEditor.status.redEyeApplied")
+        }
     }
 
     func paintBucketFill(at point: CGPoint?) {
