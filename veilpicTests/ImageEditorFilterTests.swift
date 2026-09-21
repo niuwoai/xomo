@@ -35,6 +35,7 @@ struct ImageEditorFilterTests {
         destructiveViewModel.filterIntensity = 0
         destructiveViewModel.applySelectedFilter()
         #expect(imageEditorMaximumPixelDifference(destructiveViewModel.currentImage, destructivePreviewBefore) == 0)
+        #expect(destructiveViewModel.statusText == L10n.text("imageEditor.status.filterUnchanged"))
 
         let filterLayerViewModel = ImageEditorViewModel(
             sourceName: "zero-filter-layer.png",

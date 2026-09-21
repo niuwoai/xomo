@@ -1714,6 +1714,7 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == beforePixels)
         #expect(viewModel.document.history == beforeHistory)
         #expect(viewModel.undoStack.count == beforeUndoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.adjustmentUnchanged"))
     }
 
     private func saturation(of color: NSColor) -> CGFloat {

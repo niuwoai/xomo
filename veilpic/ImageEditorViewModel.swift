@@ -9536,7 +9536,10 @@ final class ImageEditorViewModel: ObservableObject {
                 changedOutputs[index] = output
             }
         }
-        guard !changedOutputs.isEmpty else { return }
+        guard !changedOutputs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.adjustmentUnchanged")
+            return
+        }
 
         pushUndo()
         for (index, output) in changedOutputs {
@@ -9608,7 +9611,10 @@ final class ImageEditorViewModel: ObservableObject {
                 changedOutputs[index] = output
             }
         }
-        guard !changedOutputs.isEmpty else { return }
+        guard !changedOutputs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.filterUnchanged")
+            return
+        }
 
         pushUndo()
         for (index, output) in changedOutputs {
