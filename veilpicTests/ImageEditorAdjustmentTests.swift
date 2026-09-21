@@ -1696,6 +1696,26 @@ struct ImageEditorAdjustmentTests {
         return image
     }
 
+    @Test func zeroAmountAdjustmentPreservesHistoryAndPixels() throws {
+        let canvasSize = NSSize(width: 24, height: 24)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.4, green: 0.5, blue: 0.6, alpha: 1)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "adjustment-noop.png", image: sourceImage) { _ in }
+        viewModel.selectedAdjustment = .brightness
+        viewModel.adjustmentValue = 0
+        let beforePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let beforeHistory = viewModel.document.history
+        let beforeUndoCount = viewModel.undoStack.count
+
+        viewModel.applyAdjustment()
+
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == beforePixels)
+        #expect(viewModel.document.history == beforeHistory)
+        #expect(viewModel.undoStack.count == beforeUndoCount)
+    }
+
     private func saturation(of color: NSColor) -> CGFloat {
         let red = color.redComponent
         let green = color.greenComponent

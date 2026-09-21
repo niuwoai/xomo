@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-21 ｜ 当前版本：v2.12.0-rc1637 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+> 最后更新：2026-09-21 ｜ 当前版本：v2.12.0-rc1638 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+
+- `v2.12.0-rc1638`：直接应用调整在最终像素未变化时跳过 History/Undo，新增零幅度调整回归。本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 
 - `v2.12.0-rc1637`：Red Eye 工具复用最终像素 no-op 守卫；无红眼变化时不写入 History/Undo，并新增事务回归。本版不是 rc1640 完整门禁，不执行 Release 或安装覆盖。
 

@@ -9520,7 +9520,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        pushUndo()
+        var changedOutputs = [Int: NSImage]()
         for index in indices {
             guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
             let original = document.layers[index].image
@@ -9529,9 +9529,18 @@ final class ImageEditorViewModel: ObservableObject {
                 output: normalized,
                 layerFrame: document.layers[index].frame
             )
-            document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index])
+            let output = document.isEffectivelyTransparencyLocked(document.layers[index])
                 ? (clipped.preservingAlpha(from: original) ?? clipped)
                 : clipped
+            if output.qingtuPNGData() != original.qingtuPNGData() {
+                changedOutputs[index] = output
+            }
+        }
+        guard !changedOutputs.isEmpty else { return }
+
+        pushUndo()
+        for (index, output) in changedOutputs {
+            document.layers[index].image = output
         }
         if indices.count == 1 {
             appendHistory(title)
