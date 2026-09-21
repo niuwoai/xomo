@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-21 | 当前版本：v2.12.0-rc1638
+> 最后更新：2026-09-21 | 当前版本：v2.12.0-rc1639
 
-v2.12.0-rc1638 修正直接应用调整的无变化事务：输出像素未变化时不写入 History/Undo。本版不执行 rc1640 完整构建门禁或 `/Applications` 覆盖。
+v2.12.0-rc1639 修正应用滤镜的无变化事务：最终输出像素未变化时不写入 History/Undo。本版不执行 rc1640 完整构建门禁或 `/Applications` 覆盖。
 
 v2.12.0-rc1632 修复 Photoshop Patch 工具的无效事务：完全越界、零不透明度或最终像素未变化时不写入 History/Undo，也不移动 destination selection；部分重叠继续按有效像素提交。本版不执行 rc1640 完整构建门禁或 `/Applications` 覆盖。
 

@@ -1381,6 +1381,23 @@ struct ImageEditorFilterTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.filter", ImageEditorFilter.gaussianBlur.title))
     }
 
+    @Test func zeroIntensityFilterPreservesHistoryAndPixels() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = gradientImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-noop.png", image: sourceImage) { _ in }
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0
+        let beforePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let beforeHistory = viewModel.document.history
+        let beforeUndoCount = viewModel.undoStack.count
+
+        viewModel.applySelectedFilter()
+
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == beforePixels)
+        #expect(viewModel.document.history == beforeHistory)
+        #expect(viewModel.undoStack.count == beforeUndoCount)
+    }
+
     @Test func imageEditorBatchAddsUpdatesAndClearsSmartFiltersAcrossEditableSelection() async throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(
