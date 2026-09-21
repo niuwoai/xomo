@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-21 | 当前版本：v2.12.0-rc1642
+> 最后更新：2026-09-21 | 当前版本：v2.12.0-rc1643
 
-v2.12.0-rc1642 为 Alpha 通道对称翻转补充 no-op 事务回归，继续保持 Photoshop 风格通道操作不产生空 History/Undo。
+v2.12.0-rc1643 为测试目标单独启用增量 Swift 编译与 `-Onone`，缩短完整门禁反馈时间，不改变产品 Release 优化。
 
 v2.12.0-rc1632 修复 Photoshop Patch 工具的无效事务：完全越界、零不透明度或最终像素未变化时不写入 History/Undo，也不移动 destination selection；部分重叠继续按有效像素提交。本版不执行 rc1640 完整构建门禁或 `/Applications` 覆盖。
 

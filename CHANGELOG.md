@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc1643 - 2026-09-21
+
+### Changed
+- 测试目标 Release/Debug 使用增量 Swift 编译与 `-Onone`，避免继承产品 whole-module 优化导致完整测试门禁长时间卡在测试目标编译。
+
 ## 2.12.0-rc1642 - 2026-09-21
 
 ### Fixed

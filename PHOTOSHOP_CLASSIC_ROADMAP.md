@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-09-21 ｜ 当前版本：v2.12.0-rc1642 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+> 最后更新：2026-09-21 ｜ 当前版本：v2.12.0-rc1643 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+
+- `v2.12.0-rc1643`：测试目标 Release/Debug 独立使用增量 Swift 编译与 `-Onone`，不改变产品优化，降低完整门禁被测试目标编译拖住的风险。
 
 - `v2.12.0-rc1642`：为对称 Alpha 通道水平翻转补充 no-op 事务回归，确保对称结果不创建空 History/Undo。
 
