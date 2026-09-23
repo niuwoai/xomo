@@ -3406,6 +3406,7 @@
 "imageEditor.status.layerCompSaved" = "レイヤーコンプを保存しました：%@";
 "imageEditor.status.layerCompApplied" = "レイヤーコンプを適用しました：%@";
 "imageEditor.status.layerCompUpdated" = "レイヤーコンプを更新しました：%@";
+"imageEditor.status.layerCompUnchanged" = "レイヤーコンプはすでに最新です：%@";
 "imageEditor.status.layerCompDuplicated" = "レイヤーコンプを複製しました：%@";
 "imageEditor.status.layerCompFavoriteAdded" = "レイヤーコンプをお気に入りに追加しました：%@";
 "imageEditor.status.layerCompFavoriteRemoved" = "レイヤーコンプをお気に入りから削除しました：%@";

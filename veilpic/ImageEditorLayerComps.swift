@@ -744,17 +744,22 @@ extension ImageEditorViewModel {
 
     func updateLayerComp(_ id: UUID) {
         guard let index = document.layerComps.firstIndex(where: { $0.id == id }) else { return }
-        let name = document.layerComps[index].name
-        pushUndo()
+        let existing = document.layerComps[index]
+        let name = existing.name
         var updated = ImageEditorLayerComp.capture(name: name, document: document)
         updated.id = id
-        updated.comment = document.layerComps[index].comment
-        updated.isFavorite = document.layerComps[index].isFavorite
-        updated.capturesVisibility = document.layerComps[index].capturesVisibility
-        updated.capturesPosition = document.layerComps[index].capturesPosition
-        updated.capturesAppearance = document.layerComps[index].capturesAppearance
+        updated.comment = existing.comment
+        updated.isFavorite = existing.isFavorite
+        updated.capturesVisibility = existing.capturesVisibility
+        updated.capturesPosition = existing.capturesPosition
+        updated.capturesAppearance = existing.capturesAppearance
         updated.acknowledgedMissingLayerIDs = []
-        updated.createdAt = document.layerComps[index].createdAt
+        updated.createdAt = existing.createdAt
+        guard updated != existing else {
+            statusText = L10n.format("imageEditor.status.layerCompUnchanged", name)
+            return
+        }
+        pushUndo()
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
         appendHistory(L10n.text("imageEditor.history.layerCompUpdate"))

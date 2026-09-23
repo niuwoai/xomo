@@ -3406,6 +3406,7 @@
 "imageEditor.status.layerCompSaved" = "Saved layer comp: %@";
 "imageEditor.status.layerCompApplied" = "Applied layer comp: %@";
 "imageEditor.status.layerCompUpdated" = "Updated layer comp: %@";
+"imageEditor.status.layerCompUnchanged" = "Layer comp is already up to date: %@";
 "imageEditor.status.layerCompDuplicated" = "Duplicated layer comp: %@";
 "imageEditor.status.layerCompFavoriteAdded" = "Added layer comp to favorites: %@";
 "imageEditor.status.layerCompFavoriteRemoved" = "Removed layer comp from favorites: %@";
