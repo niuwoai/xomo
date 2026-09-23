@@ -686,6 +686,7 @@ extension ImageEditorViewModel {
             return false
         }
         guard !ImageEditorLayerCompApplication.matchesCurrentDocument(comp, in: document) else {
+            statusText = L10n.format("imageEditor.status.layerCompAlreadyApplied", comp.name)
             return false
         }
         if lastDocumentLayerCompState == nil {

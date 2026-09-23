@@ -966,6 +966,34 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func applyingAnAlreadyAppliedLayerCompReportsNoOpWithoutChangingHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "layer-comp-applied-noop.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayerComp(named: "Baseline")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+        #expect(viewModel.updateLayerCompComment(compID, to: "Temporary"))
+        viewModel.undo()
+
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+        let lastDocumentState = viewModel.lastDocumentLayerCompState
+
+        #expect(!viewModel.applyLayerComp(compID))
+
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.lastDocumentLayerCompState == lastDocumentState)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompAlreadyApplied",
+            "Baseline"
+        ))
+    }
+
+    @Test
     func layerCompFavoritesAreAtomicSearchableAndPersisted() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

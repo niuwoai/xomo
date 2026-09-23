@@ -3407,6 +3407,7 @@
 "imageEditor.status.layerCompApplied" = "已应用图层复合：%@";
 "imageEditor.status.layerCompUpdated" = "已更新图层复合：%@";
 "imageEditor.status.layerCompUnchanged" = "图层复合已经是最新状态：%@";
+"imageEditor.status.layerCompAlreadyApplied" = "图层复合已应用：%@";
 "imageEditor.status.layerCompDuplicated" = "已复制图层复合：%@";
 "imageEditor.status.layerCompFavoriteAdded" = "已收藏图层复合：%@";
 "imageEditor.status.layerCompFavoriteRemoved" = "已取消收藏图层复合：%@";
