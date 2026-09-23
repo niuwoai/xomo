@@ -606,6 +606,13 @@ extension ImageEditorViewModel {
         return ImageEditorLayerCompApplication.matchesCurrentDocument(comp, in: document)
     }
 
+    func layerCompApplyHelp(for id: UUID?) -> String {
+        guard let id, isLayerCompApplied(id) else {
+            return L10n.text("imageEditor.action.layerCompApply")
+        }
+        return L10n.text("imageEditor.layerComp.currentlyApplied")
+    }
+
     var canClearSelectedLayerCompWarning: Bool {
         selectedLayerComp.map { !unresolvedMissingLayerIDs(for: $0).isEmpty } ?? false
     }

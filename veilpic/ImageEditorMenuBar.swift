@@ -1016,6 +1016,7 @@ extension ImageEditorView {
                 viewModel.applySelectedLayerComp()
             }
             .disabled(!viewModel.canApplySelectedLayerComp)
+            .help(viewModel.layerCompApplyHelp(for: viewModel.selectedLayerComp?.id))
             Button(L10n.text("imageEditor.action.layerCompUpdate")) {
                 viewModel.updateSelectedLayerComp()
             }
@@ -2235,6 +2236,7 @@ extension ImageEditorView {
                 viewModel.applySelectedLayerComp()
             }
             .disabled(!viewModel.canApplySelectedLayerComp)
+            .help(viewModel.layerCompApplyHelp(for: viewModel.selectedLayerComp?.id))
             Button(L10n.text("imageEditor.action.layerCompUpdate")) {
                 selectedLayerPanelTab = .comps
                 viewModel.updateSelectedLayerComp()

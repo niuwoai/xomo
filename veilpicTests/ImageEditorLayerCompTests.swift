@@ -602,6 +602,9 @@ struct ImageEditorLayerCompTests {
 
         #expect(source.contains(".contextMenu {\n            layerCompContextMenu(comp)"))
         #expect(source.contains("viewModel.isLayerCompApplied(comp.id)"))
+        #expect(source.components(
+            separatedBy: ".help(viewModel.layerCompApplyHelp(for: comp.id))"
+        ).count - 1 == 2)
         #expect(source.contains("imageEditor.layerComp.currentlyApplied"))
         #expect(source.contains("image-editor-layer-comp-applied-"))
         #expect(source.components(separatedBy: ".disabled(isApplied)").count == 3)
@@ -718,6 +721,9 @@ struct ImageEditorLayerCompTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
+        #expect(menuSource.components(
+            separatedBy: ".help(viewModel.layerCompApplyHelp(for: viewModel.selectedLayerComp?.id))"
+        ).count - 1 == 2)
         #expect(menuSource.components(
             separatedBy: "viewModel.addLayerComp(captureOptions: .storedDefaults)"
         ).count - 1 == 2)
@@ -990,6 +996,29 @@ struct ImageEditorLayerCompTests {
         #expect(viewModel.statusText == L10n.format(
             "imageEditor.status.layerCompAlreadyApplied",
             "Baseline"
+        ))
+    }
+
+    @Test
+    func appliedLayerCompExposesItsDisabledActionReason() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "layer-comp-help.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayerComp(named: "Baseline")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+
+        #expect(viewModel.layerCompApplyHelp(for: compID) == L10n.text(
+            "imageEditor.layerComp.currentlyApplied"
+        ))
+        #expect(viewModel.layerCompApplyHelp(for: nil) == L10n.text(
+            "imageEditor.action.layerCompApply"
+        ))
+
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerVisibility(layerID)
+        #expect(viewModel.layerCompApplyHelp(for: compID) == L10n.text(
+            "imageEditor.action.layerCompApply"
         ))
     }
 

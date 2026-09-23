@@ -1533,6 +1533,7 @@ extension ImageEditorView {
                 viewModel.applyLayerComp(comp.id)
             }
             .disabled(isApplied)
+            .help(viewModel.layerCompApplyHelp(for: comp.id))
             layerCompIconButton("arrow.triangle.2.circlepath", "imageEditor.action.layerCompUpdate") {
                 viewModel.updateLayerComp(comp.id)
             }
@@ -1558,6 +1559,7 @@ extension ImageEditorView {
             Label(L10n.text("imageEditor.action.layerCompApply"), systemImage: "play.fill")
         }
         .disabled(isApplied)
+        .help(viewModel.layerCompApplyHelp(for: comp.id))
         Button {
             viewModel.updateLayerComp(comp.id)
         } label: {
