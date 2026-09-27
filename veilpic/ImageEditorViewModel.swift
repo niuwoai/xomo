@@ -7847,7 +7847,7 @@ final class ImageEditorViewModel: ObservableObject {
             document.layers[index].maskDensity = 1
             document.layers[index].maskFeather = 0
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: indices)
 
         if indices.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskAdd"))

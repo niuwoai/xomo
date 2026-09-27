@@ -3317,6 +3317,43 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func addingDefaultMaskToSecondarySelectionDoesNotEnterMissingPrimaryMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "mixed-default-mask-selection.png",
+            image: testBitmapImage(size: canvasSize, background: .black)
+        ) { _ in }
+        var primaryLayer = ImageEditorLayer.blank(name: "Locked primary without mask", size: canvasSize)
+        primaryLayer.isLocked = true
+        let secondaryLayer = ImageEditorLayer.blank(name: "Unlocked secondary", size: canvasSize)
+        viewModel.document.layers = [viewModel.document.layers[0], primaryLayer, secondaryLayer]
+        viewModel.document.selectedLayerID = primaryLayer.id
+        viewModel.document.selectedLayerIDs = [primaryLayer.id, secondaryLayer.id]
+
+        viewModel.addLayerMask()
+
+        let updatedPrimary = try #require(
+            viewModel.document.layers.first { $0.id == primaryLayer.id }
+        )
+        let updatedSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(updatedPrimary.mask == nil)
+        #expect(updatedSecondary.mask != nil)
+        #expect(viewModel.document.selectedLayerID == primaryLayer.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryLayer.id, secondaryLayer.id])
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskAdd"))
+
+        viewModel.undo()
+        let restoredSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(restoredSecondary.mask == nil)
+        #expect(!viewModel.isEditingLayerMask)
+    }
+
+    @MainActor
     @Test func imageEditorTogglesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .black)

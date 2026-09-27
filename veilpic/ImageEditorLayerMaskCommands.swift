@@ -1507,7 +1507,7 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func includesPrimarySelectedLayer(in indices: [Int]) -> Bool {
+    func includesPrimarySelectedLayer(in indices: [Int]) -> Bool {
         guard let primaryLayerID = document.selectedLayerID else { return false }
         return indices.contains { document.layers[$0].id == primaryLayerID }
     }
