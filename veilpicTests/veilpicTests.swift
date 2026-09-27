@@ -3033,6 +3033,49 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func deletingSecondaryMaskDoesNotFocusLockedPrimaryMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "locked-primary-mask-delete.png",
+            image: testBitmapImage(size: canvasSize, background: .black)
+        ) { _ in }
+        var primaryLayer = ImageEditorLayer.blank(name: "Locked primary", size: canvasSize)
+        primaryLayer.mask = NSImage.opaqueMask(size: canvasSize)
+        primaryLayer.isLocked = true
+        var secondaryLayer = ImageEditorLayer.blank(name: "Unlocked secondary", size: canvasSize)
+        secondaryLayer.mask = NSImage.opaqueMask(size: canvasSize)
+        viewModel.document.layers = [viewModel.document.layers[0], primaryLayer, secondaryLayer]
+        viewModel.document.selectedLayerID = primaryLayer.id
+        viewModel.document.selectedLayerIDs = [primaryLayer.id, secondaryLayer.id]
+
+        viewModel.deleteLayerMask()
+
+        let updatedPrimary = try #require(
+            viewModel.document.layers.first { $0.id == primaryLayer.id }
+        )
+        let updatedSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(updatedPrimary.mask != nil)
+        #expect(updatedSecondary.mask == nil)
+        #expect(viewModel.document.selectedLayerID == primaryLayer.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryLayer.id, secondaryLayer.id])
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDelete"))
+
+        viewModel.undo()
+        let restoredPrimary = try #require(
+            viewModel.document.layers.first { $0.id == primaryLayer.id }
+        )
+        let restoredSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(restoredPrimary.mask != nil)
+        #expect(restoredSecondary.mask != nil)
+        #expect(!viewModel.isEditingLayerMask)
+    }
+
+    @MainActor
     @Test func imageEditorInvertsMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .black)

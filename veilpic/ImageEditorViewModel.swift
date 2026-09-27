@@ -7868,7 +7868,7 @@ final class ImageEditorViewModel: ObservableObject {
             document.layers[index].maskDensity = 1
             document.layers[index].maskFeather = 0
         }
-        isEditingLayerMask = document.selectedLayer?.mask != nil
+        isEditingLayerMask = false
 
         if indices.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskDelete"))
