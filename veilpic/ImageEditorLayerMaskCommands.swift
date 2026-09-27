@@ -752,7 +752,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].maskFeather = 0
             document.layers[operation.index].maskFeatherSamplingScale = nil
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: operations.map(\.index))
 
         if operations.count == 1 {
             appendHistory(L10n.text("imageEditor.history.vectorMaskRasterize"))

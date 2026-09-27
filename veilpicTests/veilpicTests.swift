@@ -3196,6 +3196,69 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func rasterizingSecondarySelectedVectorMaskDoesNotEnterMissingPrimaryMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let anchors = [
+            ImageEditorPathAnchor(point: CGPoint(x: 16, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 48)),
+            ImageEditorPathAnchor(point: CGPoint(x: 16, y: 48))
+        ]
+        func vectorMaskedLayer(named name: String) -> ImageEditorLayer {
+            var layer = ImageEditorLayer.blank(name: name, size: canvasSize)
+            layer.vectorMask = ImageEditorShapeContent(
+                kind: .path,
+                fillColor: .white,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 1,
+                strokeOpacity: 0,
+                pathPoints: anchors.map(\.point),
+                pathAnchors: anchors,
+                isPathClosed: true
+            )
+            return layer
+        }
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "mixed-vector-mask-selection.png",
+            image: testBitmapImage(size: canvasSize, background: .black)
+        ) { _ in }
+        var primaryLayer = vectorMaskedLayer(named: "Locked primary vector mask")
+        primaryLayer.isLocked = true
+        let secondaryLayer = vectorMaskedLayer(named: "Unlocked secondary vector mask")
+        viewModel.document.layers = [viewModel.document.layers[0], primaryLayer, secondaryLayer]
+        viewModel.document.selectedLayerID = primaryLayer.id
+        viewModel.document.selectedLayerIDs = [primaryLayer.id, secondaryLayer.id]
+
+        #expect(viewModel.canRasterizeSelectedVectorMask)
+        viewModel.rasterizeSelectedVectorMask()
+
+        let updatedPrimary = try #require(
+            viewModel.document.layers.first { $0.id == primaryLayer.id }
+        )
+        let updatedSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(updatedPrimary.vectorMask != nil)
+        #expect(updatedPrimary.mask == nil)
+        #expect(updatedSecondary.vectorMask == nil)
+        #expect(updatedSecondary.mask != nil)
+        #expect(viewModel.document.selectedLayerID == primaryLayer.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryLayer.id, secondaryLayer.id])
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskRasterize"))
+
+        viewModel.undo()
+        let restoredSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(restoredSecondary.vectorMask != nil)
+        #expect(restoredSecondary.mask == nil)
+        #expect(!viewModel.isEditingLayerMask)
+    }
+
+    @MainActor
     @Test func imageEditorTogglesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .black)
