@@ -1424,7 +1424,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].mask?.hasEquivalentAlphaMask(to: operation.mask) != true
         }
         guard !changedOperations.isEmpty else {
-            isEditingLayerMask = true
+            isEditingLayerMask = includesPrimarySelectedLayer(in: operations.map(\.index))
             statusText = L10n.text("imageEditor.status.layerMaskSelectionUnchanged")
             return
         }
@@ -1440,7 +1440,7 @@ extension ImageEditorViewModel {
             }
             document.layers[operation.index].mask = operation.mask
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: operations.map(\.index))
 
         if changedOperations.count == 1 {
             appendHistory(L10n.text(combination.historyKey))
