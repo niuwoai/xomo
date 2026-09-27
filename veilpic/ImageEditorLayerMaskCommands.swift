@@ -816,6 +816,9 @@ extension ImageEditorViewModel {
             return
         }
 
+        let selectedLayerMaskWasInverted = document.selectedLayerID.map { selectedID in
+            indices.contains { document.layers[$0].id == selectedID }
+        } ?? false
         pushUndo()
         for index in indices {
             guard let mask = document.layers[index].mask,
@@ -823,7 +826,7 @@ extension ImageEditorViewModel {
             else { continue }
             document.layers[index].mask = inverted
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = selectedLayerMaskWasInverted
 
         if indices.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskInvert"))

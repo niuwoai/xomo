@@ -3095,6 +3095,47 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func invertingSecondarySelectedMaskDoesNotEnterMissingPrimaryMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "mixed-mask-selection.png",
+            image: testBitmapImage(size: canvasSize, background: .black)
+        ) { _ in }
+
+        let primaryLayer = ImageEditorLayer.blank(name: "Primary without mask", size: canvasSize)
+        var secondaryLayer = ImageEditorLayer.blank(name: "Secondary with mask", size: canvasSize)
+        secondaryLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 10, y: 10, width: 30, height: 30), .white)]
+        )
+        let originalMask = try #require(secondaryLayer.mask?.qingtuPNGData())
+
+        viewModel.document.layers = [viewModel.document.layers[0], primaryLayer, secondaryLayer]
+        viewModel.document.selectedLayerID = primaryLayer.id
+        viewModel.document.selectedLayerIDs = [primaryLayer.id, secondaryLayer.id]
+
+        #expect(viewModel.canInvertLayerMask)
+        viewModel.invertLayerMask()
+
+        let updatedSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(try #require(updatedSecondary.mask?.qingtuPNGData()) != originalMask)
+        #expect(viewModel.document.selectedLayerID == primaryLayer.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryLayer.id, secondaryLayer.id])
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskInvert"))
+
+        viewModel.undo()
+        let restoredSecondary = try #require(
+            viewModel.document.layers.first { $0.id == secondaryLayer.id }
+        )
+        #expect(try #require(restoredSecondary.mask?.qingtuPNGData()) == originalMask)
+        #expect(!viewModel.isEditingLayerMask)
+    }
+
+    @MainActor
     @Test func imageEditorTogglesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .black)
