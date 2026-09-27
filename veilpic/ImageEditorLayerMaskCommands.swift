@@ -570,7 +570,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].maskFeather = 0
             document.layers[operation.index].maskFeatherSamplingScale = nil
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: operations.map(\.index))
 
         if operations.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskFromSelection"))
@@ -625,7 +625,7 @@ extension ImageEditorViewModel {
             document.layers[index].maskFeather = 0
             document.layers[index].maskFeatherSamplingScale = nil
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: indices)
 
         if indices.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskHideAll"))
@@ -656,7 +656,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].maskFeather = 0
             document.layers[operation.index].maskFeatherSamplingScale = nil
         }
-        isEditingLayerMask = true
+        isEditingLayerMask = includesPrimarySelectedLayer(in: operations.map(\.index))
 
         if operations.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerMaskHideSelection"))
@@ -1505,6 +1505,11 @@ extension ImageEditorViewModel {
                 && !document.isEffectivelyLocked(layer)
                 && layer.mask == nil
         }
+    }
+
+    private func includesPrimarySelectedLayer(in indices: [Int]) -> Bool {
+        guard let primaryLayerID = document.selectedLayerID else { return false }
+        return indices.contains { document.layers[$0].id == primaryLayerID }
     }
 
     private func selectionMaskForLayer(_ selection: ImageEditorSelection, layer: ImageEditorLayer) -> NSImage? {

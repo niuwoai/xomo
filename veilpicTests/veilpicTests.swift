@@ -3136,6 +3136,66 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func creatingSecondarySelectedMaskDoesNotEnterMissingPrimaryMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let scenarios: [(historyKey: String, needsSelection: Bool, perform: (ImageEditorViewModel) -> Void)] = [
+            (
+                "imageEditor.history.layerMaskFromSelection",
+                true,
+                { $0.addLayerMaskFromSelection() }
+            ),
+            (
+                "imageEditor.history.layerMaskHideAll",
+                false,
+                { $0.addLayerMaskHidingAll() }
+            ),
+            (
+                "imageEditor.history.layerMaskHideSelection",
+                true,
+                { $0.addLayerMaskHidingSelection() }
+            )
+        ]
+
+        for scenario in scenarios {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "mixed-mask-creation-selection.png",
+                image: testBitmapImage(size: canvasSize, background: .black)
+            ) { _ in }
+            var primaryLayer = ImageEditorLayer.blank(name: "Locked primary", size: canvasSize)
+            primaryLayer.isLocked = true
+            let secondaryLayer = ImageEditorLayer.blank(name: "Unlocked secondary", size: canvasSize)
+            viewModel.document.layers = [viewModel.document.layers[0], primaryLayer, secondaryLayer]
+            viewModel.document.selectedLayerID = primaryLayer.id
+            viewModel.document.selectedLayerIDs = [primaryLayer.id, secondaryLayer.id]
+            if scenario.needsSelection {
+                viewModel.document.selection = .rectangle(CGRect(x: 12, y: 10, width: 32, height: 28))
+            }
+
+            scenario.perform(viewModel)
+
+            let updatedPrimary = try #require(
+                viewModel.document.layers.first { $0.id == primaryLayer.id }
+            )
+            let updatedSecondary = try #require(
+                viewModel.document.layers.first { $0.id == secondaryLayer.id }
+            )
+            #expect(updatedPrimary.mask == nil)
+            #expect(updatedSecondary.mask != nil)
+            #expect(viewModel.document.selectedLayerID == primaryLayer.id)
+            #expect(viewModel.document.selectedLayerIDs == [primaryLayer.id, secondaryLayer.id])
+            #expect(!viewModel.isEditingLayerMask)
+            #expect(viewModel.document.history.last?.title == L10n.text(scenario.historyKey))
+
+            viewModel.undo()
+            let restoredSecondary = try #require(
+                viewModel.document.layers.first { $0.id == secondaryLayer.id }
+            )
+            #expect(restoredSecondary.mask == nil)
+            #expect(!viewModel.isEditingLayerMask)
+        }
+    }
+
+    @MainActor
     @Test func imageEditorTogglesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .black)
