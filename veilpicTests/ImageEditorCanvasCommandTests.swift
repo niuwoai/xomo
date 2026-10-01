@@ -598,6 +598,31 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func rejectedCropUsesCropSpecificStatusWithoutChangingDocumentOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "rejected-crop.png",
+            image: testImage(color: .systemBlue, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        let baseline = try projectTransactionSnapshot(viewModel)
+        let undoCount = viewModel.undoStack.count
+        let historyCount = viewModel.document.history.count
+
+        viewModel.crop(to: CGRect(x: 0, y: 0, width: 7, height: 20))
+
+        #expect(try projectTransactionSnapshot(viewModel) == baseline)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.cropInvalid"))
+
+        viewModel.crop(to: CGRect(origin: .zero, size: viewModel.document.canvasSize))
+
+        #expect(try projectTransactionSnapshot(viewModel) == baseline)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.cropInvalid"))
+    }
+
+    @Test
     func cropClipsAndRemovesHotspotsAsOneUndoableTransaction() throws {
         let keptID = UUID()
         let clippedID = UUID()
@@ -764,7 +789,7 @@ struct ImageEditorCanvasCommandTests {
             #expect(viewModel.canvasOffset == CGSize(width: 7, height: -9))
             #expect(viewModel.targetCanvasWidth == 321)
             #expect(viewModel.targetCanvasHeight == 654)
-            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.cropInvalid"))
         }
 
         for rejectedHotspot in [

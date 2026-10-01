@@ -3445,6 +3445,7 @@
 "imageEditor.history.canvasResize" = "Resize Canvas";
 "imageEditor.status.resizeInvalid" = "Enter a valid size between 8 and 12000 px";
 "imageEditor.status.cropSelectionInvalid" = "The current selection cannot crop the canvas";
+"imageEditor.status.cropInvalid" = "The crop area is invalid or too small to crop the canvas";
 "imageEditor.status.trimNoVisiblePixels" = "No visible pixels to trim";
 "imageEditor.status.trimNoTransparentEdges" = "No transparent edge pixels to trim";
 "imageEditor.status.revealAllNoHiddenPixels" = "No visible layer content outside the canvas";

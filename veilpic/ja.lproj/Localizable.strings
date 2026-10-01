@@ -3445,6 +3445,7 @@
 "imageEditor.history.canvasResize" = "カンバスサイズを変更";
 "imageEditor.status.resizeInvalid" = "8 から 12000 px の有効なサイズを入力してください";
 "imageEditor.status.cropSelectionInvalid" = "現在の選択範囲ではカンバスを切り抜けません";
+"imageEditor.status.cropInvalid" = "切り抜き範囲が無効か小さすぎるため、カンバスを切り抜けません";
 "imageEditor.status.trimNoVisiblePixels" = "トリミングできる表示ピクセルがありません";
 "imageEditor.status.trimNoTransparentEdges" = "カンバス端にトリミングできる透明ピクセルがありません";
 "imageEditor.status.revealAllNoHiddenPixels" = "カンバス外に表示中のレイヤー内容はありません";

@@ -367,7 +367,7 @@ extension ImageEditorViewModel {
               bounded.height >= 8,
               bounded.width < originalSize.width || bounded.height < originalSize.height
         else {
-            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            statusText = L10n.text("imageEditor.status.cropInvalid")
             return
         }
 
@@ -389,7 +389,7 @@ extension ImageEditorViewModel {
                 allowsRemoval: true
             )
         } catch {
-            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            statusText = L10n.text("imageEditor.status.cropInvalid")
             return
         }
         let transformedLayers = document.layers.map { layer in

@@ -3445,6 +3445,7 @@
 "imageEditor.history.canvasResize" = "调整画布尺寸";
 "imageEditor.status.resizeInvalid" = "请输入 8 到 12000 px 之间的有效尺寸";
 "imageEditor.status.cropSelectionInvalid" = "当前选区无法裁剪画布";
+"imageEditor.status.cropInvalid" = "裁剪区域无效或尺寸不足，无法裁剪画布";
 "imageEditor.status.trimNoVisiblePixels" = "没有可裁切的可见像素";
 "imageEditor.status.trimNoTransparentEdges" = "画布边缘没有透明像素可裁切";
 "imageEditor.status.revealAllNoHiddenPixels" = "没有画布外的可见图层内容";
