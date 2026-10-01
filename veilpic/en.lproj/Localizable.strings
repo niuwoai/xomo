@@ -1981,6 +1981,7 @@
 "imageEditor.history.layerClippingMaskReleaseSelected" = "Release Selected Clipping Masks";
 "imageEditor.history.layerVisibility" = "Toggle Layer Visibility";
 "imageEditor.history.layerIsolateSelected" = "Isolate Selected Layers";
+"imageEditor.history.layerVisibilityRestore" = "Restore Previous Layer Visibility";
 "imageEditor.history.layerShowSelected" = "Show Selected Layers";
 "imageEditor.history.layerHideSelected" = "Hide Selected Layers";
 "imageEditor.history.layerShowAll" = "Show All Layers";
@@ -2511,6 +2512,7 @@
 "imageEditor.status.vectorMaskCopyUnchanged" = "Selected vector masks already match";
 "imageEditor.status.layerMaskSelectionUnchanged" = "Layer masks did not change";
 "imageEditor.status.layerIsolateSelected" = "Isolated %d selected layers";
+"imageEditor.status.layerVisibilityRestored" = "Restored previous layer visibility";
 "imageEditor.status.layerShowSelected" = "Shown %d selected layers";
 "imageEditor.status.layerHideSelected" = "Hidden %d selected layers";
 "imageEditor.status.layerShowAll" = "All layers shown";
@@ -2964,7 +2966,7 @@
 "imageEditor.action.layerStampSelected" = "Stamp Selected Layers";
 "imageEditor.action.layerFlatten" = "Flatten Image";
 "imageEditor.action.layerVisibility" = "Show / Hide Layer";
-"imageEditor.action.layerVisibilityOptionHint" = "Click to show or hide; Option-click to isolate this layer";
+"imageEditor.action.layerVisibilityOptionHint" = "Click to show or hide; Option-click to isolate this layer, then Option-click again to restore visibility";
 "imageEditor.accessibility.layerVisible" = "Visible";
 "imageEditor.accessibility.layerHidden" = "Hidden";
 "imageEditor.accessibility.canvas" = "Canvas";

@@ -1981,6 +1981,7 @@
 "imageEditor.history.layerClippingMaskReleaseSelected" = "释放所选剪贴蒙版";
 "imageEditor.history.layerVisibility" = "切换图层可见性";
 "imageEditor.history.layerIsolateSelected" = "隔离显示所选图层";
+"imageEditor.history.layerVisibilityRestore" = "恢复之前的图层可见性";
 "imageEditor.history.layerShowSelected" = "显示所选图层";
 "imageEditor.history.layerHideSelected" = "隐藏所选图层";
 "imageEditor.history.layerShowAll" = "显示全部图层";
@@ -2511,6 +2512,7 @@
 "imageEditor.status.vectorMaskCopyUnchanged" = "所选图层的矢量蒙版已经一致";
 "imageEditor.status.layerMaskSelectionUnchanged" = "图层蒙版没有变化";
 "imageEditor.status.layerIsolateSelected" = "已隔离显示 %d 个所选图层";
+"imageEditor.status.layerVisibilityRestored" = "已恢复之前的图层可见性";
 "imageEditor.status.layerShowSelected" = "已显示 %d 个所选图层";
 "imageEditor.status.layerHideSelected" = "已隐藏 %d 个所选图层";
 "imageEditor.status.layerShowAll" = "已显示全部图层";
@@ -2964,7 +2966,7 @@
 "imageEditor.action.layerStampSelected" = "盖印所选图层";
 "imageEditor.action.layerFlatten" = "扁平化图像";
 "imageEditor.action.layerVisibility" = "显示/隐藏图层";
-"imageEditor.action.layerVisibilityOptionHint" = "单击显示/隐藏图层；按住 Option 单击可隔离显示该图层";
+"imageEditor.action.layerVisibilityOptionHint" = "单击显示/隐藏图层；按住 Option 单击可隔离显示，再次 Option-单击可恢复原可见性";
 "imageEditor.accessibility.layerVisible" = "可见";
 "imageEditor.accessibility.layerHidden" = "隐藏";
 "imageEditor.accessibility.canvas" = "画布";

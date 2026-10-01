@@ -908,6 +908,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     var undoStack: [ImageEditorDocument] = []
     var redoStack: [ImageEditorDocument] = []
+    private var optionClickLayerIsolationSnapshot: [UUID: Bool]?
+    private var optionClickLayerIsolationTargetID: UUID?
     private var undoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
     private var redoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
@@ -5229,6 +5231,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard !cancelMovingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
+        clearOptionClickLayerIsolationSnapshot()
         lastDocumentLayerCompState = nil
         clearSelectedLayerTransformReferencePoint()
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
@@ -5266,6 +5269,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard !cancelMovingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
+        clearOptionClickLayerIsolationSnapshot()
         lastDocumentLayerCompState = nil
         clearSelectedLayerTransformReferencePoint()
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
@@ -6915,6 +6919,7 @@ final class ImageEditorViewModel: ObservableObject {
         )
         let changedIndices = targetIndices.filter { document.layers[$0].isVisible != targetVisibility }
         guard !changedIndices.isEmpty else { return }
+        clearOptionClickLayerIsolationSnapshot()
         pushUndo()
         for targetIndex in changedIndices {
             document.layers[targetIndex].isVisible = targetVisibility
@@ -6937,6 +6942,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func isolateSelectedLayers() {
+        clearOptionClickLayerIsolationSnapshot()
         let visibleIDs = isolatedLayerVisibilityIDs()
         let forcedVisibleIDs = isolationForcedVisibleLayerIDs(for: document.selectedLayerIDs)
         guard !visibleIDs.isEmpty, canIsolateSelectedLayers else {
@@ -6958,6 +6964,7 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        clearOptionClickLayerIsolationSnapshot()
         pushUndo()
         for index in document.layers.indices {
             document.layers[index].isVisible = true
@@ -6972,6 +6979,88 @@ final class ImageEditorViewModel: ObservableObject {
 
     func hideSelectedLayers() {
         setSelectedLayersVisibility(false)
+    }
+
+    @discardableResult
+    func toggleLayerIsolationFromVisibilityEye(_ layerID: UUID) -> Bool {
+        guard document.layers.contains(where: { $0.id == layerID }) else { return false }
+        guard hasValidOptionClickVisibilitySnapshot else {
+            clearOptionClickLayerIsolationSnapshot()
+            return applyOptionClickLayerIsolation(layerID, restoring: currentVisibilityByLayerID)
+        }
+        if optionClickLayerIsolationTargetID == layerID {
+            return restoreOptionClickLayerVisibility()
+        }
+        return applyOptionClickLayerIsolation(
+            layerID,
+            restoring: optionClickLayerIsolationSnapshot ?? currentVisibilityByLayerID
+        )
+    }
+
+    private var currentVisibilityByLayerID: [UUID: Bool] {
+        Dictionary(uniqueKeysWithValues: document.layers.map { ($0.id, $0.isVisible) })
+    }
+
+    private var hasValidOptionClickVisibilitySnapshot: Bool {
+        guard let optionClickLayerIsolationSnapshot else { return false }
+        return Set(optionClickLayerIsolationSnapshot.keys) == Set(document.layers.map(\.id))
+    }
+
+    private func applyOptionClickLayerIsolation(
+        _ layerID: UUID,
+        restoring originalVisibility: [UUID: Bool]
+    ) -> Bool {
+        let isolatedIDs = isolatedLayerVisibilityIDs(for: [layerID])
+        let forcedVisibleIDs = isolationForcedVisibleLayerIDs(for: [layerID])
+        let targetVisibility = Dictionary(uniqueKeysWithValues: document.layers.map { layer in
+            let restoredVisibility = originalVisibility[layer.id] ?? false
+            let isVisible = forcedVisibleIDs.contains(layer.id)
+                || (isolatedIDs.contains(layer.id) && restoredVisibility)
+            return (layer.id, isVisible)
+        })
+        let changedIndices = document.layers.indices.filter { index in
+            let id = document.layers[index].id
+            return document.layers[index].isVisible != (targetVisibility[id] ?? false)
+        }
+        guard !changedIndices.isEmpty else { return false }
+
+        pushUndo()
+        for index in changedIndices {
+            let id = document.layers[index].id
+            document.layers[index].isVisible = targetVisibility[id] ?? false
+        }
+        optionClickLayerIsolationSnapshot = originalVisibility
+        optionClickLayerIsolationTargetID = layerID
+        appendHistory(L10n.text("imageEditor.history.layerIsolateSelected"))
+        statusText = L10n.format("imageEditor.status.layerIsolateSelected", 1)
+        return true
+    }
+
+    private func restoreOptionClickLayerVisibility() -> Bool {
+        guard let originalVisibility = optionClickLayerIsolationSnapshot else { return false }
+        let changedIndices = document.layers.indices.filter { index in
+            let id = document.layers[index].id
+            return document.layers[index].isVisible != (originalVisibility[id] ?? false)
+        }
+        guard !changedIndices.isEmpty else {
+            clearOptionClickLayerIsolationSnapshot()
+            return false
+        }
+
+        pushUndo()
+        for index in changedIndices {
+            let id = document.layers[index].id
+            document.layers[index].isVisible = originalVisibility[id] ?? false
+        }
+        clearOptionClickLayerIsolationSnapshot()
+        appendHistory(L10n.text("imageEditor.history.layerVisibilityRestore"))
+        statusText = L10n.text("imageEditor.status.layerVisibilityRestored")
+        return true
+    }
+
+    private func clearOptionClickLayerIsolationSnapshot() {
+        optionClickLayerIsolationSnapshot = nil
+        optionClickLayerIsolationTargetID = nil
     }
 
     func toggleLayerGroupExpansion(_ id: UUID, recursively: Bool = false) {
@@ -11898,6 +11987,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
+        clearOptionClickLayerIsolationSnapshot()
         pushUndo()
         for index in indices {
             document.layers[index].isVisible = isVisible

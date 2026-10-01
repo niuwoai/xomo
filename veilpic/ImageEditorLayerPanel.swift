@@ -3150,7 +3150,7 @@ extension ImageEditorView {
     private func layerVisibilityButton(_ layer: ImageEditorLayer) -> some View {
         Button {
             if NSEvent.modifierFlags.contains(.option) {
-                viewModel.isolateLayersFromContext(layer.id)
+                viewModel.toggleLayerIsolationFromVisibilityEye(layer.id)
             } else {
                 viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)
             }

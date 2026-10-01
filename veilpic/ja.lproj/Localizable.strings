@@ -1981,6 +1981,7 @@
 "imageEditor.history.layerClippingMaskReleaseSelected" = "選択クリッピングマスクを解除";
 "imageEditor.history.layerVisibility" = "レイヤー表示を切り替え";
 "imageEditor.history.layerIsolateSelected" = "選択レイヤーを単独表示";
+"imageEditor.history.layerVisibilityRestore" = "以前のレイヤー表示状態を復元";
 "imageEditor.history.layerShowSelected" = "選択レイヤーを表示";
 "imageEditor.history.layerHideSelected" = "選択レイヤーを非表示";
 "imageEditor.history.layerShowAll" = "すべてのレイヤーを表示";
@@ -2511,6 +2512,7 @@
 "imageEditor.status.vectorMaskCopyUnchanged" = "選択したレイヤーのベクトルマスクはすでに一致しています";
 "imageEditor.status.layerMaskSelectionUnchanged" = "レイヤーマスクは変更されませんでした";
 "imageEditor.status.layerIsolateSelected" = "%d 個の選択レイヤーを単独表示しました";
+"imageEditor.status.layerVisibilityRestored" = "以前のレイヤー表示状態を復元しました";
 "imageEditor.status.layerShowSelected" = "%d 個の選択レイヤーを表示しました";
 "imageEditor.status.layerHideSelected" = "%d 個の選択レイヤーを非表示にしました";
 "imageEditor.status.layerShowAll" = "すべてのレイヤーを表示しました";
@@ -2964,7 +2966,7 @@
 "imageEditor.action.layerStampSelected" = "選択レイヤーをスタンプ";
 "imageEditor.action.layerFlatten" = "画像を統合";
 "imageEditor.action.layerVisibility" = "レイヤーを表示/非表示";
-"imageEditor.action.layerVisibilityOptionHint" = "クリックで表示/非表示、Optionキーを押しながらクリックでこのレイヤーを単独表示";
+"imageEditor.action.layerVisibilityOptionHint" = "クリックで表示/非表示、Optionキーを押しながらクリックで単独表示、再度 Option-クリックで元の表示状態に復元";
 "imageEditor.accessibility.layerVisible" = "表示";
 "imageEditor.accessibility.layerHidden" = "非表示";
 "imageEditor.accessibility.canvas" = "キャンバス";

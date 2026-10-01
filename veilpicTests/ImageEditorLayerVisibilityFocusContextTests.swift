@@ -123,6 +123,55 @@ struct ImageEditorLayerVisibilityFocusContextTests {
         #expect(isVisible(outside.id, in: viewModel))
     }
 
+    @Test func optionClickVisibilityIsolationRestoresExactPriorStateAndSupportsUndoRedo() throws {
+        let viewModel = makeViewModel()
+        let background = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let isolated = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let unrelated = try #require(viewModel.document.selectedLayer)
+        viewModel.document.layers[0].isVisible = false
+        let selectedIDsBefore = viewModel.document.selectedLayerIDs
+        let visibilityBefore = viewModel.document.layers.map(\.isVisible)
+
+        #expect(viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(isVisible(isolated.id, in: viewModel))
+        #expect(!isVisible(background.id, in: viewModel))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+        #expect(viewModel.document.selectedLayerIDs == selectedIDsBefore)
+
+        #expect(viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(viewModel.document.layers.map(\.isVisible) == visibilityBefore)
+        #expect(viewModel.document.selectedLayerIDs == selectedIDsBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerVisibilityRestored"))
+
+        viewModel.undo()
+        #expect(isVisible(isolated.id, in: viewModel))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+        #expect(!viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+        viewModel.redo()
+        #expect(viewModel.document.layers.map(\.isVisible) == visibilityBefore)
+    }
+
+    @Test func manualVisibilityChangeInvalidatesOptionClickIsolationSnapshot() throws {
+        let viewModel = makeViewModel()
+        viewModel.addLayer()
+        let isolated = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let unrelated = try #require(viewModel.document.selectedLayer)
+
+        #expect(viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+
+        viewModel.toggleLayerVisibility(unrelated.id)
+        #expect(isVisible(unrelated.id, in: viewModel))
+        #expect(viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+        #expect(viewModel.toggleLayerIsolationFromVisibilityEye(isolated.id))
+        #expect(isVisible(unrelated.id, in: viewModel))
+    }
+
     @Test func showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat() throws {
         let viewModel = makeViewModel()
         let first = try #require(viewModel.document.selectedLayer)

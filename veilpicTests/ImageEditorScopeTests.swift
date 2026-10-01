@@ -4112,7 +4112,7 @@ struct ImageEditorScopeTests {
         let buttonSource = source[buttonStart.lowerBound..<buttonEnd.lowerBound]
 
         #expect(buttonSource.contains("NSEvent.modifierFlags.contains(.option)"))
-        #expect(buttonSource.contains("viewModel.isolateLayersFromContext(layer.id)"))
+        #expect(buttonSource.contains("viewModel.toggleLayerIsolationFromVisibilityEye(layer.id)"))
         #expect(buttonSource.contains("viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)"))
         #expect(buttonSource.contains("imageEditor.action.layerVisibilityOptionHint"))
     }
