@@ -11859,6 +11859,11 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
 
+        for index in document.layers.indices where visibleIDs.contains(document.layers[index].id) {
+            guard let baseIndex = document.clippingBaseIndex(forLayerAt: index) else { continue }
+            visibleIDs.insert(document.layers[baseIndex].id)
+        }
+
         var ancestorIDs = Set<UUID>()
         for layer in document.layers where visibleIDs.contains(layer.id) {
             ancestorIDs.formUnion(document.ancestorGroups(for: layer).map(\.id))

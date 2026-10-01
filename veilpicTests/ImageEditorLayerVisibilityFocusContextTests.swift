@@ -61,6 +61,31 @@ struct ImageEditorLayerVisibilityFocusContextTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func isolatingSelectedClippingLayerKeepsItsBaseVisibleAndUndoable() throws {
+        let viewModel = makeViewModel()
+        let base = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let clipped = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let unrelated = try #require(viewModel.document.selectedLayer)
+        let clippedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == clipped.id })
+        viewModel.document.layers[clippedIndex].isClippingMask = true
+        viewModel.selectLayer(clipped.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.isolatedLayerVisibilityIDs(for: [clipped.id]).contains(base.id))
+        viewModel.isolateSelectedLayers()
+
+        #expect(isVisible(base.id, in: viewModel))
+        #expect(isVisible(clipped.id, in: viewModel))
+        #expect(!isVisible(unrelated.id, in: viewModel))
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        let restoredVisibility = viewModel.document.layers.map { $0.isVisible }
+        #expect(restoredVisibility.allSatisfy { $0 })
+    }
+
     @Test func showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat() throws {
         let viewModel = makeViewModel()
         let first = try #require(viewModel.document.selectedLayer)
