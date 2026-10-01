@@ -2964,6 +2964,7 @@
 "imageEditor.action.layerStampSelected" = "盖印所选图层";
 "imageEditor.action.layerFlatten" = "扁平化图像";
 "imageEditor.action.layerVisibility" = "显示/隐藏图层";
+"imageEditor.action.layerVisibilityOptionHint" = "单击显示/隐藏图层；按住 Option 单击可隔离显示该图层";
 "imageEditor.accessibility.layerVisible" = "可见";
 "imageEditor.accessibility.layerHidden" = "隐藏";
 "imageEditor.accessibility.canvas" = "画布";

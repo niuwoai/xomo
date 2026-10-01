@@ -2964,6 +2964,7 @@
 "imageEditor.action.layerStampSelected" = "Stamp Selected Layers";
 "imageEditor.action.layerFlatten" = "Flatten Image";
 "imageEditor.action.layerVisibility" = "Show / Hide Layer";
+"imageEditor.action.layerVisibilityOptionHint" = "Click to show or hide; Option-click to isolate this layer";
 "imageEditor.accessibility.layerVisible" = "Visible";
 "imageEditor.accessibility.layerHidden" = "Hidden";
 "imageEditor.accessibility.canvas" = "Canvas";

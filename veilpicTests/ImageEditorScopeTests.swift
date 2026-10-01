@@ -4102,6 +4102,21 @@ struct ImageEditorScopeTests {
         #expect(helperSource.contains("case .feather: viewModel.featherSelection()"))
     }
 
+    @Test func layerVisibilityEyeUsesOptionClickForIsolation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let buttonStart = try #require(source.range(of: "private func layerVisibilityButton("))
+        let buttonEnd = try #require(source[buttonStart.upperBound...].range(of: "private func layerContentButton("))
+        let buttonSource = source[buttonStart.lowerBound..<buttonEnd.lowerBound]
+
+        #expect(buttonSource.contains("NSEvent.modifierFlags.contains(.option)"))
+        #expect(buttonSource.contains("viewModel.isolateLayersFromContext(layer.id)"))
+        #expect(buttonSource.contains("viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)"))
+        #expect(buttonSource.contains("imageEditor.action.layerVisibilityOptionHint"))
+    }
+
     @Test func selectMenuSeparatesStructuralSelectionActionsFromPixelGeometry() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

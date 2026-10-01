@@ -2964,6 +2964,7 @@
 "imageEditor.action.layerStampSelected" = "選択レイヤーをスタンプ";
 "imageEditor.action.layerFlatten" = "画像を統合";
 "imageEditor.action.layerVisibility" = "レイヤーを表示/非表示";
+"imageEditor.action.layerVisibilityOptionHint" = "クリックで表示/非表示、Optionキーを押しながらクリックでこのレイヤーを単独表示";
 "imageEditor.accessibility.layerVisible" = "表示";
 "imageEditor.accessibility.layerHidden" = "非表示";
 "imageEditor.accessibility.canvas" = "キャンバス";

@@ -3149,14 +3149,18 @@ extension ImageEditorView {
 
     private func layerVisibilityButton(_ layer: ImageEditorLayer) -> some View {
         Button {
-            viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)
+            if NSEvent.modifierFlags.contains(.option) {
+                viewModel.isolateLayersFromContext(layer.id)
+            } else {
+                viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)
+            }
         } label: {
             Image(systemName: layer.isVisible ? "eye" : "eye.slash")
                 .frame(width: 18, height: 22)
         }
         .buttonStyle(.plain)
         .focusable(false)
-        .help(L10n.text("imageEditor.action.layerVisibility"))
+        .help(L10n.text("imageEditor.action.layerVisibilityOptionHint"))
         .accessibilityLabel(L10n.text("imageEditor.action.layerVisibility"))
         .accessibilityValue(L10n.text(
             layer.isVisible
