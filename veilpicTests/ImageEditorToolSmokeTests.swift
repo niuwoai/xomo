@@ -104,6 +104,33 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickSelection"))
     }
 
+    @Test func quickSelectionSamplesTheEntireLongStrokeWithinItsAnalysisBudget() throws {
+        let canvasSize = CGSize(width: 480, height: 28)
+        let samplePoints = (0..<24).map { index in
+            CGPoint(x: CGFloat(index * 20 + 5), y: 14)
+        }
+        let image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            NSColor.systemRed.setFill()
+            for index in 0..<24 {
+                CGRect(x: CGFloat(index * 20), y: 0, width: 10, height: rect.height).fill()
+            }
+        } ?? NSImage.transparent(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "long-quick-selection.png", image: image) { _ in }
+        viewModel.brushSize = 4
+        viewModel.tolerance = 0.05
+
+        #expect(viewModel.createQuickSelection(points: samplePoints))
+
+        let selection = try #require(viewModel.document.selection)
+        let firstSample = try #require(samplePoints.first)
+        let lastSample = try #require(samplePoints.last)
+        #expect(selection.contains(firstSample))
+        #expect(selection.contains(lastSample))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickSelection"))
+    }
+
     @Test func spongeIncreasesLocalColorSaturation() throws {
         let muted = NSColor(deviceRed: 0.58, green: 0.50, blue: 0.42, alpha: 1)
         let viewModel = makeEditableViewModel(image: solidImage(color: muted))

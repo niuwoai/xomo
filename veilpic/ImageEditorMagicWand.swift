@@ -8,6 +8,44 @@
 import AppKit
 import Foundation
 
+enum ImageEditorQuickSelectionSampling {
+    static func points(
+        from inputPoints: [CGPoint],
+        within canvasBounds: CGRect,
+        minimumDistance: CGFloat,
+        maximumCount: Int
+    ) -> [CGPoint] {
+        guard maximumCount > 0 else { return [] }
+        let validPoints = inputPoints.filter { point in
+            point.x.isFinite && point.y.isFinite && canvasBounds.contains(point)
+        }
+        guard !validPoints.isEmpty else { return [] }
+
+        let minimumDistance = max(0, minimumDistance.isFinite ? minimumDistance : 0)
+        var spacedPoints: [CGPoint] = []
+        for point in validPoints {
+            let isFarEnough = spacedPoints.last.map {
+                hypot(point.x - $0.x, point.y - $0.y) >= minimumDistance
+            } ?? true
+            if isFarEnough {
+                spacedPoints.append(point)
+            }
+        }
+
+        guard spacedPoints.count > maximumCount else { return spacedPoints }
+        guard maximumCount > 1 else { return [spacedPoints[0]] }
+
+        let lastIndex = spacedPoints.count - 1
+        let intervals = maximumCount - 1
+        return (0..<maximumCount).map { sampleIndex in
+            let sourceIndex = Int(
+                (Double(sampleIndex) * Double(lastIndex) / Double(intervals)).rounded()
+            )
+            return spacedPoints[sourceIndex]
+        }
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     func magicSelection(

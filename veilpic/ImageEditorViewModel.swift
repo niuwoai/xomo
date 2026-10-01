@@ -6017,14 +6017,12 @@ final class ImageEditorViewModel: ObservableObject {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let minimumDistance = max(8, brushSize * 0.65)
         let maximumSamples = 18
-        var sampledPoints: [CGPoint] = []
-
-        for point in points where canvasBounds.contains(point) {
-            guard sampledPoints.count < maximumSamples else { break }
-            guard sampledPoints.last.map({ hypot($0.x - point.x, $0.y - point.y) >= minimumDistance }) ?? true else { continue }
-            sampledPoints.append(point)
-        }
-
+        let sampledPoints = ImageEditorQuickSelectionSampling.points(
+            from: points,
+            within: canvasBounds,
+            minimumDistance: minimumDistance,
+            maximumCount: maximumSamples
+        )
         guard !sampledPoints.isEmpty else { return false }
 
         var combinedSelection: ImageEditorSelection?
