@@ -838,6 +838,41 @@ struct ImageEditorLayerMaskContextTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskCopyUnchanged"))
     }
 
+    @Test func rasterMaskCopyRejectsTargetsOverTheSamplingBudgetAtomically() {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Source", in: viewModel)
+        var validTarget = layer(named: "Valid Target", in: viewModel)
+        var oversizedTarget = layer(named: "Oversized Target", in: viewModel)
+        source.mask = mask(
+            size: source.image.size,
+            selectedRect: CGRect(x: 10, y: 8, width: 30, height: 24)
+        )
+        let originalValidTargetMask = mask(
+            size: validTarget.image.size,
+            selectedRect: CGRect(x: 2, y: 3, width: 12, height: 9)
+        )
+        let originalOversizedTargetMask = mask(
+            size: CGSize(width: 2, height: 2),
+            selectedRect: CGRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        validTarget.mask = originalValidTargetMask
+        oversizedTarget.image = NSImage(size: CGSize(width: 100_000, height: 100_000))
+        oversizedTarget.mask = originalOversizedTargetMask
+        viewModel.document.layers = [source, validTarget, oversizedTarget]
+        select([source.id, validTarget.id, oversizedTarget.id], primary: source.id, in: viewModel)
+        viewModel.isEditingLayerMask = true
+        let historyBefore = viewModel.document.history
+
+        #expect(viewModel.canCopyLayerMaskToSelectedLayers)
+        viewModel.copyLayerMaskToSelectedLayers()
+
+        #expect(viewModel.document.layers[1].mask === originalValidTargetMask)
+        #expect(viewModel.document.layers[2].mask === originalOversizedTargetMask)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func layerPanelWiresEveryMaskContextActionThroughSharedPolicy() throws {
         let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let sourceURL = testsDirectory

@@ -1683,19 +1683,28 @@ extension ImageEditorViewModel {
             sourceID: sourceID,
             selectedIDs: selectedIDs
         )
-        let operations = targetIndices.compactMap { index -> (index: Int, mask: NSImage)? in
+        var operations: [(index: Int, mask: NSImage)] = []
+        for index in targetIndices {
             let targetLayer = document.layers[index]
             let baseSize = maskSize(for: targetLayer)
             let scale = ImageEditorMaskSampling.featherScale(sourceLayer.maskFeatherSamplingScale)
-            guard let targetSize = ImageEditorMaskSampling.bitmapSize(CGSize(width: baseSize.width * scale, height: baseSize.height * scale)) else { return nil }
-            let targetMask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
+            guard let targetSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+                width: baseSize.width * scale,
+                height: baseSize.height * scale
+            )),
+            let resizedMask = sourceMask.resized(to: targetSize) else {
+                return nil
+            }
+            let targetMask = resizedMask.normalizedBitmapImage()
             let isEquivalent = targetLayer.mask?.hasEquivalentAlphaMask(to: targetMask) == true
                 && targetLayer.isMaskEnabled == sourceLayer.isMaskEnabled
                 && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
                 && targetLayer.maskDensity == sourceLayer.maskDensity
                 && targetLayer.maskFeather == sourceLayer.maskFeather
                 && ImageEditorMaskSampling.featherScale(targetLayer.maskFeatherSamplingScale) == scale
-            return isEquivalent ? nil : (index, targetMask)
+            if !isEquivalent {
+                operations.append((index, targetMask))
+            }
         }
         return (sourceIndex, operations)
     }
