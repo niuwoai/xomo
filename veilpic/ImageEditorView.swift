@@ -3526,8 +3526,9 @@ struct ImageEditorView: View {
     }
 
     private var isTextInputActiveForDirectShortcut: Bool {
-        guard let firstResponder = NSApp.keyWindow?.firstResponder else { return false }
-        return firstResponder is NSTextView || firstResponder is NSTextField
+        ImageEditorTextInputFocusPolicy.isActive(
+            firstResponder: NSApp.keyWindow?.firstResponder
+        )
     }
 
     func performNudgeCommand(_ delta: CGSize) {
@@ -20936,6 +20937,13 @@ enum ImageEditorLiveMoveShortcutPolicy {
         !hasActiveLayerMoveTransaction
             && !hasActivePathAnchorMoveTransaction
             && !isTextInputActive
+    }
+}
+
+enum ImageEditorTextInputFocusPolicy {
+    static func isActive(firstResponder: NSResponder?) -> Bool {
+        guard let firstResponder else { return false }
+        return firstResponder is NSTextView || firstResponder is NSTextField
     }
 }
 

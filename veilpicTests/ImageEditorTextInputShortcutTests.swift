@@ -356,7 +356,12 @@ struct ImageEditorTextInputShortcutTests {
         }
     }
 
-    @Test func directUnmodifiedShortcutsRespectTextInputFocus() throws {
+    @Test func textInputFocusPolicyRecognizesAppKitTextControls() throws {
+        #expect(ImageEditorTextInputFocusPolicy.isActive(firstResponder: NSTextField()))
+        #expect(ImageEditorTextInputFocusPolicy.isActive(firstResponder: NSTextView()))
+        #expect(!ImageEditorTextInputFocusPolicy.isActive(firstResponder: NSView()))
+        #expect(!ImageEditorTextInputFocusPolicy.isActive(firstResponder: nil))
+
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -366,8 +371,8 @@ struct ImageEditorTextInputShortcutTests {
         )
 
         #expect(source.contains("isTextInputActive: isTextInputActiveForDirectShortcut"))
-        #expect(source.contains("private var isTextInputActiveForDirectShortcut: Bool"))
-        #expect(source.contains("NSApp.keyWindow?.firstResponder"))
+        #expect(source.contains("ImageEditorTextInputFocusPolicy.isActive("))
+        #expect(source.contains("firstResponder: NSApp.keyWindow?.firstResponder"))
         #expect(source.contains("&& !isTextInputActive"))
     }
 
