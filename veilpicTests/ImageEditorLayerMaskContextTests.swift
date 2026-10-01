@@ -806,6 +806,38 @@ struct ImageEditorLayerMaskContextTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func unchangedDirectMaskCopiesPreserveEditingFocusAndHistory() {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Source", in: viewModel)
+        var target = layer(named: "Equivalent Target", in: viewModel)
+        let sharedRasterMask = mask(
+            size: source.image.size,
+            selectedRect: CGRect(x: 10, y: 8, width: 30, height: 24)
+        )
+        let sharedVectorMask = vectorMask(size: source.image.size)
+        source.mask = sharedRasterMask
+        target.mask = sharedRasterMask
+        source.vectorMask = sharedVectorMask
+        target.vectorMask = sharedVectorMask
+        viewModel.document.layers = [source, target]
+        select([source.id, target.id], primary: source.id, in: viewModel)
+        let historyBefore = viewModel.document.history
+
+        viewModel.isEditingLayerMask = true
+        viewModel.copyLayerMaskToSelectedLayers()
+
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskCopyUnchanged"))
+
+        viewModel.isEditingLayerMask = true
+        viewModel.copyVectorMaskToSelectedLayers()
+
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskCopyUnchanged"))
+    }
+
     @Test func layerPanelWiresEveryMaskContextActionThroughSharedPolicy() throws {
         let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let sourceURL = testsDirectory

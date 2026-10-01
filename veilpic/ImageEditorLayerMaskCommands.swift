@@ -680,7 +680,6 @@ extension ImageEditorViewModel {
         }
 
         guard !plan.operations.isEmpty else {
-            isEditingLayerMask = false
             statusText = L10n.text("imageEditor.status.layerMaskCopyUnchanged")
             return
         }
@@ -713,7 +712,6 @@ extension ImageEditorViewModel {
         }
 
         guard !plan.operations.isEmpty else {
-            isEditingLayerMask = false
             statusText = L10n.text("imageEditor.status.vectorMaskCopyUnchanged")
             return
         }
