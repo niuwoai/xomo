@@ -6026,12 +6026,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard !sampledPoints.isEmpty else { return false }
 
         var combinedSelection: ImageEditorSelection?
-        for point in sampledPoints {
-            guard let candidate = magicSelection(
-                at: point,
-                tolerance: tolerance,
-                contiguous: true
-            ) else { continue }
+        for candidate in quickSelectionCandidates(at: sampledPoints, tolerance: tolerance) {
             combinedSelection = ImageEditorSelection.combined(
                 current: combinedSelection,
                 candidate: candidate,

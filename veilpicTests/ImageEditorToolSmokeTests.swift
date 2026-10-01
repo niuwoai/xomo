@@ -120,6 +120,15 @@ struct ImageEditorToolSmokeTests {
         let viewModel = ImageEditorViewModel(sourceName: "long-quick-selection.png", image: image) { _ in }
         viewModel.brushSize = 4
         viewModel.tolerance = 0.05
+        let individuallySampled = samplePoints.compactMap { point in
+            viewModel.magicSelection(
+                at: point,
+                tolerance: 0.05,
+                contiguous: true,
+                samplingImage: image
+            )
+        }
+        #expect(viewModel.quickSelectionCandidates(at: samplePoints, tolerance: 0.05) == individuallySampled)
 
         #expect(viewModel.createQuickSelection(points: samplePoints))
 

@@ -98,6 +98,31 @@ extension ImageEditorViewModel {
         ) else { return nil }
         return selection
     }
+
+    func quickSelectionCandidates(
+        at points: [CGPoint],
+        tolerance: CGFloat? = nil
+    ) -> [ImageEditorSelection] {
+        let canvasSize = document.canvasSize
+        let canvasBounds = CGRect(origin: .zero, size: canvasSize)
+        let image = document.compositedImage
+        guard let bitmap = image.rgbaBitmap() else { return [] }
+        let threshold = max(0, min(1, tolerance ?? self.tolerance))
+
+        return points.compactMap { point in
+            guard point.x.isFinite,
+                  point.y.isFinite,
+                  canvasBounds.contains(point)
+            else { return nil }
+            return image.magicSelection(
+                at: point,
+                canvasSize: canvasSize,
+                threshold: threshold,
+                contiguous: true,
+                bitmap: bitmap
+            )
+        }
+    }
 }
 
 private struct MagicWandPixel: Equatable {
@@ -115,7 +140,7 @@ private struct MagicWandPixel: Equatable {
     }
 }
 
-private extension NSImage {
+fileprivate extension NSImage {
     func magicSelection(
         at point: CGPoint,
         canvasSize: CGSize,
@@ -123,6 +148,22 @@ private extension NSImage {
         contiguous: Bool
     ) -> ImageEditorSelection? {
         guard let bitmap = rgbaBitmap() else { return nil }
+        return magicSelection(
+            at: point,
+            canvasSize: canvasSize,
+            threshold: threshold,
+            contiguous: contiguous,
+            bitmap: bitmap
+        )
+    }
+
+    func magicSelection(
+        at point: CGPoint,
+        canvasSize: CGSize,
+        threshold: CGFloat,
+        contiguous: Bool,
+        bitmap: MagicWandBitmap
+    ) -> ImageEditorSelection? {
         let seedX = max(0, min(bitmap.width - 1, Int((point.x / max(size.width, 1)) * CGFloat(bitmap.width))))
         let seedY = max(0, min(bitmap.height - 1, Int((point.y / max(size.height, 1)) * CGFloat(bitmap.height))))
         let seedIndex = seedY * bitmap.width + seedX
