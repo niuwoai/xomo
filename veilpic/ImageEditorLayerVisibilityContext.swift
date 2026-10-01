@@ -11,9 +11,12 @@ extension ImageEditorViewModel {
     func canIsolateLayersFromContext(_ clickedLayerID: UUID) -> Bool {
         let contextIDs = layerContextSelectionIDs(for: clickedLayerID)
         let visibleIDs = isolatedLayerVisibilityIDs(for: contextIDs)
+        let forcedVisibleIDs = isolationForcedVisibleLayerIDs(for: contextIDs)
         guard !visibleIDs.isEmpty else { return false }
         return document.layers.contains { layer in
-            layer.isVisible != visibleIDs.contains(layer.id)
+            let targetVisibility = forcedVisibleIDs.contains(layer.id)
+                || (visibleIDs.contains(layer.id) && layer.isVisible)
+            return layer.isVisible != targetVisibility
         }
     }
 

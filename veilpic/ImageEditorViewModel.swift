@@ -3752,9 +3752,12 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canIsolateSelectedLayers: Bool {
         let visibleIDs = isolatedLayerVisibilityIDs()
+        let forcedVisibleIDs = isolationForcedVisibleLayerIDs(for: document.selectedLayerIDs)
         guard !visibleIDs.isEmpty else { return false }
         return document.layers.contains { layer in
-            layer.isVisible != visibleIDs.contains(layer.id)
+            let targetVisibility = forcedVisibleIDs.contains(layer.id)
+                || (visibleIDs.contains(layer.id) && layer.isVisible)
+            return layer.isVisible != targetVisibility
         }
     }
 
@@ -6935,13 +6938,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     func isolateSelectedLayers() {
         let visibleIDs = isolatedLayerVisibilityIDs()
+        let forcedVisibleIDs = isolationForcedVisibleLayerIDs(for: document.selectedLayerIDs)
         guard !visibleIDs.isEmpty, canIsolateSelectedLayers else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
         pushUndo()
         for index in document.layers.indices {
-            document.layers[index].isVisible = visibleIDs.contains(document.layers[index].id)
+            let layer = document.layers[index]
+            document.layers[index].isVisible = forcedVisibleIDs.contains(layer.id)
+                || (visibleIDs.contains(layer.id) && layer.isVisible)
         }
         appendHistory(L10n.text("imageEditor.history.layerIsolateSelected"))
         statusText = L10n.format("imageEditor.status.layerIsolateSelected", selectedLayerCount)
@@ -11870,6 +11876,19 @@ final class ImageEditorViewModel: ObservableObject {
         }
         visibleIDs.formUnion(ancestorIDs)
         return visibleIDs
+    }
+
+    func isolationForcedVisibleLayerIDs(for selectedIDs: Set<UUID>) -> Set<UUID> {
+        var forcedVisibleIDs = selectedIDs
+        for index in document.layers.indices where selectedIDs.contains(document.layers[index].id) {
+            let layer = document.layers[index]
+            forcedVisibleIDs.formUnion(document.ancestorGroups(for: layer).map(\.id))
+            guard let baseIndex = document.clippingBaseIndex(forLayerAt: index) else { continue }
+            let baseLayer = document.layers[baseIndex]
+            forcedVisibleIDs.insert(baseLayer.id)
+            forcedVisibleIDs.formUnion(document.ancestorGroups(for: baseLayer).map(\.id))
+        }
+        return forcedVisibleIDs
     }
 
     private func setSelectedLayersVisibility(_ isVisible: Bool) {

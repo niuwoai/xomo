@@ -86,6 +86,43 @@ struct ImageEditorLayerVisibilityFocusContextTests {
         #expect(restoredVisibility.allSatisfy { $0 })
     }
 
+    @Test func isolatingGroupPreservesHiddenDescendantVisibility() throws {
+        let viewModel = makeViewModel()
+        let firstChild = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let hiddenChild = try #require(viewModel.document.selectedLayer)
+        viewModel.addLayer()
+        let outside = try #require(viewModel.document.selectedLayer)
+        viewModel.selectLayer(firstChild.id)
+        viewModel.selectLayer(hiddenChild.id, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let group = try #require(viewModel.document.selectedLayer)
+        let hiddenIndex = try #require(viewModel.document.layers.firstIndex { $0.id == hiddenChild.id })
+        viewModel.document.layers[hiddenIndex].isVisible = false
+        viewModel.selectLayer(group.id)
+
+        #expect(viewModel.isolateLayersFromContext(group.id))
+
+        #expect(isVisible(group.id, in: viewModel))
+        #expect(isVisible(firstChild.id, in: viewModel))
+        #expect(!isVisible(hiddenChild.id, in: viewModel))
+        #expect(!isVisible(outside.id, in: viewModel))
+
+        viewModel.setSelectedLayersLabelColor(.blue)
+        viewModel.undo()
+        let historyAfterUndo = viewModel.document.history
+        #expect(viewModel.canRedo)
+        #expect(!viewModel.canIsolateSelectedLayers)
+        #expect(!viewModel.canIsolateLayersFromContext(group.id))
+        #expect(!viewModel.isolateLayersFromContext(group.id))
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(!isVisible(hiddenChild.id, in: viewModel))
+        #expect(isVisible(outside.id, in: viewModel))
+    }
+
     @Test func showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat() throws {
         let viewModel = makeViewModel()
         let first = try #require(viewModel.document.selectedLayer)
