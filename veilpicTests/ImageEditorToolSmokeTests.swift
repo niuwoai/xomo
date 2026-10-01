@@ -131,6 +131,29 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickSelection"))
     }
 
+    @Test func quickSelectionSamplingUsesStrokeDistanceInsteadOfEventDensity() throws {
+        let unevenlySpacedPoints = stride(from: 0, through: 100, by: 5).map { value in
+            CGPoint(x: CGFloat(value), y: 10)
+        } + [CGPoint(x: 200, y: 10), CGPoint(x: 300, y: 10), CGPoint(x: 400, y: 10)]
+
+        let samples = ImageEditorQuickSelectionSampling.points(
+            from: unevenlySpacedPoints,
+            within: CGRect(x: 0, y: 0, width: 480, height: 28),
+            minimumDistance: 1,
+            maximumCount: 4
+        )
+
+        #expect(samples.count == 4)
+        let first = try #require(samples.first)
+        let second = try #require(samples.dropFirst().first)
+        let third = try #require(samples.dropFirst(2).first)
+        let last = try #require(samples.last)
+        #expect(first.x == 0)
+        #expect(abs(second.x - (400.0 / 3.0)) < 0.01)
+        #expect(abs(third.x - (800.0 / 3.0)) < 0.01)
+        #expect(last.x == 400)
+    }
+
     @Test func spongeIncreasesLocalColorSaturation() throws {
         let muted = NSColor(deviceRed: 0.58, green: 0.50, blue: 0.42, alpha: 1)
         let viewModel = makeEditableViewModel(image: solidImage(color: muted))

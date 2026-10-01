@@ -35,14 +35,43 @@ enum ImageEditorQuickSelectionSampling {
         guard spacedPoints.count > maximumCount else { return spacedPoints }
         guard maximumCount > 1 else { return [spacedPoints[0]] }
 
-        let lastIndex = spacedPoints.count - 1
-        let intervals = maximumCount - 1
-        return (0..<maximumCount).map { sampleIndex in
-            let sourceIndex = Int(
-                (Double(sampleIndex) * Double(lastIndex) / Double(intervals)).rounded()
-            )
-            return spacedPoints[sourceIndex]
+        var segmentLengths: [CGFloat] = []
+        segmentLengths.reserveCapacity(spacedPoints.count - 1)
+        var totalLength: CGFloat = 0
+        for index in 1..<spacedPoints.count {
+            let previous = spacedPoints[index - 1]
+            let current = spacedPoints[index]
+            let length = hypot(current.x - previous.x, current.y - previous.y)
+            segmentLengths.append(length)
+            totalLength += length
         }
+        guard totalLength.isFinite, totalLength > 0 else { return [spacedPoints[0]] }
+
+        var samples = [spacedPoints[0]]
+        samples.reserveCapacity(maximumCount)
+        var segmentIndex = 0
+        var segmentStartDistance: CGFloat = 0
+        for sampleIndex in 1..<(maximumCount - 1) {
+            let targetDistance = totalLength * CGFloat(sampleIndex) / CGFloat(maximumCount - 1)
+            while segmentIndex < segmentLengths.count - 1,
+                  segmentStartDistance + segmentLengths[segmentIndex] < targetDistance {
+                segmentStartDistance += segmentLengths[segmentIndex]
+                segmentIndex += 1
+            }
+
+            let segmentLength = segmentLengths[segmentIndex]
+            let segmentProgress = segmentLength > 0
+                ? (targetDistance - segmentStartDistance) / segmentLength
+                : 0
+            let start = spacedPoints[segmentIndex]
+            let end = spacedPoints[segmentIndex + 1]
+            samples.append(CGPoint(
+                x: start.x + (end.x - start.x) * segmentProgress,
+                y: start.y + (end.y - start.y) * segmentProgress
+            ))
+        }
+        samples.append(spacedPoints[spacedPoints.count - 1])
+        return samples
     }
 }
 
