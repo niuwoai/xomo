@@ -607,7 +607,7 @@ struct ImageEditorCanvasCommandTests {
         let undoCount = viewModel.undoStack.count
         let historyCount = viewModel.document.history.count
 
-        viewModel.crop(to: CGRect(x: 0, y: 0, width: 7, height: 20))
+        viewModel.crop(to: CGRect(x: 0, y: 0, width: 0, height: 20))
 
         #expect(try projectTransactionSnapshot(viewModel) == baseline)
         #expect(viewModel.undoStack.count == undoCount)
@@ -620,6 +620,36 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.cropInvalid"))
+    }
+
+    @Test
+    func cropAndCropToSelectionAcceptSinglePixelBoundsAndRemainUndoable() throws {
+        let directCrop = ImageEditorViewModel(
+            sourceName: "single-pixel-crop.png",
+            image: testImage(color: .systemBlue, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        let directBaseline = try projectTransactionSnapshot(directCrop)
+
+        directCrop.crop(to: CGRect(x: 17, y: 23, width: 1, height: 1))
+
+        #expect(directCrop.document.canvasSize == CGSize(width: 1, height: 1))
+        #expect(directCrop.document.history.last?.title == L10n.text("imageEditor.history.crop"))
+        directCrop.undo()
+        #expect(try projectData(directCrop.document) == directBaseline.document)
+        #expect(directCrop.undoStack.count == directBaseline.undo.count)
+        #expect(directCrop.redoStack.count == directBaseline.redo.count + 1)
+
+        let selectionCrop = ImageEditorViewModel(
+            sourceName: "single-pixel-selection-crop.png",
+            image: testImage(color: .systemGreen, size: CGSize(width: 100, height: 80))
+        ) { _ in }
+        selectionCrop.document.selection = .rectangle(CGRect(x: 17, y: 23, width: 1, height: 1))
+        #expect(selectionCrop.canCropToSelection)
+
+        selectionCrop.cropToSelection()
+
+        #expect(selectionCrop.document.canvasSize == CGSize(width: 1, height: 1))
+        #expect(selectionCrop.document.history.last?.title == L10n.text("imageEditor.history.cropSelection"))
     }
 
     @Test

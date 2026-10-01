@@ -363,8 +363,8 @@ extension ImageEditorViewModel {
             for: rect,
             canvasSize: originalSize
         )
-        guard bounded.width >= 8,
-              bounded.height >= 8,
+        guard bounded.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
+              bounded.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
               bounded.width < originalSize.width || bounded.height < originalSize.height
         else {
             statusText = L10n.text("imageEditor.status.cropInvalid")
@@ -489,8 +489,8 @@ extension ImageEditorViewModel {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else { return nil }
         let rect = selectedBounds.standardized.intersection(canvasBounds).integral
-        guard rect.width >= 8,
-              rect.height >= 8,
+        guard rect.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
+              rect.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
               rect.width < canvasBounds.width || rect.height < canvasBounds.height
         else { return nil }
         return rect

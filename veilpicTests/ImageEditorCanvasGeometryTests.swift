@@ -249,9 +249,9 @@ struct ImageEditorCanvasGeometryTests {
         ) == CGRect(x: 10, y: 20, width: 72, height: 49))
         #expect(ImageEditorCropGeometry.frameBySettingCommittedSize(
             of: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
-            to: CGSize(width: 500, height: 2),
+            to: CGSize(width: 500, height: 0.4),
             canvasSize: CGSize(width: 200, height: 150)
-        ) == CGRect(x: 10, y: 20, width: 190, height: 8))
+        ) == CGRect(x: 10, y: 20, width: 190, height: 1))
         #expect(ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
             of: CGRect(x: 50, y: 40, width: 100, height: 50),
             canvasSize: CGSize(width: 300, height: 250)

@@ -238,6 +238,8 @@ nonisolated enum ImageEditorCropAspectPreset: String, CaseIterable, Identifiable
 }
 
 enum ImageEditorCropGeometry {
+    static let minimumCommittedPixelEdge: CGFloat = 1
+
     static func fullCanvasFrame(canvasSize: CGSize) -> CGRect {
         CGRect(
             x: 0,
@@ -287,7 +289,7 @@ enum ImageEditorCropGeometry {
         of cropRect: CGRect,
         to targetSize: CGSize,
         canvasSize: CGSize,
-        minimumEdge: CGFloat = 8
+        minimumEdge: CGFloat = minimumCommittedPixelEdge
     ) -> CGRect {
         let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
         guard !currentBounds.isNull,
@@ -391,7 +393,7 @@ enum ImageEditorCropGeometry {
         value: CGFloat,
         canvasSize: CGSize,
         preservesAspectRatio: Bool,
-        minimumEdge: CGFloat = 8
+        minimumEdge: CGFloat = minimumCommittedPixelEdge
     ) -> CGRect {
         let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
         guard !currentBounds.isNull,
