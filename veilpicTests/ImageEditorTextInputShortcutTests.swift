@@ -356,6 +356,21 @@ struct ImageEditorTextInputShortcutTests {
         }
     }
 
+    @Test func directUnmodifiedShortcutsRespectTextInputFocus() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("isTextInputActive: isTextInputActiveForDirectShortcut"))
+        #expect(source.contains("private var isTextInputActiveForDirectShortcut: Bool"))
+        #expect(source.contains("NSApp.keyWindow?.firstResponder"))
+        #expect(source.contains("&& !isTextInputActive"))
+    }
+
     @Test func commonTextFormattingAndFindKeysCannotTriggerDestructiveCanvasCommands() {
         let protectedActions: [(String, ImageEditorKeyboardShortcutAction)] = [
             ("b", .colorBalance),

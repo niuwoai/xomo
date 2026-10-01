@@ -3337,7 +3337,8 @@ struct ImageEditorView: View {
             Button {
                 guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
                     hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
-                    hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+                    hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction,
+                    isTextInputActive: isTextInputActiveForDirectShortcut
                 ) else { return }
                 viewModel.clearColorSamplers()
             } label: {
@@ -3350,7 +3351,8 @@ struct ImageEditorView: View {
                 Button {
                     guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
                         hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
-                        hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+                        hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction,
+                        isTextInputActive: isTextInputActiveForDirectShortcut
                     ) else { return }
                     viewModel.selectClassicToolShortcut(group.key)
                 } label: {
@@ -3363,7 +3365,8 @@ struct ImageEditorView: View {
                     Button {
                         guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
                             hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
-                            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+                            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction,
+                            isTextInputActive: isTextInputActiveForDirectShortcut
                         ) else { return }
                         viewModel.cycleClassicToolShortcut(group.key)
                     } label: {
@@ -3516,9 +3519,15 @@ struct ImageEditorView: View {
     private func performDirectShortcut(_ action: () -> Void) {
         guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
             hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
-            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction,
+            isTextInputActive: isTextInputActiveForDirectShortcut
         ) else { return }
         action()
+    }
+
+    private var isTextInputActiveForDirectShortcut: Bool {
+        guard let firstResponder = NSApp.keyWindow?.firstResponder else { return false }
+        return firstResponder is NSTextView || firstResponder is NSTextField
     }
 
     func performNudgeCommand(_ delta: CGSize) {
@@ -20921,9 +20930,12 @@ enum ImageEditorLiveMoveShortcutPolicy {
 
     static func allowsDirectShortcut(
         hasActiveLayerMoveTransaction: Bool,
-        hasActivePathAnchorMoveTransaction: Bool = false
+        hasActivePathAnchorMoveTransaction: Bool = false,
+        isTextInputActive: Bool = false
     ) -> Bool {
-        !hasActiveLayerMoveTransaction && !hasActivePathAnchorMoveTransaction
+        !hasActiveLayerMoveTransaction
+            && !hasActivePathAnchorMoveTransaction
+            && !isTextInputActive
     }
 }
 

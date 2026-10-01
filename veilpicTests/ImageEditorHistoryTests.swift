@@ -1257,6 +1257,13 @@ struct ImageEditorHistoryTests {
                 hasActivePathAnchorMoveTransaction: false
             )
         )
+        #expect(
+            !ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: false,
+                isTextInputActive: true
+            )
+        )
     }
 
     @Test
