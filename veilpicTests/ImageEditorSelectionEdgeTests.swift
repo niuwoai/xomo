@@ -281,6 +281,48 @@ struct ImageEditorSelectionEdgeTests {
         #expect(clippedRectangle == CGRect(x: 0, y: 0, width: 4, height: 4))
     }
 
+    @Test func marqueeDragInsideSelectionMovesItUnlessSelectionModifiersAreActive() throws {
+        let canvasSize = CGSize(width: 24, height: 20)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "marquee-move-selection",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 2, y: 3), to: CGPoint(x: 8, y: 9)))
+        let originalSelection = try #require(viewModel.document.selection)
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+        let start = CGPoint(x: 5, y: 6)
+        let selectionContainsPointer = originalSelection.contains(start, canvasSize: canvasSize)
+
+        #expect(ImageEditorMarqueeDragIntent.resolve(
+            selectionContainsPointer: selectionContainsPointer,
+            selectionMode: .replace,
+            modifierFlags: []
+        ) == .moveExistingSelection)
+        #expect(ImageEditorMarqueeDragIntent.resolve(
+            selectionContainsPointer: selectionContainsPointer,
+            selectionMode: .replace,
+            modifierFlags: [.shift]
+        ) == .createSelection)
+        #expect(ImageEditorMarqueeDragIntent.resolve(
+            selectionContainsPointer: selectionContainsPointer,
+            selectionMode: .add,
+            modifierFlags: []
+        ) == .createSelection)
+        #expect(ImageEditorMarqueeDragIntent.resolve(
+            selectionContainsPointer: false,
+            selectionMode: .replace,
+            modifierFlags: []
+        ) == .createSelection)
+
+        viewModel.nudgeSelection(by: CGSize(width: 3, height: -2))
+
+        #expect(viewModel.document.selection?.bounds == originalSelection.bounds.offsetBy(dx: 3, dy: -2))
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionMove"))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+    }
+
     @Test func lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

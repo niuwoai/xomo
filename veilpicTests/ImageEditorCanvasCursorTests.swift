@@ -1885,9 +1885,22 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             marqueeShape: .ellipse
         )
+        let readyToMove = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            isPointerOverMarqueeSelection: true
+        )
+        let moving = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            isPointerOverMarqueeSelection: true,
+            isMovingMarqueeSelection: true
+        )
 
         #expect(rectangle === NSCursor.crosshair)
         #expect(ellipse === NSCursor.crosshair)
+        #expect(readyToMove === NSCursor.openHand)
+        #expect(moving === NSCursor.closedHand)
     }
 
     @Test func capsLockSwitchesEveryBrushLikeToolToPrecisionCursor() {

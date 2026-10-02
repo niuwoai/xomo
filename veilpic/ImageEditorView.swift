@@ -176,6 +176,7 @@ struct ImageEditorView: View {
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
+    @State private var marqueeDragIntent: ImageEditorMarqueeDragIntent?
     @State private var primaryToolViewStart: CGPoint?
     @State private var patchPreviewImage: NSImage?
     @State private var patchRawDragEnd: CGPoint?
@@ -609,6 +610,7 @@ struct ImageEditorView: View {
             lastPatchPreviewUpdateTime = 0
             dragStart = nil
             dragEnd = nil
+            marqueeDragIntent = nil
             primaryToolViewStart = nil
             dragPoints = []
             brushStrokeSamples = []
@@ -4448,6 +4450,9 @@ struct ImageEditorView: View {
                             viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = false
                             objectSelectionBoxDrag = nil
                             eyedropperSamplingRing = nil
+                            cancelMarqueeDrag()
+                            dragStart = nil
+                            dragEnd = nil
                             cancelPathAnchorDragForCanvasLifecycle()
                         },
                         onZoom: { factor, location, viewportSize in
@@ -4501,8 +4506,12 @@ struct ImageEditorView: View {
                                     || canvasInteractionTool == .gradient,
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
-                            dragStart = imagePoint
-                            dragEnd = imagePoint
+                            if canvasInteractionTool == .marquee {
+                                beginMarqueeDrag(at: imagePoint, modifierFlags: NSEvent.modifierFlags)
+                            } else {
+                                dragStart = imagePoint
+                                dragEnd = imagePoint
+                            }
                             viewModel.updatePointer(imagePoint)
                             return true
                         },
@@ -4521,16 +4530,10 @@ struct ImageEditorView: View {
                             }
                         },
                         onRangeToolDragEnded: { location in
-                            if canvasInteractionTool == .marquee, let dragStart {
-                                viewModel.createMarqueeSelection(
-                                    from: dragStart,
+                            if canvasInteractionTool == .marquee {
+                                finishMarqueeDrag(
                                     to: boundedImagePoint(from: location, in: geometry.size),
-                                    isCentered: NSEvent.modifierFlags.contains(.option),
-                                    isConstrained: NSEvent.modifierFlags.contains(.shift),
-                                    mode: ImageEditorSelectionMode.resolved(
-                                        baseMode: viewModel.selectionMode,
-                                        modifierFlags: NSEvent.modifierFlags
-                                    )
+                                    modifierFlags: NSEvent.modifierFlags
                                 )
                             } else if canvasInteractionTool == .gradient {
                                 viewModel.drawGradient(
@@ -4538,11 +4541,14 @@ struct ImageEditorView: View {
                                     to: gradientDragPoint(from: location, in: geometry.size)
                                 )
                             }
-                            dragStart = nil
-                            dragEnd = nil
+                            if canvasInteractionTool != .marquee {
+                                dragStart = nil
+                                dragEnd = nil
+                            }
                             refreshCanvasCursor(in: geometry.size)
                         },
                         onRangeToolDragCancelled: {
+                            cancelMarqueeDrag()
                             dragStart = nil
                             dragEnd = nil
                             refreshCanvasCursor(in: geometry.size)
@@ -4942,6 +4948,14 @@ struct ImageEditorView: View {
                             penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
                             penIsContinuingPath: penPathContinuationState == .available,
                             penContinuationIsBlocked: penPathContinuationState == .blocked,
+                            isPointerOverMarqueeSelection: canvasInteractionTool == .marquee
+                                && canvasPoint.map {
+                                    viewModel.document.selection?.contains(
+                                        $0,
+                                        canvasSize: viewModel.document.canvasSize
+                                    ) == true
+                                } == true,
+                            isMovingMarqueeSelection: marqueeDragIntent == .moveExistingSelection,
                             directSelectionIsBlocked: canvasInteractionTool == .directSelection
                                 && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
                             pathSelectionIsBlocked: canvasInteractionTool == .pathSelection
@@ -6670,8 +6684,11 @@ struct ImageEditorView: View {
                         updateCanvasCursor(at: value.location, in: size)
                     }
                 case .marquee:
-                    if dragStart == nil {
-                        dragStart = pointerImagePoint
+                    if dragStart == nil, let pointerImagePoint {
+                        beginMarqueeDrag(
+                            at: pointerImagePoint,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                     }
                     if dragStart != nil {
                         dragEnd = boundedImagePoint(from: value.location, in: size)
@@ -7057,18 +7074,10 @@ struct ImageEditorView: View {
                         viewModel.finishMovingSelectedLayer()
                     }
                 case .marquee:
-                    if let dragStart {
-                        viewModel.createMarqueeSelection(
-                            from: dragStart,
-                            to: boundedImagePoint(from: value.location, in: size),
-                            isCentered: NSEvent.modifierFlags.contains(.option),
-                            isConstrained: NSEvent.modifierFlags.contains(.shift),
-                            mode: ImageEditorSelectionMode.resolved(
-                                baseMode: viewModel.selectionMode,
-                                modifierFlags: NSEvent.modifierFlags
-                            )
-                        )
-                    }
+                    finishMarqueeDrag(
+                        to: boundedImagePoint(from: value.location, in: size),
+                        modifierFlags: NSEvent.modifierFlags
+                    )
                 case .lasso:
                     if !dragPoints.isEmpty {
                         dragPoints.append(boundedImagePoint(from: value.location, in: size))
@@ -7698,6 +7707,55 @@ struct ImageEditorView: View {
         )
     }
 
+    private func beginMarqueeDrag(
+        at point: CGPoint,
+        modifierFlags: NSEvent.ModifierFlags
+    ) {
+        guard dragStart == nil else { return }
+        dragStart = point
+        dragEnd = point
+        let selectionContainsPointer = viewModel.document.selection?.contains(
+            point,
+            canvasSize: viewModel.document.canvasSize
+        ) ?? false
+        marqueeDragIntent = ImageEditorMarqueeDragIntent.resolve(
+            selectionContainsPointer: selectionContainsPointer,
+            selectionMode: viewModel.selectionMode,
+            modifierFlags: modifierFlags
+        )
+    }
+
+    private func finishMarqueeDrag(
+        to end: CGPoint,
+        modifierFlags: NSEvent.ModifierFlags
+    ) {
+        guard let start = dragStart else {
+            marqueeDragIntent = nil
+            return
+        }
+        if marqueeDragIntent == .moveExistingSelection {
+            viewModel.nudgeSelection(by: CGSize(width: end.x - start.x, height: end.y - start.y))
+        } else {
+            viewModel.createMarqueeSelection(
+                from: start,
+                to: end,
+                isCentered: modifierFlags.contains(.option),
+                isConstrained: modifierFlags.contains(.shift),
+                mode: ImageEditorSelectionMode.resolved(
+                    baseMode: viewModel.selectionMode,
+                    modifierFlags: modifierFlags
+                )
+            )
+        }
+        dragStart = nil
+        dragEnd = nil
+        marqueeDragIntent = nil
+    }
+
+    private func cancelMarqueeDrag() {
+        marqueeDragIntent = nil
+    }
+
     private func updateCanvasCursor(at viewPoint: CGPoint, in size: CGSize) {
         let canvasPoint = imagePoint(from: viewPoint, in: size)
         let penSegmentInsertionState = canvasInteractionTool == .pen
@@ -7767,6 +7825,14 @@ struct ImageEditorView: View {
             penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
             penIsContinuingPath: penPathContinuationState == .available,
             penContinuationIsBlocked: penPathContinuationState == .blocked,
+            isPointerOverMarqueeSelection: canvasInteractionTool == .marquee
+                && canvasPoint.map {
+                    viewModel.document.selection?.contains(
+                        $0,
+                        canvasSize: viewModel.document.canvasSize
+                    ) == true
+                } == true,
+            isMovingMarqueeSelection: marqueeDragIntent == .moveExistingSelection,
             directSelectionIsBlocked: canvasInteractionTool == .directSelection
                 && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
             pathSelectionIsBlocked: canvasInteractionTool == .pathSelection
@@ -10736,14 +10802,28 @@ struct ImageEditorView: View {
             let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
                 ? viewModel.selection
                 : nil
-            let edgeGeometry = activeSelection != nil
+            let selectionEdges = activeSelection != nil
                 ? viewModel.selectionEdgeGeometry
-                : (activeLasso ? ImageEditorSelection.polygon(dragPoints).map {
+                : nil
+            let marqueeDragOffset = marqueeDragIntent == .moveExistingSelection
+                ? dragStart.flatMap { start in
+                    dragEnd.map { end in
+                        CGSize(width: end.x - start.x, height: end.y - start.y)
+                    }
+                } ?? .zero
+                : .zero
+            let lassoEdges = activeLasso
+                ? ImageEditorSelection.polygon(dragPoints).map {
                     ImageEditorSelectionEdgeGeometry.make(
                         selection: $0,
                         canvasSize: viewModel.document.canvasSize
                     )
-                } : nil)
+                }
+                : nil
+            let edgeGeometry = selectionEdges?.offsetBy(
+                dx: marqueeDragOffset.width,
+                dy: marqueeDragOffset.height
+            ) ?? lassoEdges
             if let edgeGeometry {
                 TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
                     Canvas { context, _ in
@@ -17171,6 +17251,8 @@ enum ImageEditorCanvasCursor {
         penAnchorDeletionIsBlocked: Bool = false,
         penIsContinuingPath: Bool = false,
         penContinuationIsBlocked: Bool = false,
+        isPointerOverMarqueeSelection: Bool = false,
+        isMovingMarqueeSelection: Bool = false,
         directSelectionIsBlocked: Bool = false,
         pathSelectionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
@@ -17290,6 +17372,8 @@ enum ImageEditorCanvasCursor {
                 penAnchorDeletionIsBlocked: penAnchorDeletionIsBlocked,
                 penIsContinuingPath: penIsContinuingPath,
                 penContinuationIsBlocked: penContinuationIsBlocked,
+                isPointerOverMarqueeSelection: isPointerOverMarqueeSelection,
+                isMovingMarqueeSelection: isMovingMarqueeSelection,
                 pathHandleIsBreaking: pathHandleIsBreaking,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
@@ -17907,6 +17991,8 @@ enum ImageEditorCanvasCursor {
         penAnchorDeletionIsBlocked: Bool = false,
         penIsContinuingPath: Bool = false,
         penContinuationIsBlocked: Bool = false,
+        isPointerOverMarqueeSelection: Bool = false,
+        isMovingMarqueeSelection: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
@@ -17942,6 +18028,8 @@ enum ImageEditorCanvasCursor {
         case .textInsertion:
             return isPointerOverEditableText ? .iBeam : textCreationCursor()
         case .selectionMarquee:
+            if isMovingMarqueeSelection { return .closedHand }
+            if isPointerOverMarqueeSelection && selectionMode == .replace { return .openHand }
             return selectionMode == .replace
                 ? .crosshair
                 : familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)

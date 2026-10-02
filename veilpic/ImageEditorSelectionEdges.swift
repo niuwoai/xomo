@@ -5,12 +5,31 @@
 //  Created by Codex on 2026/7/12.
 //
 
+import AppKit
 import CoreGraphics
 import Foundation
 
 struct ImageEditorSelectionEdgeSegment: Equatable {
     var start: CGPoint
     var end: CGPoint
+}
+
+enum ImageEditorMarqueeDragIntent: Equatable {
+    case createSelection
+    case moveExistingSelection
+
+    static func resolve(
+        selectionContainsPointer: Bool,
+        selectionMode: ImageEditorSelectionMode,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Self {
+        let selectionModifiers = modifierFlags.intersection([.shift, .option])
+        guard selectionContainsPointer,
+              selectionMode == .replace,
+              selectionModifiers.isEmpty
+        else { return .createSelection }
+        return .moveExistingSelection
+    }
 }
 
 struct ImageEditorSelectionEdgeGeometry: Equatable {
