@@ -323,6 +323,24 @@ struct ImageEditorSelectionEdgeTests {
         #expect(viewModel.undoStack.count == originalUndoCount + 1)
     }
 
+    @Test func marqueeSelectionMoveShiftLocksToTheDominantAxis() {
+        #expect(ImageEditorMarqueeMoveConstraint.delta(
+            from: CGPoint(x: 4, y: 5),
+            to: CGPoint(x: 12, y: 8),
+            modifierFlags: [.shift]
+        ) == CGSize(width: 8, height: 0))
+        #expect(ImageEditorMarqueeMoveConstraint.delta(
+            from: CGPoint(x: 4, y: 5),
+            to: CGPoint(x: 7, y: -3),
+            modifierFlags: [.shift]
+        ) == CGSize(width: 0, height: -8))
+        #expect(ImageEditorMarqueeMoveConstraint.delta(
+            from: CGPoint(x: 4, y: 5),
+            to: CGPoint(x: 12, y: 8),
+            modifierFlags: []
+        ) == CGSize(width: 8, height: 3))
+    }
+
     @Test func lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

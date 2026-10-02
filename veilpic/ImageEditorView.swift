@@ -7734,7 +7734,11 @@ struct ImageEditorView: View {
             return
         }
         if marqueeDragIntent == .moveExistingSelection {
-            viewModel.nudgeSelection(by: CGSize(width: end.x - start.x, height: end.y - start.y))
+            viewModel.nudgeSelection(by: ImageEditorMarqueeMoveConstraint.delta(
+                from: start,
+                to: end,
+                modifierFlags: modifierFlags
+            ))
         } else {
             viewModel.createMarqueeSelection(
                 from: start,
@@ -10808,7 +10812,11 @@ struct ImageEditorView: View {
             let marqueeDragOffset = marqueeDragIntent == .moveExistingSelection
                 ? dragStart.flatMap { start in
                     dragEnd.map { end in
-                        CGSize(width: end.x - start.x, height: end.y - start.y)
+                        ImageEditorMarqueeMoveConstraint.delta(
+                            from: start,
+                            to: end,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                     }
                 } ?? .zero
                 : .zero

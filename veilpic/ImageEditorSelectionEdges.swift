@@ -32,6 +32,21 @@ enum ImageEditorMarqueeDragIntent: Equatable {
     }
 }
 
+enum ImageEditorMarqueeMoveConstraint {
+    static func delta(
+        from start: CGPoint,
+        to end: CGPoint,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> CGSize {
+        let proposed = CGSize(width: end.x - start.x, height: end.y - start.y)
+        guard modifierFlags.contains(.shift) else { return proposed }
+        if abs(proposed.width) >= abs(proposed.height) {
+            return CGSize(width: proposed.width, height: 0)
+        }
+        return CGSize(width: 0, height: proposed.height)
+    }
+}
+
 struct ImageEditorSelectionEdgeGeometry: Equatable {
     var contours: [[CGPoint]]
 
