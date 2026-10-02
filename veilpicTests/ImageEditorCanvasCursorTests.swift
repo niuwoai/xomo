@@ -887,6 +887,32 @@ struct ImageEditorCanvasCursorTests {
         #expect(blockedContentMove === NSCursor.operationNotAllowed)
     }
 
+    @Test func movablePixelSelectionShowsMoveCursorWithoutChangingOtherMoveModes() {
+        let selectedPixels = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovablePixelSelection: true
+        )
+        let blockedContent = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverBlockedContent: true,
+            isPointerOverMovablePixelSelection: true
+        )
+        let componentLibrary = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isPointerOverMovablePixelSelection: true
+        )
+
+        #expect(selectedPixels === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(blockedContent === NSCursor.operationNotAllowed)
+        #expect(componentLibrary === NSCursor.arrow)
+    }
+
     @Test func moveCursorHitTestUsesComponentGeometryWithoutChangingSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "cursor-hit-test",

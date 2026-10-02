@@ -4926,6 +4926,9 @@ struct ImageEditorView: View {
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
+                            isPointerOverMovablePixelSelection:
+                                canvasInteractionTool == .move
+                                    && canvasPoint.map(viewModel.canBeginPixelSelectionMove(at:)) == true,
                             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
                             moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
                             isPointerOverEditableText:
@@ -7845,6 +7848,9 @@ struct ImageEditorView: View {
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
+            isPointerOverMovablePixelSelection:
+                canvasInteractionTool == .move
+                    && canvasPoint.map(viewModel.canBeginPixelSelectionMove(at:)) == true,
             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
             moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
             isPointerOverEditableText:
@@ -17293,6 +17299,7 @@ enum ImageEditorCanvasCursor {
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
+        isPointerOverMovablePixelSelection: Bool = false,
         moveToolUsesBoxSelection: Bool = false,
         moveToolHoverSelectionIntent: ImageEditorMoveToolHoverSelectionIntent = .none,
         isPointerOverEditableText: Bool = false,
@@ -17385,6 +17392,9 @@ enum ImageEditorCanvasCursor {
             }
             if selectedTool == .move, isPointerOverBlockedContent {
                 return .operationNotAllowed
+            }
+            if selectedTool == .move, isPointerOverMovablePixelSelection {
+                return objectMoveCursor()
             }
             if selectedTool == .directSelection, directSelectionIsBlocked {
                 return .operationNotAllowed
