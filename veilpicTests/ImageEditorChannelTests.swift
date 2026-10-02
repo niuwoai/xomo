@@ -276,6 +276,56 @@ struct ImageEditorChannelTests {
         #expect(viewModel.foregroundColor == originalForeground)
     }
 
+    @Test func colorRangeMatchesOpaqueAndTranslucentPixelsOfTheSameColor() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "alpha-range.png",
+            image: alphaColorRangeTestImage()
+        ) { _ in }
+        viewModel.presentColorRangePanel()
+        viewModel.colorRangeTolerance = 0.01
+        viewModel.sampleColorRangeColor(at: CGPoint(x: 0.5, y: 0.5))
+
+        viewModel.applyColorRangeSelectionFromPanel()
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 2, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 3, y: 0) == 0)
+    }
+
+    @Test func selectSimilarColorsUnpremultipliesSampledSelectionColor() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "alpha-similar.png",
+            image: alphaColorRangeTestImage()
+        ) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 1, y: 0, width: 1, height: 1))
+
+        viewModel.selectSimilarColors(tolerance: 0.01)
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 2, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 3, y: 0) == 0)
+    }
+
+    @Test func growColorSelectionMatchesNeighborWithSameTranslucentColor() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "alpha-grow.png",
+            image: alphaColorRangeTestImage()
+        ) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 1, y: 0, width: 1, height: 1))
+
+        viewModel.growColorSelection(tolerance: 0.01)
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 2, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 3, y: 0) == 0)
+    }
+
     @Test func colorRangePanelAddsAndSubtractsSampleColors() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "range.png", image: colorRangeTestImage()) { _ in }
         viewModel.presentColorRangePanel()
@@ -1766,6 +1816,19 @@ struct ImageEditorChannelTests {
             NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1).setFill()
             CGRect(x: 1, y: 0, width: 1, height: 1).fill()
             NSColor(calibratedRed: 0.94, green: 0.02, blue: 0.02, alpha: 1).setFill()
+            CGRect(x: 2, y: 0, width: 1, height: 1).fill()
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 0).setFill()
+            CGRect(x: 3, y: 0, width: 1, height: 1).fill()
+        } ?? NSImage(size: NSSize(width: 4, height: 1))
+    }
+
+    private func alphaColorRangeTestImage() -> NSImage {
+        NSImage.rendered(size: NSSize(width: 4, height: 1)) { _ in
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 0.5).setFill()
+            CGRect(x: 1, y: 0, width: 1, height: 1).fill()
+            NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1).setFill()
             CGRect(x: 2, y: 0, width: 1, height: 1).fill()
             NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 0).setFill()
             CGRect(x: 3, y: 0, width: 1, height: 1).fill()

@@ -801,6 +801,25 @@ private extension Array where Element == NSColor {
     }
 }
 
+private let minimumColorRangeSampleAlpha: UInt8 = 8
+
+private func unpremultipliedRGBComponents(
+    in pixels: [UInt8],
+    at offset: Int
+) -> (red: CGFloat, green: CGFloat, blue: CGFloat)? {
+    guard offset >= 0,
+          offset + 3 < pixels.count,
+          pixels[offset + 3] > minimumColorRangeSampleAlpha
+    else { return nil }
+
+    let alpha = CGFloat(pixels[offset + 3])
+    return (
+        red: min(1, CGFloat(pixels[offset]) / alpha),
+        green: min(1, CGFloat(pixels[offset + 1]) / alpha),
+        blue: min(1, CGFloat(pixels[offset + 2]) / alpha)
+    )
+}
+
 extension NSImage {
     func colorRangeSelection(
         targetColor: NSColor,
@@ -859,22 +878,19 @@ extension NSImage {
         for y in 0..<height {
             for x in 0..<width {
                 let pixelOffset = y * bytesPerRow + x * bytesPerPixel
-                let pixelAlpha = pixels[pixelOffset + 3]
-                guard pixelAlpha > 8 else { continue }
-
-                let red = CGFloat(pixels[pixelOffset]) / 255
-                let green = CGFloat(pixels[pixelOffset + 1]) / 255
-                let blue = CGFloat(pixels[pixelOffset + 2]) / 255
+                guard let color = unpremultipliedRGBComponents(in: pixels, at: pixelOffset) else {
+                    continue
+                }
                 let isIncluded = targets.containsColorRangeMatch(
-                    red: red,
-                    green: green,
-                    blue: blue,
+                    red: color.red,
+                    green: color.green,
+                    blue: color.blue,
                     tolerance: clampedTolerance
                 )
                 let isExcluded = exclusions.containsColorRangeMatch(
-                    red: red,
-                    green: green,
-                    blue: blue,
+                    red: color.red,
+                    green: color.green,
+                    blue: color.blue,
                     tolerance: clampedTolerance
                 )
                 let isColorMatch = isIncluded && !isExcluded
@@ -1077,11 +1093,13 @@ extension NSImage {
                 defer { selectedIndex += 1 }
                 guard selectedIndex % interval == 0 else { continue }
                 let pixelOffset = y * bytesPerRow + x * 4
-                guard pixels[pixelOffset + 3] > 8 else { continue }
+                guard let color = unpremultipliedRGBComponents(in: pixels, at: pixelOffset) else {
+                    continue
+                }
                 let components = [
-                    CGFloat(pixels[pixelOffset]) / 255,
-                    CGFloat(pixels[pixelOffset + 1]) / 255,
-                    CGFloat(pixels[pixelOffset + 2]) / 255,
+                    color.red,
+                    color.green,
+                    color.blue,
                     CGFloat(1)
                 ]
                 colors.appendUniqueColorRangeSample(
@@ -1115,11 +1133,13 @@ extension NSImage {
         let x = index % width
         let y = index / width
         let pixelOffset = y * bytesPerRow + x * 4
-        guard pixels[pixelOffset + 3] > 8 else { return false }
+        guard let color = unpremultipliedRGBComponents(in: pixels, at: pixelOffset) else {
+            return false
+        }
         return targets.containsColorRangeMatch(
-            red: CGFloat(pixels[pixelOffset]) / 255,
-            green: CGFloat(pixels[pixelOffset + 1]) / 255,
-            blue: CGFloat(pixels[pixelOffset + 2]) / 255,
+            red: color.red,
+            green: color.green,
+            blue: color.blue,
             tolerance: tolerance
         )
     }

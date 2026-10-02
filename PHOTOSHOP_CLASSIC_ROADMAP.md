@@ -1,5 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
+- `v2.12.0-rc1694`：Color Range、Select Similar 与 Grow Selection 共用预乘 RGBA 解码，取色按真实 RGB 匹配半透明像素；新增透明/不透明同色的三路径回归。
 - `v2.12.0-rc1693`：Color Range 取样后应用选区不再把当前前景绘画色改成最后采样色；专项回归检查选区应用和颜色状态隔离。
 - `v2.12.0-rc1692`：将 Option 五像素、Shift 十像素方向键步长与 Move 工具活动像素选区移动事务端到端连接验证，检查像素内容、选区边界和单步撤销恢复。
 - `v2.12.0-rc1691`：Move 工具下用方向键 nudging 活动像素选区时，像素与选区边界共用拖移事务，并只生成一个 Undo/History 步骤；Marquee 方向键仍只移动选区边界，组件库与不可编辑图层仍走原路径。
