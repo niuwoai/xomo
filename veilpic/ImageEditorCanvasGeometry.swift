@@ -827,9 +827,14 @@ enum ImageEditorCanvasGeometry {
 
     static func boundedCanvasPoint(_ point: CGPoint, canvasSize: CGSize) -> CGPoint {
         CGPoint(
-            x: min(max(0, point.x), max(0, canvasSize.width)),
-            y: min(max(0, point.y), max(0, canvasSize.height))
+            x: boundedCoordinate(point.x, limit: canvasSize.width),
+            y: boundedCoordinate(point.y, limit: canvasSize.height)
         )
+    }
+
+    private static func boundedCoordinate(_ value: CGFloat, limit: CGFloat) -> CGFloat {
+        guard !value.isNaN else { return 0 }
+        return min(max(0, value), max(0, limit))
     }
 
     static func visibleCanvasCenter(

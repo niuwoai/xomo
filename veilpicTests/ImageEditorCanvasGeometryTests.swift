@@ -48,6 +48,24 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func boundedCanvasPointHandlesNonFiniteCoordinatesDeterministically() {
+        let canvasSize = CGSize(width: 80, height: 60)
+
+        #expect(ImageEditorCanvasGeometry.boundedCanvasPoint(
+            CGPoint(x: CGFloat.nan, y: CGFloat.infinity),
+            canvasSize: canvasSize
+        ) == CGPoint(x: 0, y: 60))
+        #expect(ImageEditorCanvasGeometry.boundedCanvasPoint(
+            CGPoint(x: -CGFloat.infinity, y: CGFloat.nan),
+            canvasSize: canvasSize
+        ) == .zero)
+        #expect(ImageEditorCanvasGeometry.boundedCanvasPoint(
+            CGPoint(x: CGFloat.infinity, y: -CGFloat.infinity),
+            canvasSize: canvasSize
+        ) == CGPoint(x: 80, y: 0))
+    }
+
+    @Test
     func navigatorViewportTracksZoomAndPanInsideThumbnail() throws {
         let canvasSize = CGSize(width: 400, height: 200)
         let previewBounds = CGRect(x: 0, y: 0, width: 184, height: 92)
