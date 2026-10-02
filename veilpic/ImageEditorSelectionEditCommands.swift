@@ -1368,17 +1368,12 @@ extension ImageEditorViewModel {
             return
         }
         guard let index = document.selectedLayerIndex,
-              let clippedImage = document.layers[index].visibleImage.copied(
-                selection: selection,
-                layerFrame: document.layers[index].frame,
-                canvasSize: document.canvasSize,
-                feather: feather
-              ),
               let selectionCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
+                image: document.layers[index].visibleImage,
                 selection: selection,
                 layerFrame: document.layers[index].frame,
-                feather: feather
+                feather: feather,
+                selectionIsApplied: false
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -1473,7 +1468,7 @@ extension ImageEditorViewModel {
                 feather: feather
               ),
               let selectionCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
+                image: clippedImage,
                 selection: selection,
                 layerFrame: document.layers[index].frame,
                 feather: feather
@@ -1521,9 +1516,9 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func copySelectionToClipboard() -> Bool {
+    func copySelectionToClipboard(to pasteboard: NSPasteboard = .general) -> Bool {
         guard hasSelection else {
-            return copySelectedLayersToClipboard()
+            return copySelectedLayersToClipboard(to: pasteboard)
         }
 
         guard let selection = document.selection else {
@@ -1535,17 +1530,12 @@ extension ImageEditorViewModel {
             return false
         }
         guard let layer = document.selectedLayer,
-              let clippedImage = layer.visibleImage.copied(
-                selection: selection,
-                layerFrame: layer.frame,
-                canvasSize: document.canvasSize,
-                feather: feather
-              ),
               let clipboardCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
+                image: layer.visibleImage,
                 selection: selection,
                 layerFrame: layer.frame,
-                feather: feather
+                feather: feather,
+                selectionIsApplied: false
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -1554,10 +1544,11 @@ extension ImageEditorViewModel {
 
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
-            preferredFileName: "\(layer.name)-selection.png"
+            preferredFileName: "\(layer.name)-selection.png",
+            to: pasteboard
         )
         if didCopy {
-            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
+            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
@@ -1566,11 +1557,13 @@ extension ImageEditorViewModel {
     }
 
     private func selectionClipboardCopy(
-        clippedImage: NSImage,
+        image: NSImage,
         selection: ImageEditorSelection,
         layerFrame: CGRect,
-        feather: CGFloat
+        feather: CGFloat,
+        selectionIsApplied: Bool = true
     ) -> (image: NSImage, frame: CGRect)? {
+        guard ImageEditorMaskSampling.bitmapSize(document.canvasSize) != nil else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let featherExtent = ceil(
             max(0, feather)
@@ -1583,13 +1576,21 @@ extension ImageEditorViewModel {
             height: layerFrame.height
         )
         guard let canvasImage = NSImage.rendered(size: document.canvasSize, actions: { _ in
-            clippedImage.draw(
+            image.draw(
                 in: appKitLayerFrame,
-                from: CGRect(origin: .zero, size: clippedImage.size),
+                from: CGRect(origin: .zero, size: image.size),
                 operation: .copy,
                 fraction: 1
             )
-        }), let contentBounds = canvasImage.nonTransparentPixelBounds() else { return nil }
+        }) else { return nil }
+        // Copies apply selection coverage after projection, so a fine canvas
+        // mask is never first reduced to the retained source bitmap's grid.
+        let selectedImage = selectionIsApplied ? canvasImage : canvasImage.copied(
+            selection: selection, layerFrame: canvasBounds,
+            canvasSize: document.canvasSize, feather: feather
+        )
+        guard let selectedImage,
+              let contentBounds = selectedImage.nonTransparentPixelBounds() else { return nil }
 
         guard let selectedBounds = selection.effectiveSelectedBounds(
             in: document.canvasSize
@@ -1602,7 +1603,7 @@ extension ImageEditorViewModel {
         let clipboardFrame = candidateFrame.intersection(canvasBounds)
         guard !clipboardFrame.isNull,
               !clipboardFrame.isEmpty,
-              let croppedImage = canvasImage.croppedUsingImagePixelCoordinates(to: clipboardFrame),
+              let croppedImage = selectedImage.croppedUsingImagePixelCoordinates(to: clipboardFrame),
               croppedImage.nonTransparentPixelBounds() != nil
         else { return nil }
 
@@ -1631,7 +1632,7 @@ extension ImageEditorViewModel {
                 feather: feather
               ),
               let clipboardCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
+                image: clippedImage,
                 selection: selection,
                 layerFrame: document.layers[index].frame,
                 feather: feather
@@ -1686,7 +1687,7 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func copyMergedToClipboard() -> Bool {
+    func copyMergedToClipboard(to pasteboard: NSPasteboard = .general) -> Bool {
         guard canCopyMergedToClipboard else {
             statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
             return false
@@ -1694,16 +1695,12 @@ extension ImageEditorViewModel {
 
         let clipboardCopy: (image: NSImage, frame: CGRect)
         if let selection = document.selection {
-            guard let clippedImage = document.compositedImage.copied(
+            guard let selectionCopy = selectionClipboardCopy(
+                image: document.compositedImage,
                 selection: selection,
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
-                canvasSize: document.canvasSize,
-                feather: feather
-            ), let selectionCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
-                selection: selection,
-                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
-                feather: feather
+                feather: feather,
+                selectionIsApplied: false
             ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return false
@@ -1718,10 +1715,11 @@ extension ImageEditorViewModel {
 
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
-            preferredFileName: "\(document.sourceName)-merged.png"
+            preferredFileName: "\(document.sourceName)-merged.png",
+            to: pasteboard
         )
         if didCopy {
-            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
+            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
@@ -1782,16 +1780,12 @@ extension ImageEditorViewModel {
         let mergedCopy: (image: NSImage, frame: CGRect)
         let layerNameKey: String
         if let selection = document.selection {
-            guard let clippedImage = document.compositedImage.copied(
+            guard let selectionCopy = selectionClipboardCopy(
+                image: document.compositedImage,
                 selection: selection,
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
-                canvasSize: document.canvasSize,
-                feather: feather
-            ), let selectionCopy = selectionClipboardCopy(
-                clippedImage: clippedImage,
-                selection: selection,
-                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
-                feather: feather
+                feather: feather,
+                selectionIsApplied: false
             ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
