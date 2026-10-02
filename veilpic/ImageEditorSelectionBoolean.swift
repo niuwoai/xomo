@@ -708,20 +708,9 @@ extension ImageEditorSelectionMask {
     }
 
     func translated(by delta: CGSize, canvasSize: CGSize) -> ImageEditorSelectionMask? {
-        guard width > 0, height > 0, alpha.count == width * height else { return nil }
-        let dx = Int(((delta.width / max(canvasSize.width, 1)) * CGFloat(width)).rounded(.toNearestOrAwayFromZero))
-        let dy = Int(((delta.height / max(canvasSize.height, 1)) * CGFloat(height)).rounded(.toNearestOrAwayFromZero))
-        guard dx != 0 || dy != 0 else { return self }
-
-        var output = [UInt8](repeating: 0, count: alpha.count)
-        for y in 0..<height {
-            for x in 0..<width {
-                let sourceX = x - dx
-                let sourceY = y - dy
-                guard sourceX >= 0, sourceY >= 0, sourceX < width, sourceY < height else { continue }
-                output[y * width + x] = alpha[sourceY * width + sourceX]
-            }
-        }
+        guard let output = ImageEditorSelectionMaskTranslation.translated(
+            alpha: alpha, width: width, height: height, delta: delta, canvasSize: canvasSize
+        ) else { return nil }
         return ImageEditorSelectionMask(width: width, height: height, alpha: output)
     }
 

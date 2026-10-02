@@ -73,7 +73,8 @@ def count_leading_enum_cases(source, enum_name)
 end
 
 readme = File.read(README)
-changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+changelog_paths = [File.join(ROOT, "CHANGELOG.md"), *Dir.glob(File.join(ROOT, "docs/changelog/part-*.md"))]
+changelog = changelog_paths.map { |path| File.read(path) }.join("\n")
 registry = File.read(File.join(ROOT, "veilpic/XomoAutomationRegistry.swift"))
 
 # --- 1. 相对链接与图片路径 -----------------------------------------------------
