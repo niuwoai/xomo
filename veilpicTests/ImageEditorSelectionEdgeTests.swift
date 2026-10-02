@@ -203,6 +203,42 @@ struct ImageEditorSelectionEdgeTests {
         #expect(boundedPoint == CGPoint(x: 0, y: 200))
     }
 
+    @Test func marqueeCanGrowOutwardFromItsStartPoint() throws {
+        let canvasSize = CGSize(width: 20, height: 16)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+
+        let centeredRectangle = viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isCentered: true
+        )
+        #expect(centeredRectangle == CGRect(x: 7, y: 6, width: 6, height: 4))
+        #expect(viewModel.createMarqueeSelection(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isCentered: true
+        ))
+        #expect(viewModel.document.selection?.bounds == centeredRectangle)
+
+        viewModel.marqueeShape = .circle
+        let centeredCircle = viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isCentered: true
+        )
+        #expect(centeredCircle == CGRect(x: 8, y: 6, width: 4, height: 4))
+
+        let clippedRectangle = viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 2, y: 2),
+            to: CGPoint(x: -10, y: -8),
+            isCentered: true
+        )
+        #expect(clippedRectangle == CGRect(x: 0, y: 0, width: 4, height: 4))
+    }
+
     @Test func lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

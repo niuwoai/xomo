@@ -4525,6 +4525,7 @@ struct ImageEditorView: View {
                                 viewModel.createMarqueeSelection(
                                     from: dragStart,
                                     to: boundedImagePoint(from: location, in: geometry.size),
+                                    isCentered: NSEvent.modifierFlags.contains(.option),
                                     mode: ImageEditorSelectionMode.resolved(
                                         baseMode: viewModel.selectionMode,
                                         modifierFlags: NSEvent.modifierFlags
@@ -5747,7 +5748,11 @@ struct ImageEditorView: View {
 
         if let dragStart, let dragEnd, shouldShowDragRect {
             let imageRect = canvasInteractionTool == .marquee
-                ? viewModel.marqueeSelectionRect(from: dragStart, to: dragEnd)
+                ? viewModel.marqueeSelectionRect(
+                    from: dragStart,
+                    to: dragEnd,
+                    isCentered: NSEvent.modifierFlags.contains(.option)
+                )
                 : CGRect(
                     x: min(dragStart.x, dragEnd.x),
                     y: min(dragStart.y, dragEnd.y),
@@ -7054,6 +7059,7 @@ struct ImageEditorView: View {
                         viewModel.createMarqueeSelection(
                             from: dragStart,
                             to: boundedImagePoint(from: value.location, in: size),
+                            isCentered: NSEvent.modifierFlags.contains(.option),
                             mode: ImageEditorSelectionMode.resolved(
                                 baseMode: viewModel.selectionMode,
                                 modifierFlags: NSEvent.modifierFlags

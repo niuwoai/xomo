@@ -5921,7 +5921,11 @@ final class ImageEditorViewModel: ObservableObject {
         selectTool(.marquee)
     }
 
-    func marqueeSelectionRect(from start: CGPoint, to end: CGPoint) -> CGRect {
+    func marqueeSelectionRect(
+        from start: CGPoint,
+        to end: CGPoint,
+        isCentered: Bool = false
+    ) -> CGRect {
         let boundedStart = ImageEditorCanvasGeometry.boundedCanvasPoint(
             start,
             canvasSize: document.canvasSize
@@ -5930,6 +5934,26 @@ final class ImageEditorViewModel: ObservableObject {
             end,
             canvasSize: document.canvasSize
         )
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        if isCentered {
+            let halfSize: CGSize
+            if marqueeShape.hasFixedAspectRatio {
+                let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
+                halfSize = CGSize(width: side, height: side)
+            } else {
+                halfSize = CGSize(
+                    width: abs(boundedEnd.x - boundedStart.x),
+                    height: abs(boundedEnd.y - boundedStart.y)
+                )
+            }
+            return CGRect(
+                x: boundedStart.x - halfSize.width,
+                y: boundedStart.y - halfSize.height,
+                width: halfSize.width * 2,
+                height: halfSize.height * 2
+            ).intersection(canvasBounds)
+        }
+
         let adjustedEnd: CGPoint
         if marqueeShape.hasFixedAspectRatio {
             let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
@@ -5945,16 +5969,17 @@ final class ImageEditorViewModel: ObservableObject {
             y: min(boundedStart.y, adjustedEnd.y),
             width: abs(adjustedEnd.x - boundedStart.x),
             height: abs(adjustedEnd.y - boundedStart.y)
-        ).intersection(CGRect(origin: .zero, size: document.canvasSize))
+        ).intersection(canvasBounds)
     }
 
     @discardableResult
     func createMarqueeSelection(
         from start: CGPoint,
         to end: CGPoint,
+        isCentered: Bool = false,
         mode: ImageEditorSelectionMode? = nil
     ) -> Bool {
-        let rect = marqueeSelectionRect(from: start, to: end)
+        let rect = marqueeSelectionRect(from: start, to: end, isCentered: isCentered)
         guard rect.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
               rect.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge
         else { return false }
