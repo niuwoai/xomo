@@ -20012,6 +20012,11 @@ struct XomoAutomationTests {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
+        if let layerIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[layerIndex].image = patchContrastFixture(
+                size: viewModel.document.canvasSize
+            )
+        }
         viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
 
         let response = registry.execute(request(
@@ -20942,6 +20947,44 @@ struct XomoAutomationTests {
             image: NSImage.transparent(size: CGSize(width: 320, height: 240)),
             preferencesDefaults: preferencesDefaults
         ) { _ in }
+    }
+
+    private func patchContrastFixture(size: CGSize) -> NSImage {
+        let width = Int(size.width.rounded())
+        let height = Int(size.height.rounded())
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ), let pixels = bitmap.bitmapData else {
+            return NSImage.transparent(size: size)
+        }
+        let source = CGRect(x: 10, y: 10, width: 20, height: 20)
+        let destination = CGRect(x: 40, y: 10, width: 20, height: 20)
+        for y in 0..<height {
+            for x in 0..<width {
+                let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
+                let color: (UInt8, UInt8, UInt8) = source.contains(point)
+                    ? (230, 25, 25)
+                    : destination.contains(point) ? (20, 20, 20) : (0, 100, 220)
+                let offset = y * bitmap.bytesPerRow + x * 4
+                pixels[offset] = color.0
+                pixels[offset + 1] = color.1
+                pixels[offset + 2] = color.2
+                pixels[offset + 3] = 255
+            }
+        }
+        bitmap.size = size
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmap)
+        return image
     }
 
     private func transactionSignature(
