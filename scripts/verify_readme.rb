@@ -17,6 +17,8 @@
 #      最近 30 天提交数。
 #   4. README 里出现的命令真的可用：`xomo <subcommand>` 必须是 main.swift 顶层
 #      分支里的子命令，`xomo call <tool>` 必须在自动化注册表里存在。
+#   5. README 的许可证口径与仓库根的 LICENSE 一致：LICENSE 存在、是 MIT 正文、
+#      带版权主体，README 的 License 章节声明 MIT 而不是「尚未确定」。
 #
 # 该脚本是「README 与仓库同步」的快照守卫：改造产品后如果数字变了，
 # 要么更新 README，要么在这里明确改口径，不要让两者静默漂移。
@@ -202,6 +204,30 @@ declared_tools_version = readme[/swift-tools-version ([\d.]+)/, 1]
 check(failures, "CLI swift-tools 版本不一致") do
   declared_tools_version == cli_tools_version ||
     "README 写 #{declared_tools_version}，Package.swift 写 #{cli_tools_version}"
+end
+
+# --- 5. 许可证口径 -------------------------------------------------------------
+license_path = File.join(ROOT, "LICENSE")
+license = File.exist?(license_path) ? File.read(license_path) : ""
+
+check(failures, "仓库根缺少 LICENSE") { !license.empty? || "没有 LICENSE 文件" }
+check(failures, "LICENSE 不是 MIT 正文") do
+  (license.include?("MIT License") && license.include?("Permission is hereby granted, free of charge")) ||
+    "LICENSE 缺少 MIT 的关键段落"
+end
+check(failures, "LICENSE 缺少版权主体") do
+  license.match?(/^Copyright \(c\) \d{4} \S/) || "LICENSE 里没有 Copyright (c) <year> <holder>"
+end
+
+license_section = readme[/^## License\n(.*?)(?=^## |\z)/m, 1].to_s
+check(failures, "README 的 License 章节未声明 MIT") do
+  license_section.include?("MIT") || "License 章节里找不到 MIT"
+end
+check(failures, "README 的 License 章节未链接 LICENSE") do
+  license_section.include?("](LICENSE)") || "License 章节里没有指向 LICENSE 的链接"
+end
+check(failures, "README 仍宣称许可证尚未确定") do
+  !readme.match?(/being finalised|not granted/i) || "README 里还留着待定许可证的说法"
 end
 
 # --- 汇总 ---------------------------------------------------------------------

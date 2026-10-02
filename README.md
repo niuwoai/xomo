@@ -191,7 +191,7 @@ dist/xomo-macos-universal install          # -> ~/.local/bin/xomo
 
 ## Tests
 
-The suite is unusually large for an app of this kind — 202 test sources, ~144k lines, including pixel-accurate rendering assertions. Pixel and colour-space tests need process isolation (a documented AppKit/Swift Testing interaction), so the repo ships its own runner:
+The suite is unusually large for an app of this kind — 203 test sources, ~144k lines, including pixel-accurate rendering assertions. Pixel and colour-space tests need process isolation (a documented AppKit/Swift Testing interaction), so the repo ships its own runner:
 
 ```bash
 ruby scripts/run_tests_isolated.rb --jobs 4        # JSON + Markdown report in test-reports/
@@ -236,7 +236,9 @@ House rules that keep the codebase predictable:
 
 ## License
 
-Xomo is published as **source-available**: read it, build it, run it, evaluate it, and open issues and pull requests. A formal `LICENSE` file is being finalised for the public launch; until it lands, redistribution and commercial reuse are not granted. If your use case needs an explicit grant, open an issue and ask.
+**MIT.** Read it, fork it, ship it, sell it — the only obligation is keeping the copyright notice with the source. Full text: [`LICENSE`](LICENSE).
+
+Bundled dependencies and the referenced third-party component packs are attributed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ---
 
