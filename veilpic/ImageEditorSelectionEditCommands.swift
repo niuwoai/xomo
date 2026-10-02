@@ -2530,14 +2530,12 @@ private extension NSImage {
         let localDeltaX = max(
             -CGFloat(width),
             min(CGFloat(width), delta.width * CGFloat(width) / layerFrame.width)
-        ).rounded()
+        )
         let localDeltaY = max(
             -CGFloat(height),
             min(CGFloat(height), delta.height * CGFloat(height) / layerFrame.height)
-        ).rounded()
-        let offsetX = Int(localDeltaX)
-        let offsetY = Int(localDeltaY)
-        guard offsetX != 0 || offsetY != 0 else { return self }
+        )
+        guard localDeltaX != 0 || localDeltaY != 0 else { return self }
 
         let bytesPerPixel = 4
         // Clear every source pixel before compositing any destination. Clearing
@@ -2546,6 +2544,16 @@ private extension NSImage {
             let inverseCoverage = 1 - CGFloat(maskAlpha[index / bytesPerPixel]) / 255
             return UInt8((CGFloat(component) * inverseCoverage).rounded())
         }
+        if abs(localDeltaX - localDeltaX.rounded()) > ImageEditorFractionalPixelMove.gridTolerance
+            || abs(localDeltaY - localDeltaY.rounded()) > ImageEditorFractionalPixelMove.gridTolerance {
+            ImageEditorFractionalPixelMove.composite(
+                source: source, maskAlpha: maskAlpha, width: width, height: height,
+                delta: CGSize(width: localDeltaX, height: localDeltaY), into: &output
+            )
+            return NSImage.rgbaImage(width: width, height: height, pixels: output, size: size)
+        }
+        let offsetX = Int(localDeltaX.rounded())
+        let offsetY = Int(localDeltaY.rounded())
         for y in 0..<height {
             for x in 0..<width {
                 let sourcePixel = y * width + x
