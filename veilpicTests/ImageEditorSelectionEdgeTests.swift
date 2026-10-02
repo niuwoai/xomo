@@ -223,6 +223,38 @@ struct ImageEditorSelectionEdgeTests {
         ))
         #expect(viewModel.document.selection?.bounds == centeredRectangle)
 
+        viewModel.marqueeShape = .rectangle
+        let constrainedRectangle = viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isConstrained: true
+        )
+        #expect(constrainedRectangle == CGRect(x: 10, y: 8, width: 2, height: 2))
+        let centeredConstrainedRectangle = viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isCentered: true,
+            isConstrained: true
+        )
+        #expect(centeredConstrainedRectangle == CGRect(x: 8, y: 6, width: 4, height: 4))
+
+        viewModel.marqueeShape = .ellipse
+        #expect(viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 10, y: 8),
+            to: CGPoint(x: 13, y: 10),
+            isConstrained: true
+        ) == constrainedRectangle)
+        #expect(viewModel.createMarqueeSelection(
+            from: CGPoint(x: 15, y: 12),
+            to: CGPoint(x: 18, y: 14),
+            isConstrained: true,
+            mode: .add
+        ))
+        let combinedSelection = try #require(viewModel.document.selection)
+        #expect(combinedSelection.contains(CGPoint(x: 10, y: 8)))
+        #expect(combinedSelection.contains(CGPoint(x: 16, y: 13)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionAdd"))
+
         viewModel.marqueeShape = .circle
         let centeredCircle = viewModel.marqueeSelectionRect(
             from: CGPoint(x: 10, y: 8),

@@ -4526,6 +4526,7 @@ struct ImageEditorView: View {
                                     from: dragStart,
                                     to: boundedImagePoint(from: location, in: geometry.size),
                                     isCentered: NSEvent.modifierFlags.contains(.option),
+                                    isConstrained: NSEvent.modifierFlags.contains(.shift),
                                     mode: ImageEditorSelectionMode.resolved(
                                         baseMode: viewModel.selectionMode,
                                         modifierFlags: NSEvent.modifierFlags
@@ -5751,7 +5752,8 @@ struct ImageEditorView: View {
                 ? viewModel.marqueeSelectionRect(
                     from: dragStart,
                     to: dragEnd,
-                    isCentered: NSEvent.modifierFlags.contains(.option)
+                    isCentered: NSEvent.modifierFlags.contains(.option),
+                    isConstrained: NSEvent.modifierFlags.contains(.shift)
                 )
                 : CGRect(
                     x: min(dragStart.x, dragEnd.x),
@@ -7060,6 +7062,7 @@ struct ImageEditorView: View {
                             from: dragStart,
                             to: boundedImagePoint(from: value.location, in: size),
                             isCentered: NSEvent.modifierFlags.contains(.option),
+                            isConstrained: NSEvent.modifierFlags.contains(.shift),
                             mode: ImageEditorSelectionMode.resolved(
                                 baseMode: viewModel.selectionMode,
                                 modifierFlags: NSEvent.modifierFlags

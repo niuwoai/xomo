@@ -5924,7 +5924,8 @@ final class ImageEditorViewModel: ObservableObject {
     func marqueeSelectionRect(
         from start: CGPoint,
         to end: CGPoint,
-        isCentered: Bool = false
+        isCentered: Bool = false,
+        isConstrained: Bool = false
     ) -> CGRect {
         let boundedStart = ImageEditorCanvasGeometry.boundedCanvasPoint(
             start,
@@ -5935,9 +5936,10 @@ final class ImageEditorViewModel: ObservableObject {
             canvasSize: document.canvasSize
         )
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let hasFixedAspectRatio = marqueeShape.hasFixedAspectRatio || isConstrained
         if isCentered {
             let halfSize: CGSize
-            if marqueeShape.hasFixedAspectRatio {
+            if hasFixedAspectRatio {
                 let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
                 halfSize = CGSize(width: side, height: side)
             } else {
@@ -5955,7 +5957,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         let adjustedEnd: CGPoint
-        if marqueeShape.hasFixedAspectRatio {
+        if hasFixedAspectRatio {
             let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
             adjustedEnd = CGPoint(
                 x: boundedStart.x + (boundedEnd.x >= boundedStart.x ? side : -side),
@@ -5977,9 +5979,15 @@ final class ImageEditorViewModel: ObservableObject {
         from start: CGPoint,
         to end: CGPoint,
         isCentered: Bool = false,
+        isConstrained: Bool = false,
         mode: ImageEditorSelectionMode? = nil
     ) -> Bool {
-        let rect = marqueeSelectionRect(from: start, to: end, isCentered: isCentered)
+        let rect = marqueeSelectionRect(
+            from: start,
+            to: end,
+            isCentered: isCentered,
+            isConstrained: isConstrained
+        )
         guard rect.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
               rect.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge
         else { return false }
