@@ -214,6 +214,16 @@ extension ImageEditorSelection {
     }
 
     func translated(by delta: CGSize, canvasSize: CGSize) -> ImageEditorSelection? {
+        guard delta.width.isFinite,
+              delta.height.isFinite,
+              canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              canvasSize.width > 0,
+              canvasSize.height > 0
+        else { return nil }
+        guard abs(delta.width) < canvasSize.width,
+              abs(delta.height) < canvasSize.height
+        else { return nil }
         guard abs(delta.width) > 0.01 || abs(delta.height) > 0.01 else { return self }
         guard let mask = rasterizedMask(canvasSize: canvasSize),
               let outputMask = mask.translated(by: delta, canvasSize: canvasSize),

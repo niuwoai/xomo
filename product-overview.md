@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-02 | 当前版本：v2.12.0-rc1680
+> 最后更新：2026-10-02 | 当前版本：v2.12.0-rc1681
+
+v2.12.0-rc1681 加固经典选区拖移事务：非有限位移不再触碰文档或 History；任意超出画布的极大有限位移不做危险的浮点到整数转换，按空选区结果进入可撤销 History。
 
 v2.12.0-rc1680 完成第 40 个小版本质量门槛：Release App/CLI 构建及 App、单测、UI 测试目标的 `build-for-testing` 通过（测试编译启用 `ENABLE_TESTABILITY=YES`）；334 项相关 App 回归与 2 项 CLI 测试通过。XCUITest Runner 未能连接，因此以安装版实际验证启动、组件库插入与撤销，并观察到组件库中的系统箭头指针。`/Applications/Xomo.app` 已更新，旧 rc1641 包保存在 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app`；本版未公开发布。rc1679 让选区内部原地点击不改变状态提示，也不产生空历史；真实移动仍单步撤销。
 

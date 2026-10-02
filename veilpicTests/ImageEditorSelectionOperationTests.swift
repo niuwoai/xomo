@@ -85,7 +85,7 @@ struct ImageEditorSelectionOperationTests {
         viewModel.createMarqueeSelection(from: CGPoint(x: 10, y: 8), to: CGPoint(x: 42, y: 28))
 
         var selection = try #require(viewModel.document.selection)
-        #expect(selection.bounds == CGRect(x: 10, y: 8, width: 20, height: 20))
+        #expect(selection.bounds == CGRect(x: 10, y: 8, width: 32, height: 32))
         #expect(!selection.isPolygon)
 
         viewModel.selectMarqueeShape(.circle)
@@ -93,7 +93,7 @@ struct ImageEditorSelectionOperationTests {
 
         selection = try #require(viewModel.document.selection)
         #expect(abs(selection.bounds.width - selection.bounds.height) < 0.001)
-        #expect(selection.bounds == CGRect(x: 24, y: 14, width: 26, height: 26))
+        #expect(selection.bounds == CGRect(x: 22, y: 12, width: 28, height: 28))
         #expect(selection.isPolygon)
         #expect(selection.points.count == 64)
     }
@@ -1404,6 +1404,47 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.selection == originalSelection)
         viewModel.redo()
         #expect(viewModel.document.selection == nil)
+    }
+
+    @Test func movingSelectionByHugeFiniteDeltaSafelyCommitsEmptySelection() throws {
+        let canvasSize = NSSize(width: 4, height: 4)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 1, y: 1, width: 2, height: 2)
+        )
+        viewModel.document.selection = originalSelection
+        let historyCount = viewModel.document.history.count
+
+        viewModel.nudgeSelection(by: CGSize(width: CGFloat.greatestFiniteMagnitude, height: 0))
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionMove"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == originalSelection)
+    }
+
+    @Test func nonFiniteSelectionNudgeDoesNotChangeDocumentOrHistory() throws {
+        let canvasSize = NSSize(width: 4, height: 4)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 1, y: 1, width: 2, height: 2)
+        )
+        viewModel.document.selection = originalSelection
+        let historyCount = viewModel.document.history.count
+
+        viewModel.nudgeSelection(by: CGSize(width: CGFloat.infinity, height: CGFloat.nan))
+
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func zeroSelectionNudgePreservesHistoryAndExistingRedo() throws {

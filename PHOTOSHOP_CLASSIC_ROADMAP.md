@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-10-02 ｜ 当前版本：v2.12.0-rc1680 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+> 最后更新：2026-10-02 ｜ 当前版本：v2.12.0-rc1681 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+
+- `v2.12.0-rc1681`：选区位移先拒绝 NaN/无穷值；极大有限位移在超过画布边长时直接解析为空选区，不再转换成可能溢出的整数像素偏移。增加撤销和 History 事务回归；Figma 功能范围不变。
 
 - `v2.12.0-rc1680`：第 40 个小版本质量门槛；Release App/CLI 和 App、单测、UI 测试目标的 `build-for-testing` 编译通过（测试编译需 `ENABLE_TESTABILITY=YES`）；Cursor/Scope/SelectionEdge 334 项与 CLI 2 项测试通过。XCUITest Runner 未能连接，改用安装版实际完成组件插入、撤销和系统箭头指针冒烟。`/Applications/Xomo.app` 当前为 rc1680，rc1641 可从 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app` 恢复；未公开发布。下一周期完整门槛为 rc1720。
 

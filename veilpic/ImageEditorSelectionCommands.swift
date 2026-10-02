@@ -468,6 +468,7 @@ extension ImageEditorViewModel {
     }
 
     private func moveSelection(by delta: CGSize) {
+        guard delta.width.isFinite, delta.height.isFinite else { return }
         guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let modified = selection.translated(by: delta, canvasSize: document.canvasSize)
         guard !selectionsAreEquivalent(selection, modified) else {
