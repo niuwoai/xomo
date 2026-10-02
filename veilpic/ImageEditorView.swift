@@ -4880,7 +4880,7 @@ struct ImageEditorView: View {
                         imageRect: imageRect
                     )
                     let canvasPoint = hoverViewPoint.flatMap { imagePoint(from: $0, in: geometry.size) }
-                    let objectMoveIsActive = isSelectedObjectMoveGestureActive || isObjectMoveGestureActive
+                    let objectMoveIsActive = hasActiveObjectMoveCursorGesture
                     // The move cursor wins for the entire active transaction.
                     // Avoid rescanning visible pixels and the layer stack for
                     // every lightweight preview-frame update while dragging.
@@ -7898,7 +7898,7 @@ struct ImageEditorView: View {
                 modifierFlags: NSEvent.modifierFlags
             ),
             handIsDragging: isCanvasPanGestureActive,
-            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
+            isObjectMoveGestureActive: hasActiveObjectMoveCursorGesture,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -7955,7 +7955,7 @@ struct ImageEditorView: View {
             isPointerOverMovableContent: false,
             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
             handIsDragging: isCanvasPanGestureActive,
-            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
+            isObjectMoveGestureActive: hasActiveObjectMoveCursorGesture,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -10396,6 +10396,14 @@ struct ImageEditorView: View {
         hasActiveCanvasContentPointerTransaction
             || isSpacebarPanning
             || isCanvasPanGestureActive
+    }
+
+    private var hasActiveObjectMoveCursorGesture: Bool {
+        ImageEditorCanvasCursor.hasActiveObjectMoveCursorGesture(
+            objectMoveIsActive: isObjectMoveGestureActive,
+            selectedObjectMoveIsActive: isSelectedObjectMoveGestureActive,
+            pixelSelectionMoveIsActive: isPixelSelectionMoveGestureActive
+        )
     }
 
     /// A Space press may claim an idle canvas, but must never replace a
@@ -17240,6 +17248,14 @@ enum ImageEditorPatchGestureCancellationPolicy {
 
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
+
+    static func hasActiveObjectMoveCursorGesture(
+        objectMoveIsActive: Bool,
+        selectedObjectMoveIsActive: Bool,
+        pixelSelectionMoveIsActive: Bool
+    ) -> Bool {
+        objectMoveIsActive || selectedObjectMoveIsActive || pixelSelectionMoveIsActive
+    }
 
     static func isPointerOverDrawableCanvas(_ point: CGPoint?, imageRect: CGRect) -> Bool {
         guard let point else { return false }

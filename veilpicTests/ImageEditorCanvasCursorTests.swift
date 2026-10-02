@@ -913,6 +913,38 @@ struct ImageEditorCanvasCursorTests {
         #expect(componentLibrary === NSCursor.arrow)
     }
 
+    @Test func pixelSelectionDragKeepsMoveCursorLockedForTheWholeTransaction() {
+        #expect(!ImageEditorCanvasCursor.hasActiveObjectMoveCursorGesture(
+            objectMoveIsActive: false,
+            selectedObjectMoveIsActive: false,
+            pixelSelectionMoveIsActive: false
+        ))
+        #expect(ImageEditorCanvasCursor.hasActiveObjectMoveCursorGesture(
+            objectMoveIsActive: true,
+            selectedObjectMoveIsActive: false,
+            pixelSelectionMoveIsActive: false
+        ))
+        #expect(ImageEditorCanvasCursor.hasActiveObjectMoveCursorGesture(
+            objectMoveIsActive: false,
+            selectedObjectMoveIsActive: true,
+            pixelSelectionMoveIsActive: false
+        ))
+
+        let pixelSelectionDragIsActive = ImageEditorCanvasCursor.hasActiveObjectMoveCursorGesture(
+            objectMoveIsActive: false,
+            selectedObjectMoveIsActive: false,
+            pixelSelectionMoveIsActive: true
+        )
+        let cursor = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isObjectMoveGestureActive: pixelSelectionDragIsActive
+        )
+
+        #expect(cursor === ImageEditorCanvasCursor.objectMoveCursor())
+    }
+
     @Test func moveCursorHitTestUsesComponentGeometryWithoutChangingSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "cursor-hit-test",
