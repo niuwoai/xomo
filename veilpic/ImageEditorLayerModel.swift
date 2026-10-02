@@ -543,7 +543,7 @@ struct ImageEditorLayer: Identifiable {
             return partial.applyingFilter(
                 kind: filter.kind,
                 intensity: filter.normalizedIntensity,
-                settings: filter.normalizedSettings,
+                settings: filter.renderingSettings,
                 mask: nil,
                 opacity: filter.normalizedOpacity,
                 blendMode: filter.normalizedBlendMode
