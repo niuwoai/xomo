@@ -203,7 +203,7 @@ ruby scripts/run_tests_isolated.rb --filter Filter # or run a subset
 We would rather you know the edges before you install than after:
 
 - **macOS only.** No Windows or Linux build today.
-- **Releases carry `-rc` tags.** 2,230+ logged releases, 7,300+ documented changes and 86 commits in the last 30 days — this is a fast-moving, continuously shipped app rather than a frozen 1.0.
+- **Releases carry `-rc` tags.** 2,230+ logged releases, 7,300+ documented changes and 86 commits in the last 30 days — this is a fast-moving, continuously shipped app rather than a frozen 1.0. GitHub releases are cut at milestones, not for every internal build; the complete per-build log is [`CHANGELOG.md`](CHANGELOG.md).
 - **PSD compatibility is broad but not Photoshop-complete.** PSD v1 only (no PSB), 8-bit RGB only (no 16/32-bit, CMYK, grayscale, indexed, Lab). Smart-object internals, adjustment layers, exotic fills and native `vscg`/`vogk` shape descriptors are imported as rendered pixels, each item listed in a compatibility report. See [`docs/PSD_SUPPORT.md`](docs/PSD_SUPPORT.md) for the full matrix.
 - **Not a Figma editor.** Figma support is import, inspection, link handling and local token exchange — Xomo never writes back to Figma and never asks for your access token.
 - **The rendering test suite is order-sensitive by nature.** That is why the isolated runner exists; a plain parallel `xcodebuild test` will occasionally show false failures.
