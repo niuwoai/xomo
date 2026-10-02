@@ -14,7 +14,7 @@
 # 公证凭据：用 `xcrun notarytool store-credentials` 提前存进 Keychain
 #   下面 NOTARY_PROFILE 引用的就是那个 profile 名。
 #   首次使用前请先跑一次：
-#     xcrun notarytool store-credentials "qingtu-notary" \
+#     xcrun notarytool store-credentials "veilwriter-notary" \
 #       --apple-id "你的 Apple ID" \
 #       --team-id  "ZH2S7D6PL6" \
 #       --password "App 专用密码"
@@ -34,7 +34,7 @@ PRODUCT_NAME="Xomo"                                   # 最终 .app / .dmg 文�
 BUNDLE_ID="im.some.xomo"
 TEAM_ID="ZH2S7D6PL6"                                     # Developer Team ID
 SIGNING_IDENTITY="Developer ID Application: Beijing Alibaba information Technology Co., Ltd. (ZH2S7D6PL6)"
-NOTARY_PROFILE="qingtu-notary"                           # store-credentials 时取的名字
+NOTARY_PROFILE="${NOTARY_PROFILE:-veilwriter-notary}"   # store-credentials 时取的名字（可用同名环境变量覆盖）
 DMG_VOLUME_NAME="Xomo"
 
 # ----- 路径 ----------------------------------------------------------------
@@ -79,6 +79,24 @@ if ! security find-identity -v -p codesigning | grep -q "$SIGNING_IDENTITY"; the
   echo "    ${SIGNING_IDENTITY}"
   echo "  请到 Apple Developer → Certificates 下载 .cer 后双击导入"
   exit 1
+fi
+
+# ----- 预检公证凭据 ---------------------------------------------------------
+# 公证失败发生在 7 步流程的最后，若等到那时才发现凭据不可用，前面十几分钟的
+# archive + export + DMG 全部白做。这里先探一次。
+if [[ $SKIP_NOTARIZE == 0 ]]; then
+  echo ""
+  echo "[0/7] 预检公证凭据 ..."
+  if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+    echo "❌ 公证凭据不可用：${NOTARY_PROFILE}"
+    echo "   重建凭据：xcrun notarytool store-credentials \"$NOTARY_PROFILE\" \\"
+    echo "             --apple-id <Apple ID> --team-id $TEAM_ID --password <App 专用密码>"
+    echo "   若上面报 403 / required agreement：账号持有人需到 developer.apple.com"
+    echo "   → Account → Agreements 补签开发者协议，签完即时生效"
+    echo "   只想先出签名包：scripts/release.sh --skip-notarize（Gatekeeper 会拦）"
+    exit 1
+  fi
+  echo "  ✅ ${NOTARY_PROFILE} 可用"
 fi
 
 # ----- 清理上次产物 ---------------------------------------------------------
