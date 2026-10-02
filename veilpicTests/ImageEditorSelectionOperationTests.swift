@@ -98,6 +98,62 @@ struct ImageEditorSelectionOperationTests {
         #expect(selection.points.count == 64)
     }
 
+    @Test func imageEditorMarqueeModifierOverrideMatchesCursorModeWithoutChangingToolbarMode() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: NSSize(width: 12, height: 10))
+        ) { _ in }
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 4, y: 4)))
+        viewModel.selectionMode = .replace
+
+        #expect(viewModel.createMarqueeSelection(
+            from: CGPoint(x: 6, y: 2),
+            to: CGPoint(x: 9, y: 5),
+            mode: ImageEditorSelectionMode.resolved(baseMode: .replace, modifierFlags: [.shift])
+        ))
+
+        let addedSelection = try #require(viewModel.document.selection)
+        #expect(addedSelection.contains(CGPoint(x: 2, y: 2)))
+        #expect(addedSelection.contains(CGPoint(x: 7, y: 3)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionAdd"))
+        #expect(viewModel.selectionMode == .replace)
+    }
+
+    @Test func selectionMarqueeLassoWandQuickUseResolvedModifierMode() throws {
+        let canvasSize = NSSize(width: 12, height: 10)
+        let sourceImage = testImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.selectionMode = .replace
+
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 4, y: 4)))
+        #expect(viewModel.createLassoSelection(
+            points: [CGPoint(x: 6, y: 1), CGPoint(x: 9, y: 1), CGPoint(x: 7, y: 4)],
+            mode: ImageEditorSelectionMode.resolved(baseMode: .replace, modifierFlags: [.shift])
+        ))
+        let lassoSelection = try #require(viewModel.document.selection)
+        #expect(lassoSelection.contains(CGPoint(x: 2, y: 2)))
+        #expect(lassoSelection.contains(CGPoint(x: 7, y: 2)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionAdd"))
+
+        #expect(viewModel.createMagicSelection(
+            at: CGPoint(x: 8, y: 7),
+            samplingImage: sourceImage,
+            mode: ImageEditorSelectionMode.resolved(baseMode: .replace, modifierFlags: [.option])
+        ))
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionSubtract"))
+
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 4, y: 4)))
+        #expect(viewModel.createQuickSelection(
+            points: [CGPoint(x: 8, y: 7)],
+            tolerance: 1,
+            mode: ImageEditorSelectionMode.resolved(baseMode: .replace, modifierFlags: [.option])
+        ))
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionSubtract"))
+        #expect(viewModel.selectionMode == .replace)
+    }
+
     @Test func imageEditorCreatesOnePixelMarqueeSelection() throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

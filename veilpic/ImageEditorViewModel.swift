@@ -5949,7 +5949,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
-    func createMarqueeSelection(from start: CGPoint, to end: CGPoint) -> Bool {
+    func createMarqueeSelection(
+        from start: CGPoint,
+        to end: CGPoint,
+        mode: ImageEditorSelectionMode? = nil
+    ) -> Bool {
         let rect = marqueeSelectionRect(from: start, to: end)
         guard rect.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
               rect.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge
@@ -5961,7 +5965,11 @@ final class ImageEditorViewModel: ObservableObject {
             selection = .rectangle(rect)
         }
         guard let selection else { return false }
-        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        _ = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selection",
+            mode: mode
+        )
         return true
     }
 
@@ -5975,12 +5983,19 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
-    func createLassoSelection(points: [CGPoint]) -> Bool {
+    func createLassoSelection(
+        points: [CGPoint],
+        mode: ImageEditorSelectionMode? = nil
+    ) -> Bool {
         let boundedPoints = points.map { point in
             ImageEditorCanvasGeometry.boundedCanvasPoint(point, canvasSize: document.canvasSize)
         }
         guard let selection = ImageEditorSelection.polygon(boundedPoints) else { return false }
-        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        _ = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selection",
+            mode: mode
+        )
         return true
     }
 
@@ -5989,7 +6004,8 @@ final class ImageEditorViewModel: ObservableObject {
         at point: CGPoint?,
         tolerance: CGFloat? = nil,
         contiguous: Bool? = nil,
-        samplingImage: NSImage? = nil
+        samplingImage: NSImage? = nil,
+        mode: ImageEditorSelectionMode? = nil
     ) -> Bool {
         guard let point else { return false }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
@@ -6010,12 +6026,20 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return false
         }
-        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
+        _ = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.magicSelection",
+            mode: mode
+        )
         return true
     }
 
     @discardableResult
-    func createQuickSelection(points: [CGPoint], tolerance: CGFloat? = nil) -> Bool {
+    func createQuickSelection(
+        points: [CGPoint],
+        tolerance: CGFloat? = nil,
+        mode: ImageEditorSelectionMode? = nil
+    ) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let minimumDistance = max(8, brushSize * 0.65)
         let maximumSamples = 18
@@ -6038,7 +6062,11 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         guard let combinedSelection else { return false }
-        _ = applySelectionCandidate(combinedSelection, replaceHistoryKey: "imageEditor.history.quickSelection")
+        _ = applySelectionCandidate(
+            combinedSelection,
+            replaceHistoryKey: "imageEditor.history.quickSelection",
+            mode: mode
+        )
         return true
     }
 

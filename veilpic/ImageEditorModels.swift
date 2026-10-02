@@ -824,6 +824,18 @@ enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {
             "imageEditor.history.selectionIntersect"
         }
     }
+
+    static func resolved(
+        baseMode: Self,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Self {
+        switch modifierFlags.intersection([.shift, .option]) {
+        case [.shift, .option]: .intersect
+        case [.shift]: .add
+        case [.option]: .subtract
+        default: baseMode
+        }
+    }
 }
 
 enum ImageEditorPatchMode: String, CaseIterable, Identifiable {

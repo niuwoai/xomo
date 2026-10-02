@@ -4524,7 +4524,11 @@ struct ImageEditorView: View {
                             if canvasInteractionTool == .marquee, let dragStart {
                                 viewModel.createMarqueeSelection(
                                     from: dragStart,
-                                    to: boundedImagePoint(from: location, in: geometry.size)
+                                    to: boundedImagePoint(from: location, in: geometry.size),
+                                    mode: ImageEditorSelectionMode.resolved(
+                                        baseMode: viewModel.selectionMode,
+                                        modifierFlags: NSEvent.modifierFlags
+                                    )
                                 )
                             } else if canvasInteractionTool == .gradient {
                                 viewModel.drawGradient(
@@ -7049,18 +7053,40 @@ struct ImageEditorView: View {
                     if let dragStart {
                         viewModel.createMarqueeSelection(
                             from: dragStart,
-                            to: boundedImagePoint(from: value.location, in: size)
+                            to: boundedImagePoint(from: value.location, in: size),
+                            mode: ImageEditorSelectionMode.resolved(
+                                baseMode: viewModel.selectionMode,
+                                modifierFlags: NSEvent.modifierFlags
+                            )
                         )
                     }
                 case .lasso:
                     if !dragPoints.isEmpty {
                         dragPoints.append(boundedImagePoint(from: value.location, in: size))
                     }
-                    viewModel.createLassoSelection(points: dragPoints)
+                    viewModel.createLassoSelection(
+                        points: dragPoints,
+                        mode: ImageEditorSelectionMode.resolved(
+                            baseMode: viewModel.selectionMode,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
+                    )
                 case .magicWand:
-                    viewModel.createMagicSelection(at: endImagePoint)
+                    viewModel.createMagicSelection(
+                        at: endImagePoint,
+                        mode: ImageEditorSelectionMode.resolved(
+                            baseMode: viewModel.selectionMode,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
+                    )
                 case .quickSelection:
-                    viewModel.createQuickSelection(points: dragPoints)
+                    viewModel.createQuickSelection(
+                        points: dragPoints,
+                        mode: ImageEditorSelectionMode.resolved(
+                            baseMode: viewModel.selectionMode,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
+                    )
                 case .brush:
                     if isTemporaryEyedropperGestureActive, let endImagePoint {
                         viewModel.sampleColor(at: endImagePoint)
@@ -16914,18 +16940,14 @@ enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
     case subtract
     case intersect
 
-    static func from(modifierFlags: NSEvent.ModifierFlags) -> Self {
-        let flags = modifierFlags.intersection([.shift, .option])
-        switch flags {
-        case [.shift, .option]:
-            return .intersect
-        case [.shift]:
-            return .add
-        case [.option]:
-            return .subtract
-        default:
-            return .replace
-        }
+    static func from(
+        modifierFlags: NSEvent.ModifierFlags,
+        baseMode: ImageEditorSelectionMode = .replace
+    ) -> Self {
+        from(selectionMode: ImageEditorSelectionMode.resolved(
+            baseMode: baseMode,
+            modifierFlags: modifierFlags
+        ))
     }
 
     static func from(selectionMode: ImageEditorSelectionMode) -> Self {
@@ -17893,7 +17915,10 @@ enum ImageEditorCanvasCursor {
            ImageEditorTemporaryEyedropperPolicy.isAvailable(for: tool) {
             return eyedropperCursor(target: eyedropperTarget)
         }
-        let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
+        let selectionMode = ImageEditorSelectionCursorMode.from(
+            modifierFlags: modifierFlags,
+            baseMode: patchSelectionMode
+        )
         switch family(for: tool) {
         case .systemArrow:
             return .arrow

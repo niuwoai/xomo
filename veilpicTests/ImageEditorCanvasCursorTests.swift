@@ -1835,7 +1835,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorArrowNudge.delta(for: 125, modifierFlags: [.command]) == nil)
     }
 
-    @Test func selectionCursorModesReflectPhotoshopModifierSemantics() {
+    @Test func selectionMarqueeCursorModesReflectPhotoshopModifierSemantics() {
         #expect(ImageEditorSelectionCursorMode.from(modifierFlags: []) == .replace)
         #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.shift]) == .add)
         #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.option]) == .subtract)
@@ -1849,6 +1849,29 @@ struct ImageEditorCanvasCursorTests {
         #expect(replace.image.tiffRepresentation != add.image.tiffRepresentation)
         #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
         #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
+
+        let toolbarAdd = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            patchSelectionMode: .add
+        )
+        let toolbarSubtract = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            patchSelectionMode: .subtract
+        )
+        let toolbarIntersect = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            patchSelectionMode: .intersect
+        )
+        #expect(toolbarAdd.image.tiffRepresentation != replace.image.tiffRepresentation)
+        #expect(toolbarAdd.image.tiffRepresentation != toolbarSubtract.image.tiffRepresentation)
+        #expect(toolbarSubtract.image.tiffRepresentation != toolbarIntersect.image.tiffRepresentation)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [], baseMode: .subtract) == .subtract)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.shift], baseMode: .subtract) == .add)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.option], baseMode: .add) == .subtract)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.shift, .option], baseMode: .replace) == .intersect)
     }
 
     @Test func marqueeUsesTheConventionalCrosshairForEveryBaseShape() {
