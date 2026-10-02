@@ -171,13 +171,6 @@ private enum ImageEditorLayerBlendIfEditKind {
     case underlyingWhite
 }
 
-struct ImageEditorPixelSelectionMoveTransaction {
-    let originalDocument: ImageEditorDocument
-    let layerID: UUID
-    let originalImage: NSImage
-    var delta: CGSize = .zero
-}
-
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
