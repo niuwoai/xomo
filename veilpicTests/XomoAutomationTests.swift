@@ -12161,6 +12161,53 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == initialHistoryCount)
     }
 
+    @Test func retouchAutomationBoundsCloneAndHealingSourcePointsToCanvas() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let canvasSize = viewModel.document.canvasSize
+
+        let cloneSource = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "x": .number(.greatestFiniteMagnitude),
+                "y": .number(-.greatestFiniteMagnitude)
+            ]
+        ))
+        #expect(cloneSource.ok)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: canvasSize.width, y: 0))
+
+        let healingSource = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setHealingSource"),
+                "x": .number(-.greatestFiniteMagnitude),
+                "y": .number(.greatestFiniteMagnitude)
+            ]
+        ))
+        #expect(healingSource.ok)
+        #expect(viewModel.healingSourcePoint == CGPoint(x: 0, y: canvasSize.height))
+
+        let initialBrushSize = viewModel.brushSize
+        let invalidCloneSource = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "size": .number(72),
+                "x": .number(.infinity),
+                "y": .number(12)
+            ]
+        ))
+        #expect(!invalidCloneSource.ok)
+        #expect(viewModel.brushSize == initialBrushSize)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: canvasSize.width, y: 0))
+    }
+
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

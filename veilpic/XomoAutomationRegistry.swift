@@ -6031,6 +6031,15 @@ final class XomoAutomationRegistry {
                 canvasSize: viewModel.document.canvasSize
             )
             : nil
+        let validatedSourcePoint: CGPoint?
+        if action == "setCloneSource" || action == "setHealingSource" {
+            validatedSourcePoint = try requiredCanvasPoint(
+                arguments,
+                canvasSize: viewModel.document.canvasSize
+            )
+        } else {
+            validatedSourcePoint = nil
+        }
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
@@ -6373,11 +6382,17 @@ final class XomoAutomationRegistry {
             return
         }
         if action == "setCloneSource" {
-            viewModel.setCloneSource(at: try requiredPoint(arguments))
+            guard let validatedSourcePoint else {
+                throw XomoAutomationCallError.invalidArgument("Clone source point is required")
+            }
+            viewModel.setCloneSource(at: validatedSourcePoint)
             return
         }
         if action == "setHealingSource" {
-            viewModel.setHealingSource(at: try requiredPoint(arguments))
+            guard let validatedSourcePoint else {
+                throw XomoAutomationCallError.invalidArgument("Healing source point is required")
+            }
+            viewModel.setHealingSource(at: validatedSourcePoint)
             return
         }
         let samples: [ImageEditorBrushStrokeSample]
@@ -7144,6 +7159,16 @@ final class XomoAutomationRegistry {
         CGPoint(
             x: try requiredNumber("x", in: arguments),
             y: try requiredNumber("y", in: arguments)
+        )
+    }
+
+    private func requiredCanvasPoint(
+        _ arguments: [String: XomoJSONValue],
+        canvasSize: CGSize
+    ) throws -> CGPoint {
+        ImageEditorCanvasGeometry.boundedCanvasPoint(
+            try requiredPoint(arguments),
+            canvasSize: canvasSize
         )
     }
 
