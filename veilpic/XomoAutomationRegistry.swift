@@ -5521,7 +5521,11 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.operationFailed("Quick Mask is not active")
             }
             viewModel.paintQuickMaskSelection(
-                samples: try requiredBrushSamples("points", in: arguments),
+                samples: try requiredBrushSamples(
+                    "points",
+                    in: arguments,
+                    canvasSize: viewModel.document.canvasSize
+                ),
                 reveal: arguments["reveal"]?.boolValue ?? false
             )
         default:
@@ -5744,7 +5748,11 @@ final class XomoAutomationRegistry {
         guard tool == "brush" || tool == "eraser" else {
             throw XomoAutomationCallError.invalidArgument("Stroke tool must be brush or eraser")
         }
-        let samples = try requiredBrushSamples("points", in: arguments)
+        let samples = try requiredBrushSamples(
+            "points",
+            in: arguments,
+            canvasSize: viewModel.document.canvasSize
+        )
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
         if let hardness = arguments["hardness"]?.doubleValue {
@@ -6011,12 +6019,19 @@ final class XomoAutomationRegistry {
         let resolvedPatchPatternRed = try validatedPatchPatternChannel("patternRed")
         let resolvedPatchPatternGreen = try validatedPatchPatternChannel("patternGreen")
         let resolvedPatchPatternBlue = try validatedPatchPatternChannel("patternBlue")
-        if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
         let usesFlow = action == "sponge"
         let usesSampledBrush = action == "cloneStamp" || action == "healing"
         let usesRetouchPressure = usesStrength || usesExposure || usesFlow || usesSampledBrush
+        let validatedRetouchSamples = usesRetouchPressure
+            ? try requiredBrushSamples(
+                "points",
+                in: arguments,
+                canvasSize: viewModel.document.canvasSize
+            )
+            : nil
+        if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
         } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
@@ -6365,9 +6380,13 @@ final class XomoAutomationRegistry {
             viewModel.setHealingSource(at: try requiredPoint(arguments))
             return
         }
-        let samples = usesRetouchPressure
-            ? try requiredBrushSamples("points", in: arguments)
-            : try requiredPoints("points", in: arguments).map { ImageEditorBrushStrokeSample(point: $0) }
+        let samples: [ImageEditorBrushStrokeSample]
+        if let validatedRetouchSamples {
+            samples = validatedRetouchSamples
+        } else {
+            samples = try requiredPoints("points", in: arguments)
+                .map { ImageEditorBrushStrokeSample(point: $0) }
+        }
         let points = samples.map(\.point)
         let airbrushPulseSamples: [ImageEditorBrushStrokeSample]
         if viewModel.toneBrushAirbrushEnabled, let lastSample = samples.last {
@@ -7195,7 +7214,8 @@ final class XomoAutomationRegistry {
 
     private func requiredBrushSamples(
         _ key: String,
-        in arguments: [String: XomoJSONValue]
+        in arguments: [String: XomoJSONValue],
+        canvasSize: CGSize
     ) throws -> [ImageEditorBrushStrokeSample] {
         guard let values = arguments[key]?.arrayValue else {
             throw XomoAutomationCallError.invalidArgument("Missing point array: \(key)")
@@ -7205,8 +7225,17 @@ final class XomoAutomationRegistry {
                   let x = object["x"]?.doubleValue,
                   let y = object["y"]?.doubleValue
             else { throw XomoAutomationCallError.invalidArgument("Each point needs numeric x and y") }
-            let pressure = object["pressure"]?.doubleValue.map {
-                CGFloat(max(0, min(1, $0)))
+            guard x.isFinite, y.isFinite else {
+                throw XomoAutomationCallError.invalidArgument("Brush point coordinates must be finite")
+            }
+            let pressure: CGFloat?
+            if let rawPressure = object["pressure"]?.doubleValue {
+                guard rawPressure.isFinite else {
+                    throw XomoAutomationCallError.invalidArgument("Brush pressure must be finite")
+                }
+                pressure = CGFloat(max(0, min(1, rawPressure)))
+            } else {
+                pressure = nil
             }
             let tiltX = object["tiltX"]?.doubleValue
             let tiltY = object["tiltY"]?.doubleValue
@@ -7215,6 +7244,9 @@ final class XomoAutomationRegistry {
             case (nil, nil):
                 tilt = nil
             case (.some(let x), .some(let y)):
+                guard x.isFinite, y.isFinite else {
+                    throw XomoAutomationCallError.invalidArgument("Brush tilt must be finite")
+                }
                 tilt = ImageEditorStylusInput.normalizedTilt(
                     rawX: CGFloat(x),
                     rawY: CGFloat(y),
@@ -7226,7 +7258,10 @@ final class XomoAutomationRegistry {
                 )
             }
             return ImageEditorBrushStrokeSample(
-                point: CGPoint(x: x, y: y),
+                point: ImageEditorCanvasGeometry.boundedCanvasPoint(
+                    CGPoint(x: x, y: y),
+                    canvasSize: canvasSize
+                ),
                 pressure: pressure,
                 tilt: tilt
             )

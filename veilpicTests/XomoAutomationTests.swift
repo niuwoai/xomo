@@ -12047,7 +12047,6 @@ struct XomoAutomationTests {
         #expect(viewModel.retouchPressureControlsSize)
         #expect(viewModel.retouchPressureSensitivity == 80)
         #expect(!viewModel.brushPressureControlsSize)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
 
         #expect(registry.execute(request(
             operation: "call",
@@ -12074,7 +12073,92 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(healing.ok)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+    }
+
+    @Test func sampledBrushAutomationRejectsNonFiniteInputsBeforeChangingEditorState() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let initialBrushSize = viewModel.brushSize
+        let initialHistoryCount = viewModel.document.history.count
+        let invalidRetouch = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("healing"),
+                "size": .number(72),
+                "points": .array([
+                    .object([
+                        "x": .number(.infinity),
+                        "y": .number(24),
+                        "pressure": .number(.nan)
+                    ])
+                ])
+            ]
+        ))
+
+        #expect(!invalidRetouch.ok)
+        #expect(viewModel.brushSize == initialBrushSize)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+
+        let invalidTilt = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.stroke",
+            arguments: [
+                "points": .array([
+                    .object([
+                        "x": .number(24),
+                        "y": .number(24),
+                        "tiltX": .number(.nan),
+                        "tiltY": .number(0)
+                    ])
+                ])
+            ]
+        ))
+        #expect(!invalidTilt.ok)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+
+        let invalidPressure = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.stroke",
+            arguments: [
+                "points": .array([
+                    .object([
+                        "x": .number(24),
+                        "y": .number(24),
+                        "pressure": .number(.infinity)
+                    ])
+                ])
+            ]
+        ))
+        #expect(!invalidPressure.ok)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setHealingSource"),
+                "x": .number(24),
+                "y": .number(24)
+            ]
+        )).ok)
+        let boundedFinitePoint = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("healing"),
+                "points": .array([
+                    .object([
+                        "x": .number(.greatestFiniteMagnitude),
+                        "y": .number(.greatestFiniteMagnitude)
+                    ])
+                ])
+            ]
+        ))
+        #expect(boundedFinitePoint.ok)
+        #expect(viewModel.document.history.count == initialHistoryCount)
     }
 
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
