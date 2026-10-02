@@ -229,14 +229,24 @@ struct ImageEditorSelectionEdgeTests {
             to: CGPoint(x: 13, y: 10),
             isConstrained: true
         )
-        #expect(constrainedRectangle == CGRect(x: 10, y: 8, width: 2, height: 2))
+        #expect(constrainedRectangle == CGRect(x: 10, y: 8, width: 3, height: 3))
         let centeredConstrainedRectangle = viewModel.marqueeSelectionRect(
             from: CGPoint(x: 10, y: 8),
             to: CGPoint(x: 13, y: 10),
             isCentered: true,
             isConstrained: true
         )
-        #expect(centeredConstrainedRectangle == CGRect(x: 8, y: 6, width: 4, height: 4))
+        #expect(centeredConstrainedRectangle == CGRect(x: 7, y: 5, width: 6, height: 6))
+        #expect(viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 18, y: 14),
+            to: CGPoint(x: 10, y: 12),
+            isConstrained: true
+        ) == CGRect(x: 10, y: 6, width: 8, height: 8))
+        #expect(viewModel.marqueeSelectionRect(
+            from: CGPoint(x: 19, y: 15),
+            to: CGPoint(x: 0, y: 0),
+            isConstrained: true
+        ) == CGRect(x: 4, y: 0, width: 15, height: 15))
 
         viewModel.marqueeShape = .ellipse
         #expect(viewModel.marqueeSelectionRect(
@@ -261,7 +271,7 @@ struct ImageEditorSelectionEdgeTests {
             to: CGPoint(x: 13, y: 10),
             isCentered: true
         )
-        #expect(centeredCircle == CGRect(x: 8, y: 6, width: 4, height: 4))
+        #expect(centeredCircle == CGRect(x: 7, y: 5, width: 6, height: 6))
 
         let clippedRectangle = viewModel.marqueeSelectionRect(
             from: CGPoint(x: 2, y: 2),

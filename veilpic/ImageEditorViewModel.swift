@@ -5940,7 +5940,12 @@ final class ImageEditorViewModel: ObservableObject {
         if isCentered {
             let halfSize: CGSize
             if hasFixedAspectRatio {
-                let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
+                let horizontalReach = min(boundedStart.x, canvasBounds.maxX - boundedStart.x)
+                let verticalReach = min(boundedStart.y, canvasBounds.maxY - boundedStart.y)
+                let side = min(
+                    max(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y)),
+                    min(horizontalReach, verticalReach)
+                )
                 halfSize = CGSize(width: side, height: side)
             } else {
                 halfSize = CGSize(
@@ -5958,7 +5963,16 @@ final class ImageEditorViewModel: ObservableObject {
 
         let adjustedEnd: CGPoint
         if hasFixedAspectRatio {
-            let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
+            let horizontalReach = boundedEnd.x >= boundedStart.x
+                ? canvasBounds.maxX - boundedStart.x
+                : boundedStart.x - canvasBounds.minX
+            let verticalReach = boundedEnd.y >= boundedStart.y
+                ? canvasBounds.maxY - boundedStart.y
+                : boundedStart.y - canvasBounds.minY
+            let side = min(
+                max(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y)),
+                min(horizontalReach, verticalReach)
+            )
             adjustedEnd = CGPoint(
                 x: boundedStart.x + (boundedEnd.x >= boundedStart.x ? side : -side),
                 y: boundedStart.y + (boundedEnd.y >= boundedStart.y ? side : -side)
