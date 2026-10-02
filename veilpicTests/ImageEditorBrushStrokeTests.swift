@@ -242,6 +242,49 @@ struct ImageEditorBrushStrokeTests {
         )
     }
 
+    @Test func stampResamplingBoundsHugeFinitePointsToTheCanvas() {
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: -CGFloat.greatestFiniteMagnitude, y: 12)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: CGFloat.greatestFiniteMagnitude, y: 12))
+            ],
+            diameter: 4,
+            spacing: 0.5,
+            canvasSize: CGSize(width: 32, height: 24)
+        )
+
+        #expect(!stamps.isEmpty)
+        #expect(stamps.first?.point == CGPoint(x: 0, y: 12))
+        #expect(stamps.last?.point == CGPoint(x: 32, y: 12))
+        #expect(stamps.allSatisfy {
+            $0.point.x.isFinite && $0.point.y.isFinite
+                && $0.point.x >= 0 && $0.point.x <= 32
+                && $0.point.y >= 0 && $0.point.y <= 24
+        })
+    }
+
+    @Test func brushCoverageIgnoresNonFiniteAndUnrepresentableStampCoordinates() {
+        let coverage = ImageEditorBrushStrokeKernel.coverage(
+            width: 8,
+            height: 6,
+            stamps: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: CGFloat.nan, y: CGFloat.infinity)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: -CGFloat.infinity, y: CGFloat.nan)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: CGFloat.greatestFiniteMagnitude, y: 3))
+            ],
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: 2,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 1
+            )
+        )
+
+        #expect(coverage.count == 8 * 6)
+        #expect(coverage.allSatisfy { $0 == 0 })
+    }
+
     @Test func flowAccumulatesPerStampWithoutExceedingOpacityCap() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 10,

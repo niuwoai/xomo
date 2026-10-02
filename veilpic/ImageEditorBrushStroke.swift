@@ -216,10 +216,21 @@ enum ImageEditorBrushStrokeKernel {
         samples: [ImageEditorBrushStrokeSample],
         diameter: CGFloat,
         spacing: CGFloat,
-        smoothing: CGFloat = 0
+        smoothing: CGFloat = 0,
+        canvasSize: CGSize? = nil
     ) -> [ImageEditorBrushStrokeSample] {
+        let boundedSamples = canvasSize.map { size in
+            samples.map { sample in
+                var bounded = sample
+                bounded.point = ImageEditorCanvasGeometry.boundedCanvasPoint(
+                    sample.point,
+                    canvasSize: size
+                )
+                return bounded
+            }
+        } ?? samples
         let normalizedSamples = normalizedStylusSamples(
-            smoothedSamples(samples, amount: smoothing)
+            smoothedSamples(boundedSamples, amount: smoothing)
         )
         guard let first = normalizedSamples.first else { return [] }
         let step = max(0.5, max(1, diameter) * max(0.01, min(2, spacing)))
@@ -333,9 +344,16 @@ enum ImageEditorBrushStrokeKernel {
     ) -> [UInt8] {
         guard width > 0, height > 0, !stamps.isEmpty else { return [] }
         let settings = settings.normalized
+        let maximumSafeCoordinate = CGFloat(max(width, height)) * 1_000_000
+        let boundedStamps = stamps.filter { sample in
+            sample.point.x.isFinite
+                && sample.point.y.isFinite
+                && abs(sample.point.x) <= maximumSafeCoordinate
+                && abs(sample.point.y) <= maximumSafeCoordinate
+        }
         var accumulated = [CGFloat](repeating: 0, count: width * height)
 
-        for renderedStamp in renderedStamps(from: stamps, settings: settings) {
+        for renderedStamp in renderedStamps(from: boundedStamps, settings: settings) {
             let stamp = renderedStamp.sample
             let stampIndex = renderedStamp.dynamicIndex
             let mappedPressure = mappedPressure(
@@ -993,7 +1011,8 @@ extension NSImage {
             samples: samples,
             diameter: normalized.diameter,
             spacing: normalized.spacing,
-            smoothing: normalized.smoothing
+            smoothing: normalized.smoothing,
+            canvasSize: CGSize(width: pixelWidth, height: pixelHeight)
         )
         let strokeCoverage = ImageEditorBrushStrokeKernel.coverage(
             width: pixelWidth,

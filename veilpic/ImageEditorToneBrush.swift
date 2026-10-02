@@ -227,7 +227,8 @@ extension NSImage {
             stamps: ImageEditorBrushStrokeKernel.stampSamples(
                 samples: samples,
                 diameter: settings.diameter,
-                spacing: settings.spacing
+                spacing: settings.spacing,
+                canvasSize: CGSize(width: pixelWidth, height: pixelHeight)
             ),
             settings: settings
         )

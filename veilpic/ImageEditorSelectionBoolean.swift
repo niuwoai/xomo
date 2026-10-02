@@ -547,7 +547,8 @@ extension ImageEditorSelectionMask {
                 samples: scaledSamples,
                 diameter: scaledDiameter,
                 spacing: spacing,
-                smoothing: smoothing
+                smoothing: smoothing,
+                canvasSize: CGSize(width: width, height: height)
             ) + scaledAirbrushPulseSamples,
             settings: settings
         )

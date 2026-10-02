@@ -1897,7 +1897,8 @@ private extension NSImage {
             samples: samples,
             diameter: normalized.diameter,
             spacing: normalized.spacing,
-            smoothing: normalized.smoothing
+            smoothing: normalized.smoothing,
+            canvasSize: CGSize(width: width, height: height)
         )
         let coverage = ImageEditorBrushStrokeKernel.coverage(
             width: width,
