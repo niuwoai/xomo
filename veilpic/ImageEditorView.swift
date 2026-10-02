@@ -12535,59 +12535,28 @@ struct ImageEditorView: View {
         in rect: CGRect,
         canvasSize: CGSize
     ) -> some View {
-        let topPoint = CGPoint(x: rect.midX, y: rect.minY)
-        let handlePoint = rotateHandleViewPoint(in: rect)
-        return ZStack {
-            Path { path in
-                path.move(to: topPoint)
-                path.addLine(to: handlePoint)
+        ImageEditorLayerRotationHandle(
+            rect: rect, isRotating: $isRotatingLayer,
+            canBegin: {
+                ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                    isSpacebarPanning: isSpacebarPanning,
+                    isCanvasPanGestureActive: isCanvasPanGestureActive,
+                    isHandToolActive: canvasInteractionTool == .hand
+                ) && viewModel.canRotateSelectedLayer && !isPixelSelectionMoveGestureActive
+            },
+            onBegan: { point in
+                viewModel.beginRotatingSelectedLayer(from: unboundedImagePoint(from: point, in: canvasSize))
+                ImageEditorCanvasCursor.transformCursor(for: .rotate).set()
+            },
+            onChanged: { point in
+                viewModel.rotateSelectedLayer(to: unboundedImagePoint(from: point, in: canvasSize),
+                                              snappingToStep: NSEvent.modifierFlags.contains(.shift))
+            },
+            onEnded: {
+                viewModel.finishRotatingSelectedLayer()
+                refreshCanvasCursor(in: canvasSize)
             }
-            .stroke(Color(nsColor: ImageEditorTheme.selected).opacity(0.75), lineWidth: 1.4)
-            .allowsHitTesting(false)
-
-            Circle()
-                .fill(Color.white.opacity(0.96))
-                .overlay(
-                    Circle()
-                        .stroke(Color(nsColor: ImageEditorTheme.selected), lineWidth: 1.6)
-                )
-                .overlay {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.selected))
-                }
-                .frame(width: 16, height: 16)
-                .position(handlePoint)
-                .contentShape(Rectangle().inset(by: -1))
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            if !isRotatingLayer {
-                                guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
-                                    isSpacebarPanning: isSpacebarPanning,
-                                    isCanvasPanGestureActive: isCanvasPanGestureActive,
-                                    isHandToolActive: canvasInteractionTool == .hand
-                                ) else { return }
-                                isRotatingLayer = true
-                                viewModel.beginRotatingSelectedLayer(
-                                    from: unboundedImagePoint(from: value.startLocation, in: canvasSize)
-                                )
-                                ImageEditorCanvasCursor.transformCursor(for: .rotate).set()
-                            }
-                            viewModel.rotateSelectedLayer(
-                                to: unboundedImagePoint(from: value.location, in: canvasSize),
-                                snappingToStep: NSEvent.modifierFlags.contains(.shift)
-                            )
-                        }
-                        .onEnded { _ in
-                            guard isRotatingLayer else { return }
-                            viewModel.finishRotatingSelectedLayer()
-                            isRotatingLayer = false
-                            refreshCanvasCursor(in: canvasSize)
-                        }
-                )
-                .help(L10n.text("imageEditor.action.layerRotateHandle"))
-        }
+        )
     }
 
     private func transformReferencePointView(in canvasSize: CGSize) -> some View {
@@ -12671,10 +12640,6 @@ struct ImageEditorView: View {
 
     private func resizeHandleViewPoint(_ handle: ImageEditorLayerResizeHandle, in rect: CGRect) -> CGPoint {
         ImageEditorCanvasCursor.transformHandlePoint(handle, in: rect)
-    }
-
-    private func rotateHandleViewPoint(in rect: CGRect) -> CGPoint {
-        ImageEditorCanvasCursor.transformRotateHandlePoint(in: rect)
     }
 
     @ViewBuilder
