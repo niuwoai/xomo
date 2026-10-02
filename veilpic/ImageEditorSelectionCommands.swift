@@ -399,6 +399,13 @@ extension ImageEditorViewModel {
         moveSelection(by: delta)
     }
 
+    /// Pointer-based marquee drags treat a snapped zero-distance release as
+    /// a click, not as an attempted transform with a user-visible no-op status.
+    func moveMarqueeSelection(by delta: CGSize) {
+        guard delta.width != 0 || delta.height != 0 else { return }
+        nudgeSelection(by: delta)
+    }
+
     func centerSelectionHorizontally() {
         centerSelection(horizontal: true, vertical: false)
     }

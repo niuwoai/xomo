@@ -291,6 +291,7 @@ struct ImageEditorSelectionEdgeTests {
         let originalSelection = try #require(viewModel.document.selection)
         let originalHistoryCount = viewModel.document.history.count
         let originalUndoCount = viewModel.undoStack.count
+        let originalStatus = viewModel.statusText
         let start = CGPoint(x: 5, y: 6)
         let selectionContainsPointer = originalSelection.contains(start, canvasSize: canvasSize)
 
@@ -315,7 +316,14 @@ struct ImageEditorSelectionEdgeTests {
             modifierFlags: []
         ) == .createSelection)
 
-        viewModel.nudgeSelection(by: CGSize(width: 3, height: -2))
+        viewModel.moveMarqueeSelection(by: .zero)
+
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.statusText == originalStatus)
+
+        viewModel.moveMarqueeSelection(by: CGSize(width: 3, height: -2))
 
         #expect(viewModel.document.selection?.bounds == originalSelection.bounds.offsetBy(dx: 3, dy: -2))
         #expect(viewModel.document.history.count == originalHistoryCount + 1)

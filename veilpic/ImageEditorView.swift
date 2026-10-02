@@ -7734,7 +7734,7 @@ struct ImageEditorView: View {
             return
         }
         if marqueeDragIntent == .moveExistingSelection {
-            viewModel.nudgeSelection(by: ImageEditorMarqueeMoveConstraint.delta(
+            viewModel.moveMarqueeSelection(by: ImageEditorMarqueeMoveConstraint.delta(
                 from: start,
                 to: end,
                 modifierFlags: modifierFlags,
