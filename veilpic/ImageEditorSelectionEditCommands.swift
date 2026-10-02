@@ -2515,53 +2515,10 @@ private extension NSImage {
         )
         guard localDeltaX != 0 || localDeltaY != 0 else { return self }
 
-        let bytesPerPixel = 4
-        // Clear every source pixel before compositing any destination. Clearing
-        // in the move loop would erase newly written overlapping pixels.
-        var output = source.enumerated().map { index, component in
-            let inverseCoverage = 1 - CGFloat(maskAlpha[index / bytesPerPixel]) / 255
-            return UInt8((CGFloat(component) * inverseCoverage).rounded())
-        }
-        if abs(localDeltaX - localDeltaX.rounded()) > ImageEditorFractionalPixelMove.gridTolerance
-            || abs(localDeltaY - localDeltaY.rounded()) > ImageEditorFractionalPixelMove.gridTolerance {
-            ImageEditorFractionalPixelMove.composite(
-                source: source, maskAlpha: maskAlpha, width: width, height: height,
-                delta: CGSize(width: localDeltaX, height: localDeltaY), into: &output
-            )
-            return NSImage.rgbaImage(width: width, height: height, pixels: output, size: size)
-        }
-        let offsetX = Int(localDeltaX.rounded())
-        let offsetY = Int(localDeltaY.rounded())
-        for y in 0..<height {
-            for x in 0..<width {
-                let sourcePixel = y * width + x
-                let coverage = CGFloat(maskAlpha[sourcePixel]) / 255
-                guard coverage > 0 else { continue }
-
-                let sourceOffset = sourcePixel * bytesPerPixel
-                let destinationX = x + offsetX
-                let destinationY = y + offsetY
-                guard destinationX >= 0,
-                      destinationX < width,
-                      destinationY >= 0,
-                      destinationY < height
-                else { continue }
-
-                let destinationPixel = destinationY * width + destinationX
-                let destinationOffset = destinationPixel * bytesPerPixel
-                let sourceAlpha = CGFloat(source[sourceOffset + 3]) / 255 * coverage
-                let inverseAlpha = 1 - sourceAlpha
-                for channel in 0..<bytesPerPixel {
-                    let movedComponent = CGFloat(source[sourceOffset + channel]) * coverage
-                    let backgroundComponent = CGFloat(output[destinationOffset + channel])
-                    output[destinationOffset + channel] = UInt8(max(
-                        0,
-                        min(255, (movedComponent + backgroundComponent * inverseAlpha).rounded())
-                    ))
-                }
-            }
-        }
-
+        guard let output = ImageEditorPixelSelectionMovePixels.moved(
+            source: source, maskAlpha: maskAlpha, width: width, height: height,
+            delta: CGSize(width: localDeltaX, height: localDeltaY)
+        ) else { return nil }
         return NSImage.rgbaImage(width: width, height: height, pixels: output, size: size)
     }
 

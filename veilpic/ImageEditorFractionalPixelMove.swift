@@ -10,10 +10,17 @@ enum ImageEditorFractionalPixelMove {
     /// and incorrectly reduce their combined coverage.
     static func composite(
         source: [UInt8], maskAlpha: [UInt8], width: Int, height: Int,
-        delta: CGSize, into background: inout [UInt8]
+        delta: CGSize, coverageBounds: ImageEditorPixelMoveCoverageBounds? = nil, into background: inout [UInt8]
     ) {
-        for y in 0..<height {
-            for x in 0..<width {
+        guard width > 0, height > 0, height <= maskAlpha.count / width,
+              width * height <= source.count / componentsPerPixel,
+              width * height <= background.count / componentsPerPixel,
+              delta.width.isFinite, delta.height.isFinite,
+              let sourceBounds = coverageBounds ?? ImageEditorPixelMoveCoverageBounds(maskAlpha: maskAlpha, width: width, height: height),
+              let destination = sourceBounds.samplingDestination(width: width, height: height, delta: delta)
+        else { return }
+        for y in destination.rows {
+            for x in destination.columns {
                 let sample = selectedSample(source: source, maskAlpha: maskAlpha, width: width, height: height,
                                             x: CGFloat(x) - delta.width, y: CGFloat(y) - delta.height)
                 guard sample.alpha > 0 else { continue }
