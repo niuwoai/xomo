@@ -731,43 +731,7 @@ extension ImageEditorViewModel {
     }
 
     private func colorRangeSamples(from selection: ImageEditorSelection) -> [NSColor] {
-        guard let mask = selection.rasterizedMask(canvasSize: document.canvasSize) else { return [] }
-        let selectedPixelCount = mask.alpha.reduce(0) { count, value in
-            value > 0 ? count + 1 : count
-        }
-        guard selectedPixelCount > 0 else { return [] }
-
-        let sampledOrdinals = distributedColorRangeSampleOrdinals(
-            selectedPixelCount: selectedPixelCount
-        )
-        var selectedIndex = 0
-        var colors: [NSColor] = []
-
-        for y in 0..<mask.height {
-            for x in 0..<mask.width {
-                guard mask.alpha[y * mask.width + x] > 0 else { continue }
-                let sampleOrdinal = selectedIndex
-                selectedIndex += 1
-                guard sampledOrdinals.contains(sampleOrdinal) else { continue }
-                let point = CGPoint(
-                    x: (CGFloat(x) + 0.5) / CGFloat(mask.width) * document.canvasSize.width,
-                    y: (CGFloat(y) + 0.5) / CGFloat(mask.height) * document.canvasSize.height
-                )
-                guard let color = currentImage.color(
-                    at: point,
-                    coordinateSize: document.canvasSize
-                )?.usingColorSpace(.deviceRGB),
-                      color.alphaComponent * CGFloat(UInt8.max)
-                        > CGFloat(minimumColorRangeSampleAlpha)
-                else { continue }
-                colors.appendUniqueColorRangeSample(color)
-                if colors.count >= maximumColorRangeSamples {
-                    return colors
-                }
-            }
-        }
-
-        return colors
+        currentImage.colorRangeSampleColors(from: selection, canvasSize: document.canvasSize)
     }
 }
 
@@ -843,6 +807,36 @@ private func unpremultipliedRGBComponents(
 }
 
 extension NSImage {
+    func colorRangeSampleColors(
+        from selection: ImageEditorSelection,
+        canvasSize: CGSize
+    ) -> [NSColor] {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let mask = selection.rasterizedMask(canvasSize: canvasSize),
+              let pixels = colorRangePixels(from: cgImage, width: mask.width, height: mask.height)
+        else { return [] }
+
+        return colorRangeSamples(from: mask, pixels: pixels, bytesPerRow: mask.width * 4)
+    }
+
+    private func colorRangePixels(from cgImage: CGImage, width: Int, height: Int) -> [UInt8]? {
+        let bytesPerRow = width * 4
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
+    }
+
     func colorRangeSelection(
         targetColor: NSColor,
         tolerance: CGFloat,
@@ -1001,22 +995,8 @@ extension NSImage {
               sourceMask.alpha.count == width * height
         else { return nil }
 
-        let bytesPerPixel = 4
-        let bytesPerRow = width * bytesPerPixel
-        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
-        guard let context = CGContext(
-            data: &pixels,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
-
-        context.interpolationQuality = .none
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-
+        let bytesPerRow = width * 4
+        guard let pixels = colorRangePixels(from: cgImage, width: width, height: height) else { return nil }
         let clampedTolerance = max(0, min(1, tolerance))
         let targets = colorRangeSamples(from: sourceMask, pixels: pixels, bytesPerRow: bytesPerRow)
         guard !targets.isEmpty else { return nil }
@@ -1100,8 +1080,10 @@ extension NSImage {
         pixels: [UInt8],
         bytesPerRow: Int
     ) -> [NSColor] {
-        let selectedPixelCount = mask.alpha.reduce(0) { count, value in
-            value > 0 ? count + 1 : count
+        let selectedPixelCount = mask.alpha.enumerated().reduce(0) { count, pixel in
+            let pixelOffset = (pixel.offset / mask.width) * bytesPerRow + (pixel.offset % mask.width) * 4
+            return pixel.element > 0 && pixels[pixelOffset + 3] > minimumColorRangeSampleAlpha
+                ? count + 1 : count
         }
         guard selectedPixelCount > 0 else { return [] }
 
@@ -1113,10 +1095,11 @@ extension NSImage {
         for y in 0..<mask.height {
             for x in 0..<mask.width {
                 guard mask.alpha[y * mask.width + x] > 0 else { continue }
+                let pixelOffset = y * bytesPerRow + x * 4
+                guard pixels[pixelOffset + 3] > minimumColorRangeSampleAlpha else { continue }
                 let sampleOrdinal = selectedIndex
                 selectedIndex += 1
                 guard sampledOrdinals.contains(sampleOrdinal) else { continue }
-                let pixelOffset = y * bytesPerRow + x * 4
                 guard let color = unpremultipliedRGBComponents(in: pixels, at: pixelOffset) else {
                     continue
                 }
