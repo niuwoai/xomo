@@ -50,6 +50,48 @@ struct ImageEditorPixelSelectionMoveTests {
         #expect(viewModel.document.selection?.bounds == CGRect(x: 8, y: 2, width: 3, height: 3))
     }
 
+    @Test func moveToolArrowNudgeMovesPixelsAndMarqueeAsOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        viewModel.selectedTool = .move
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let originalImage = try #require(viewModel.document.selectedLayer?.image)
+        let originalPixels = try #require(imageEditorRGBABytes(originalImage, width: 12, height: 8))
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
+
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 3, y: 2, width: 3, height: 3))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPixelsMove"))
+        let movedImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        let movedPixels = try #require(imageEditorRGBABytes(movedImage, width: 12, height: 8))
+        #expect(try pixel(movedPixels, x: 3, y: 3, width: 12) == pixel(originalPixels, x: 2, y: 3, width: 12))
+        #expect(try pixel(movedPixels, x: 2, y: 3, width: 12) == pixel(originalPixels, x: 3, y: 3, width: 12))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
+        let undoneImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        #expect(imageEditorMaximumPixelDifference(undoneImage, originalImage) == 0)
+        viewModel.redo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 3, y: 2, width: 3, height: 3))
+    }
+
+    @Test func marqueeArrowNudgeMovesOnlySelectionBoundary() throws {
+        let viewModel = makeViewModel()
+        viewModel.selectedTool = .marquee
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let originalImage = try #require(viewModel.document.selectedLayer?.image)
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
+
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 3, y: 2, width: 3, height: 3))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionMove"))
+        let movedImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        #expect(imageEditorMaximumPixelDifference(movedImage, originalImage) == 0)
+    }
+
     @Test func draggingActivePixelSelectionMovesPixelsAndMarqueeAsOneUndoStep() throws {
         let viewModel = makeViewModel()
         let layerID = try #require(viewModel.document.selectedLayerID)

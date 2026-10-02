@@ -637,6 +637,12 @@ extension ImageEditorViewModel {
         }
 
         if hasEffectiveSelectionPixels {
+            if selectedLeftSidebarTab == .tools,
+               selectedTool == .move,
+               canBeginPixelSelectionMove() {
+                nudgePixelSelection(by: delta)
+                return
+            }
             nudgeSelection(by: delta)
             return
         }

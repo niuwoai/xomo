@@ -332,12 +332,18 @@ extension ImageEditorViewModel {
     }
 
     func canBeginPixelSelectionMove(at point: CGPoint) -> Bool {
+        guard let selection = document.selection,
+              selection.contains(point, canvasSize: document.canvasSize)
+        else { return false }
+        return canBeginPixelSelectionMove()
+    }
+
+    func canBeginPixelSelectionMove() -> Bool {
         guard selectedLeftSidebarTab == .tools,
               selectedTool == .move,
               !isQuickMaskMode,
               !isEditingLayerMask,
               let selection = document.selection,
-              selection.contains(point, canvasSize: document.canvasSize),
               selectedLayerCount == 1,
               let index = document.selectedLayerIndex,
               editableSelectionPixelLayerIndices().contains(index),
@@ -355,8 +361,14 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func beginPixelSelectionMove(at point: CGPoint) -> Bool {
+        guard canBeginPixelSelectionMove(at: point) else { return false }
+        return beginPixelSelectionMove()
+    }
+
+    @discardableResult
+    func beginPixelSelectionMove() -> Bool {
         guard pixelSelectionMoveTransaction == nil,
-              canBeginPixelSelectionMove(at: point),
+              canBeginPixelSelectionMove(),
               let layer = document.selectedLayer
         else { return false }
 
@@ -366,6 +378,15 @@ extension ImageEditorViewModel {
             originalImage: layer.image
         )
         return true
+    }
+
+    func nudgePixelSelection(by delta: CGSize) {
+        guard delta.width.isFinite,
+              delta.height.isFinite,
+              beginPixelSelectionMove()
+        else { return }
+        updatePixelSelectionMove(by: delta)
+        finishPixelSelectionMove()
     }
 
     func updatePixelSelectionMove(

@@ -1616,10 +1616,11 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
+    @Test func marqueeArrowNudgeShortcutsMoveSelectionBeforeLayer() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
 
+        viewModel.selectedTool = .marquee
         viewModel.document.selection = .rectangle(CGRect(x: 10, y: 12, width: 20, height: 18))
         viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
         #expect(viewModel.document.selection?.bounds == CGRect(x: 11, y: 12, width: 20, height: 18))
