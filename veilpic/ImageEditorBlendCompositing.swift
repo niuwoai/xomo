@@ -147,53 +147,60 @@ extension NSImage {
               let overlayPixels = overlay.rgbaPixels(width: width, height: height, targetSize: targetSize)
         else { return nil }
 
-        var outputPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        var outputPixels: [UInt8]
+        if mode == .normal {
+            guard let normalPixels = ImageEditorNormalBlendKernel.composite(
+                base: basePixels, overlay: overlayPixels, opacity: sourceOpacity
+            ) else { return nil }
+            outputPixels = normalPixels
+        } else {
+            outputPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+            for y in 0..<height {
+                for x in 0..<width {
+                    let offset = y * bytesPerRow + x * bytesPerPixel
+                    let baseAlpha = Double(basePixels[offset + 3]) / 255
+                    let originalOverlayAlpha = Double(overlayPixels[offset + 3]) / 255
+                    let effectiveOverlayAlpha = originalOverlayAlpha * sourceOpacity
+                    let overlayAlpha = mode == .dissolve
+                        ? Self.dissolvedAlpha(x: x, y: y, probability: effectiveOverlayAlpha)
+                        : effectiveOverlayAlpha
+                    let outputAlpha = overlayAlpha + baseAlpha * (1 - overlayAlpha)
 
-        for y in 0..<height {
-            for x in 0..<width {
-                let offset = y * bytesPerRow + x * bytesPerPixel
-                let baseAlpha = Double(basePixels[offset + 3]) / 255
-                let originalOverlayAlpha = Double(overlayPixels[offset + 3]) / 255
-                let effectiveOverlayAlpha = originalOverlayAlpha * sourceOpacity
-                let overlayAlpha = mode == .dissolve
-                    ? Self.dissolvedAlpha(x: x, y: y, probability: effectiveOverlayAlpha)
-                    : effectiveOverlayAlpha
-                let outputAlpha = overlayAlpha + baseAlpha * (1 - overlayAlpha)
+                    guard outputAlpha > 0 else {
+                        outputPixels[offset] = 0
+                        outputPixels[offset + 1] = 0
+                        outputPixels[offset + 2] = 0
+                        outputPixels[offset + 3] = 0
+                        continue
+                    }
 
-                guard outputAlpha > 0 else {
-                    outputPixels[offset] = 0
-                    outputPixels[offset + 1] = 0
-                    outputPixels[offset + 2] = 0
-                    outputPixels[offset + 3] = 0
-                    continue
+                    let baseRed = Self.unpremultiplied(basePixels[offset], alpha: baseAlpha)
+                    let baseGreen = Self.unpremultiplied(basePixels[offset + 1], alpha: baseAlpha)
+                    let baseBlue = Self.unpremultiplied(basePixels[offset + 2], alpha: baseAlpha)
+                    let overlayRed = Self.unpremultiplied(overlayPixels[offset], alpha: originalOverlayAlpha)
+                    let overlayGreen = Self.unpremultiplied(overlayPixels[offset + 1], alpha: originalOverlayAlpha)
+                    let overlayBlue = Self.unpremultiplied(overlayPixels[offset + 2], alpha: originalOverlayAlpha)
+
+                    let blended = mode.blend(
+                        baseRed: baseRed,
+                        baseGreen: baseGreen,
+                        baseBlue: baseBlue,
+                        overlayRed: overlayRed,
+                        overlayGreen: overlayGreen,
+                        overlayBlue: overlayBlue
+                    )
+                    let compositedRed = overlayAlpha * ((1 - baseAlpha) * overlayRed + baseAlpha * blended.red)
+                        + baseAlpha * baseRed * (1 - overlayAlpha)
+                    let compositedGreen = overlayAlpha * ((1 - baseAlpha) * overlayGreen + baseAlpha * blended.green)
+                        + baseAlpha * baseGreen * (1 - overlayAlpha)
+                    let compositedBlue = overlayAlpha * ((1 - baseAlpha) * overlayBlue + baseAlpha * blended.blue)
+                        + baseAlpha * baseBlue * (1 - overlayAlpha)
+
+                    outputPixels[offset] = Self.byte(compositedRed)
+                    outputPixels[offset + 1] = Self.byte(compositedGreen)
+                    outputPixels[offset + 2] = Self.byte(compositedBlue)
+                    outputPixels[offset + 3] = Self.byte(outputAlpha)
                 }
-
-                let baseRed = Self.unpremultiplied(basePixels[offset], alpha: baseAlpha)
-                let baseGreen = Self.unpremultiplied(basePixels[offset + 1], alpha: baseAlpha)
-                let baseBlue = Self.unpremultiplied(basePixels[offset + 2], alpha: baseAlpha)
-                let overlayRed = Self.unpremultiplied(overlayPixels[offset], alpha: originalOverlayAlpha)
-                let overlayGreen = Self.unpremultiplied(overlayPixels[offset + 1], alpha: originalOverlayAlpha)
-                let overlayBlue = Self.unpremultiplied(overlayPixels[offset + 2], alpha: originalOverlayAlpha)
-
-                let blended = mode.blend(
-                    baseRed: baseRed,
-                    baseGreen: baseGreen,
-                    baseBlue: baseBlue,
-                    overlayRed: overlayRed,
-                    overlayGreen: overlayGreen,
-                    overlayBlue: overlayBlue
-                )
-                let compositedRed = overlayAlpha * ((1 - baseAlpha) * overlayRed + baseAlpha * blended.red)
-                    + baseAlpha * baseRed * (1 - overlayAlpha)
-                let compositedGreen = overlayAlpha * ((1 - baseAlpha) * overlayGreen + baseAlpha * blended.green)
-                    + baseAlpha * baseGreen * (1 - overlayAlpha)
-                let compositedBlue = overlayAlpha * ((1 - baseAlpha) * overlayBlue + baseAlpha * blended.blue)
-                    + baseAlpha * baseBlue * (1 - overlayAlpha)
-
-                outputPixels[offset] = Self.byte(compositedRed)
-                outputPixels[offset + 1] = Self.byte(compositedGreen)
-                outputPixels[offset + 2] = Self.byte(compositedBlue)
-                outputPixels[offset + 3] = Self.byte(outputAlpha)
             }
         }
 
