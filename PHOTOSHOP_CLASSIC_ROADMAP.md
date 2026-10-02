@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-10-02 ｜ 当前版本：v2.12.0-rc1679 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+> 最后更新：2026-10-02 ｜ 当前版本：v2.12.0-rc1680 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座，并吸收 Sketch、Fireworks 与适量 Figma 的现代工作流
+
+- `v2.12.0-rc1680`：第 40 个小版本质量门槛；Release App/CLI 和 App、单测、UI 测试目标的 `build-for-testing` 编译通过（测试编译需 `ENABLE_TESTABILITY=YES`）；Cursor/Scope/SelectionEdge 334 项与 CLI 2 项测试通过。XCUITest Runner 未能连接，改用安装版实际完成组件插入、撤销和系统箭头指针冒烟。`/Applications/Xomo.app` 当前为 rc1680，rc1641 可从 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app` 恢复；未公开发布。下一周期完整门槛为 rc1720。
 
 - `v2.12.0-rc1679`：Marquee 在现有选区内原地点击（栅格吸附后零位移）视为普通点击，不改变状态提示、不创建空 History/Undo；实际移动继续可撤销。
 

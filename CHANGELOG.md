@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1680 - 2026-10-02
+
+### Release gate
+- Release App/CLI 构建通过；Release `build-for-testing` 在启用 `ENABLE_TESTABILITY=YES` 后，App、单元测试与 UI 测试目标均编译通过。未启用该测试标志的首次尝试无法编译 `@testable import musepic`。
+- Marquee 相关 Cursor/Scope/SelectionEdge 套件共 334 项、CLI 2 项测试通过。
+- XCUITest Runner 在连接测试前挂起，未执行 UI 断言；改用安装版实际界面完成启动、组件库插入可编辑按钮组、撤销恢复及系统箭头指针冒烟。
+- `/Applications/Xomo.app` 已更新为 rc1680；原 rc1641 包保存在 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app`，本门槛不包含公开发布。
+
 ## 2.12.0-rc1679 - 2026-10-02
 
 ### Fixed

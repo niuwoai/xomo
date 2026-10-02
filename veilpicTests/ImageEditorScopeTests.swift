@@ -896,7 +896,14 @@ struct ImageEditorScopeTests {
         let nativeRangeSource = source[nativeRangeStart.lowerBound..<objectMoveStart.lowerBound]
         #expect(nativeRangeSource.contains("onRangeToolDragChanged:"))
         #expect(nativeRangeSource.contains("onRangeToolDragEnded:"))
-        #expect(nativeRangeSource.contains("viewModel.createMarqueeSelection("))
+        #expect(nativeRangeSource.contains("finishMarqueeDrag("))
+        let marqueeFinishStart = try #require(source.range(of: "private func finishMarqueeDrag("))
+        let marqueeCancelStart = try #require(
+            source[marqueeFinishStart.upperBound...].range(of: "private func cancelMarqueeDrag(")
+        )
+        let marqueeFinishSource = source[marqueeFinishStart.lowerBound..<marqueeCancelStart.lowerBound]
+        #expect(marqueeFinishSource.contains("viewModel.createMarqueeSelection("))
+        #expect(marqueeFinishSource.contains("viewModel.moveMarqueeSelection("))
         #expect(nativeRangeSource.contains("viewModel.drawGradient("))
         #expect(nativeRangeSource.contains("canvasInteractionTool == .gradient"))
         #expect(nativeRangeSource.contains("to: gradientDragPoint(from: location, in: geometry.size)"))
