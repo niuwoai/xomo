@@ -2513,8 +2513,7 @@ private extension NSImage {
 
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard var output = rgbaPixels(width: width, height: height),
-              let source = rgbaPixels(width: width, height: height),
+        guard let source = rgbaPixels(width: width, height: height),
               let maskPixels = selectionMask.rgbaPixels(width: width, height: height)
         else { return nil }
 
@@ -2534,6 +2533,12 @@ private extension NSImage {
         guard offsetX != 0 || offsetY != 0 else { return self }
 
         let bytesPerPixel = 4
+        // Clear every source pixel before compositing any destination. Clearing
+        // in the move loop would erase newly written overlapping pixels.
+        var output = source.enumerated().map { index, component in
+            let inverseCoverage = 1 - CGFloat(maskAlpha[index / bytesPerPixel]) / 255
+            return UInt8((CGFloat(component) * inverseCoverage).rounded())
+        }
         for y in 0..<height {
             for x in 0..<width {
                 let sourcePixel = y * width + x
@@ -2541,13 +2546,6 @@ private extension NSImage {
                 guard coverage > 0 else { continue }
 
                 let sourceOffset = sourcePixel * bytesPerPixel
-                let inverseCoverage = 1 - coverage
-                for channel in 0..<bytesPerPixel {
-                    output[sourceOffset + channel] = UInt8(
-                        (CGFloat(source[sourceOffset + channel]) * inverseCoverage).rounded()
-                    )
-                }
-
                 let destinationX = x + offsetX
                 let destinationY = y + offsetY
                 guard destinationX >= 0,

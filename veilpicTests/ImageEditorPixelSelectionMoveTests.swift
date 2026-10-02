@@ -67,7 +67,7 @@ struct ImageEditorPixelSelectionMoveTests {
         let movedImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
         let movedPixels = try #require(imageEditorRGBABytes(movedImage, width: 12, height: 8))
         #expect(try pixel(movedPixels, x: 3, y: 3, width: 12) == pixel(originalPixels, x: 2, y: 3, width: 12))
-        #expect(try pixel(movedPixels, x: 2, y: 3, width: 12) == pixel(originalPixels, x: 3, y: 3, width: 12))
+        #expect(pixel(movedPixels, x: 2, y: 3, width: 12)?.last == 0)
 
         viewModel.undo()
         #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
@@ -164,8 +164,7 @@ struct ImageEditorPixelSelectionMoveTests {
         let oldPixel = try #require(pixel(movedPixels, x: 3, y: 3, width: 12))
         let newPixel = try #require(pixel(movedPixels, x: 7, y: 3, width: 12))
         let originalOldPixel = try #require(pixel(originalPixels, x: 3, y: 3, width: 12))
-        let originalNewPixel = try #require(pixel(originalPixels, x: 7, y: 3, width: 12))
-        #expect(oldPixel == originalNewPixel)
+        #expect(oldPixel.last == 0)
         #expect(newPixel == originalOldPixel)
 
         viewModel.undo()
@@ -222,7 +221,7 @@ struct ImageEditorPixelSelectionMoveTests {
             NSBezierPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3)).fill()
         } ?? NSImage.transparent(size: NSSize(width: 12, height: 8))
         let viewModel = ImageEditorViewModel(sourceName: "pixel-move.png", image: image) { _ in }
-        if let layerID = viewModel.document.selectedLayerID {
+        if let layerID = viewModel.document.layers.first?.id {
             viewModel.selectLayer(layerID)
             viewModel.convertBackgroundToLayer()
         }
