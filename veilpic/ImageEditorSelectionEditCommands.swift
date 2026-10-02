@@ -418,10 +418,13 @@ extension ImageEditorViewModel {
             by: canvasDelta,
             canvasSize: transaction.originalDocument.canvasSize
         )
-        guard let movedImage = transaction.originalImage.moving(
+        guard var backingLayer = originalLayer.expandedPixelSelectionMoveBacking(
+            selection: selection, by: canvasDelta,
+            canvasSize: transaction.originalDocument.canvasSize, feather: feather
+        ), let movedImage = backingLayer.image.moving(
             selection: selection,
             by: canvasDelta,
-            layerFrame: originalLayer.frame,
+            layerFrame: backingLayer.frame,
             canvasSize: transaction.originalDocument.canvasSize,
             feather: feather
         ) else {
@@ -429,7 +432,8 @@ extension ImageEditorViewModel {
             return
         }
 
-        document.layers[currentIndex].image = movedImage
+        backingLayer.image = movedImage
+        document.layers[currentIndex] = backingLayer
         document.selection = movedSelection
         transaction.delta = canvasDelta
         pixelSelectionMoveTransaction = transaction
@@ -440,6 +444,8 @@ extension ImageEditorViewModel {
         pixelSelectionMoveTransaction = nil
         let updatedDocument = document
         let didChange = updatedDocument.selection != transaction.originalDocument.selection
+            || updatedDocument.layers.first(where: { $0.id == transaction.layerID })?.frame
+                != transaction.originalDocument.layers.first(where: { $0.id == transaction.layerID })?.frame
             || !Self.imagesAreEquivalent(
                 updatedDocument.layers.first(where: { $0.id == transaction.layerID })?.image,
                 transaction.originalImage
@@ -2507,7 +2513,8 @@ private extension NSImage {
                 layerFrame: layerFrame,
                 layerSize: size,
                 canvasSize: canvasSize,
-                feather: feather
+                feather: feather,
+                usesNearestSampling: true
               )
         else { return nil }
 
@@ -2735,7 +2742,10 @@ private extension ImageEditorSelection {
         )
     }
 
-    func layerMask(layerFrame: CGRect, layerSize: CGSize, canvasSize: CGSize, feather: CGFloat) -> NSImage? {
+    func layerMask(
+        layerFrame: CGRect, layerSize: CGSize, canvasSize: CGSize, feather: CGFloat,
+        usesNearestSampling: Bool = false
+    ) -> NSImage? {
         guard layerSize.width > 0,
               layerSize.height > 0,
               layerFrame.width > 0,
@@ -2743,7 +2753,21 @@ private extension ImageEditorSelection {
               let canvasMask = canvasMask(size: canvasSize, feather: feather)
         else { return nil }
 
+        let sampledImage = usesNearestSampling
+            ? canvasMask.cgImage(forProposedRect: nil, context: nil, hints: nil) : nil
+        guard !usesNearestSampling || sampledImage != nil else { return nil }
         return NSImage.rendered(size: layerSize) { _ in
+            if let sampledImage, let context = NSGraphicsContext.current?.cgContext {
+                let scaleX = layerSize.width / layerFrame.width
+                let scaleY = layerSize.height / layerFrame.height
+                context.interpolationQuality = .none
+                context.draw(sampledImage, in: CGRect(
+                    x: -layerFrame.minX * scaleX,
+                    y: -(canvasSize.height - layerFrame.maxY) * scaleY,
+                    width: canvasSize.width * scaleX, height: canvasSize.height * scaleY
+                ))
+                return
+            }
             canvasMask.draw(
                 in: CGRect(origin: .zero, size: layerSize),
                 from: CGRect(
