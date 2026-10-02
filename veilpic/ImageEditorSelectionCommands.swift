@@ -737,16 +737,18 @@ extension ImageEditorViewModel {
         }
         guard selectedPixelCount > 0 else { return [] }
 
-        let maxSamples = 48
-        let interval = max(1, selectedPixelCount / maxSamples)
+        let sampledOrdinals = distributedColorRangeSampleOrdinals(
+            selectedPixelCount: selectedPixelCount
+        )
         var selectedIndex = 0
         var colors: [NSColor] = []
 
         for y in 0..<mask.height {
             for x in 0..<mask.width {
                 guard mask.alpha[y * mask.width + x] > 0 else { continue }
-                defer { selectedIndex += 1 }
-                guard selectedIndex % interval == 0 else { continue }
+                let sampleOrdinal = selectedIndex
+                selectedIndex += 1
+                guard sampledOrdinals.contains(sampleOrdinal) else { continue }
                 let point = CGPoint(
                     x: (CGFloat(x) + 0.5) / CGFloat(mask.width) * document.canvasSize.width,
                     y: (CGFloat(y) + 0.5) / CGFloat(mask.height) * document.canvasSize.height
@@ -756,7 +758,7 @@ extension ImageEditorViewModel {
                     coordinateSize: document.canvasSize
                 )?.usingColorSpace(.deviceRGB) else { continue }
                 colors.appendUniqueColorRangeSample(color)
-                if colors.count >= maxSamples {
+                if colors.count >= maximumColorRangeSamples {
                     return colors
                 }
             }
@@ -802,6 +804,23 @@ private extension Array where Element == NSColor {
 }
 
 private let minimumColorRangeSampleAlpha: UInt8 = 8
+private let maximumColorRangeSamples = 48
+
+private func distributedColorRangeSampleOrdinals(selectedPixelCount: Int) -> Set<Int> {
+    guard selectedPixelCount > 0 else { return [] }
+    let sampleCount = min(selectedPixelCount, maximumColorRangeSamples)
+    guard sampleCount < selectedPixelCount else { return Set(0..<selectedPixelCount) }
+    guard sampleCount > 1 else { return [0] }
+
+    return Set((0..<sampleCount).map { sampleIndex in
+        Int(
+            (
+                Double(sampleIndex) * Double(selectedPixelCount - 1)
+                    / Double(sampleCount - 1)
+            ).rounded()
+        )
+    })
+}
 
 private func unpremultipliedRGBComponents(
     in pixels: [UInt8],
@@ -1078,20 +1097,22 @@ extension NSImage {
         pixels: [UInt8],
         bytesPerRow: Int
     ) -> [NSColor] {
-        let maxSamples = 48
         let selectedPixelCount = mask.alpha.reduce(0) { count, value in
             value > 0 ? count + 1 : count
         }
         guard selectedPixelCount > 0 else { return [] }
 
-        let interval = max(1, selectedPixelCount / maxSamples)
+        let sampledOrdinals = distributedColorRangeSampleOrdinals(
+            selectedPixelCount: selectedPixelCount
+        )
         var selectedIndex = 0
         var colors: [NSColor] = []
         for y in 0..<mask.height {
             for x in 0..<mask.width {
                 guard mask.alpha[y * mask.width + x] > 0 else { continue }
-                defer { selectedIndex += 1 }
-                guard selectedIndex % interval == 0 else { continue }
+                let sampleOrdinal = selectedIndex
+                selectedIndex += 1
+                guard sampledOrdinals.contains(sampleOrdinal) else { continue }
                 let pixelOffset = y * bytesPerRow + x * 4
                 guard let color = unpremultipliedRGBComponents(in: pixels, at: pixelOffset) else {
                     continue
@@ -1105,7 +1126,7 @@ extension NSImage {
                 colors.appendUniqueColorRangeSample(
                     NSColor(colorSpace: .deviceRGB, components: components, count: components.count)
                 )
-                if colors.count >= maxSamples {
+                if colors.count >= maximumColorRangeSamples {
                     return colors
                 }
             }

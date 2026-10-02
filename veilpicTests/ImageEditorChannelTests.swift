@@ -326,6 +326,35 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(mask, x: 3, y: 0) == 0)
     }
 
+    @Test func selectSimilarColorsSamplesAcrossTheEntireSelection() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "distributed-similar-samples.png",
+            image: distributedSelectionSampleImage()
+        ) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 64, height: 1))
+
+        viewModel.selectSimilarColors(tolerance: 0.001)
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 63, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 127, y: 0) == 255)
+    }
+
+    @Test func growColorSelectionSamplesAcrossTheEntireSeedSelection() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "distributed-grow-samples.png",
+            image: distributedSelectionSampleImage()
+        ) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 64, height: 1))
+
+        viewModel.growColorSelection(tolerance: 0.001)
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 63, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 64, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 127, y: 0) == 255)
+    }
+
     @Test func colorRangePanelAddsAndSubtractsSampleColors() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "range.png", image: colorRangeTestImage()) { _ in }
         viewModel.presentColorRangePanel()
@@ -1833,6 +1862,18 @@ struct ImageEditorChannelTests {
             NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 0).setFill()
             CGRect(x: 3, y: 0, width: 1, height: 1).fill()
         } ?? NSImage(size: NSSize(width: 4, height: 1))
+    }
+
+    private func distributedSelectionSampleImage() -> NSImage {
+        NSImage.rendered(size: NSSize(width: 128, height: 1)) { _ in
+            for x in 0..<63 {
+                let value = 0.05 + CGFloat(x) * 0.012
+                NSColor(calibratedWhite: value, alpha: 1).setFill()
+                CGRect(x: x, y: 0, width: 1, height: 1).fill()
+            }
+            NSColor.green.setFill()
+            CGRect(x: 63, y: 0, width: 65, height: 1).fill()
+        } ?? NSImage(size: NSSize(width: 128, height: 1))
     }
 
     private func grayscaleHistogramImage() -> NSImage {
