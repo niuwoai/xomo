@@ -77,6 +77,8 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     /// When true, a Gaussian blur samples the already-composited pixels behind the layer.
     /// This keeps Figma BACKGROUND_BLUR non-destructive instead of baking the backdrop.
     var appliesToBackdrop = false
+    /// Retained samples per original filter pixel unit after a pixel edit promotes its backing.
+    var pixelSamplingScale: Double?
 
     init(
         id: UUID = UUID(),
@@ -107,6 +109,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         case opacity
         case blendMode
         case appliesToBackdrop
+        case pixelSamplingScale
     }
 
     init(from decoder: Decoder) throws {
@@ -120,6 +123,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         blendMode = try container.decodeIfPresent(ImageEditorBlendMode.self, forKey: .blendMode) ?? .normal
         if blendMode == .passThrough { blendMode = .normal }
         appliesToBackdrop = try container.decodeIfPresent(Bool.self, forKey: .appliesToBackdrop) ?? false
+        pixelSamplingScale = try container.decodeIfPresent(Double.self, forKey: .pixelSamplingScale)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -132,6 +136,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         try container.encode(opacity, forKey: .opacity)
         try container.encode(normalizedBlendMode, forKey: .blendMode)
         try container.encode(appliesToBackdrop, forKey: .appliesToBackdrop)
+        try container.encodeIfPresent(pixelSamplingScale, forKey: .pixelSamplingScale)
     }
 
     var normalizedIntensity: Double {
@@ -147,11 +152,21 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     }
 
     var normalizedSettings: ImageEditorFilterSettings {
-        settings.normalized()
+        var normalized = settings.normalized()
+        normalized.renderingScale = 1
+        return normalized
+    }
+
+    var renderingSettings: ImageEditorFilterSettings {
+        var normalized = normalizedSettings
+        normalized.renderingScale = appliesToBackdrop ? 1 : ImageEditorMaskSampling.featherScale(pixelSamplingScale)
+        return normalized
     }
 }
 
 struct ImageEditorFilterSettings: Equatable, Codable {
+    /// Transient render-grid multiplier; not an editable setting or an encoded key.
+    var renderingScale: Double = 1
     /// When present, Gaussian blur uses this pixel radius instead of the UI's normalized intensity.
     /// Figma layer-blur imports use this to retain the source radius across project round-trips.
     var gaussianBlurRadius: Double?
@@ -482,7 +497,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     }
 
     func normalized() -> ImageEditorFilterSettings {
-        ImageEditorFilterSettings(
+        var normalized = ImageEditorFilterSettings(
             gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(1_000, $0)) },
             sharpenAmountPercent: sharpenAmountPercent.map { max(0, min(200, $0)) },
             highPassRadius: highPassRadius.map { max(1, min(1_000, $0)) },
@@ -537,6 +552,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             lensDistortionAmountPercent: lensDistortionAmountPercent.map { max(-100, min(100, $0)) },
             lensDistortion: max(-1, min(1, lensDistortion))
         )
+        normalized.renderingScale = ImageEditorMaskSampling.featherScale(renderingScale)
+        return normalized
     }
 
     private enum CodingKeys: String, CodingKey {

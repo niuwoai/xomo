@@ -119,7 +119,7 @@ extension NSImage {
             return addingDeterministicNoise(intensity: clamped, settings: settings)
         }
         if kind == .median {
-            return medianDenoised(intensity: clamped)
+            return medianDenoised(intensity: clamped, samplingScale: normalizedSettings.renderingScale)
         }
         if kind == .unsharpMask {
             return unsharpMasked(intensity: clamped, settings: settings)
@@ -131,7 +131,7 @@ extension NSImage {
             return embossed(intensity: clamped, settings: settings)
         }
         if kind == .findEdges {
-            return findingEdges(intensity: clamped)
+            return findingEdges(intensity: clamped, samplingScale: normalizedSettings.renderingScale)
         }
         if kind == .minimum {
             return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: false)
@@ -181,30 +181,31 @@ extension NSImage {
             let filter = CIFilter.gaussianBlur()
             filter.inputImage = ciImage.clampedToExtent()
             let radius = settings.normalized().gaussianBlurRadius ?? clamped * 18
-            filter.radius = Float(max(0, min(1_000, radius)))
+            filter.radius = Float(max(0, min(1_000, radius)) * normalizedSettings.renderingScale)
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .sharpen:
             let filter = CIFilter.sharpenLuminance()
             filter.inputImage = ciImage
             filter.sharpness = Float((normalizedSettings.sharpenAmountPercent ?? (clamped * 150)) / 100)
+            filter.radius *= Float(normalizedSettings.renderingScale)
             output = filter.outputImage
         case .pixelate:
             let filter = CIFilter.pixellate()
             filter.inputImage = ciImage
             filter.center = CGPoint(x: size.width / 2, y: size.height / 2)
-            filter.scale = Float(settings.normalized().pixelateCellSize ?? (2 + clamped * 32))
+            filter.scale = Float((normalizedSettings.pixelateCellSize ?? (2 + clamped * 32)) * normalizedSettings.renderingScale)
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .motionBlur:
             let filter = CIFilter.motionBlur()
             filter.inputImage = ciImage.clampedToExtent()
             let normalized = settings.normalized()
-            filter.radius = Float(normalized.motionBlurDistance ?? (clamped * 28))
+            filter.radius = Float((normalized.motionBlurDistance ?? (clamped * 28)) * normalized.renderingScale)
             filter.angle = Float((normalized.motionBlurAngleDegrees ?? 0) * .pi / 180)
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .addNoise:
             return addingDeterministicNoise(intensity: clamped, settings: settings)
         case .median:
-            return medianDenoised(intensity: clamped)
+            return medianDenoised(intensity: clamped, samplingScale: normalizedSettings.renderingScale)
         case .unsharpMask:
             return unsharpMasked(intensity: clamped, settings: settings)
         case .highPass:
@@ -212,7 +213,7 @@ extension NSImage {
         case .emboss:
             return embossed(intensity: clamped, settings: settings)
         case .findEdges:
-            return findingEdges(intensity: clamped)
+            return findingEdges(intensity: clamped, samplingScale: normalizedSettings.renderingScale)
         case .minimum:
             return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: false)
         case .maximum:
@@ -545,6 +546,8 @@ extension NSImage {
         let monochromatic = normalized.addNoiseMonochromatic ?? true
         let distribution = normalized.addNoiseDistribution ?? .uniform
         return pixelMappedByCoordinate { x, y, red, green, blue, alpha in
+            let x = Int(Double(x) / normalized.renderingScale)
+            let y = Int(Double(y) / normalized.renderingScale)
             let redNoise = Self.coordinateNoise(
                 x: x,
                 y: y,
@@ -643,16 +646,16 @@ extension NSImage {
         return NSImage(cgImage: output, size: size)
     }
 
-    private func medianDenoised(intensity: Double) -> NSImage? {
+    private func medianDenoised(intensity: Double, samplingScale: Double = 1) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
         guard clampedIntensity > 0 else { return self }
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let radius = clampedIntensity < 0.5 ? 1 : 2
+            let radius = min(max(width, height), max(1, Int(((clampedIntensity < 0.5 ? 1 : 2) * samplingScale).rounded())))
             let offset = y * bytesPerRow + x * bytesPerPixel
             var reds: [Double] = []
             var greens: [Double] = []
             var blues: [Double] = []
-            let capacity = (radius * 2 + 1) * (radius * 2 + 1)
+            let capacity = min(width, radius * 2 + 1) * min(height, radius * 2 + 1)
             reds.reserveCapacity(capacity)
             greens.reserveCapacity(capacity)
             blues.reserveCapacity(capacity)
@@ -722,8 +725,8 @@ extension NSImage {
             return Double(bottomRight - topRight - bottomLeft + topLeft) / count / 255
         }
 
-        let preciseRadius = normalizedSettings.unsharpRadiusPixels
-        let legacyRadius = max(1, Int(normalizedSettings.unsharpRadius.rounded()))
+        let preciseRadius = normalizedSettings.unsharpRadiusPixels.map { $0 * normalizedSettings.renderingScale }
+        let legacyRadius = max(1, Int((max(1, normalizedSettings.unsharpRadius.rounded()) * normalizedSettings.renderingScale).rounded()))
         let lowerRadius = preciseRadius.map { max(0, Int(floor($0))) } ?? legacyRadius
         let upperRadius = preciseRadius.map { max(1, Int(ceil($0))) } ?? legacyRadius
         let radiusFraction = preciseRadius.map { $0 - floor($0) } ?? 0
@@ -787,7 +790,7 @@ extension NSImage {
         let radius = max(
             1,
             Int(
-                (normalizedSettings.highPassRadius ?? (1 + clampedIntensity * 9))
+                ((normalizedSettings.highPassRadius ?? (1 + clampedIntensity * 9)) * normalizedSettings.renderingScale)
                     .rounded()
             )
         )
@@ -874,10 +877,10 @@ extension NSImage {
         let strength = 1.2 + clampedIntensity * 2.6
         let normalizedSettings = settings.normalized()
         guard normalizedSettings.embossAngleDegrees != nil || normalizedSettings.embossHeight != nil else {
-            return legacyEmbossed(strength: strength)
+            return legacyEmbossed(strength: strength, samplingScale: normalizedSettings.renderingScale)
         }
         let angle = (normalizedSettings.embossAngleDegrees ?? 135) * .pi / 180
-        let height = normalizedSettings.embossHeight ?? 3
+        let height = (normalizedSettings.embossHeight ?? 3) * normalizedSettings.renderingScale
         let sampleX = cos(angle) * height
         let sampleY = -sin(angle) * height
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
@@ -912,20 +915,21 @@ extension NSImage {
         }
     }
 
-    private func legacyEmbossed(strength: Double) -> NSImage? {
-        pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+    private func legacyEmbossed(strength: Double, samplingScale: Double = 1) -> NSImage? {
+        let step = max(1, Int(samplingScale.rounded()))
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
             let shadow = Self.luminance(
-                x: max(0, x - 1),
-                y: max(0, y - 1),
+                x: max(0, x - step),
+                y: max(0, y - step),
                 pixels: pixels,
                 bytesPerRow: bytesPerRow,
                 bytesPerPixel: bytesPerPixel
             )
             let highlight = Self.luminance(
-                x: min(width - 1, x + 1),
-                y: min(height - 1, y + 1),
+                x: min(width - 1, x + step),
+                y: min(height - 1, y + step),
                 pixels: pixels,
                 bytesPerRow: bytesPerRow,
                 bytesPerPixel: bytesPerPixel
@@ -941,16 +945,17 @@ extension NSImage {
         }
     }
 
-    private func findingEdges(intensity: Double) -> NSImage? {
+    private func findingEdges(intensity: Double, samplingScale: Double = 1) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
         let strength = 1.2 + clampedIntensity * 3.4
+        let step = max(1, Int(samplingScale.rounded()))
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
-            let left = max(0, x - 1)
-            let right = min(width - 1, x + 1)
-            let top = max(0, y - 1)
-            let bottom = min(height - 1, y + 1)
+            let left = max(0, x - step)
+            let right = min(width - 1, x + step)
+            let top = max(0, y - step)
+            let bottom = min(height - 1, y + step)
             let topLeft = Self.luminance(x: left, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
             let topCenter = Self.luminance(x: x, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
             let topRight = Self.luminance(x: right, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
@@ -981,7 +986,7 @@ extension NSImage {
         let radius = max(
             1,
             Int(
-                (settings.normalized().morphologyRadius ?? (1 + clampedIntensity * 4))
+                ((settings.normalized().morphologyRadius ?? (1 + clampedIntensity * 4)) * settings.normalized().renderingScale)
                     .rounded()
             )
         )
@@ -1088,7 +1093,7 @@ extension NSImage {
         let normalizedSettings = settings.normalized()
         let radius = max(
             1,
-            Int((normalizedSettings.oilPaintRadius ?? (1 + clampedIntensity * 5)).rounded())
+            Int(((normalizedSettings.oilPaintRadius ?? (1 + clampedIntensity * 5)) * normalizedSettings.renderingScale).rounded())
         )
         let bucketCount = max(
             6,
@@ -1308,9 +1313,9 @@ extension NSImage {
 
             let falloff = pow(1 - distance / radius, 2)
             let maxShift = radius * 0.42 * clampedIntensity
-            let shiftX = normalizedSettings.liquifyPushXPixels
+            let shiftX = normalizedSettings.liquifyPushXPixels.map { $0 * normalizedSettings.renderingScale }
                 ?? (normalizedSettings.liquifyPushX * maxShift)
-            let shiftY = normalizedSettings.liquifyPushYPixels
+            let shiftY = normalizedSettings.liquifyPushYPixels.map { $0 * normalizedSettings.renderingScale }
                 ?? (normalizedSettings.liquifyPushY * maxShift)
             guard abs(shiftX) > 0.000_1 || abs(shiftY) > 0.000_1 else {
                 return Self.samplePixel(
@@ -1341,9 +1346,9 @@ extension NSImage {
         let clampedIntensity = max(0, min(1, intensity))
         let normalizedSettings = settings.normalized()
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let shiftX = normalizedSettings.offsetXPixels
+            let shiftX = normalizedSettings.offsetXPixels.map { $0 * normalizedSettings.renderingScale }
                 ?? (normalizedSettings.offsetX * Double(width) * 0.5 * clampedIntensity)
-            let shiftY = normalizedSettings.offsetYPixels
+            let shiftY = normalizedSettings.offsetYPixels.map { $0 * normalizedSettings.renderingScale }
                 ?? (normalizedSettings.offsetY * Double(height) * 0.5 * clampedIntensity)
             guard abs(shiftX) > 0.000_1 || abs(shiftY) > 0.000_1 else {
                 return Self.samplePixel(

@@ -1461,21 +1461,17 @@ extension ImageEditorViewModel {
             return
         }
         guard let index = document.selectedLayerIndex,
-              let clippedImage = document.layers[index].visibleImage.copied(
-                selection: selection,
-                layerFrame: document.layers[index].frame,
-                canvasSize: document.canvasSize,
-                feather: feather
-              ),
+              var backing = document.layers[index].selectionPixelEditingBacking(),
               let selectionCopy = selectionClipboardCopy(
-                image: clippedImage,
+                image: document.layers[index].visibleImage,
                 selection: selection,
                 layerFrame: document.layers[index].frame,
-                feather: feather
+                feather: feather,
+                selectionIsApplied: false
               ),
-              let clearedImage = document.layers[index].image.cleared(
+              let clearedImage = backing.image.cleared(
                 selection: selection,
-                layerFrame: document.layers[index].frame,
+                layerFrame: backing.frame,
                 canvasSize: document.canvasSize,
                 feather: feather
               )
@@ -1485,7 +1481,8 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
-        document.layers[index].image = clearedImage.normalizedBitmapImage()
+        backing.image = clearedImage.normalizedBitmapImage()
+        document.layers[index] = backing
         let sourceLayer = document.layers[index]
         var layer = ImageEditorLayer.blank(
             name: L10n.format("imageEditor.layer.selectionCutName", sourceLayer.name),
@@ -1611,9 +1608,9 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func cutSelectionToClipboard() -> Bool {
+    func cutSelectionToClipboard(to pasteboard: NSPasteboard = .general) -> Bool {
         guard hasSelection else {
-            return cutSelectedLayersToClipboard()
+            return cutSelectedLayersToClipboard(to: pasteboard)
         }
 
         guard let selection = document.selection else {
@@ -1625,16 +1622,18 @@ extension ImageEditorViewModel {
             return false
         }
         guard let index = document.selectedLayerIndex,
-              let clippedImage = document.layers[index].visibleImage.copied(
-                selection: selection,
-                layerFrame: document.layers[index].frame,
-                canvasSize: document.canvasSize,
-                feather: feather
-              ),
+              var backing = document.layers[index].selectionPixelEditingBacking(),
               let clipboardCopy = selectionClipboardCopy(
-                image: clippedImage,
+                image: document.layers[index].visibleImage,
                 selection: selection,
                 layerFrame: document.layers[index].frame,
+                feather: feather,
+                selectionIsApplied: false
+              ),
+              let output = backing.image.cleared(
+                selection: selection,
+                layerFrame: backing.frame,
+                canvasSize: document.canvasSize,
                 feather: feather
               )
         else {
@@ -1645,23 +1644,18 @@ extension ImageEditorViewModel {
         let sourceLayer = document.layers[index]
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
-            preferredFileName: "\(sourceLayer.name)-selection.png"
+            preferredFileName: "\(sourceLayer.name)-selection.png",
+            to: pasteboard
         )
-        guard didCopy,
-              let output = sourceLayer.image.cleared(
-                selection: selection,
-                layerFrame: sourceLayer.frame,
-                canvasSize: document.canvasSize,
-                feather: feather
-              )
-        else {
+        guard didCopy else {
             statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
             return false
         }
 
-        XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
+        XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
         pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
+        backing.image = output.normalizedBitmapImage()
+        document.layers[index] = backing
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
         statusText = L10n.text("imageEditor.status.selectionCutToClipboard")
         return true
