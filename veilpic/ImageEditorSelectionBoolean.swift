@@ -815,25 +815,7 @@ extension ImageEditorSelectionMask {
     }
 
     private func selectedPixelBounds(inverted: Bool = false) -> (minX: Int, minY: Int, maxX: Int, maxY: Int)? {
-        guard width > 0, height > 0, alpha.count == width * height else { return nil }
-        var minX = width
-        var minY = height
-        var maxX = -1
-        var maxY = -1
-
-        for y in 0..<height {
-            for x in 0..<width {
-                let value = alpha[y * width + x]
-                guard inverted ? value < UInt8.max : value > 0 else { continue }
-                minX = min(minX, x)
-                minY = min(minY, y)
-                maxX = max(maxX, x)
-                maxY = max(maxY, y)
-            }
-        }
-
-        guard maxX >= minX, maxY >= minY else { return nil }
-        return (minX, minY, maxX, maxY)
+        ImageEditorSelectionMaskBounds.pixelBounds(alpha: alpha, width: width, height: height, inverted: inverted)
     }
 
     private func scaledSelection(
