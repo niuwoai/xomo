@@ -253,6 +253,8 @@ struct ImageEditorChannelTests {
 
     @Test func colorRangePanelSamplesSourcePreviewColor() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "range.png", image: colorRangeTestImage()) { _ in }
+        let originalForeground = NSColor.systemBlue
+        viewModel.foregroundColor = originalForeground
         viewModel.presentColorRangePanel()
         viewModel.colorRangeTolerance = 0.03
 
@@ -271,6 +273,7 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(mask, x: 1, y: 0) == 255)
         #expect(maskAlpha(mask, x: 2, y: 0) == 0)
         #expect(maskAlpha(mask, x: 3, y: 0) == 0)
+        #expect(viewModel.foregroundColor == originalForeground)
     }
 
     @Test func colorRangePanelAddsAndSubtractsSampleColors() async throws {

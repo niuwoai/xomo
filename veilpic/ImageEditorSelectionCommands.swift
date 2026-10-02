@@ -195,7 +195,6 @@ extension ImageEditorViewModel {
             return
         }
 
-        foregroundColor = colorRangeColor
         tolerance = colorRangeTolerance
         isColorRangeSheetPresented = false
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionColorRange")
