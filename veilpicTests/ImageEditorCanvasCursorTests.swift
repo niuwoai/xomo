@@ -1899,8 +1899,8 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(rectangle === NSCursor.crosshair)
         #expect(ellipse === NSCursor.crosshair)
-        #expect(readyToMove === NSCursor.openHand)
-        #expect(moving === NSCursor.closedHand)
+        #expect(readyToMove === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(moving === ImageEditorCanvasCursor.objectMoveCursor())
     }
 
     @Test func capsLockSwitchesEveryBrushLikeToolToPrecisionCursor() {

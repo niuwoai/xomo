@@ -18036,8 +18036,10 @@ enum ImageEditorCanvasCursor {
         case .textInsertion:
             return isPointerOverEditableText ? .iBeam : textCreationCursor()
         case .selectionMarquee:
-            if isMovingMarqueeSelection { return .closedHand }
-            if isPointerOverMarqueeSelection && selectionMode == .replace { return .openHand }
+            if isMovingMarqueeSelection
+                || (isPointerOverMarqueeSelection && selectionMode == .replace) {
+                return objectMoveCursor()
+            }
             return selectionMode == .replace
                 ? .crosshair
                 : familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
