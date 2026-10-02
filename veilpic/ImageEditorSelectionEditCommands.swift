@@ -1420,28 +1420,18 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        guard editableIndices.contains(where: { index in
+        let affectedIndices = editableIndices.filter { index in
             selection.mayAffect(
                 layerFrame: document.layers[index].frame,
                 canvasSize: document.canvasSize,
                 expansion: feather
             )
-        }) else {
+        }
+        guard !affectedIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
-        applySelectionPixelEdit(
-            historyKey: "imageEditor.history.selectionClearPixels",
-            selectedHistoryKey: "imageEditor.history.selectionClearPixelsSelected",
-            statusKey: "imageEditor.status.selectionPixelsCleared",
-            selectedStatusKey: "imageEditor.status.selectionPixelsClearedSelected"
-        ) { layer in
-            guard !document.isEffectivelyTransparencyLocked(layer) else { return nil }
-            guard selection.mayAffect(
-                layerFrame: layer.frame,
-                canvasSize: document.canvasSize,
-                expansion: feather
-            ) else { return nil }
+        applySelectionPixelClear(at: affectedIndices) { layer in
             return layer.image.cleared(
                 selection: selection,
                 layerFrame: layer.frame,
