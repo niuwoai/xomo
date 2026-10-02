@@ -5,6 +5,51 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPixelSelectionMoveTests {
+    @Test func shiftConstrainsPixelSelectionMoveToTheDominantAxis() {
+        #expect(ImageEditorPixelSelectionMoveConstraint.delta(
+            from: CGSize(width: 7.4, height: 3.2),
+            modifierFlags: [.shift],
+            canvasSize: CGSize(width: 12, height: 8)
+        ) == CGSize(width: 7, height: 0))
+        #expect(ImageEditorPixelSelectionMoveConstraint.delta(
+            from: CGSize(width: -2.3, height: 6.6),
+            modifierFlags: [.shift],
+            canvasSize: CGSize(width: 12, height: 8)
+        ) == CGSize(width: 0, height: 7))
+        #expect(ImageEditorPixelSelectionMoveConstraint.delta(
+            from: CGSize(width: 4.6, height: -3.4),
+            modifierFlags: [],
+            canvasSize: CGSize(width: 12, height: 8)
+        ) == CGSize(width: 5, height: -3))
+    }
+
+    @Test func shiftConstrainedPixelMoveUsesOneUndoableHorizontalDelta() throws {
+        let viewModel = makeViewModel()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
+        let originalImage = try #require(viewModel.document.selectedLayer?.image)
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginPixelSelectionMove(at: CGPoint(x: 3, y: 3)))
+        viewModel.updatePixelSelectionMove(
+            by: CGSize(width: 6, height: 2),
+            modifierFlags: [.shift]
+        )
+        viewModel.finishPixelSelectionMove()
+
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 8, y: 2, width: 3, height: 3))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        let movedImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        let movedPixels = try #require(imageEditorRGBABytes(movedImage, width: 12, height: 8))
+        let originalPixels = try #require(imageEditorRGBABytes(originalImage, width: 12, height: 8))
+        #expect(try pixel(movedPixels, x: 9, y: 3, width: 12) == pixel(originalPixels, x: 3, y: 3, width: 12))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
+        viewModel.redo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 8, y: 2, width: 3, height: 3))
+    }
+
     @Test func draggingActivePixelSelectionMovesPixelsAndMarqueeAsOneUndoStep() throws {
         let viewModel = makeViewModel()
         let layerID = try #require(viewModel.document.selectedLayerID)

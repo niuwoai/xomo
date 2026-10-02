@@ -368,7 +368,10 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func updatePixelSelectionMove(by delta: CGSize) {
+    func updatePixelSelectionMove(
+        by delta: CGSize,
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) {
         guard delta.width.isFinite,
               delta.height.isFinite,
               var transaction = pixelSelectionMoveTransaction,
@@ -381,7 +384,15 @@ extension ImageEditorViewModel {
               })
         else { return }
 
-        let canvasDelta = CGSize(width: delta.width.rounded(), height: delta.height.rounded())
+        let constrainedDelta = ImageEditorPixelSelectionMoveConstraint.delta(
+            from: delta,
+            modifierFlags: modifierFlags,
+            canvasSize: transaction.originalDocument.canvasSize
+        )
+        let canvasDelta = CGSize(
+            width: constrainedDelta.width.rounded(),
+            height: constrainedDelta.height.rounded()
+        )
         let movedSelection = selection.translated(
             by: canvasDelta,
             canvasSize: transaction.originalDocument.canvasSize

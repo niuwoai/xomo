@@ -63,6 +63,22 @@ enum ImageEditorMarqueeMoveConstraint {
     }
 }
 
+enum ImageEditorPixelSelectionMoveConstraint {
+    static func delta(
+        from proposed: CGSize,
+        modifierFlags: NSEvent.ModifierFlags,
+        canvasSize: CGSize
+    ) -> CGSize {
+        guard proposed.width.isFinite, proposed.height.isFinite else { return proposed }
+        return ImageEditorMarqueeMoveConstraint.delta(
+            from: .zero,
+            to: CGPoint(x: proposed.width, y: proposed.height),
+            modifierFlags: modifierFlags,
+            canvasSize: canvasSize
+        )
+    }
+}
+
 struct ImageEditorSelectionEdgeGeometry: Equatable {
     var contours: [[CGPoint]]
 

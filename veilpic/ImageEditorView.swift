@@ -6513,7 +6513,11 @@ struct ImageEditorView: View {
                 switch canvasInteractionTool {
                 case .move:
                     if isPixelSelectionMoveGestureActive {
-                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        updatePixelSelectionMove(
+                            translation: value.translation,
+                            in: size,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                         break
                     }
                     if var selectionBoxDrag = objectSelectionBoxDrag {
@@ -6547,7 +6551,11 @@ struct ImageEditorView: View {
                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                        viewModel.beginPixelSelectionMove(at: pressedImagePoint) {
                         isPixelSelectionMoveGestureActive = true
-                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        updatePixelSelectionMove(
+                            translation: value.translation,
+                            in: size,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                         break
                     }
                     if !isDeliveryObjectMoveGestureActive,
@@ -7095,7 +7103,11 @@ struct ImageEditorView: View {
                 switch canvasInteractionTool {
                 case .move:
                     if isPixelSelectionMoveGestureActive {
-                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        updatePixelSelectionMove(
+                            translation: value.translation,
+                            in: size,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                         viewModel.finishPixelSelectionMove()
                         isPixelSelectionMoveGestureActive = false
                         break
@@ -7562,13 +7574,19 @@ struct ImageEditorView: View {
         objectMoveAxisLock = nil
     }
 
-    private func updatePixelSelectionMove(translation: CGSize, in size: CGSize) {
+    private func updatePixelSelectionMove(
+        translation: CGSize,
+        in size: CGSize,
+        modifierFlags: NSEvent.ModifierFlags
+    ) {
+        let canvasSize = viewModel.document.canvasSize
         viewModel.updatePixelSelectionMove(
             by: ImageEditorCanvasDragGeometry.imageDelta(
                 from: translation,
-                canvasSize: viewModel.document.canvasSize,
+                canvasSize: canvasSize,
                 imageRect: fittedImageRect(in: size)
-            )
+            ),
+            modifierFlags: modifierFlags
         )
     }
 
