@@ -36,14 +36,30 @@ enum ImageEditorMarqueeMoveConstraint {
     static func delta(
         from start: CGPoint,
         to end: CGPoint,
-        modifierFlags: NSEvent.ModifierFlags
+        modifierFlags: NSEvent.ModifierFlags,
+        canvasSize: CGSize
     ) -> CGSize {
         let proposed = CGSize(width: end.x - start.x, height: end.y - start.y)
-        guard modifierFlags.contains(.shift) else { return proposed }
-        if abs(proposed.width) >= abs(proposed.height) {
-            return CGSize(width: proposed.width, height: 0)
+        let constrained: CGSize
+        if modifierFlags.contains(.shift) {
+            if abs(proposed.width) >= abs(proposed.height) {
+                constrained = CGSize(width: proposed.width, height: 0)
+            } else {
+                constrained = CGSize(width: 0, height: proposed.height)
+            }
+        } else {
+            constrained = proposed
         }
-        return CGSize(width: 0, height: proposed.height)
+        let pixelWidth = max(1, Int(canvasSize.width.rounded()))
+        let pixelHeight = max(1, Int(canvasSize.height.rounded()))
+        let horizontalScale = CGFloat(pixelWidth) / max(canvasSize.width, 1)
+        let verticalScale = CGFloat(pixelHeight) / max(canvasSize.height, 1)
+        return CGSize(
+            width: (constrained.width * horizontalScale).rounded(.toNearestOrAwayFromZero)
+                / horizontalScale,
+            height: (constrained.height * verticalScale).rounded(.toNearestOrAwayFromZero)
+                / verticalScale
+        )
     }
 }
 

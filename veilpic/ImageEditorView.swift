@@ -7737,7 +7737,8 @@ struct ImageEditorView: View {
             viewModel.nudgeSelection(by: ImageEditorMarqueeMoveConstraint.delta(
                 from: start,
                 to: end,
-                modifierFlags: modifierFlags
+                modifierFlags: modifierFlags,
+                canvasSize: viewModel.document.canvasSize
             ))
         } else {
             viewModel.createMarqueeSelection(
@@ -10815,7 +10816,8 @@ struct ImageEditorView: View {
                         ImageEditorMarqueeMoveConstraint.delta(
                             from: start,
                             to: end,
-                            modifierFlags: NSEvent.modifierFlags
+                            modifierFlags: NSEvent.modifierFlags,
+                            canvasSize: viewModel.document.canvasSize
                         )
                     }
                 } ?? .zero

@@ -327,18 +327,27 @@ struct ImageEditorSelectionEdgeTests {
         #expect(ImageEditorMarqueeMoveConstraint.delta(
             from: CGPoint(x: 4, y: 5),
             to: CGPoint(x: 12, y: 8),
-            modifierFlags: [.shift]
+            modifierFlags: [.shift],
+            canvasSize: CGSize(width: 20, height: 20)
         ) == CGSize(width: 8, height: 0))
         #expect(ImageEditorMarqueeMoveConstraint.delta(
             from: CGPoint(x: 4, y: 5),
             to: CGPoint(x: 7, y: -3),
-            modifierFlags: [.shift]
+            modifierFlags: [.shift],
+            canvasSize: CGSize(width: 20, height: 20)
         ) == CGSize(width: 0, height: -8))
         #expect(ImageEditorMarqueeMoveConstraint.delta(
             from: CGPoint(x: 4, y: 5),
             to: CGPoint(x: 12, y: 8),
-            modifierFlags: []
+            modifierFlags: [],
+            canvasSize: CGSize(width: 20, height: 20)
         ) == CGSize(width: 8, height: 3))
+        #expect(ImageEditorMarqueeMoveConstraint.delta(
+            from: CGPoint(x: 4, y: 5),
+            to: CGPoint(x: 6.4, y: 3.6),
+            modifierFlags: [],
+            canvasSize: CGSize(width: 20, height: 20)
+        ) == CGSize(width: 2, height: -1))
     }
 
     @Test func lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions() throws {
