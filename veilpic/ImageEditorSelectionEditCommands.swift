@@ -2520,10 +2520,8 @@ private extension NSImage {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         guard let source = rgbaPixels(width: width, height: height),
-              let maskPixels = selectionMask.rgbaPixels(width: width, height: height)
+              let maskAlpha = ImageEditorPixelMoveMaskAlpha.read(from: selectionMask, width: width, height: height)
         else { return nil }
-
-        let maskAlpha = stride(from: 3, to: maskPixels.count, by: 4).map { maskPixels[$0] }
         guard maskAlpha.contains(where: { $0 > 0 }) else { return self }
 
         let localDeltaX = max(
