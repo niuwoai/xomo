@@ -2153,6 +2153,7 @@
 "imageEditor.history.selectionSimilar" = "选取相似颜色";
 "imageEditor.history.selectionGrow" = "扩展相邻相似颜色";
 "imageEditor.history.selectionMove" = "移动选区";
+"imageEditor.history.selectionPixelsMove" = "移动选中像素";
 "imageEditor.history.selectionFlipHorizontal" = "水平翻转选区";
 "imageEditor.history.selectionFlipVertical" = "垂直翻转选区";
 "imageEditor.history.selectionRotateClockwise" = "顺时针旋转选区";
@@ -2542,6 +2543,7 @@
 "imageEditor.status.selectionSimilarSampleEmpty" = "当前选区没有可取样的可见颜色";
 "imageEditor.status.selectionGrown" = "已扩展相邻相似颜色选区";
 "imageEditor.status.selectionMoved" = "已移动选区 X:%d Y:%d px";
+"imageEditor.status.selectionPixelsMoved" = "已移动选中像素";
 "imageEditor.status.selectionFlippedHorizontal" = "已水平翻转选区";
 "imageEditor.status.selectionFlippedVertical" = "已垂直翻转选区";
 "imageEditor.status.selectionRotatedClockwise" = "已顺时针旋转选区";

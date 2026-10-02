@@ -331,6 +331,113 @@ extension ImageEditorViewModel {
         hasPotentialSelectionPixels && !removableSelectionPixelLayerIndices().isEmpty
     }
 
+    func canBeginPixelSelectionMove(at point: CGPoint) -> Bool {
+        guard selectedLeftSidebarTab == .tools,
+              selectedTool == .move,
+              !isQuickMaskMode,
+              !isEditingLayerMask,
+              let selection = document.selection,
+              selection.contains(point, canvasSize: document.canvasSize),
+              selectedLayerCount == 1,
+              let index = document.selectedLayerIndex,
+              editableSelectionPixelLayerIndices().contains(index),
+              removableSelectionPixelLayerIndices().contains(index)
+        else { return false }
+
+        let layer = document.layers[index]
+        return layer.kind.isPixel
+            && selection.mayAffect(
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                expansion: feather
+            )
+    }
+
+    @discardableResult
+    func beginPixelSelectionMove(at point: CGPoint) -> Bool {
+        guard pixelSelectionMoveTransaction == nil,
+              canBeginPixelSelectionMove(at: point),
+              let layer = document.selectedLayer
+        else { return false }
+
+        pixelSelectionMoveTransaction = ImageEditorPixelSelectionMoveTransaction(
+            originalDocument: document,
+            layerID: layer.id,
+            originalImage: layer.image
+        )
+        return true
+    }
+
+    func updatePixelSelectionMove(by delta: CGSize) {
+        guard delta.width.isFinite,
+              delta.height.isFinite,
+              var transaction = pixelSelectionMoveTransaction,
+              let selection = transaction.originalDocument.selection,
+              let originalLayer = transaction.originalDocument.layers.first(where: {
+                  $0.id == transaction.layerID
+              }),
+              let currentIndex = document.layers.firstIndex(where: {
+                  $0.id == transaction.layerID
+              })
+        else { return }
+
+        let canvasDelta = CGSize(width: delta.width.rounded(), height: delta.height.rounded())
+        let movedSelection = selection.translated(
+            by: canvasDelta,
+            canvasSize: transaction.originalDocument.canvasSize
+        )
+        guard let movedImage = transaction.originalImage.moving(
+            selection: selection,
+            by: canvasDelta,
+            layerFrame: originalLayer.frame,
+            canvasSize: transaction.originalDocument.canvasSize,
+            feather: feather
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        document.layers[currentIndex].image = movedImage
+        document.selection = movedSelection
+        transaction.delta = canvasDelta
+        pixelSelectionMoveTransaction = transaction
+    }
+
+    func finishPixelSelectionMove() {
+        guard let transaction = pixelSelectionMoveTransaction else { return }
+        pixelSelectionMoveTransaction = nil
+        let updatedDocument = document
+        let didChange = updatedDocument.selection != transaction.originalDocument.selection
+            || !Self.imagesAreEquivalent(
+                updatedDocument.layers.first(where: { $0.id == transaction.layerID })?.image,
+                transaction.originalImage
+            )
+        guard didChange else {
+            document = transaction.originalDocument
+            return
+        }
+
+        document = transaction.originalDocument
+        pushUndo()
+        document = updatedDocument
+        appendHistory(L10n.text("imageEditor.history.selectionPixelsMove"))
+        statusText = L10n.text("imageEditor.status.selectionPixelsMoved")
+    }
+
+    func cancelPixelSelectionMove() {
+        guard let transaction = pixelSelectionMoveTransaction else { return }
+        pixelSelectionMoveTransaction = nil
+        document = transaction.originalDocument
+    }
+
+    private static func imagesAreEquivalent(_ lhs: NSImage?, _ rhs: NSImage) -> Bool {
+        guard let lhs,
+              let lhsData = lhs.normalizedBitmapImage().qingtuPNGData(),
+              let rhsData = rhs.normalizedBitmapImage().qingtuPNGData()
+        else { return false }
+        return lhsData == rhsData
+    }
+
     var canCopySelectionToNewLayer: Bool {
         guard selectedLayerCount == 1,
               let selection = document.selection,
@@ -2349,6 +2456,90 @@ private extension NSImage {
                 fraction: 1
             )
         }
+    }
+
+    func moving(
+        selection: ImageEditorSelection,
+        by delta: CGSize,
+        layerFrame: CGRect,
+        canvasSize: CGSize,
+        feather: CGFloat
+    ) -> NSImage? {
+        guard delta.width.isFinite,
+              delta.height.isFinite,
+              layerFrame.width.isFinite,
+              layerFrame.height.isFinite,
+              layerFrame.width > 0,
+              layerFrame.height > 0,
+              let selectionMask = selection.layerMask(
+                layerFrame: layerFrame,
+                layerSize: size,
+                canvasSize: canvasSize,
+                feather: feather
+              )
+        else { return nil }
+
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard var output = rgbaPixels(width: width, height: height),
+              let source = rgbaPixels(width: width, height: height),
+              let maskPixels = selectionMask.rgbaPixels(width: width, height: height)
+        else { return nil }
+
+        let maskAlpha = stride(from: 3, to: maskPixels.count, by: 4).map { maskPixels[$0] }
+        guard maskAlpha.contains(where: { $0 > 0 }) else { return self }
+
+        let localDeltaX = max(
+            -CGFloat(width),
+            min(CGFloat(width), delta.width * CGFloat(width) / layerFrame.width)
+        ).rounded()
+        let localDeltaY = max(
+            -CGFloat(height),
+            min(CGFloat(height), delta.height * CGFloat(height) / layerFrame.height)
+        ).rounded()
+        let offsetX = Int(localDeltaX)
+        let offsetY = Int(localDeltaY)
+        guard offsetX != 0 || offsetY != 0 else { return self }
+
+        let bytesPerPixel = 4
+        for y in 0..<height {
+            for x in 0..<width {
+                let sourcePixel = y * width + x
+                let coverage = CGFloat(maskAlpha[sourcePixel]) / 255
+                guard coverage > 0 else { continue }
+
+                let sourceOffset = sourcePixel * bytesPerPixel
+                let inverseCoverage = 1 - coverage
+                for channel in 0..<bytesPerPixel {
+                    output[sourceOffset + channel] = UInt8(
+                        (CGFloat(source[sourceOffset + channel]) * inverseCoverage).rounded()
+                    )
+                }
+
+                let destinationX = x + offsetX
+                let destinationY = y + offsetY
+                guard destinationX >= 0,
+                      destinationX < width,
+                      destinationY >= 0,
+                      destinationY < height
+                else { continue }
+
+                let destinationPixel = destinationY * width + destinationX
+                let destinationOffset = destinationPixel * bytesPerPixel
+                let sourceAlpha = CGFloat(source[sourceOffset + 3]) / 255 * coverage
+                let inverseAlpha = 1 - sourceAlpha
+                for channel in 0..<bytesPerPixel {
+                    let movedComponent = CGFloat(source[sourceOffset + channel]) * coverage
+                    let backgroundComponent = CGFloat(output[destinationOffset + channel])
+                    output[destinationOffset + channel] = UInt8(max(
+                        0,
+                        min(255, (movedComponent + backgroundComponent * inverseAlpha).rounded())
+                    ))
+                }
+            }
+        }
+
+        return NSImage.rgbaImage(width: width, height: height, pixels: output, size: size)
     }
 
     private func contentAwareFallbackColor(

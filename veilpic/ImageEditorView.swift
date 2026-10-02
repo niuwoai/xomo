@@ -201,6 +201,7 @@ struct ImageEditorView: View {
     @State private var lastMoveTranslation: CGSize = .zero
     @State private var objectMoveAxisLock: ImageEditorObjectDragAxis?
     @State private var isObjectMoveGestureActive = false
+    @State private var isPixelSelectionMoveGestureActive = false
     @State private var isCanvasSelectionGestureActive = false
     @State private var objectSelectionBoxDrag: ImageEditorObjectSelectionBoxDrag?
     @State private var isCanvasCloneGestureActive = false
@@ -458,6 +459,12 @@ struct ImageEditorView: View {
                         return true
                     }
                     if cancelPatchGestureForCanvasLifecycle() {
+                        return true
+                    }
+                    if viewModel.pixelSelectionMoveTransaction != nil {
+                        viewModel.cancelPixelSelectionMove()
+                        isPixelSelectionMoveGestureActive = false
+                        NSCursor.arrow.set()
                         return true
                     }
                     if isMovingPathAnchor {
@@ -4782,6 +4789,13 @@ struct ImageEditorView: View {
                             if isDirectEditingDoubleClick {
                                 return true
                             }
+                            let pixelMoveModifiers = modifierFlags.intersection(
+                                [.option, .command, .shift, .control]
+                            )
+                            if pixelMoveModifiers.isEmpty,
+                               viewModel.canBeginPixelSelectionMove(at: imagePoint) {
+                                return false
+                            }
                             return viewModel.canBeginCanvasObjectMove(at: imagePoint)
                         },
                         onObjectMoveActivated: { location, _ in
@@ -5113,6 +5127,8 @@ struct ImageEditorView: View {
                 }
                 .onDisappear {
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
+                    viewModel.cancelPixelSelectionMove()
+                    isPixelSelectionMoveGestureActive = false
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
                     resetPenAnchorConversionGesture()
@@ -6493,6 +6509,10 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if isPixelSelectionMoveGestureActive {
+                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        break
+                    }
                     if var selectionBoxDrag = objectSelectionBoxDrag {
                         selectionBoxDrag.endCanvasPoint = boundedImagePoint(
                             from: value.location,
@@ -6514,6 +6534,19 @@ struct ImageEditorView: View {
                         // stand down instead of starting a competing move.
                         return
                     }
+                    let cloneDragDecision = ImageEditorObjectDragEventPolicy.cloneDragDecision(
+                        modifierFlags: NSEvent.modifierFlags,
+                        from: value.startLocation,
+                        to: value.location
+                    )
+                    if cloneDragDecision == .unavailable,
+                       NSEvent.modifierFlags.intersection([.option, .command, .shift, .control]).isEmpty,
+                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
+                       viewModel.beginPixelSelectionMove(at: pressedImagePoint) {
+                        isPixelSelectionMoveGestureActive = true
+                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        break
+                    }
                     if !isDeliveryObjectMoveGestureActive,
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive,
@@ -6531,11 +6564,6 @@ struct ImageEditorView: View {
                         }
                         break
                     }
-                    let cloneDragDecision = ImageEditorObjectDragEventPolicy.cloneDragDecision(
-                        modifierFlags: NSEvent.modifierFlags,
-                        from: value.startLocation,
-                        to: value.location
-                    )
                     let cloneStartImagePoint = imagePoint(from: value.startLocation, in: size)
                     let boxSelectionOwnsModifiedBlankDrag = viewModel.moveToolAutoSelectsCanvasTarget
                         && cloneStartImagePoint.map(viewModel.moveToolContentHit(at:)) == .some(.none)
@@ -7063,6 +7091,12 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if isPixelSelectionMoveGestureActive {
+                        updatePixelSelectionMove(translation: value.translation, in: size)
+                        viewModel.finishPixelSelectionMove()
+                        isPixelSelectionMoveGestureActive = false
+                        break
+                    }
                     if isDeliveryObjectMoveGestureActive {
                         updateDeliveryObjectMove(translation: value.translation, in: size)
                         finishDeliveryObjectMove()
@@ -7344,6 +7378,7 @@ struct ImageEditorView: View {
                 lastPanTranslation = .zero
                 resetObjectMoveTracking()
                 isObjectMoveGestureActive = false
+                isPixelSelectionMoveGestureActive = false
                 isCanvasCloneGestureActive = false
                 isSelectedObjectMoveGestureActive = false
                 isDeliveryObjectMoveGestureActive = false
@@ -7522,6 +7557,16 @@ struct ImageEditorView: View {
     private func resetObjectMoveTracking() {
         lastMoveTranslation = .zero
         objectMoveAxisLock = nil
+    }
+
+    private func updatePixelSelectionMove(translation: CGSize, in size: CGSize) {
+        viewModel.updatePixelSelectionMove(
+            by: ImageEditorCanvasDragGeometry.imageDelta(
+                from: translation,
+                canvasSize: viewModel.document.canvasSize,
+                imageRect: fittedImageRect(in: size)
+            )
+        )
     }
 
     private func fontFamilyPicker(width: CGFloat? = nil) -> some View {
@@ -10361,6 +10406,7 @@ struct ImageEditorView: View {
 
     private var hasActiveCanvasMovePointerTransaction: Bool {
         viewModel.hasActiveLayerMoveTransaction
+            || isPixelSelectionMoveGestureActive
             || isObjectMoveGestureActive
             || isSelectedObjectMoveGestureActive
             || isCanvasCloneGestureActive

@@ -2153,6 +2153,7 @@
 "imageEditor.history.selectionSimilar" = "近似色を選択";
 "imageEditor.history.selectionGrow" = "隣接する近似色へ拡張";
 "imageEditor.history.selectionMove" = "選択範囲を移動";
+"imageEditor.history.selectionPixelsMove" = "選択ピクセルを移動";
 "imageEditor.history.selectionFlipHorizontal" = "選択範囲を水平方向に反転";
 "imageEditor.history.selectionFlipVertical" = "選択範囲を垂直方向に反転";
 "imageEditor.history.selectionRotateClockwise" = "選択範囲を時計回りに回転";
@@ -2542,6 +2543,7 @@
 "imageEditor.status.selectionSimilarSampleEmpty" = "現在の選択範囲にはサンプル可能な表示色がありません";
 "imageEditor.status.selectionGrown" = "隣接する近似色へ選択範囲を拡張しました";
 "imageEditor.status.selectionMoved" = "選択範囲を移動しました X:%d Y:%d px";
+"imageEditor.status.selectionPixelsMoved" = "選択ピクセルを移動しました";
 "imageEditor.status.selectionFlippedHorizontal" = "選択範囲を水平方向に反転しました";
 "imageEditor.status.selectionFlippedVertical" = "選択範囲を垂直方向に反転しました";
 "imageEditor.status.selectionRotatedClockwise" = "選択範囲を時計回りに回転しました";

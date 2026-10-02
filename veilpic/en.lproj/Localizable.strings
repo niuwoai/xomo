@@ -2153,6 +2153,7 @@
 "imageEditor.history.selectionSimilar" = "Select Similar Colors";
 "imageEditor.history.selectionGrow" = "Grow Adjacent Similar Colors";
 "imageEditor.history.selectionMove" = "Move Selection";
+"imageEditor.history.selectionPixelsMove" = "Move Selected Pixels";
 "imageEditor.history.selectionFlipHorizontal" = "Flip Selection Horizontal";
 "imageEditor.history.selectionFlipVertical" = "Flip Selection Vertical";
 "imageEditor.history.selectionRotateClockwise" = "Rotate Selection Clockwise";
@@ -2542,6 +2543,7 @@
 "imageEditor.status.selectionSimilarSampleEmpty" = "The current selection has no visible colors to sample";
 "imageEditor.status.selectionGrown" = "Grew the selection to adjacent similar colors";
 "imageEditor.status.selectionMoved" = "Moved selection X:%d Y:%d px";
+"imageEditor.status.selectionPixelsMoved" = "Moved selected pixels";
 "imageEditor.status.selectionFlippedHorizontal" = "Selection flipped horizontally";
 "imageEditor.status.selectionFlippedVertical" = "Selection flipped vertically";
 "imageEditor.status.selectionRotatedClockwise" = "Selection rotated clockwise";
