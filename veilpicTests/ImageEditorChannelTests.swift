@@ -355,6 +355,21 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(mask, x: 127, y: 0) == 255)
     }
 
+    @Test func selectSimilarColorsIgnoresTransparentPixelsInTheSourceSelection() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-similar-samples.png",
+            image: transparentSimilarSelectionTestImage()
+        ) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 64, height: 1))
+
+        viewModel.selectSimilarColors(tolerance: 0.001)
+
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 16, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 80, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 112, y: 0) == 255)
+    }
+
     @Test func colorRangePanelAddsAndSubtractsSampleColors() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "range.png", image: colorRangeTestImage()) { _ in }
         viewModel.presentColorRangePanel()
@@ -1873,6 +1888,19 @@ struct ImageEditorChannelTests {
             }
             NSColor.green.setFill()
             CGRect(x: 63, y: 0, width: 65, height: 1).fill()
+        } ?? NSImage(size: NSSize(width: 128, height: 1))
+    }
+
+    private func transparentSimilarSelectionTestImage() -> NSImage {
+        NSImage.rendered(size: NSSize(width: 128, height: 1)) { _ in
+            NSColor.clear.setFill()
+            CGRect(x: 0, y: 0, width: 48, height: 1).fill()
+            NSColor.red.setFill()
+            CGRect(x: 48, y: 0, width: 16, height: 1).fill()
+            NSColor.black.setFill()
+            CGRect(x: 64, y: 0, width: 32, height: 1).fill()
+            NSColor.red.setFill()
+            CGRect(x: 96, y: 0, width: 32, height: 1).fill()
         } ?? NSImage(size: NSSize(width: 128, height: 1))
     }
 

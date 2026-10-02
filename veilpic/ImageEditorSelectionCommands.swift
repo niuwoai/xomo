@@ -756,7 +756,10 @@ extension ImageEditorViewModel {
                 guard let color = currentImage.color(
                     at: point,
                     coordinateSize: document.canvasSize
-                )?.usingColorSpace(.deviceRGB) else { continue }
+                )?.usingColorSpace(.deviceRGB),
+                      color.alphaComponent * CGFloat(UInt8.max)
+                        > CGFloat(minimumColorRangeSampleAlpha)
+                else { continue }
                 colors.appendUniqueColorRangeSample(color)
                 if colors.count >= maximumColorRangeSamples {
                     return colors
