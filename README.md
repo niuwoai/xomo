@@ -36,7 +36,7 @@ macOS never got a pixel editor that treats design work as *structured, scriptabl
 
 | | |
 |---|---|
-| **It is genuinely native** | 160 Swift sources, ~143k lines, no web view, no Electron, no Python runtime. Universal binary (Apple silicon + Intel), notarized Developer ID, Sparkle auto-update. |
+| **It is genuinely native** | 160+ Swift sources, 140k+ lines, no web view, no Electron, no Python runtime. Universal binary (Apple silicon + Intel), notarized Developer ID, Sparkle auto-update. |
 | **It is genuinely scriptable** | 146 automation tools cover the same code path as the UI: selections, masks, layer effects, PSD I/O, exports, Figma import. Wire it into Claude Code, Cursor, or a shell script and the canvas responds. |
 | **It exchanges files instead of trapping you** | Opens *and writes* layered PSD, imports Figma links/SVG/PSD, exports PNG/JPEG/WebP/PDF/SVG/PSD, and stores its own work in an open `.xomoproject` format. |
 | **It stays non-destructive** | Editable text, vector paths, named path library, shape fills/strokes, layer effects, smart objects, smart filters, layer comps, adjustments — all re-editable, with a full Undo/History spine. |
@@ -191,7 +191,7 @@ dist/xomo-macos-universal install          # -> ~/.local/bin/xomo
 
 ## Tests
 
-The suite is unusually large for an app of this kind — 203 test sources, ~144k lines, including pixel-accurate rendering assertions. Pixel and colour-space tests need process isolation (a documented AppKit/Swift Testing interaction), so the repo ships its own runner:
+The suite is unusually large for an app of this kind — 200+ test sources, 140k+ lines, including pixel-accurate rendering assertions. Pixel and colour-space tests need process isolation (a documented AppKit/Swift Testing interaction), so the repo ships its own runner:
 
 ```bash
 ruby scripts/run_tests_isolated.rb --jobs 4        # JSON + Markdown report in test-reports/

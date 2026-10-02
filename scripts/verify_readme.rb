@@ -142,22 +142,37 @@ test_sources = Dir.glob(File.join(ROOT, "veilpicTests/**/*.swift")) +
                Dir.glob(File.join(ROOT, "veilpicUITests/**/*.swift"))
 test_lines = test_sources.sum { |f| File.foreach(f).count }
 
-declared_app = readme[/It is genuinely native\*\* \| (\d+) Swift sources, ~(\d+)k lines/, 1]&.to_i
-declared_app_k = readme[/It is genuinely native\*\* \| (\d+) Swift sources, ~(\d+)k lines/, 2]&.to_i
-check(failures, "App 源文件数不一致") do
-  declared_app == app_sources.size || "README 写 #{declared_app}，实测 #{app_sources.size}"
+# 规模数字按「下界」声明（160+ / 140k+）：仓库以每小时数次的节奏提交，写死精确
+# 计数在下一次提交就会失真，只能判定「不低于」——与 releases / changes / commits
+# 三项既有口径一致。README 一旦改回精确值，这里的正则匹配失败会立刻报出来。
+app_scale = readme.match(/(\d+)\+ Swift sources, (\d+)k\+ lines/)
+declared_app = app_scale && app_scale[1].to_i
+declared_app_k = app_scale && app_scale[2].to_i
+check(failures, "README 缺少 App 规模声明") do
+  !declared_app.nil? || "找不到「N+ Swift sources, Nk+ lines」"
 end
-check(failures, "App 代码行数量级不一致") do
-  (app_lines / 1000).floor == declared_app_k || "README 写 ~#{declared_app_k}k，实测 #{(app_lines / 1000).floor}k"
+check(failures, "App 源文件数声明已过期") do
+  (declared_app && app_sources.size >= declared_app) ||
+    "README 声称 #{declared_app.inspect}，实测 #{app_sources.size}"
+end
+check(failures, "App 代码行数量级声明已过期") do
+  (declared_app_k && (app_lines / 1000).floor >= declared_app_k) ||
+    "README 声称 #{declared_app_k.inspect}k+，实测 #{(app_lines / 1000).floor}k"
 end
 
-declared_tests = readme[/(\d+) test sources, ~(\d+)k lines/, 1]&.to_i
-declared_tests_k = readme[/(\d+) test sources, ~(\d+)k lines/, 2]&.to_i
-check(failures, "测试源文件数不一致") do
-  declared_tests == test_sources.size || "README 写 #{declared_tests}，实测 #{test_sources.size}"
+test_scale = readme.match(/(\d+)\+ test sources, (\d+)k\+ lines/)
+declared_tests = test_scale && test_scale[1].to_i
+declared_tests_k = test_scale && test_scale[2].to_i
+check(failures, "README 缺少测试规模声明") do
+  !declared_tests.nil? || "找不到「N+ test sources, Nk+ lines」"
 end
-check(failures, "测试行数量级不一致") do
-  (test_lines / 1000).floor == declared_tests_k || "README 写 ~#{declared_tests_k}k，实测 #{(test_lines / 1000).floor}k"
+check(failures, "测试源文件数声明已过期") do
+  (declared_tests && test_sources.size >= declared_tests) ||
+    "README 声称 #{declared_tests.inspect}，实测 #{test_sources.size}"
+end
+check(failures, "测试行数量级声明已过期") do
+  (declared_tests_k && (test_lines / 1000).floor >= declared_tests_k) ||
+    "README 声称 #{declared_tests_k.inspect}k+，实测 #{(test_lines / 1000).floor}k"
 end
 
 component_families = count_leading_enum_cases(
