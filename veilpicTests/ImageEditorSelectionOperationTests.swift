@@ -98,6 +98,43 @@ struct ImageEditorSelectionOperationTests {
         #expect(selection.points.count == 64)
     }
 
+    @Test func imageEditorCreatesOnePixelMarqueeSelection() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 3, y: 2), to: CGPoint(x: 4, y: 3)))
+
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.bounds == CGRect(x: 3, y: 2, width: 1, height: 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selection"))
+        #expect(viewModel.undoStack.count == 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+
+        viewModel.selectMarqueeShape(.ellipse)
+        #expect(viewModel.createMarqueeSelection(from: CGPoint(x: 3, y: 2), to: CGPoint(x: 4, y: 3)))
+
+        let ellipseSelection = try #require(viewModel.document.selection)
+        #expect(ellipseSelection.bounds == CGRect(x: 3, y: 2, width: 1, height: 1))
+        #expect(ellipseSelection.isPolygon)
+    }
+
+    @Test func imageEditorRejectsZeroAreaMarqueeWithoutChangingDocument() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 3, y: 3)))
+        let selectionBeforeInvalidDrag = viewModel.document.selection
+        let historyCountBeforeInvalidDrag = viewModel.document.history.count
+        let undoCountBeforeInvalidDrag = viewModel.undoStack.count
+
+        #expect(!viewModel.createRectSelection(from: CGPoint(x: 5, y: 2), to: CGPoint(x: 5, y: 4)))
+        #expect(!viewModel.createRectSelection(from: CGPoint(x: 2, y: 5), to: CGPoint(x: 4, y: 5)))
+        #expect(viewModel.document.selection == selectionBeforeInvalidDrag)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidDrag)
+        #expect(viewModel.undoStack.count == undoCountBeforeInvalidDrag)
+    }
+
     @Test func imageEditorCreatesEllipseMarqueeWithExpectedBounds() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

@@ -5951,7 +5951,9 @@ final class ImageEditorViewModel: ObservableObject {
     @discardableResult
     func createMarqueeSelection(from start: CGPoint, to end: CGPoint) -> Bool {
         let rect = marqueeSelectionRect(from: start, to: end)
-        guard rect.width > 2, rect.height > 2 else { return false }
+        guard rect.width >= ImageEditorCropGeometry.minimumCommittedPixelEdge,
+              rect.height >= ImageEditorCropGeometry.minimumCommittedPixelEdge
+        else { return false }
         let selection: ImageEditorSelection?
         if marqueeShape.isEllipse {
             selection = ImageEditorSelection.ellipse(rect)
