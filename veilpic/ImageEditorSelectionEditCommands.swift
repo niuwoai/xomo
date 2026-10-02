@@ -372,11 +372,13 @@ extension ImageEditorViewModel {
               let layer = document.selectedLayer
         else { return false }
 
-        pixelSelectionMoveTransaction = ImageEditorPixelSelectionMoveTransaction(
+        var transaction = ImageEditorPixelSelectionMoveTransaction(
             originalDocument: document,
             layerID: layer.id,
             originalImage: layer.image
         )
+        transaction.rememberPreview(layer: layer, selection: document.selection, delta: .zero, feather: feather)
+        pixelSelectionMoveTransaction = transaction
         return true
     }
 
@@ -414,6 +416,22 @@ extension ImageEditorViewModel {
             width: constrainedDelta.width.rounded(),
             height: constrainedDelta.height.rounded()
         )
+        guard feather.isFinite else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard !transaction.canReusePreview(delta: canvasDelta, feather: feather,
+            layer: document.layers[currentIndex], selection: document.selection, canvasSize: document.canvasSize)
+        else { return }
+        if canvasDelta == .zero {
+            var restored = document
+            restored.layers[currentIndex] = originalLayer
+            restored.selection = selection
+            transaction.rememberPreview(layer: originalLayer, selection: selection, delta: .zero, feather: feather)
+            pixelSelectionMoveTransaction = transaction
+            document = restored
+            return
+        }
         let movedSelection = selection.translated(
             by: canvasDelta,
             canvasSize: transaction.originalDocument.canvasSize
@@ -433,10 +451,12 @@ extension ImageEditorViewModel {
         }
 
         backingLayer.image = movedImage
-        document.layers[currentIndex] = backingLayer
-        document.selection = movedSelection
-        transaction.delta = canvasDelta
+        var previewDocument = document
+        previewDocument.layers[currentIndex] = backingLayer
+        previewDocument.selection = movedSelection
+        transaction.rememberPreview(layer: backingLayer, selection: movedSelection, delta: canvasDelta, feather: feather)
         pixelSelectionMoveTransaction = transaction
+        document = previewDocument
     }
 
     func finishPixelSelectionMove() {
@@ -469,8 +489,9 @@ extension ImageEditorViewModel {
     }
 
     private static func imagesAreEquivalent(_ lhs: NSImage?, _ rhs: NSImage) -> Bool {
-        guard let lhs,
-              let lhsData = lhs.normalizedBitmapImage().qingtuPNGData(),
+        guard let lhs else { return false }
+        guard lhs !== rhs else { return true }
+        guard let lhsData = lhs.normalizedBitmapImage().qingtuPNGData(),
               let rhsData = rhs.normalizedBitmapImage().qingtuPNGData()
         else { return false }
         return lhsData == rhsData
