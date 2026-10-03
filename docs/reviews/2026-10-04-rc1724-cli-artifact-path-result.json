@@ -152,7 +152,7 @@
       }
     },
     "current_full_units": {
-      "status": "running_not_passed",
+      "status": "stopped_native_infrastructure_failure_not_passed",
       "session": 88350,
       "started_at": "2026-10-04T06:03:08+08:00",
       "baseline_main": "aa772e3fac00c78cff960e6f0b688a8f72929652",
@@ -169,7 +169,22 @@
       "first_completed_suite": "ClipboardImageWriterTests",
       "first_completed_methods": 16,
       "first_completed_runs": 16,
-      "checkpoint_at": "2026-10-04T06:04:39+08:00"
+      "checkpoint_at": "2026-10-04T06:04:39+08:00",
+      "execution_exit": 143,
+      "recorded_groups": 2,
+      "successful_suites": 1,
+      "passed_product_methods": 16,
+      "passed_product_runs": 16,
+      "failed_suite": "ImageEditorAdjustmentTests",
+      "failed_suite_exit": 65,
+      "failed_suite_missing_methods": 29,
+      "next_suite": "ImageEditorBackgroundLayerConversionTests",
+      "next_suite_status": "interrupted_not_accepted",
+      "partial_raw_report_status": "running_not_passed_historical_prefix_not_live_process",
+      "partial_raw_report_sha256": "b55245c1523d36d53b9733648140a9f10608064c838cdea5b0954b2a81a7b57a",
+      "failure_reference": "2026-10-04-rc1724-xctest-infrastructure-result.json",
+      "shared_service_restart": "awaiting_user_approval",
+      "all_native_processes_stopped": true
     },
     "ui": {
       "status": "runner_initialization_failed_before_product_assertions",
@@ -235,9 +250,26 @@
   "script_sha256": "068f6f4eeddc5eb1d18c0be810ba1538f6752092fc8fc07d39dcb76740ff6edf",
   "contract_script_sha256": "4b7a4643efe26da255ba1528390a6f6ce5035bf7747f9bffd165e90ab8ee1e28",
   "documentation_contracts": {
-    "release": { "command": "ruby scripts/test_release_contract.rb", "tests": 10, "assertions": 30, "failures": 0, "exit": 0 },
-    "overview": { "command": "ruby scripts/test_product_overview_archive.rb", "tests": 3, "assertions": 22, "failures": 0, "exit": 0 },
-    "readme": { "command": "ruby scripts/verify_readme.rb", "assertions": 29, "failures": 0, "exit": 0 },
+    "release": {
+      "command": "ruby scripts/test_release_contract.rb",
+      "tests": 10,
+      "assertions": 30,
+      "failures": 0,
+      "exit": 0
+    },
+    "overview": {
+      "command": "ruby scripts/test_product_overview_archive.rb",
+      "tests": 3,
+      "assertions": 22,
+      "failures": 0,
+      "exit": 0
+    },
+    "readme": {
+      "command": "ruby scripts/verify_readme.rb",
+      "assertions": 29,
+      "failures": 0,
+      "exit": 0
+    },
     "readme_invocation_correction": "Initial guessed scripts/test_readme_contract.rb was absent (exit 1); discovered and executed the existing verify_readme.rb successfully",
     "workflow_evidence": "Committed JSON equals original parsed readback report",
     "compiled_inputs": "412 inputs still match compiled SHA256; documentation only"
@@ -250,7 +282,8 @@
     "sample": "/tmp/xcodebuild_2026-10-04_060711_a9p5.sample.txt",
     "sample_exit": 0,
     "main_thread": "Xcode3CommandLineBuildTool waitForBuildWithBuildLog -> CFRunLoopRun -> mach_msg2_trap",
-    "interpretation": "Live native process waiting; no terminal result. Cause not established, no restart/termination or second native workflow"
+    "interpretation": "Live native process waiting; no terminal result. Cause not established, no restart/termination or second native workflow",
+    "resolved_by": "Native group exit 65; failed before connection. Whole owned workflow subsequently terminated with exit 143."
   },
   "latest_four_hour_review": {
     "window_start": "2026-10-04T01:53:24+08:00",
