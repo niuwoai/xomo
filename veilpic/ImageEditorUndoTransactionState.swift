@@ -1,5 +1,10 @@
 import Foundation
 
+enum ImageEditorTransformCommitPolicy {
+    static let minimumRotationDegrees: CGFloat = 0.01
+    static let frameRoundingTolerance: CGFloat = 1e-9
+}
+
 struct ImageEditorXomoThemeUndoState {
     var theme: XomoComponentTheme
     var tokenSnapshot: XomoComponentThemeTokenSnapshot?
@@ -45,7 +50,9 @@ extension ImageEditorViewModel {
     func finishTransformUndoTransaction(didChange: Bool) {
         guard let snapshot = undoTransactionState.transformRedo else { return }
         if !didChange {
-            _ = discardLastUndoSnapshot()
+            if let originalDocument = discardLastUndoSnapshot() {
+                document = originalDocument
+            }
             redoStack = snapshot.documents
             undoTransactionState.redoThemes = snapshot.themes
         }

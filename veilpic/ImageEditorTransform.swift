@@ -775,7 +775,6 @@ extension ImageEditorViewModel {
             resizingOriginalParagraphTextContents[document.layers[index].id] = content
         }
         resizingOriginalTransformFrame = transformFrame
-        resizingLayerDidChange = false
         activeAlignmentGuides = []
         activeSpacingGuides = []
     }
@@ -818,7 +817,6 @@ extension ImageEditorViewModel {
             changed = applyResizedTransformFrame(snappedFrame, originalTransformFrame: originalFrame)
         }
         guard changed else { return }
-        resizingLayerDidChange = true
         statusText = L10n.text(
             resizesParagraphTextBox
                 ? "imageEditor.status.textBoxResized"
@@ -828,7 +826,13 @@ extension ImageEditorViewModel {
 
     func finishResizingSelectedLayer() {
         guard !resizingLayerIDs.isEmpty else { return }
-        if resizingLayerDidChange {
+        let didChange = document.layers.contains { layer in
+            guard let originalFrame = resizingOriginalFrames[layer.id] else { return false }
+            return !layer.frame.isApproximatelyEqual(
+                to: originalFrame, tolerance: ImageEditorTransformCommitPolicy.frameRoundingTolerance
+            )
+        }
+        if didChange {
             appendHistory(L10n.text(
                 resizingOriginalParagraphTextContents.isEmpty
                     ? "imageEditor.history.layerResize"
@@ -837,7 +841,7 @@ extension ImageEditorViewModel {
         } else {
             updateStatus()
         }
-        finishTransformUndoTransaction(didChange: resizingLayerDidChange)
+        finishTransformUndoTransaction(didChange: didChange)
         resetResizingSelectedLayerState()
     }
 
@@ -846,7 +850,6 @@ extension ImageEditorViewModel {
         resizingOriginalFrames = [:]
         resizingOriginalParagraphTextContents = [:]
         resizingOriginalTransformFrame = nil
-        resizingLayerDidChange = false
         activeAlignmentGuides = []
         activeSpacingGuides = []
     }
@@ -874,7 +877,6 @@ extension ImageEditorViewModel {
             around: rotatingReferencePoint ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY),
             to: point
         )
-        rotatingLayerDidChange = false
         rotatingPreviewDegrees = 0
         activeAlignmentGuides = []
         activeSpacingGuides = []
@@ -897,7 +899,6 @@ extension ImageEditorViewModel {
         }
         guard applyRotation(degrees: degrees, from: rotatingOriginalLayers, around: referencePoint) else { return }
         rotatingPreviewDegrees = degrees
-        rotatingLayerDidChange = rotatingLayerDidChange || abs(degrees) > 0.1
         statusText = L10n.text("imageEditor.status.layerRotated")
     }
 
@@ -905,12 +906,13 @@ extension ImageEditorViewModel {
         guard !rotatingLayerIDs.isEmpty else { return }
         let referencePoint = rotatingReferencePoint
         let shouldPreserveReferencePoint = rotatingReferenceWasCustom
-        if rotatingLayerDidChange {
+        let didChange = abs(rotatingPreviewDegrees ?? 0) > ImageEditorTransformCommitPolicy.minimumRotationDegrees
+        if didChange {
             appendHistory(L10n.text("imageEditor.history.layerRotate"))
         } else {
             updateStatus()
         }
-        finishTransformUndoTransaction(didChange: rotatingLayerDidChange)
+        finishTransformUndoTransaction(didChange: didChange)
         resetRotatingSelectedLayerState()
         if shouldPreserveReferencePoint, let referencePoint {
             setSelectedLayerTransformReferencePoint(referencePoint)
@@ -924,10 +926,9 @@ extension ImageEditorViewModel {
     @discardableResult
     func cancelTransformingSelectedLayer() -> Bool {
         guard !resizingLayerIDs.isEmpty || !rotatingLayerIDs.isEmpty,
-              let originalDocument = undoStack.last
+              !undoStack.isEmpty
         else { return false }
         finishTransformUndoTransaction(didChange: false)
-        document = originalDocument
         resetSelectedLayerTransformTransaction()
         updateStatus()
         return true
@@ -948,7 +949,6 @@ extension ImageEditorViewModel {
         rotatingReferencePoint = nil
         rotatingReferenceWasCustom = false
         rotatingStartAngleDegrees = 0
-        rotatingLayerDidChange = false
         rotatingPreviewDegrees = nil
         activeAlignmentGuides = []
         activeSpacingGuides = []
@@ -990,7 +990,7 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func rotateSelectedLayer(degrees: CGFloat) -> Bool {
-        guard degrees.isFinite, abs(degrees) > 0.01 else { return false }
+        guard degrees.isFinite, abs(degrees) > ImageEditorTransformCommitPolicy.minimumRotationDegrees else { return false }
         guard canRotateSelectedLayer else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return false
@@ -1355,7 +1355,7 @@ extension ImageEditorViewModel {
         var rotatedLayers: [UUID: ImageEditorLayer] = [:]
 
         for (id, originalLayer) in originalLayers {
-            if abs(degrees) <= 0.01 {
+            if abs(degrees) <= ImageEditorTransformCommitPolicy.minimumRotationDegrees {
                 rotatedLayers[id] = originalLayer
                 continue
             }
@@ -1379,7 +1379,7 @@ extension ImageEditorViewModel {
             let originalFrame = originalLayer.frame.standardized
             let originalCenter = CGPoint(x: originalFrame.midX, y: originalFrame.midY)
             let rotatedCenter: CGPoint
-            if abs(degrees) <= 0.01 {
+            if abs(degrees) <= ImageEditorTransformCommitPolicy.minimumRotationDegrees {
                 rotatedCenter = originalCenter
             } else {
                 let offset = CGPoint(x: originalCenter.x - center.x, y: originalCenter.y - center.y)

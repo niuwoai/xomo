@@ -413,7 +413,7 @@ struct ImageEditorProjectLayer: Codable {
     func restoredLayer(smartObjectSourceData: [UUID: Data] = [:]) throws -> ImageEditorLayer {
         let restoredImageData = imageData ?? smartObjectSourceID.flatMap { smartObjectSourceData[$0] }
         guard let restoredImageData,
-              let image = NSImage(data: restoredImageData)?.normalizedBitmapImage()
+              let image = ImageEditorProjectRasterData.decodedImage(restoredImageData)
         else {
             throw ImageEditorProjectDocumentError.imageDecodingFailed(name)
         }
@@ -483,7 +483,7 @@ struct ImageEditorProjectLayer: Codable {
 
     private func restoredMask() throws -> NSImage? {
         guard let maskData else { return nil }
-        guard let mask = NSImage(data: maskData)?.normalizedBitmapImage() else {
+        guard let mask = ImageEditorProjectRasterData.decodedImage(maskData) else {
             throw ImageEditorProjectDocumentError.imageDecodingFailed(name)
         }
         return mask

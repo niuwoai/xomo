@@ -957,14 +957,12 @@ final class ImageEditorViewModel: ObservableObject {
     var resizingOriginalFrames: [UUID: CGRect] = [:]
     var resizingOriginalParagraphTextContents: [UUID: ImageEditorTextContent] = [:]
     var resizingOriginalTransformFrame: CGRect?
-    var resizingLayerDidChange = false
     var rotatingLayerIDs = Set<UUID>()
     var rotatingOriginalLayers: [UUID: ImageEditorLayer] = [:]
     var rotatingOriginalTransformFrame: CGRect?
     var rotatingReferencePoint: CGPoint?
     var rotatingReferenceWasCustom = false
     var rotatingStartAngleDegrees: CGFloat = 0
-    var rotatingLayerDidChange = false
     @Published var rotatingPreviewDegrees: CGFloat?
     @Published var transformReferenceUnitPoint: CGPoint?
     var transformReferenceLayerIDs = Set<UUID>()
