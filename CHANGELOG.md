@@ -19,6 +19,11 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1715 - 2026-10-03
+
+### Fixed
+- 减少干净项目检查的大型选区/通道 JSON 展开，精确编码等价不成立时回退完整字节比较，始终重新编码可变位图；实际 46.5MB 项目干净检查 1011.640→86.308ms、Undo 回保存点 1013.528→90.705ms，不宣称保存或整个界面提速。专项 10 个方法/40 次运行及 42 组扩大回归 846 个方法/1006 次运行通过，实际原生关闭保护、取消后 Undo、另存为和重开通过；Cmd-W 尚待独立复核。记录并更正不可恢复的 rc1680 回退备份当前状态，rc1720 安装前重新验证备份，不改项目格式或扩张 Figma。详见 [验证记录](docs/reviews/2026-10-03-rc1715-clean-project-checkpoint.md)。
+
 ## 2.12.0-rc1714 - 2026-10-03
 
 ### Fixed
@@ -231,7 +236,7 @@
 - Release App/CLI 构建通过；Release `build-for-testing` 在启用 `ENABLE_TESTABILITY=YES` 后，App、单元测试与 UI 测试目标均编译通过。未启用该测试标志的首次尝试无法编译 `@testable import musepic`。
 - Marquee 相关 Cursor/Scope/SelectionEdge 套件共 334 项、CLI 2 项测试通过。
 - XCUITest Runner 在连接测试前挂起，未执行 UI 断言；改用安装版实际界面完成启动、组件库插入可编辑按钮组、撤销恢复及系统箭头指针冒烟。
-- `/Applications/Xomo.app` 已更新为 rc1680；原 rc1641 包保存在 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app`，本门槛不包含公开发布。
+- `/Applications/Xomo.app` 已更新为 rc1680；原 rc1641 包当时保存在 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app`，本门槛不包含公开发布。2026-10-03 复核该目录已不是有效备份：Info.plist 缺失、MacOS 为空、签名验证失败；下一次覆盖安装前必须重新验证可恢复包，不能仅依据目录存在。
 
 ## 2.12.0-rc1679 - 2026-10-02
 

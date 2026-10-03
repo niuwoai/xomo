@@ -67,7 +67,14 @@ extension ImageEditorViewModel {
            projectMetadataDiffersFromSaveBaseline(metadata) {
             return true
         }
-        guard let currentData = try? projectData(rasterEncoder: rasterEncoder) else { return true }
-        return !projectDataMatchesSaveBaseline(currentData)
+        do {
+            let project = try projectDocument(rasterEncoder: rasterEncoder)
+            if let matches = try projectSaveState.matchesContent(project) {
+                return !matches
+            }
+            return !projectDataMatchesSaveBaseline(try project.encodedProjectData())
+        } catch {
+            return true
+        }
     }
 }
