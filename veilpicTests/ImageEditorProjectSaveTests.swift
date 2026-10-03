@@ -16,6 +16,72 @@ struct ImageEditorProjectSaveTests {
         case denied
     }
 
+    @Test(arguments: [false, true])
+    func saveEntryWritesCurrentProjectWithOrWithoutCompletion(notify: Bool) throws {
+        let model = makeViewModel(sourceName: "save-entry.png")
+        let destination = URL(fileURLWithPath: "/tmp/save-entry-\(UUID()).xomoproject")
+        #expect(model.writeProjectDocument(to: destination, dataWriter: { _, _ in },
+                                          recentDocumentRegistrar: { _ in }))
+        model.renameSelectedLayer(to: "Edited layer")
+        let expected = try model.projectData()
+        let history = model.document.history
+        let undoCount = model.undoStack.count
+        let redoCount = model.redoStack.count
+        var writes: [(Data, URL)] = []
+        var registrations: [URL] = []
+        var outcomes: [Bool] = []
+        var completion: (@MainActor (Bool) -> Void)? = nil
+        if notify { completion = { result in outcomes.append(result) } }
+
+        model.saveProjectDocument(completion: completion,
+            dataWriter: { writes.append(($0, $1)) },
+            recentDocumentRegistrar: { registrations.append($0) })
+
+        #expect(writes.count == 1)
+        #expect(writes.first?.0 == expected)
+        #expect(writes.first?.1 == destination)
+        #expect(registrations == [destination])
+        #expect(outcomes == (notify ? [true] : []))
+        #expect(!model.hasUnsavedProjectChanges)
+        #expect(model.currentProjectURL == destination)
+        #expect(model.document.history == history)
+        #expect(model.undoStack.count == undoCount && model.redoStack.count == redoCount)
+        #expect(model.statusText == L10n.format("imageEditor.status.projectSaved", destination.lastPathComponent))
+        #expect(try model.projectData() == expected)
+    }
+
+    @Test(arguments: [false, true])
+    func saveEntryReportsFailureWithoutChangingDirtyDocumentOrIdentity(notify: Bool) throws {
+        let model = makeViewModel(sourceName: "save-entry-failure.png")
+        let destination = URL(fileURLWithPath: "/tmp/save-entry-failure-\(UUID()).xomoproject")
+        #expect(model.writeProjectDocument(to: destination, dataWriter: { _, _ in },
+                                          recentDocumentRegistrar: { _ in }))
+        model.renameSelectedLayer(to: "Unsaved layer")
+        let original = try model.projectData()
+        let history = model.document.history
+        let undoCount = model.undoStack.count
+        let redoCount = model.redoStack.count
+        var attempts = 0
+        var registrations = 0
+        var outcomes: [Bool] = []
+        var completion: (@MainActor (Bool) -> Void)? = nil
+        if notify { completion = { result in outcomes.append(result) } }
+
+        model.saveProjectDocument(completion: completion,
+            dataWriter: { _, _ in attempts += 1; throw SaveFailure.denied },
+            recentDocumentRegistrar: { _ in registrations += 1 })
+
+        #expect(attempts == 1 && registrations == 0)
+        #expect(outcomes == (notify ? [false] : []))
+        #expect(model.hasUnsavedProjectChanges)
+        #expect(model.currentProjectURL == destination)
+        #expect(try model.projectData() == original)
+        #expect(model.document.history == history)
+        #expect(model.undoStack.count == undoCount && model.redoStack.count == redoCount)
+        #expect(model.statusText == L10n.format("imageEditor.status.projectSaveFailedWithReason",
+                                               SaveFailure.denied.localizedDescription))
+    }
+
     @Test func savingToAProjectURLUpdatesItsDestinationWithoutCreatingAnEditTransaction() throws {
         let viewModel = makeViewModel(sourceName: "poster.png")
         let destination = URL(fileURLWithPath: "/tmp/Poster.xomoproject")
@@ -341,7 +407,7 @@ struct ImageEditorProjectSaveTests {
         #expect(commands.contains("actions?.revealProjectInFinder()"))
         #expect(commands.contains("actions?.canRevealProjectInFinder != true"))
         #expect(project.contains("guard let currentProjectURL else"))
-        #expect(project.contains("writeProjectDocument(to: currentProjectURL)"))
+        #expect(project.contains("writeProjectDocument(to: currentProjectURL, dataWriter: dataWriter"))
 
         for locale in ["zh-Hans", "en", "ja"] {
             let strings = try String(

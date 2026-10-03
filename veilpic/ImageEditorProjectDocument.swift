@@ -1303,12 +1303,22 @@ extension ImageEditorViewModel {
         saveProjectDocument(completion: nil)
     }
 
-    func saveProjectDocument(completion: (@MainActor (Bool) -> Void)?) {
+    func saveProjectDocument(
+        completion: (@MainActor (Bool) -> Void)?,
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .atomic)
+        },
+        recentDocumentRegistrar: @MainActor (URL) -> Void = {
+            XomoRecentDocumentStore.shared.noteOpened($0)
+        }
+    ) {
         guard let currentProjectURL else {
             saveProjectDocumentAs(completion: completion)
             return
         }
-        completion?(writeProjectDocument(to: currentProjectURL))
+        let didSave = writeProjectDocument(to: currentProjectURL, dataWriter: dataWriter,
+                                           recentDocumentRegistrar: recentDocumentRegistrar)
+        completion?(didSave)
     }
 
     func saveProjectDocumentAs() {
@@ -1326,7 +1336,8 @@ extension ImageEditorViewModel {
                     completion?(false)
                     return
                 }
-                completion?(self.writeProjectDocument(to: url))
+                let didSave = self.writeProjectDocument(to: url)
+                completion?(didSave)
             }
         }
     }
@@ -1346,7 +1357,8 @@ extension ImageEditorViewModel {
                     completion?(false)
                     return
                 }
-                completion?(self.writeProjectDocumentCopy(to: url))
+                let didSave = self.writeProjectDocumentCopy(to: url)
+                completion?(didSave)
             }
         }
     }
