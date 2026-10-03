@@ -39,6 +39,7 @@ extension ImageEditorViewModel {
     /// Deferred commands must call this before capturing their own original
     /// document, not after replaying that document at commit time.
     func finishActiveCanvasEditForNewCommand() {
+        finishActiveLayerPropertyEditForNewCommand()
         if !rotatingLayerIDs.isEmpty {
             finishRotatingSelectedLayer()
         } else if !resizingLayerIDs.isEmpty {

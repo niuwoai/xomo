@@ -1482,7 +1482,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canRedo: Bool {
-        if pixelSelectionMoveTransaction != nil
+        if hasActiveLayerPropertyEdit
+            || pixelSelectionMoveTransaction != nil
             || hasActiveSelectedLayerTransformTransaction
             || hasActivePathAnchorMoveTransaction
             || hasActiveGradientOverlayCenterTransaction
@@ -5216,6 +5217,7 @@ final class ImageEditorViewModel: ObservableObject {
         // that snapshot as ordinary history would restore the document while
         // leaving the transform transaction active. The first history command
         // therefore cancels the preview; a subsequent command reaches history.
+        guard !cancelActiveLayerPropertyEdit() else { return }
         guard !cancelPixelSelectionMove() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasMidpoint() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasStop() else { return }
@@ -5256,6 +5258,7 @@ final class ImageEditorViewModel: ObservableObject {
     func redo() {
         // Redo follows the same transaction boundary as Undo: an unfinished
         // pointer move is cancelled before either history stack can change.
+        guard !cancelActiveLayerPropertyEdit() else { return }
         guard !cancelPixelSelectionMove() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasMidpoint() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasStop() else { return }
@@ -7553,6 +7556,31 @@ final class ImageEditorViewModel: ObservableObject {
             document.layers[index].blendMode = blendMode
         }
         appendHistory(L10n.text("imageEditor.history.layerBlendMode"))
+    }
+
+    var hasActiveLayerPropertyEdit: Bool {
+        activeLayerOpacityEdit != nil || activeLayerBlendIfEdit != nil || activeLayerMaskPropertyEdit != nil
+    }
+
+    func finishActiveLayerPropertyEditForNewCommand() {
+        finishActiveLayerOpacityPropertyChange()
+        finishActiveLayerBlendIfChange()
+        finishActiveLayerMaskPropertyChange()
+    }
+
+    func resetLayerPropertyEditTransactions() {
+        activeLayerOpacityEdit = nil
+        activeLayerOpacityTargetIDs = []
+        activeLayerOpacityRedoStack = []
+        activeLayerOpacityRedoThemeStates = []
+        activeLayerBlendIfEdit = nil
+        activeLayerBlendIfTargetIDs = []
+        activeLayerBlendIfRedoStack = []
+        activeLayerBlendIfRedoThemeStates = []
+        activeLayerMaskPropertyEdit = nil
+        activeLayerMaskPropertyTargetIDs = []
+        activeLayerMaskPropertyRedoStack = []
+        activeLayerMaskPropertyRedoThemeStates = []
     }
 
     func beginSelectedLayerOpacityChange() {
@@ -12417,6 +12445,7 @@ final class ImageEditorViewModel: ObservableObject {
     func clearUndoHistory() {
         // A replaced document must not be restored by an old pointer release.
         pixelSelectionMoveTransaction = nil
+        resetLayerPropertyEditTransactions()
         resetSelectedLayerTransformTransaction()
         undoStack.removeAll()
         redoStack.removeAll()
