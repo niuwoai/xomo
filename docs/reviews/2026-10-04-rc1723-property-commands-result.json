@@ -1811,7 +1811,14 @@
       "installable": false
     },
     "complete_release_units": {
-      "status": "running_not_passed",
+      "status": "passed",
+      "execution_exit": 0,
+      "finished_at": "2026-10-04T05:10:19+08:00",
+      "passed_runs": 4584,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "completed_report": "2026-10-04-rc1723-release-full-result.json",
+      "raw_report_sha256": "d473510df0e0f791edfd8401a4c412e01794f85a3f0950a7a26d47755a0ce9b8",
       "execution_session": 82575,
       "script": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-full/run_full_release.rb",
       "runner_contract_tests": 7,

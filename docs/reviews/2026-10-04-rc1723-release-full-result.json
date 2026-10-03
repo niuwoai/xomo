@@ -1,0 +1,2306 @@
+{
+  "version": "2.12.0-rc1723",
+  "scope": "All native Release unit suites; not CLI/UI/physical editing/cursors/install acceptance",
+  "status": "passed",
+  "execution_exit": 0,
+  "started_at": "2026-10-04T04:51:39+08:00",
+  "finished_at": "2026-10-04T05:10:19+08:00",
+  "suites": 225,
+  "methods": 3637,
+  "passed_runs": 4584,
+  "failed_methods": 0,
+  "skipped_methods": 0,
+  "source_inputs": {
+    "count": 412,
+    "sha256": "8ce32107edb941acd5ead854d61dea3d9dec0b420e7ab4e3d75e293d9bcc1860",
+    "paths_reference": "2026-10-04-rc1723-property-commands-result.json/source_inputs/paths"
+  },
+  "raw_report": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-full/report.json",
+  "raw_report_sha256": "d473510df0e0f791edfd8401a4c412e01794f85a3f0950a7a26d47755a0ce9b8",
+  "manifest": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-full/manifest.json",
+  "manifest_sha256": "14bcf1caf147a016c07c89a7c92ae22cfc04866a5a3c428e66087c54871ca90e",
+  "command_reference": "2026-10-04-rc1723-property-commands-result.json/gate/complete_release_units/base_command",
+  "results": [
+    {
+      "suite": "ClipboardImageWriterTests",
+      "actual_methods": 16,
+      "passed_runs": 16,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.47,
+      "actual_identifier_sha256": "b9ac6835777f487ce55bbeb1f7b335d30e95f0e0bba4f06f4fed9ba41652c752"
+    },
+    {
+      "suite": "ImageEditorAdjustmentTests",
+      "actual_methods": 29,
+      "passed_runs": 29,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.94,
+      "actual_identifier_sha256": "488d11b431a84eea18c34a23b369e71dfabf42352395869f1e1d952ba2127f2c"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.32,
+      "actual_identifier_sha256": "b187bf7d498a020874f75813085a51ec5b22dced74c75086261b2bb04b8da18d"
+    },
+    {
+      "suite": "ImageEditorBevelAngleTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.49,
+      "actual_identifier_sha256": "22b32f5ab4ae67268c90abd61def9df523008f96d365b4d9f9b029144e9006aa"
+    },
+    {
+      "suite": "ImageEditorBevelDirectionTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.67,
+      "actual_identifier_sha256": "6545c2fa8e39da98c844e27a30c4b43945784f1443f7f3f1b9a5aafda044be9e"
+    },
+    {
+      "suite": "ImageEditorBevelHighlightColorTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "3449356e35b9cbdbad6d443ca00247522b89fd0a3cdd8162bbc738c462a5d584"
+    },
+    {
+      "suite": "ImageEditorBevelOpacityTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.54,
+      "actual_identifier_sha256": "6920ba330e90d09469dec177f276bddc7ab96110a6cc16429f40e9e5f0fd6767"
+    },
+    {
+      "suite": "ImageEditorBevelShadowColorTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.36,
+      "actual_identifier_sha256": "15da114a61b7686205b7762aa932b89c5b584638731601f96c246fbfbcd13f62"
+    },
+    {
+      "suite": "ImageEditorBevelSizeTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.52,
+      "actual_identifier_sha256": "0987c4050806f6f0d9645e88de3f77d12013f43619bb8a2cf2fffb425d3268d7"
+    },
+    {
+      "suite": "ImageEditorBevelSoftenTransactionTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.79,
+      "actual_identifier_sha256": "1b8d4c16a2aef2cbd6b41bbd21ee078a24374f73f7f5c9771e2452554ac3b4f8"
+    },
+    {
+      "suite": "ImageEditorBlendModeTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.38,
+      "actual_identifier_sha256": "23ea63991ad02c5e23483c8c652a9167d3dcabd08eeeb06283e912afecf96aa7"
+    },
+    {
+      "suite": "ImageEditorBrushDynamicsPreferencesTests",
+      "actual_methods": 35,
+      "passed_runs": 35,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.73,
+      "actual_identifier_sha256": "6cb1699b0162eb3f911879b974df5134f79a6e42c3658d0ccd338f312d6777c5"
+    },
+    {
+      "suite": "ImageEditorBrushPresetQueryTests",
+      "actual_methods": 24,
+      "passed_runs": 24,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.62,
+      "actual_identifier_sha256": "25e68c8a6547b40555c20a8d83822380ae7e8798c743bee13ec966f69a168d67"
+    },
+    {
+      "suite": "ImageEditorBrushPresetUsageTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.71,
+      "actual_identifier_sha256": "8c56eceaa4301848a2e9f3bddc7336536dfb87b96dd652f117bfd0ff9cc8f588"
+    },
+    {
+      "suite": "ImageEditorBrushStrokeTests",
+      "actual_methods": 57,
+      "passed_runs": 57,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.69,
+      "actual_identifier_sha256": "b3ec5a32bf3e4e6187c1ac55ccfbcb3cbb1ed6a29f062316bcf84db3883baead"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "actual_methods": 27,
+      "passed_runs": 27,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.95,
+      "actual_identifier_sha256": "1a938684785fb6279e65375fd9fcb5fa6e2df331ba3da44c8307be7a8d83e2dc"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "actual_methods": 130,
+      "passed_runs": 130,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.45,
+      "actual_identifier_sha256": "818e29df513b92ed7622fed105ae2c522eab8ba7c5880ba42281e38f3192e114"
+    },
+    {
+      "suite": "ImageEditorCanvasFileDropTests",
+      "actual_methods": 10,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.91,
+      "actual_identifier_sha256": "7eaac0a958f4bafe7e96e37bddb77a73403c2d8ead1d13824405183dc671d7f9"
+    },
+    {
+      "suite": "ImageEditorCanvasGeometryTests",
+      "actual_methods": 22,
+      "passed_runs": 22,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.47,
+      "actual_identifier_sha256": "2885d10da481d75ad118afe4645375ab27b3f7302df3614420aed9a82bc97102"
+    },
+    {
+      "suite": "ImageEditorCanvasHandleEditBoundaryTests",
+      "actual_methods": 3,
+      "passed_runs": 43,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.2,
+      "actual_identifier_sha256": "7564f7e450d43454b6b902854a633349c2e92815ba40adef15d959f53addfa32"
+    },
+    {
+      "suite": "ImageEditorCenteredResizeTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.42,
+      "actual_identifier_sha256": "9dccc7215552a4bae900869769dd090d1be906abd98be3ae807a1d9de201fb96"
+    },
+    {
+      "suite": "ImageEditorChannelTests",
+      "actual_methods": 58,
+      "passed_runs": 58,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "f8030732e4f08f8ee22a25172aea51e0d224c54db99c82e8389e8cbff8fbc7af"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "actual_methods": 34,
+      "passed_runs": 34,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.41,
+      "actual_identifier_sha256": "d889aac4e4a80499ac6945517ef03a9b074178a734a91f826c80b6019f0ed73c"
+    },
+    {
+      "suite": "ImageEditorColorWellTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.3,
+      "actual_identifier_sha256": "8a5125b36644b3af0c6521973ed5d17562db8940c9a0329ebf63ec8e0cfc04fd"
+    },
+    {
+      "suite": "ImageEditorCombinedMaskSamplingTests",
+      "actual_methods": 5,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.8,
+      "actual_identifier_sha256": "1f796994c5b9774afeed0151c2dec30678f6978ff61edc572c4cac92502e370b"
+    },
+    {
+      "suite": "ImageEditorCopyAsSVGTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.5,
+      "actual_identifier_sha256": "e41af7a6e4d813b88b332671866863d7958a264a413dd6f9db8d6bfacba9c968"
+    },
+    {
+      "suite": "ImageEditorDarkPanelControlsTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.76,
+      "actual_identifier_sha256": "4ed6f956030e4885276e764cadb78680cd7ad9d07c076a78e750e4a29d1c2c82"
+    },
+    {
+      "suite": "ImageEditorDeferredRedoBoundaryTests",
+      "actual_methods": 3,
+      "passed_runs": 83,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.17,
+      "actual_identifier_sha256": "c0aed425b0f06fb5d464cd7a21174af7bf117f8d19e38804c34b6e5c5fcb2ec0"
+    },
+    {
+      "suite": "ImageEditorEffectiveSelectionAutomationTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.52,
+      "actual_identifier_sha256": "f352f43bf3a0afe8b7ef46ce31d5ad0d9d6ccedaec37c44547a837c7ccd261f7"
+    },
+    {
+      "suite": "ImageEditorEmptySelectionGeometryTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "db95a5a900ca5ab1c5654677e444d66f62b25448efaa228dd8a685cd87792dfe"
+    },
+    {
+      "suite": "ImageEditorEmptySelectionNudgeTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.56,
+      "actual_identifier_sha256": "b858ca3965a331a9b9dcdcbea3d8bb9569345a78b13a00a9359539ddca5b9118"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "actual_methods": 51,
+      "passed_runs": 51,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.49,
+      "actual_identifier_sha256": "c80129707fc2c45a95fcf799f3f739586713798f2d10221440e5eb6e5752386c"
+    },
+    {
+      "suite": "ImageEditorFigmaProvenanceTests",
+      "actual_methods": 34,
+      "passed_runs": 34,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.59,
+      "actual_identifier_sha256": "706235ba59837ece8a76937a7716d43e13297bbe8d2a0a26a7ec749dc21acb83"
+    },
+    {
+      "suite": "ImageEditorFilterTests",
+      "actual_methods": 84,
+      "passed_runs": 84,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.36,
+      "actual_identifier_sha256": "79de6bf6de409fc8d1bcb8656512c9d45bbc84ba3642569141fbb2642780344c"
+    },
+    {
+      "suite": "ImageEditorGlobalLightLinkAutomationTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.24,
+      "actual_identifier_sha256": "9f6732bf9f405cd6812ae52bfabd50d6cc8a298cab64defe9cdead1483bf0588"
+    },
+    {
+      "suite": "ImageEditorGradientSelectionTests",
+      "actual_methods": 10,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.49,
+      "actual_identifier_sha256": "12a1308425d94e8a213b6c21ac9e31f698dcfdbefffb886f740d02bb09915b10"
+    },
+    {
+      "suite": "ImageEditorGroupMaskTranslationTests",
+      "actual_methods": 8,
+      "passed_runs": 12,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "20dac5970dd675da9ca0a73edeb196798d478f10a5f489c703e72245c6e5fea0"
+    },
+    {
+      "suite": "ImageEditorGroupResizeTests",
+      "actual_methods": 9,
+      "passed_runs": 16,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.22,
+      "actual_identifier_sha256": "b07d9ed057c550fa61d298ea12ecb0d8e48cc5f693af71ef9b62f5e6a81655bd"
+    },
+    {
+      "suite": "ImageEditorGroupRotationTests",
+      "actual_methods": 9,
+      "passed_runs": 15,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.33,
+      "actual_identifier_sha256": "6279eb3726f78c5f894b8f56728332265eff08783b99725ee6140fec96c8dc5e"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "actual_methods": 37,
+      "passed_runs": 37,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "77a2f024874d34d2036585c10081925176d566d9b969c9a9318c88d8ef520007"
+    },
+    {
+      "suite": "ImageEditorHealingBrushTests",
+      "actual_methods": 13,
+      "passed_runs": 13,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.51,
+      "actual_identifier_sha256": "55a3f51b5ccaeba5306d370f56a5a2f073b2801c2c7df8314f3aed51cc2974bb"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "actual_methods": 45,
+      "passed_runs": 45,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.34,
+      "actual_identifier_sha256": "7bc677bf7a135a02db6b455927955fb4ac984196a83aaac295229b99de631b7f"
+    },
+    {
+      "suite": "ImageEditorHotspotHTMLExporterTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.47,
+      "actual_identifier_sha256": "cf6616656e8f3bb544a1289c044f75508d8125a404a0f3b6c593099190f0e407"
+    },
+    {
+      "suite": "ImageEditorHotspotOrthogonalTransformTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.9,
+      "actual_identifier_sha256": "50affba400821c9b3eff7382ab64ea29633c39d39ca905ccedcd09d2e838e868"
+    },
+    {
+      "suite": "ImageEditorInspectorResizeTests",
+      "actual_methods": 8,
+      "passed_runs": 19,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.54,
+      "actual_identifier_sha256": "a11129c45648927b93a09c543b474d6bb79a39020ba0a1b210752952ce15750a"
+    },
+    {
+      "suite": "ImageEditorInspectorTranslationTests",
+      "actual_methods": 7,
+      "passed_runs": 19,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.35,
+      "actual_identifier_sha256": "d0ae16608c0e38ec25a8f17ea4091922b1b63f0ede98071f4ce48b64c9875841"
+    },
+    {
+      "suite": "ImageEditorKeyboardEventRoutingTests",
+      "actual_methods": 11,
+      "passed_runs": 11,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "112ca1abe4a44fbefe27f9c15bdeb6550ec9cc55151d85c663e3e5cb83371605"
+    },
+    {
+      "suite": "ImageEditorLayerBatchAppearanceTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.19,
+      "actual_identifier_sha256": "cfaa6ec4740765b7d4618e4abb5fc50ba8521997e02c0693d8f8948107e80b25"
+    },
+    {
+      "suite": "ImageEditorLayerCanvasAlignmentContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.23,
+      "actual_identifier_sha256": "ab5f27590d40a1d32c539b4af5d5da2bf64e2fa76cf72fdbab3c25672b4fab4a"
+    },
+    {
+      "suite": "ImageEditorLayerCompTests",
+      "actual_methods": 33,
+      "passed_runs": 33,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.69,
+      "actual_identifier_sha256": "3140ffebca03627cda50e8a5d4280acd0e7b2aa92b87c64bb51b00c3d3324238"
+    },
+    {
+      "suite": "ImageEditorLayerCompositeHierarchyTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.46,
+      "actual_identifier_sha256": "29dab2585783712a1078d96c78a2727671b624a74a43964bb873807310decd6f"
+    },
+    {
+      "suite": "ImageEditorLayerDeletionTests",
+      "actual_methods": 25,
+      "passed_runs": 25,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.79,
+      "actual_identifier_sha256": "d6047d7abbdc30968f9806f0ed6bb172173d892db85a7e907f18dddbc920be58"
+    },
+    {
+      "suite": "ImageEditorLayerDistributionContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.25,
+      "actual_identifier_sha256": "6df989bd55a89492dfb2accf5a15b234a457f2cdad5b63d17fd0928895249f7a"
+    },
+    {
+      "suite": "ImageEditorLayerDuplicateTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 7,
+      "actual_identifier_sha256": "aead185da2c16c549d3eb47d3ee3563fadfbbfd6edef07d57bbcd5c913b54ea6"
+    },
+    {
+      "suite": "ImageEditorLayerGroupExpansionContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.45,
+      "actual_identifier_sha256": "49ca8ea4e7edd5ba499df4f59f09e22a22d3adb7dabaaf0fa0b3678a5b4f02ba"
+    },
+    {
+      "suite": "ImageEditorLayerGroupExpansionTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.67,
+      "actual_identifier_sha256": "726952b590340e07effc3b7dd0c7f08d92c860a75a783fe95b434a4820005ad6"
+    },
+    {
+      "suite": "ImageEditorLayerGroupMovementConsistencyTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.7,
+      "actual_identifier_sha256": "ba1f124c467880e89d97fd9757cb75caf9587a8e5c73307cc2c8a3d1242f7c2e"
+    },
+    {
+      "suite": "ImageEditorLayerGroupingConsistencyTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5,
+      "actual_identifier_sha256": "c01896ace8dea9e9b9d4ce01aa999f8c2141d732badeacc08f77f027fbc1fa15"
+    },
+    {
+      "suite": "ImageEditorLayerLinksContextTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.95,
+      "actual_identifier_sha256": "122f9149c1c5babf559f3a737c544015fd4411221132ff0e0d5c4768ac04756d"
+    },
+    {
+      "suite": "ImageEditorLayerLockContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "59907180e157bfaa8127e93a02d033ac1bf4fadca3da4edf02a9a1eb51d49787"
+    },
+    {
+      "suite": "ImageEditorLayerMaskContextTests",
+      "actual_methods": 23,
+      "passed_runs": 23,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "25d3f5964f9826e56d9815a75ef52967813198aaaf43e4e852d12d7fb42cf673"
+    },
+    {
+      "suite": "ImageEditorLayerMergeHierarchyTests",
+      "actual_methods": 14,
+      "passed_runs": 14,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.34,
+      "actual_identifier_sha256": "920d73748951cb1fd8f2fe0ac29517b93850cbe04ba212b793eb53f8b6c15c8c"
+    },
+    {
+      "suite": "ImageEditorLayerOrderingContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.28,
+      "actual_identifier_sha256": "d4e6a67451c2d025102192b785b7e2d5582f6cd1bdac84a5e9f509f122af3150"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.37,
+      "actual_identifier_sha256": "c58b7deef15852a54b187ff0c74800e06cc302e768a9ff6d0233924d7a33e222"
+    },
+    {
+      "suite": "ImageEditorLayerPeerAlignmentContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.17,
+      "actual_identifier_sha256": "ae439131c18e6969aaeeebe8cb8839422f58ec9dfcd1c09e67d883f13e5185af"
+    },
+    {
+      "suite": "ImageEditorLayerPropertyOwnershipTests",
+      "actual_methods": 5,
+      "passed_runs": 245,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 7.44,
+      "actual_identifier_sha256": "e82654648f192ac614154088eeae82bc98bf210a58e3ece2e27b4582132ace1f"
+    },
+    {
+      "suite": "ImageEditorLayerRangeSelectionTests",
+      "actual_methods": 16,
+      "passed_runs": 16,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.77,
+      "actual_identifier_sha256": "3a4a49fb8f17dad74957e891c1bbee0048413ddf955b54885842978d91266fd4"
+    },
+    {
+      "suite": "ImageEditorLayerResizePointerEventTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.79,
+      "actual_identifier_sha256": "35ca52dc822a89ef33b1c1f2e54749bf5e0f7ae9cd783a2cb56560831f2730d2"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "actual_methods": 139,
+      "passed_runs": 139,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 9.18,
+      "actual_identifier_sha256": "5680000ee49fef3607ec877a30c17156675749bac65832d5ea0e4818d94ae22e"
+    },
+    {
+      "suite": "ImageEditorLayerSelectionAlignmentContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.67,
+      "actual_identifier_sha256": "7d413f78f4e36971cf5d3e5165d215dfeb65d7c7bae3fea9f129e3a91333cfd0"
+    },
+    {
+      "suite": "ImageEditorLayerSpacingDistributionContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.15,
+      "actual_identifier_sha256": "996ef68820a7a31ef0f13dfeb58a740cefc72e9d8ee6c1be60f9c4e4c0ab5a40"
+    },
+    {
+      "suite": "ImageEditorLayerStyleBuiltInPresetTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.19,
+      "actual_identifier_sha256": "e95827eee32c88c2d84129f03d5a8638fd243109fecb75a5893cb15439ccc01d"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.52,
+      "actual_identifier_sha256": "1a0719929dc21493a515d7a31fdd041b844ed62bbfdc7bbb5ffcb90d5eba3ed2"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetQueryTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.29,
+      "actual_identifier_sha256": "2a3da712a52ceeff03c29e2d5bf29ab7e06567fd6a65d3bf885ecc5f3b2f1756"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.28,
+      "actual_identifier_sha256": "c68def3f9ef95f6eb19df145eccf9315f8102c27db8e54070f09e2a8bfa7dbf7"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.29,
+      "actual_identifier_sha256": "43cdb531fb29284ba70e327c1e39f427639cc2b7375ec7df1ab88cb57b12d16b"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "actual_methods": 96,
+      "passed_runs": 96,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.56,
+      "actual_identifier_sha256": "d2a543b32bc45c6b66a0e3d2d4f786c96b318e3ba912079f1b02e9a384913313"
+    },
+    {
+      "suite": "ImageEditorLayerStyleVisibilityScaleTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.18,
+      "actual_identifier_sha256": "0f9717e1da7dc5574c991efe6c3717d6440eccf68e299943ad8865e3041702a0"
+    },
+    {
+      "suite": "ImageEditorLayerThumbnailSelectionTests",
+      "actual_methods": 20,
+      "passed_runs": 20,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.34,
+      "actual_identifier_sha256": "21fd660beb17818b9102ffca9195cd0c4d6a07caac1561e36eb091944bc933a8"
+    },
+    {
+      "suite": "ImageEditorLayerTransformContextTests",
+      "actual_methods": 10,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.62,
+      "actual_identifier_sha256": "ae951964fdedc559e454e5fa60df30006c01e0bf41332f3117eef4cf219860c1"
+    },
+    {
+      "suite": "ImageEditorLayerVisibilityContextTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.39,
+      "actual_identifier_sha256": "a95b12ea10fec1019658c64053f9ee08f108df79c131f4863b411ff8cbec1ce7"
+    },
+    {
+      "suite": "ImageEditorLayerVisibilityFocusContextTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.43,
+      "actual_identifier_sha256": "5738e7ce281610b8bca2ad932036dbc56cd263b45efbdfbff46e1173ddc0666b"
+    },
+    {
+      "suite": "ImageEditorMaskApplicationSamplingTests",
+      "actual_methods": 7,
+      "passed_runs": 13,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.8,
+      "actual_identifier_sha256": "2981f25ffc221335494a654fc9f00bb4cca0e6ce038f8cc2905d01e15df74468"
+    },
+    {
+      "suite": "ImageEditorMaskFeatherSamplingTests",
+      "actual_methods": 8,
+      "passed_runs": 15,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.53,
+      "actual_identifier_sha256": "ebcdb7282d765f0a19acd2c575182efa0dfbb31033a34b13035640a0d0603fb8"
+    },
+    {
+      "suite": "ImageEditorMaskLinkRenderingTests",
+      "actual_methods": 5,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.81,
+      "actual_identifier_sha256": "0bd1ad4ad63ec6fc2d3d5734edd4e1b02010242bf7ddc594c12a448ece88959b"
+    },
+    {
+      "suite": "ImageEditorMaskSamplingTests",
+      "actual_methods": 11,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.5,
+      "actual_identifier_sha256": "1c157c1829cb8a0c878de605ead36e8660a48befbee4e422409e68f9c39e8318"
+    },
+    {
+      "suite": "ImageEditorMiddleMousePanCompletionTests",
+      "actual_methods": 10,
+      "passed_runs": 11,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.67,
+      "actual_identifier_sha256": "0cc7a451d381887456ce0a1b1be1345b25ef2647402c0671c48bcfe62454a9af"
+    },
+    {
+      "suite": "ImageEditorMiddleMousePanEventTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.25,
+      "actual_identifier_sha256": "5b3a5507f2a26634edccf95b2783bcb1f270c2e845e9a1b70e2ec2ff47809026"
+    },
+    {
+      "suite": "ImageEditorNormalBlendKernelTests",
+      "actual_methods": 5,
+      "passed_runs": 16,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.12,
+      "actual_identifier_sha256": "1e42d8d6bdc739999461bf921f041d28dbd16e8fcd3d642e88175242555a18e7"
+    },
+    {
+      "suite": "ImageEditorObjectDragConstraintTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.19,
+      "actual_identifier_sha256": "ed77b8c08eda6f665d86813f6a68206ee37c4dcf3f51149d9871bf8b1937fbad"
+    },
+    {
+      "suite": "ImageEditorObjectMoveActivationTests",
+      "actual_methods": 6,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.29,
+      "actual_identifier_sha256": "e94ed998dc0c396554bc1cf5096f43aea609c063dea2d9f9122de2b0410852d8"
+    },
+    {
+      "suite": "ImageEditorObjectMoveCandidateTests",
+      "actual_methods": 7,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.2,
+      "actual_identifier_sha256": "76f7414f98fae91e0ded3e8248b23a2c04bf643bc623c38dfa975c8ff135dc36"
+    },
+    {
+      "suite": "ImageEditorObjectMoveEventTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "4a38f4be3b8d2058e96d70755c5ca61d3a5eebe812d40e5ad65ef16d49736d3f"
+    },
+    {
+      "suite": "ImageEditorObjectMoveReleaseTests",
+      "actual_methods": 9,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.21,
+      "actual_identifier_sha256": "372c820e64cd85216cd15e4242670f6e9de441a0b18d0668f34ca733d0172a42"
+    },
+    {
+      "suite": "ImageEditorOptionsBarStyleTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.76,
+      "actual_identifier_sha256": "4f84854ec36f6dda03985998c819f2d695fc8ac587a7411f9d8e405675be2acb"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "actual_methods": 59,
+      "passed_runs": 59,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.32,
+      "actual_identifier_sha256": "ffaeb132a7cac480ce0ce52f602405f2e118b406ec24c568e4698df48d4fbbe5"
+    },
+    {
+      "suite": "ImageEditorPaintBucketTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.31,
+      "actual_identifier_sha256": "9dbffa0461041cce377890942969b98a3bc0ab9c2d3b9d306cacdcb63f7f3888"
+    },
+    {
+      "suite": "ImageEditorParagraphLayoutTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 8.62,
+      "actual_identifier_sha256": "4f903154f39513a3e22c8e0302c520ecb3af9283b33aa8a37fd9ea18987601da"
+    },
+    {
+      "suite": "ImageEditorPatchToolTests",
+      "actual_methods": 42,
+      "passed_runs": 42,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 9.36,
+      "actual_identifier_sha256": "be27df9c8947c4a8c19c90c0de0a6022adffc0174f448775e8e12d3c9bc45304"
+    },
+    {
+      "suite": "ImageEditorPixelMoveCoverageTests",
+      "actual_methods": 7,
+      "passed_runs": 41,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.26,
+      "actual_identifier_sha256": "7ce704cd9e65475f41e392af7950f96960171dee63e7779aa12f211fc29cb5af"
+    },
+    {
+      "suite": "ImageEditorPixelMoveEditBoundaryTests",
+      "actual_methods": 7,
+      "passed_runs": 20,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.87,
+      "actual_identifier_sha256": "6d57544c7df565cfd96b4f2fdd461f2e975d380c2d44831899c92ce0843e51df"
+    },
+    {
+      "suite": "ImageEditorPixelMoveMaskAlphaTests",
+      "actual_methods": 5,
+      "passed_runs": 12,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.37,
+      "actual_identifier_sha256": "169bff07f8b11ad0cf97f64926688798e8cb8740018c949b6d65ecdbd9bbf19d"
+    },
+    {
+      "suite": "ImageEditorPixelMovePreviewReuseTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "ef3c5102970494b0edcf6a4859c806cbac2c379ad7526cf1cf0e2d0b5f7b1851"
+    },
+    {
+      "suite": "ImageEditorPixelMoveWorkflowProfileTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 14.01,
+      "actual_identifier_sha256": "be17b071372e9216e34c20c43a5c2c99fbc3852b4ce215010ed30f49510bf57b"
+    },
+    {
+      "suite": "ImageEditorPixelSelectionLayerBoundsTests",
+      "actual_methods": 7,
+      "passed_runs": 11,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.11,
+      "actual_identifier_sha256": "97e6f997f12f50124783da1f1cb59fd81d4acd51c3ab7f7b85395987b5466c6e"
+    },
+    {
+      "suite": "ImageEditorPixelSelectionMoveTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.43,
+      "actual_identifier_sha256": "f0c9efb3d5b5b3f540f723f3d2294cd222bace610e88508f06654a3aabdba687"
+    },
+    {
+      "suite": "ImageEditorPixelSelectionOverlapTests",
+      "actual_methods": 3,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.43,
+      "actual_identifier_sha256": "601197c6599ef8603892562363571e8e5571505c9cbdd87ad74b10c4537bcbff"
+    },
+    {
+      "suite": "ImageEditorPointerSequenceRecoveryTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.41,
+      "actual_identifier_sha256": "77c2dfe5181058b694cd751ae90e8309942178c0f37c8f6f864c02244e82dbf2"
+    },
+    {
+      "suite": "ImageEditorPrintTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.32,
+      "actual_identifier_sha256": "318c5ef917d5b532bf62aa27d882b3f23aa4968a24705b982e193b1ebae485ca"
+    },
+    {
+      "suite": "ImageEditorProjectContentCheckpointTests",
+      "actual_methods": 4,
+      "passed_runs": 23,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.82,
+      "actual_identifier_sha256": "776896c3fabbc054706a110298afbccbd28ac6d0105b9019767588f901c032c3"
+    },
+    {
+      "suite": "ImageEditorProjectDirtyStateTests",
+      "actual_methods": 6,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 18.44,
+      "actual_identifier_sha256": "8014245d970f9d799eb13aeb0d05618e09a827ed01ea82115febc49c3288ea0a"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "actual_methods": 13,
+      "passed_runs": 13,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.35,
+      "actual_identifier_sha256": "49776c92cd32bfd5a9b89b17080b0bbc33051e553735f3f8bea6ec0e019cef3e"
+    },
+    {
+      "suite": "ImageEditorProjectRevertTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.69,
+      "actual_identifier_sha256": "dc5c36ba1accd622a9062dfdfc0d21a80eb24020247c24b4407fc391a0684081"
+    },
+    {
+      "suite": "ImageEditorProjectSaveTests",
+      "actual_methods": 12,
+      "passed_runs": 14,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.42,
+      "actual_identifier_sha256": "62c3bcc799f3d3a7baf9e4a76a482b5a6d7000759a3060dbb032b1021de9f98b"
+    },
+    {
+      "suite": "ImageEditorQuickExportPNGTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.21,
+      "actual_identifier_sha256": "f1763142c1d0bd02ae4c94ec6968ad253849df3ee7169464a7d5a794bf400ce0"
+    },
+    {
+      "suite": "ImageEditorQuickMaskPreferencesTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.22,
+      "actual_identifier_sha256": "fb1ea9e856afa05257b33fbac324b5497ab196d4d810f1f506b5b8c5279abf80"
+    },
+    {
+      "suite": "ImageEditorRasterRotationTests",
+      "actual_methods": 9,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.19,
+      "actual_identifier_sha256": "4461754bea79bb9ebfcf07e30a795cf8980d89780eef1362cf4992a17abc2f0b"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.45,
+      "actual_identifier_sha256": "cc6b81e6fcd931e4ed1307a9e9eacdb82affd096daa71372dfb2894cc409cedb"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.47,
+      "actual_identifier_sha256": "46a98b074d8b038a4110f8cc56569e2e660b207192372d8e686e568bf3eac44c"
+    },
+    {
+      "suite": "ImageEditorRotationHandleGestureTests",
+      "actual_methods": 5,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.21,
+      "actual_identifier_sha256": "3c90a82e7afc99ad5a7cb75dafb9170de6ee3fb7b0fb6d52b0e29523632b1425"
+    },
+    {
+      "suite": "ImageEditorSVGImportTests",
+      "actual_methods": 39,
+      "passed_runs": 39,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.27,
+      "actual_identifier_sha256": "425dee19c7d28acd57ae1b716e3122bef37bbf7234da0cf4f96874dc1e4db460"
+    },
+    {
+      "suite": "ImageEditorSampledBrushPreviewTests",
+      "actual_methods": 10,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "7f903596456c15330a5c8e0a678b259b7727db1d3f9a28c605897749dff69469"
+    },
+    {
+      "suite": "ImageEditorSatinAutomationTransactionTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.03,
+      "actual_identifier_sha256": "bca52f59b4424cf905c89dca9b32ce0fb54713618df756e2058b1a8201e2dbbe"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "actual_methods": 30,
+      "passed_runs": 30,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 14.24,
+      "actual_identifier_sha256": "3d3fb3b739ec3c1df35d9d4ab97cd995fdf6a90ce4b256aab7323472e37ff627"
+    },
+    {
+      "suite": "ImageEditorScaledPixelSelectionMoveTests",
+      "actual_methods": 5,
+      "passed_runs": 12,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 8.92,
+      "actual_identifier_sha256": "024174245c5adae5e74d66374c24724620a9529388b17803486e38350d089dd3"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "actual_methods": 194,
+      "passed_runs": 194,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 16.74,
+      "actual_identifier_sha256": "26970e98fc75178db0e502c10f8d81b0f2ec78634258694bba79bd9c52499cac"
+    },
+    {
+      "suite": "ImageEditorSelectionCenteringTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.2,
+      "actual_identifier_sha256": "d774ee6c912c52af16d8bba134e5bf947d8c5eae96662d05b5caa7baf520a5bd"
+    },
+    {
+      "suite": "ImageEditorSelectionClearSamplingTests",
+      "actual_methods": 8,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.32,
+      "actual_identifier_sha256": "ac3380c2722433e9b46e11f5de5f0b3fd854746f4c78fd3b14aea3530572a246"
+    },
+    {
+      "suite": "ImageEditorSelectionCopySamplingTests",
+      "actual_methods": 6,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.42,
+      "actual_identifier_sha256": "fd9bb86d27cd6487312f8cd147d6543968db24be0d061296be4f134dcf5dccaa"
+    },
+    {
+      "suite": "ImageEditorSelectionCutSamplingTests",
+      "actual_methods": 9,
+      "passed_runs": 22,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.76,
+      "actual_identifier_sha256": "ce8da2283a4d6e555ca71f4182ff3c096a74c75028e2180cfff41da617caf529"
+    },
+    {
+      "suite": "ImageEditorSelectionDeliveryBoundsTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.63,
+      "actual_identifier_sha256": "e8f0ea35f6286c476fa623f85df2f70695cfde3ed6aa51fda8e292e064fb4225"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "actual_methods": 12,
+      "passed_runs": 12,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.05,
+      "actual_identifier_sha256": "288f1f9c7cbdc4a8d1941edf5b18299f6dd2bba445cac8442ef960433294202b"
+    },
+    {
+      "suite": "ImageEditorSelectionExportBoundsTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.74,
+      "actual_identifier_sha256": "fed344b9548eb3880c813b3ebc42f2eeb8fa1f9ccfe2252816fcdd2988899f54"
+    },
+    {
+      "suite": "ImageEditorSelectionFillCoverageTests",
+      "actual_methods": 33,
+      "passed_runs": 33,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.9,
+      "actual_identifier_sha256": "cccded725c13da434e155d2e1dfa74d13f45e7ebd84a04741c3a9eb05b1c9b85"
+    },
+    {
+      "suite": "ImageEditorSelectionFillDialogTests",
+      "actual_methods": 30,
+      "passed_runs": 30,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.61,
+      "actual_identifier_sha256": "a7505210f14f575ab16a3c536ca0b6fcf35208f0f69c7025d6b1d68155a01300"
+    },
+    {
+      "suite": "ImageEditorSelectionInfoBoundsTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.81,
+      "actual_identifier_sha256": "01c52b57bd8c5cf464a8d99af247e01f1ca7620855667caf4985b181d7bfacc8"
+    },
+    {
+      "suite": "ImageEditorSelectionMaskBoundsTests",
+      "actual_methods": 4,
+      "passed_runs": 25,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.23,
+      "actual_identifier_sha256": "528954cb97868fc29f30addc544407002bbd4356c1503239e63d52b3bb980195"
+    },
+    {
+      "suite": "ImageEditorSelectionMaskSamplingTests",
+      "actual_methods": 8,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.76,
+      "actual_identifier_sha256": "bb1086074911f28cbb8786c951a269ddf8169e01ea179e93a98bfb8eba2f949f"
+    },
+    {
+      "suite": "ImageEditorSelectionMaskTranslationTests",
+      "actual_methods": 5,
+      "passed_runs": 33,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.58,
+      "actual_identifier_sha256": "bf7351bc70980cf694fa864faa5af2f40baed81e9ca4a0d938fb641d93193817"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "actual_methods": 58,
+      "passed_runs": 58,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.74,
+      "actual_identifier_sha256": "5a4948592a34a1727b8fb9552f50558a26f4ced34b763c17a2a18bfc03f44444"
+    },
+    {
+      "suite": "ImageEditorSelectionPixelAvailabilityTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.52,
+      "actual_identifier_sha256": "0e8a3b24434eec7f4ff0fa35111de1983fea4476b0ffdd8b5d64c4305ab3e786"
+    },
+    {
+      "suite": "ImageEditorSelectionResourceAvailabilityTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.65,
+      "actual_identifier_sha256": "0e89f412e49c0a6bcfcbc5302b3c15c30349c34ce267094e55d235d319544c4d"
+    },
+    {
+      "suite": "ImageEditorSelectionSnapshotAvailabilityTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "a6937d7daf01c7e853d9502a5476478ff804fc191e022fc9cc85dd759e8a2f8a"
+    },
+    {
+      "suite": "ImageEditorSelectionTargetBoundsTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.55,
+      "actual_identifier_sha256": "513410e12ae6792cb1455774dd096667b81ecb244e25968270f1fb3c4e1f9772"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "actual_methods": 6,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.57,
+      "actual_identifier_sha256": "6b4eff26c1a645dfcbcaebe62a3dbab831d9c7351ea77b0103cd4f4988398476"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "actual_methods": 41,
+      "passed_runs": 41,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.77,
+      "actual_identifier_sha256": "005ed3a417e0b2296058f4f64bd4b6d55b4c5ec65593a40ee32df878550a99ba"
+    },
+    {
+      "suite": "ImageEditorSliceCanvasSizeTransformTests",
+      "actual_methods": 11,
+      "passed_runs": 11,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.71,
+      "actual_identifier_sha256": "54ed2bf41e73d336677b7bc4dfa4fc871165cb35e2ba5c5327e426b30ba1edfa"
+    },
+    {
+      "suite": "ImageEditorSliceCropTransformTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.56,
+      "actual_identifier_sha256": "a4db9c00f129b7bcc056d2bdbb11804cd689da7fef27fb43b4a4c7d6bb11c064"
+    },
+    {
+      "suite": "ImageEditorSliceImageSizeTransformTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.55,
+      "actual_identifier_sha256": "c4dc5955960bc674b12079cecade0f61035a45da08f949142317cae84be4c94d"
+    },
+    {
+      "suite": "ImageEditorSliceOrthogonalTransformTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.93,
+      "actual_identifier_sha256": "cd58e9a8d4db9c934968fc9a5313c85971cec9330eedc183a5fc68ca73ae8e9b"
+    },
+    {
+      "suite": "ImageEditorSliceRevealAllTransformTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.52,
+      "actual_identifier_sha256": "08b11555224338ca3fd174fc0e983bf4be47dbee43bbf855b848e60ad0ad7843"
+    },
+    {
+      "suite": "ImageEditorSmartObjectContextTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.65,
+      "actual_identifier_sha256": "82b5dd12d9d9fe9ca31685bb3aad02b75f180e894e6fb28cc5d43d776fc381cf"
+    },
+    {
+      "suite": "ImageEditorSmartObjectPlacementTests",
+      "actual_methods": 17,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.51,
+      "actual_identifier_sha256": "a3cb943922e85b13bcb6ee5df51d7f7c0e00260569e9689845634fc10f435fab"
+    },
+    {
+      "suite": "ImageEditorSmartObjectSourceExportTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.29,
+      "actual_identifier_sha256": "d0fc25afe998f0472fdf3c37a6ff23ff7fb37cf7872521821c116785f2b067e1"
+    },
+    {
+      "suite": "ImageEditorSpacebarPanEventTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "c5432094760c8609aae366f0c4474044582e882f5dba727ec1e5da71dbdf4c6a"
+    },
+    {
+      "suite": "ImageEditorSparseColorSelectionTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.34,
+      "actual_identifier_sha256": "8651ee1830ef5edf0be2b07624cf1202c4069fc656e8024051e6384a9a129deb"
+    },
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.32,
+      "actual_identifier_sha256": "8899d16a00f6a6ba8a2c6cc2920e76894cfea90c71d6a47174908d62989f91bb"
+    },
+    {
+      "suite": "ImageEditorStackLayoutTests",
+      "actual_methods": 35,
+      "passed_runs": 35,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.68,
+      "actual_identifier_sha256": "f66bcb5bf2f3bf141f7cfabfe9473b9acc3a039e3db395ed1c5ee757ec46b06b"
+    },
+    {
+      "suite": "ImageEditorStrokeCompletionTests",
+      "actual_methods": 6,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.23,
+      "actual_identifier_sha256": "37aa92b25b3d0d76c31ceb574838b4b1050a4109e10a581b74b19fc408759b8b"
+    },
+    {
+      "suite": "ImageEditorStrokeWindowEventTests",
+      "actual_methods": 10,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.27,
+      "actual_identifier_sha256": "c7d8bbf4954963d7b837aa4a92c13e871f5b3f2dc668ab06505443381edcd160"
+    },
+    {
+      "suite": "ImageEditorTextBoxCreationTests",
+      "actual_methods": 12,
+      "passed_runs": 12,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.44,
+      "actual_identifier_sha256": "ae974b03a781b899d515d1dcf60a1cc0d20bb162f1dd8a60e8fa6d9d37e7bf2e"
+    },
+    {
+      "suite": "ImageEditorTextDecorationTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.3,
+      "actual_identifier_sha256": "099d6c89bff25443c6e82ea5844fa64e37838c89e57585bd9239df2c2a804bfb"
+    },
+    {
+      "suite": "ImageEditorTextEditingLifecycleTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.39,
+      "actual_identifier_sha256": "ac1f1b8bdde2277a121af423dc71ae5abfb15eaf400b7c0aa377933a9f8bc447"
+    },
+    {
+      "suite": "ImageEditorTextHitTestingTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.69,
+      "actual_identifier_sha256": "afb1920312297711120e41003e84c596c4b62ca26218d7210e1144bc5ccf5f3d"
+    },
+    {
+      "suite": "ImageEditorTextInputShortcutTests",
+      "actual_methods": 17,
+      "passed_runs": 17,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.58,
+      "actual_identifier_sha256": "37eb2d0f95c1a1f65f1a350fbea7c38695cf0998b5520fc9e269c642233a600c"
+    },
+    {
+      "suite": "ImageEditorTextLayoutModeTests",
+      "actual_methods": 13,
+      "passed_runs": 13,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.53,
+      "actual_identifier_sha256": "34f47a08d54dc30fe141a2d49e31724c775812737dd8717ffaecbeadf709baa7"
+    },
+    {
+      "suite": "ImageEditorToneAirbrushTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.39,
+      "actual_identifier_sha256": "090d635af60198c100d89fd2db7e8fc2bafee44ae308479c7e77bb7f3886493c"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.2,
+      "actual_identifier_sha256": "b141303a204c39a0ab627765688ae248fb9577a7b9f342f3c3632682665cd9f0"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "actual_methods": 11,
+      "passed_runs": 11,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.81,
+      "actual_identifier_sha256": "eed99f75753df4bf2dbbec7ea0f1adb717d49cf4c0e5dffc353b0faa827d5a96"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "actual_methods": 45,
+      "passed_runs": 45,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.12,
+      "actual_identifier_sha256": "ee527dc12eb95814003381f1972064af7b95fd10de07c24dbf48ad4f27a28212"
+    },
+    {
+      "suite": "ImageEditorTransformCancellationTests",
+      "actual_methods": 7,
+      "passed_runs": 18,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.61,
+      "actual_identifier_sha256": "147644c8ba472f1d81caba4992c6f789e8c7829441b46d632e377be19022aefd"
+    },
+    {
+      "suite": "ImageEditorTransformEditBoundaryTests",
+      "actual_methods": 4,
+      "passed_runs": 15,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.62,
+      "actual_identifier_sha256": "cd96ce9ec75679cebeafe3951e1ab1f538817c8931c38b5d08ef0410438369a9"
+    },
+    {
+      "suite": "ImageEditorTransformFinalStateTests",
+      "actual_methods": 4,
+      "passed_runs": 16,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.08,
+      "actual_identifier_sha256": "5dafd8e42c32cff877d47a02cb902ae6bbae203d5d51856f9082ebc759e4896a"
+    },
+    {
+      "suite": "ImageEditorTransformHUDTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.62,
+      "actual_identifier_sha256": "e494e22a78447b725628b35789203d31bc09d0cff47aef415dec2658356c717e"
+    },
+    {
+      "suite": "ImageEditorTransformLockTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.51,
+      "actual_identifier_sha256": "a47ae001a35f53159b7de393ca8bd31ef845fa1760d1a929f16814fd38734b78"
+    },
+    {
+      "suite": "ImageEditorTransformReferencePointTests",
+      "actual_methods": 7,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.64,
+      "actual_identifier_sha256": "5cf85f305928065d390511476a95ba367464d2e4c4c144320a78de00597c6b88"
+    },
+    {
+      "suite": "ImageEditorTransparentPixelLockTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.98,
+      "actual_identifier_sha256": "ca090ad4fe539f4e92e4bbdebefc791161d25572af3223a93d02115b172689e1"
+    },
+    {
+      "suite": "ImageEditorUnlinkedMaskResizeTests",
+      "actual_methods": 9,
+      "passed_runs": 21,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.02,
+      "actual_identifier_sha256": "5123cb98ad8433fa9d8e777d314daaf96e66c477f01f79d0890382ece90e25d3"
+    },
+    {
+      "suite": "ImageEditorUnlinkedMaskRotationTests",
+      "actual_methods": 6,
+      "passed_runs": 14,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.47,
+      "actual_identifier_sha256": "74c3fe0cc4c8f59c7878c2704d0fc2f39cf1e9949f704b41eba97c1e6836d943"
+    },
+    {
+      "suite": "ImageEditorUnlinkedMaskTranslationTests",
+      "actual_methods": 5,
+      "passed_runs": 10,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.7,
+      "actual_identifier_sha256": "b87768771a8844072d7049c7285047715340c4cddc4e319b6b3dcac76e321726"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "actual_methods": 107,
+      "passed_runs": 107,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.5,
+      "actual_identifier_sha256": "f8cc2a4b1cc807c2a6059d5522826f1cba0381a200fe3932cbfa97ddb22c9086"
+    },
+    {
+      "suite": "ImageEditorVectorMaskRasterizationSamplingTests",
+      "actual_methods": 5,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.64,
+      "actual_identifier_sha256": "e53847fd9fada1c348bff65c9298fa29ed49a98a3f7c15e193809b4f8306f3f4"
+    },
+    {
+      "suite": "ImageEditorVisibleLayerOrderingTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "adeb0afed5029cdd210203768aaa43b73ae2a0a4d5673fdc3d9d0f17358565ba"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "actual_methods": 46,
+      "passed_runs": 46,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.14,
+      "actual_identifier_sha256": "c4a98ad905922789dcb822ecfe9c6c6b91109e747cdcb0225328996ee03d2669"
+    },
+    {
+      "suite": "SomeIMUpdateConfigurationTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.41,
+      "actual_identifier_sha256": "6d902422a607fe542b885594881483d7bc5abbf1b8e740dbb96930ca78c087b4"
+    },
+    {
+      "suite": "XomoAutomationHotspotCanvasResizeTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.2,
+      "actual_identifier_sha256": "f5cfaf9603e32569228a369326d49fec34dc6f84413b98d475377623ad9b539d"
+    },
+    {
+      "suite": "XomoAutomationHotspotCropRevealTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.19,
+      "actual_identifier_sha256": "98fd9e04ac420d20dc749c7ee43b79aff031e8d9c77d61e6715980487e167fea"
+    },
+    {
+      "suite": "XomoAutomationHotspotOrthogonalTransformTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.12,
+      "actual_identifier_sha256": "e4c10da6e2e46487402a1ef5d41167326291c3b09a8d5a22e751abb42ef55fdc"
+    },
+    {
+      "suite": "XomoAutomationHotspotResizeTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.28,
+      "actual_identifier_sha256": "ef50a271092ebf0bc34796f4f3584b767af1dcff6dbec0b7d0a17cdea6310fbf"
+    },
+    {
+      "suite": "XomoAutomationRetouchWorkflowTests",
+      "actual_methods": 20,
+      "passed_runs": 31,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.21,
+      "actual_identifier_sha256": "37340020d1eeccfc9ba8312c3cf7b46b2c001f7626ae033701edd6c23dd58f89"
+    },
+    {
+      "suite": "XomoAutomationSliceCanvasResizeTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.24,
+      "actual_identifier_sha256": "60ddf020dea7353f77d2510bacd0fdc780e51521758e29633d366a2f41d8c701"
+    },
+    {
+      "suite": "XomoAutomationSliceCropTrimTests",
+      "actual_methods": 2,
+      "passed_runs": 2,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.4,
+      "actual_identifier_sha256": "0e6a19433b099a877ff40393201404fe26df2c7adaf20f0267e36402549ed789"
+    },
+    {
+      "suite": "XomoAutomationSliceOrthogonalTransformTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.3,
+      "actual_identifier_sha256": "b7c186b85a3fc8c174825b4c217bb541103360680646a729117f95a2fcbf83d2"
+    },
+    {
+      "suite": "XomoAutomationSliceResizeTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.57,
+      "actual_identifier_sha256": "d1cb5ea393a0e8f3ce65e166ee604b1ca09bc2ba543cabec58d2f6eda666dc5c"
+    },
+    {
+      "suite": "XomoAutomationSliceRevealAllTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.28,
+      "actual_identifier_sha256": "e9e8ce2fb9d3c638ec2c0b5a634410251beecad00e936efce5368252ae23099f"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "actual_methods": 307,
+      "passed_runs": 307,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 8.01,
+      "actual_identifier_sha256": "01197ef5bb54f2ba7a7b0e4daf1566a05d4fe96ed6b2877dc65363e54e102034"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "actual_methods": 80,
+      "passed_runs": 80,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.79,
+      "actual_identifier_sha256": "fef9e4fc634479133415de149f7a00811c4530ef6ec53c9b60652a9a4b534d87"
+    },
+    {
+      "suite": "XomoCanvasPresetTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.27,
+      "actual_identifier_sha256": "3a47ac1b72576a9972734989a0ddb26c8bcd808755260be9a5db407c97c64023"
+    },
+    {
+      "suite": "XomoCloseCommandTests",
+      "actual_methods": 3,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.82,
+      "actual_identifier_sha256": "243842c5f1b990f416a44bc038354ee7131ee081581e30d50ae0b08c94156445"
+    },
+    {
+      "suite": "XomoDocumentCloseGuardTests",
+      "actual_methods": 14,
+      "passed_runs": 14,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.89,
+      "actual_identifier_sha256": "d6162777d889880bf4750dbaa23a316573b062f8749da0839f17c5e129370d61"
+    },
+    {
+      "suite": "XomoExternalDocumentOpenTests",
+      "actual_methods": 23,
+      "passed_runs": 23,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.69,
+      "actual_identifier_sha256": "b1a4ae4be73c37d85f43c3a72259e68b5fda8a11bba4cb2014d0c2c721019909"
+    },
+    {
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.42,
+      "actual_identifier_sha256": "70c2c7a2a8b3af8a2ba7bd24d7f66453ef91ee8e6b3c3f4763db9ab9fd7e5729"
+    },
+    {
+      "suite": "XomoFigmaCancellationTests",
+      "actual_methods": 4,
+      "passed_runs": 18,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.31,
+      "actual_identifier_sha256": "9d21a44d89dd528d79208389438e78f69b8c864a07ce34d45eaa130582a03a38"
+    },
+    {
+      "suite": "XomoFigmaExportPresetTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "86ddbff20e5eae7eebbaa9c5e6e0adfb3ae07c63e3498e7ec224aa2c208567af"
+    },
+    {
+      "suite": "XomoFigmaImageAssetTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.21,
+      "actual_identifier_sha256": "74f499ad9b0d028ed303c6a2bba4fc2f98bfefa3149de7cee0804a3b20a0a679"
+    },
+    {
+      "suite": "XomoFigmaImageFilterTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.41,
+      "actual_identifier_sha256": "84c685e0d7a4b88c652036b746f470dd28fb00e7e80ee4dd65a54065cd5b9cb7"
+    },
+    {
+      "suite": "XomoFigmaImagePaintDiagnosticsTests",
+      "actual_methods": 9,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.63,
+      "actual_identifier_sha256": "ff4c443fae21b21c05d7de59b380fba2acbbe155cc243e33563816c9e413d348"
+    },
+    {
+      "suite": "XomoFigmaImportLayoutScaleTests",
+      "actual_methods": 5,
+      "passed_runs": 6,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.25,
+      "actual_identifier_sha256": "2d12c5adbfeeb62316dd08509ab031084de48181e2844b8f1bf5a96b9a750ad2"
+    },
+    {
+      "suite": "XomoFigmaImportSelectionTests",
+      "actual_methods": 8,
+      "passed_runs": 9,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.08,
+      "actual_identifier_sha256": "d0316600eccf8c1d21ca145ac0992c69b5654b30f992331cd06ffb631a4e30e7"
+    },
+    {
+      "suite": "XomoFigmaImportTransactionTests",
+      "actual_methods": 5,
+      "passed_runs": 15,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.27,
+      "actual_identifier_sha256": "d785e8654fcb9102c68a458ffe06778a955c46524b69ffbe25f8f4c63b12ab9f"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "actual_methods": 25,
+      "passed_runs": 25,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.99,
+      "actual_identifier_sha256": "51a235cc392e1e7ad2c1f773840e9740c886b7d36c7131910f4d7e27202007e0"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "actual_methods": 23,
+      "passed_runs": 23,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.32,
+      "actual_identifier_sha256": "ad9f5cc3fd1ea8caf0b4aa0987daf88706001bfa46d6e3e42ccc2cdd0795494c"
+    },
+    {
+      "suite": "XomoFigmaMaskClippingTests",
+      "actual_methods": 5,
+      "passed_runs": 7,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.36,
+      "actual_identifier_sha256": "5e0d9d7901fc3d060dc1e73d0c316d97fefe97cb985c1eeee344c81b4d64071a"
+    },
+    {
+      "suite": "XomoFigmaNodeIdentityTests",
+      "actual_methods": 7,
+      "passed_runs": 14,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.26,
+      "actual_identifier_sha256": "3eeeac85326f4f7c45b62eceefdd0a4c7e82380d10f2561e1fa8436bde617478"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "actual_methods": 98,
+      "passed_runs": 98,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.97,
+      "actual_identifier_sha256": "fc94d6773d86dc5b943c9e57d203763e08dc75407180cf7cb82e43b47b8b01f8"
+    },
+    {
+      "suite": "XomoFigmaRequestGenerationTests",
+      "actual_methods": 13,
+      "passed_runs": 31,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.48,
+      "actual_identifier_sha256": "d134eec22052b8fe136f9337a681e327d90b24cfb909ea0705627bb64f6e2587"
+    },
+    {
+      "suite": "XomoHelpTests",
+      "actual_methods": 3,
+      "passed_runs": 3,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.76,
+      "actual_identifier_sha256": "e6c3de351463104e2afa90153809859edf7949e1d218209668ee1846347cc7f3"
+    },
+    {
+      "suite": "XomoLayerClipboardTests",
+      "actual_methods": 5,
+      "passed_runs": 5,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.47,
+      "actual_identifier_sha256": "97fe837130e159bef2353abef778c30025c8273ceea3f29b171cfb253512686b"
+    },
+    {
+      "suite": "XomoLayerPropertyCommandBoundaryTests",
+      "actual_methods": 4,
+      "passed_runs": 196,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 5.74,
+      "actual_identifier_sha256": "19b0525daf28283d11d9f222e14758de710648280ecac7d03991f6e87354f77b"
+    },
+    {
+      "suite": "XomoLayerStyleScaleAutomationTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.22,
+      "actual_identifier_sha256": "f6c466b7a7001652d65d2c3c30ac6ce893cbf542f6e7a7fe73737cd58a3da66a"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "actual_methods": 54,
+      "passed_runs": 54,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 6.93,
+      "actual_identifier_sha256": "03be6b97036a30b769e38d284ebc926901a1e7a9246c2d1efbb21109354fa153"
+    },
+    {
+      "suite": "XomoRecentDocumentsTests",
+      "actual_methods": 4,
+      "passed_runs": 4,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.63,
+      "actual_identifier_sha256": "bb936f39263734341a79c642bbe8b6b1b3eb542895ed83ab498365fef61f00a6"
+    },
+    {
+      "suite": "XomoSelectionGetAutomationTests",
+      "actual_methods": 1,
+      "passed_runs": 1,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.45,
+      "actual_identifier_sha256": "970970e9fd71282555bb12e110ec4e9d0d578c759513a858766045065b1a0c9b"
+    },
+    {
+      "suite": "XomoSmartObjectAutomationTests",
+      "actual_methods": 8,
+      "passed_runs": 8,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 4.53,
+      "actual_identifier_sha256": "9e98b10e57b9afdd53c029d97e1c2e26149901faada46c92877d14a7525acc77"
+    },
+    {
+      "suite": "veilpicTests",
+      "actual_methods": 163,
+      "passed_runs": 163,
+      "exit": 0,
+      "failed_methods": 0,
+      "skipped_methods": 0,
+      "elapsed_seconds": 7.29,
+      "actual_identifier_sha256": "e484f6b5141b0ad6877dd2bfc1062d33de464fb6f27009af332628a33dd74050"
+    }
+  ],
+  "profile_archives": [
+    {
+      "path": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-profiles/xomo-pixel-move-workflow-2.12.0-rc1723.json",
+      "source": "/Users/rocky/Library/Containers/im.some.xomo/Data/tmp/xomo-pixel-move-workflow-2.12.0-rc1723.json",
+      "sha256": "f9e6a21ab4589968262a2310015a078cedc524243f07bb533d7c99b9fbbf698b",
+      "configuration": "Release native test host"
+    },
+    {
+      "path": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-profiles/xomo-pixel-move-workflow-2.12.0-rc1723.md",
+      "source": "/Users/rocky/Library/Containers/im.some.xomo/Data/tmp/xomo-pixel-move-workflow-2.12.0-rc1723.md",
+      "sha256": "11adc3de4a4ffe7e3df94aa6c14d4739b7f9dbe2aae044eac3d7f3e5bd226c17",
+      "configuration": "Release native test host"
+    },
+    {
+      "path": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-profiles/xomo-project-dirty-2.12.0-rc1723.json",
+      "source": "/Users/rocky/Library/Containers/im.some.xomo/Data/tmp/xomo-project-dirty-2.12.0-rc1723.json",
+      "sha256": "c71395ce3e9d9edc41b3f300892401b839ef2ef4f97d2cdc62af11dc7f71be7f",
+      "configuration": "Release native test host"
+    },
+    {
+      "path": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-profiles/xomo-project-dirty-2.12.0-rc1723.md",
+      "source": "/Users/rocky/Library/Containers/im.some.xomo/Data/tmp/xomo-project-dirty-2.12.0-rc1723.md",
+      "sha256": "c43e5903e0d046aceeff96fc5eadb9330b4936f15b3580fc525f014ee5bb5b79",
+      "configuration": "Release native test host"
+    }
+  ],
+  "limitations": [
+    "arm64 runtime only; Universal build does not prove Intel runtime execution",
+    "No GUI frame latency or per-phase memory improvement claim",
+    "Complete rc1720 cycle still requires current version CLI/UI/physical workflow/cursor/normal candidate/install gates"
+  ]
+}
