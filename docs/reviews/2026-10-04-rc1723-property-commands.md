@@ -23,7 +23,9 @@
 
 两份 Debug 性能报告的 JSON/Markdown 按真实测试日志打印的宿主临时目录读取（本轮不是旧版容器目录），另存 `debug-profiles/`，四份原始字节与 SHA256 核对一致，防止同版本 Release 覆盖；不据此声称性能提升。当前 rc1680 完整备份与安装版 143 项内容再次比对一致，Info.plist 和可执行文件齐全，但未实际启动回退验收。
 
-唯一双架构 Release 测试编译会话 63725 已启动，日志 `/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-test-build.log`，尚未成功终态。构建期间源码冻结；随后必须原生 Release 枚举并完成全部套件复验，不用 Debug 相关回归代替。
+唯一双架构 Release 测试编译会话 63725 退出 0，622.13 秒；日志 `/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-test-build.log`。App 为 rc1723/1723，App、单测及 UI Runner 可执行文件均含 arm64、x86_64，严格 App 签名核验退出 0。仍是测试注入权限产物，不得安装。
+
+Release 原生枚举会话退出 0、7.25 秒，225 套件/3637 方法，零错误/禁用，与源码候选及 Debug 原生标识逐项匹配；清单为 `release-native-inventory.json`。枚举不等于执行。全量原生串行回归会话 82575 已启动，使用 `release-full/run_full_release.rb` 和完整 `manifest.json`；进度 `release-full/report.{json,md}`。执行器契约 7 项/8 断言已过，逐组检查结果树、方法标识与 412 输入，不排除失败、不自动重试、不按静默超时终止。尚未完成，不能称全部通过；源码继续冻结。
 
 ## 验收边界
 
