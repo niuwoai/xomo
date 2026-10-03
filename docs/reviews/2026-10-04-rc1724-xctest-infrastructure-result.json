@@ -1,0 +1,266 @@
+{
+  "version": "2.12.0-rc1724",
+  "cycle": "rc1720",
+  "scope": "Native XCTest infrastructure failure before product assertions; not a product regression verdict or full acceptance",
+  "baseline_main": "b14ca9c730558bc5d3ef58d2ca633724a71c5172",
+  "status": "stopped_after_confirmed_native_failure",
+  "observed_at_utc": "2026-10-03 22:25:57 UTC",
+  "session": 88350,
+  "execution_exit": 143,
+  "native_failed_group": {
+    "suite": "ImageEditorAdjustmentTests",
+    "xcodebuild_pid": 4197,
+    "host_pid": 4527,
+    "exit": 65,
+    "seconds": 834.65,
+    "result": "Failed",
+    "error": "The test runner hung before establishing connection.",
+    "passed_product_methods": 0,
+    "missing_product_methods": 29,
+    "error_placeholder_count": 1,
+    "raw_result": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220313-ImageEditorAdjustmentTests.xcresult"
+  },
+  "daemon_control_failures": {
+    "message": "Timed out after 120.0s while initiating control session with daemon.",
+    "channel": "Channel disconnected",
+    "observed_times": [
+      "06:05:22.851",
+      "06:12:50.967",
+      "06:14:59.258"
+    ],
+    "native_startup_timer_seconds": 300,
+    "native_failure_at": "2026-10-04T06:12:50.968+08:00"
+  },
+  "daemon_sample": {
+    "pid": 2101,
+    "path": "/tmp/testmanagerd_2026-10-04_061727_YYh8.sample.txt",
+    "sha256": "a7d3f90645fdc02bcc1183a80fef5204cca5f39739f04b11712d429a4758240f",
+    "exit": 0,
+    "observed_at": "2026-10-04T06:17:27+08:00",
+    "frames": [
+      "XCTestSession _XCT_enableAutomationModeWithReply",
+      "XCTDAutomationModeInterface enableAutomationModeForClient:error: -> objc_sync_enter -> __ulock_wait2",
+      "XAMWriter enableAutomationModeWithError -> LAContext evaluatePolicy -> LAClient performSynchronous"
+    ],
+    "interpretation": "A UI automation session is synchronously waiting for local authentication while another waits for its lock. Native control-session failures coexist; causal recovery not yet verified.",
+    "restarted": false,
+    "system_permissions_changed": false
+  },
+  "termination": {
+    "runner_pid": 4173,
+    "validated_process_group": 4173,
+    "owned_script": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/run_full_release.rb",
+    "signals": [
+      "SIGINT",
+      "SIGTERM after SIGINT did not return"
+    ],
+    "reason": "Authoritative native group exit 65 and daemon handshake failures, not observation timeout alone",
+    "next_group_pid": 6274,
+    "next_group": "ImageEditorBackgroundLayerConversionTests",
+    "next_group_status": "interrupted_not_accepted",
+    "whole_session_terminal_exit": 143,
+    "final_process_check": "No owned runner, xcodebuild, Swift build/test or Xomo process remained; shared testmanagerd 2101 untouched"
+  },
+  "partial_report": {
+    "path": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/report.json",
+    "sha256": "b55245c1523d36d53b9733648140a9f10608064c838cdea5b0954b2a81a7b57a",
+    "original_status": "running_not_passed",
+    "meaning": "Raw prefix was left unchanged when executor interrupted. Its running_not_passed label is historical and not a live process claim.",
+    "requested_suites": 225,
+    "requested_methods": 3637,
+    "recorded_groups": 2,
+    "completed_successful_groups": 1,
+    "passed_product_methods": 16,
+    "passed_product_runs": 16,
+    "results": [
+      {
+        "status": "passed",
+        "actual_methods": 16,
+        "actual_identifiers": [
+          "veilpicTests/ClipboardImageWriterTests/bitmapPasteAndPasteIntoSelectionStayBesideTheSelectedGroupChild()",
+          "veilpicTests/ClipboardImageWriterTests/clipboardFilesUseWritableTemporaryStorageInsteadOfDownloads()",
+          "veilpicTests/ClipboardImageWriterTests/commandXWithoutSelectionCutsTheSelectedImportedPixelLayer()",
+          "veilpicTests/ClipboardImageWriterTests/copyingMergedSelectionCropsToSelectionFrameForPasteInPlace()",
+          "veilpicTests/ClipboardImageWriterTests/copyingRasterSelectionToNewLayerUsesSelectedPixelBounds()",
+          "veilpicTests/ClipboardImageWriterTests/copyingRasterSelectionUsesSelectedPixelBoundsForPasteInPlace()",
+          "veilpicTests/ClipboardImageWriterTests/copyingSelectionCropsToSelectionFrameForPasteInPlace()",
+          "veilpicTests/ClipboardImageWriterTests/copyingSeparatedSelectedLayersPreservesUnionFrameAndEditableLayersForPasteInPlace()",
+          "veilpicTests/ClipboardImageWriterTests/cuttingSelectionCropsToSelectionFrameForPasteInPlace()",
+          "veilpicTests/ClipboardImageWriterTests/emptyAdditionalClipboardDataDoesNotEraseExistingContents()",
+          "veilpicTests/ClipboardImageWriterTests/objectCutRejectsTheLastLayerAndActiveMoves()",
+          "veilpicTests/ClipboardImageWriterTests/onePhysicalCommandVCreatesOnlyOnePastedLayer()",
+          "veilpicTests/ClipboardImageWriterTests/onePhysicalCommandXCutsOnlyTheFrontImportedPixelLayer()",
+          "veilpicTests/ClipboardImageWriterTests/ordinaryPasteKeepsNativeSizeWhenClipboardImageExceedsCanvas()",
+          "veilpicTests/ClipboardImageWriterTests/ordinaryPasteUsesBitmapPixelsInsteadOfHighDPIImagePoints()",
+          "veilpicTests/ClipboardImageWriterTests/transparentObjectCutUsesTheEditableArchiveAndRemainsUndoable()"
+        ],
+        "missing": [],
+        "unexpected": [],
+        "nonpassing_nodes": [],
+        "suite": "ClipboardImageWriterTests",
+        "command": [
+          "xcodebuild",
+          "-project",
+          "veilpic.xcodeproj",
+          "-scheme",
+          "veilpic",
+          "-configuration",
+          "Release",
+          "-destination",
+          "platform=macOS,arch=arm64",
+          "-derivedDataPath",
+          ".codex/ReleaseDerivedData",
+          "-clonedSourcePackagesDirPath",
+          ".codex/SourcePackages",
+          "-disableAutomaticPackageResolution",
+          "-parallel-testing-enabled",
+          "NO",
+          "-test-timeouts-enabled",
+          "NO",
+          "ENABLE_USER_SCRIPT_SANDBOXING=NO",
+          "test-without-building",
+          "-only-testing:veilpicTests/ClipboardImageWriterTests",
+          "-resultBundlePath",
+          "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220308-ClipboardImageWriterTests.xcresult"
+        ],
+        "exit": 0,
+        "result_bundle": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220308-ClipboardImageWriterTests.xcresult",
+        "log": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220308-ClipboardImageWriterTests.log",
+        "passed_runs": 16,
+        "failed_methods": 0,
+        "skipped_methods": 0,
+        "elapsed_seconds": 5.25
+      },
+      {
+        "status": "failed_or_incomplete",
+        "actual_methods": 1,
+        "actual_identifiers": [
+          "veilpicTests/Xomo (4527) encountered an error"
+        ],
+        "missing": [
+          "veilpicTests/ImageEditorAdjustmentTests/adjustmentLayerOpacityBlendsTheCompletedEffectWithoutChangingItsParameters()",
+          "veilpicTests/ImageEditorAdjustmentTests/gradientFillDraftEditsEveryStopAndCommitsOneRealTransaction()",
+          "veilpicTests/ImageEditorAdjustmentTests/gradientFillDraftProtectsEndpointsAndSixteenStopLimit()",
+          "veilpicTests/ImageEditorAdjustmentTests/gradientFillTrackAddsAStopAtTheRequestedCurvePosition()",
+          "veilpicTests/ImageEditorAdjustmentTests/gradientFillTrackGeometryMapsStopsAndMidpoints()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBatchUpdatesSelectedAdjustmentLayersAndSkipsLockedOrIneligibleLayers()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBatchUpdatesSelectedGradientFillLayersAndSkipsLockedOrIneligibleLayers()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBatchUpdatesSelectedPatternFillLayersAndSkipsLockedOrIneligibleLayers()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBatchUpdatesSelectedSolidColorFillLayersAndSkipsLockedOrIneligibleLayers()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBlackWhiteAdjustmentSupportsSixChannelMixAndLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorBrightnessContrastAdjustmentCombinesToneControlsAndSupportsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorChannelMixerAdjustmentSupportsRGBMatrixAndMonochromeLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorColorLookupAdjustmentImportsCubeLUTAndPersistsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorColorLookupAdjustmentSupportsPresetsAndLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorDesaturatesSelectedLayerWithClassicCommand()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorExposureAdjustmentUsesEvOffsetGammaAndSupportsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorGradientFillLayerRendersUpdatesAndRoundTripsProjectState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorGradientFillStylesRenderAndRoundTripProjectState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorGradientMapAdjustmentSupportsPresetsAndLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorHueSaturationAdjustmentSupportsColorizeAndLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorInvertsSelectedLayerWithClassicCommand()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorPatternFillLayerRendersSmartFiltersAndRoundTripsProjectState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorPhotoFilterAdjustmentSupportsPresetsAndCustomLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorPosterizeAdjustmentQuantizesChannelsAndSupportsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorSelectiveColorAdjustmentSupportsRangesAndLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorShadowsHighlightsAdjustmentRecoversToneRangeAndSupportsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorSolidColorFillLayerRendersSmartFiltersAndRoundTripsProjectState()",
+          "veilpicTests/ImageEditorAdjustmentTests/imageEditorVibranceAdjustmentPrioritizesMutedColorsAndSupportsLayerState()",
+          "veilpicTests/ImageEditorAdjustmentTests/zeroAmountAdjustmentPreservesHistoryAndPixels()"
+        ],
+        "unexpected": [
+          "veilpicTests/Xomo (4527) encountered an error"
+        ],
+        "nonpassing_nodes": [
+          "Xomo (4527) encountered an error"
+        ],
+        "suite": "ImageEditorAdjustmentTests",
+        "command": [
+          "xcodebuild",
+          "-project",
+          "veilpic.xcodeproj",
+          "-scheme",
+          "veilpic",
+          "-configuration",
+          "Release",
+          "-destination",
+          "platform=macOS,arch=arm64",
+          "-derivedDataPath",
+          ".codex/ReleaseDerivedData",
+          "-clonedSourcePackagesDirPath",
+          ".codex/SourcePackages",
+          "-disableAutomaticPackageResolution",
+          "-parallel-testing-enabled",
+          "NO",
+          "-test-timeouts-enabled",
+          "NO",
+          "ENABLE_USER_SCRIPT_SANDBOXING=NO",
+          "test-without-building",
+          "-only-testing:veilpicTests/ImageEditorAdjustmentTests",
+          "-resultBundlePath",
+          "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220313-ImageEditorAdjustmentTests.xcresult"
+        ],
+        "exit": 65,
+        "result_bundle": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220313-ImageEditorAdjustmentTests.xcresult",
+        "log": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220313-ImageEditorAdjustmentTests.log",
+        "passed_runs": 0,
+        "failed_methods": 1,
+        "skipped_methods": 0,
+        "elapsed_seconds": 834.65
+      }
+    ]
+  },
+  "diagnostics_export": {
+    "command": [
+      "xcrun",
+      "xcresulttool",
+      "export",
+      "diagnostics",
+      "--path",
+      "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/20261003T220313-ImageEditorAdjustmentTests.xcresult",
+      "--output-path",
+      "/private/tmp/xomo-rc1724-xctest-diagnostics.STEpVS"
+    ],
+    "exit": 0,
+    "directory": "/private/tmp/xomo-rc1724-xctest-diagnostics.STEpVS",
+    "files": [
+      {
+        "name": "testmanagerd.log",
+        "bytes": 4460,
+        "sha256": "c11882e99c0854614fd0a9dd2f19c9ed5352581ba65dd4dec4e3442cf63fa5a8"
+      },
+      {
+        "name": "scheduling.log",
+        "bytes": 558,
+        "sha256": "0f1328836a434b26a7b05abded6f72beb22e9abf42f011c26b045189bf37df46"
+      },
+      {
+        "name": "Session-veilpicTests-2026-10-04_060314-cg4kxz.log",
+        "bytes": 5011,
+        "sha256": "c0978e5dc659202e04ec64378987e504223e86ef2c6905257bb26fd2fdc9ccf2"
+      },
+      {
+        "name": "StandardOutputAndStandardError.txt",
+        "bytes": 815,
+        "sha256": "2fca1db981246b63386df5b8906ba48c8c02f72168ab6cfc56dfe2f6b1de9436"
+      }
+    ]
+  },
+  "source_inputs": {
+    "count": 412,
+    "sha256": "68659c8c9392c7e017645c42e09d476dbee448596475534214d1e70df26403a1"
+  },
+  "source_changed": false,
+  "physical_workflow_reference": "2026-10-04-rc1724-workflow-readback.json",
+  "pending": [
+    "User approval to restart only current-user XCTest service after rechecking no other native workflow",
+    "Re-run complete current-version native units in a fresh result directory without excluding missing tests",
+    "Resolve UI automation setup without changing permissions implicitly",
+    "Component-library system arrow and semantic tool cursor acceptance",
+    "Normal non-test-entitlement candidate and recoverable /Applications install"
+  ],
+  "installed": "2.12.0-rc1680",
+  "installed_this_round": false,
+  "published": false,
+  "goal_status": "active_not_complete"
+}
