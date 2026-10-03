@@ -1,0 +1,169 @@
+{
+  "version": "2.12.0-rc1713",
+  "baseline_main": "96056102ebbf7f7d26f3bf0efa687bfc4cb2bbff",
+  "result": "Passed",
+  "scope": "Transform final-state transactions and stored project raster fidelity, not full Release gate",
+  "baseline": {
+    "path": "/private/tmp/veilpic-rc1713-saved-pixel-baseline-tests.xcresult",
+    "result": "Failed",
+    "methods": 2,
+    "runs": 13,
+    "issues": 64,
+    "exit": 65,
+    "elapsed_seconds": 49.23
+  },
+  "final": {
+    "path": "/private/tmp/veilpic-rc1713-final-state-green-tests.xcresult",
+    "suites": 33,
+    "methods": 711,
+    "runs": 841,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 357.49,
+    "new_methods": 4,
+    "new_runs": 16
+  },
+  "source_inputs": {
+    "count": 395,
+    "unchanged_after_test": true,
+    "changed_file_sha256": {
+      "veilpic/ImageEditorTransform.swift": "78580fbaa38060311ecabb17f535d8eb91e3edaf814dc30015b785e6abacb8db",
+      "veilpic/ImageEditorUndoTransactionState.swift": "5344cd999b84687c236f480feb42d1746fb25adf0670fdbb6e3e7a602dd8e2ea",
+      "veilpic/ImageEditorProjectRasterData.swift": "a7aa390c49ca033527973970e5ded1e0baa47a2783d5578fbd057f11ecac5d9a",
+      "veilpic/ImageEditorProjectDocument.swift": "c28f4e1a0ebeb9dc5cce9f067486af3e9f259e47bbefa3b18ec33efed28d79de",
+      "veilpic/ImageEditorViewModel.swift": "4a91bc80294b34104283f93d09e5e1b4627b048baf64e640f924ffcc377fcf86",
+      "veilpicTests/ImageEditorTransformFinalStateTests.swift": "f5efacf1de49b894c29617569f8516aab425b961e1e8210c84f7876b69e4cf76",
+      "veilpic.xcodeproj/project.pbxproj": "875efee91b71db2b4f67534a6724be898bb49f81fdd4c5d335d9f272fd1b8b1c"
+    }
+  },
+  "ui": {
+    "version": "2.12.0-rc1713",
+    "result": "Passed",
+    "scope": "Synthetic actual UI rotation save and native reopen, not full Release gate",
+    "projects": [
+      {
+        "path": "/private/tmp/xomo-ui-transform-rc1713-saved.xomoproject",
+        "bytes": 46505000,
+        "sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+        "stored_png_sha256": "682f90e35b1c413efe889eb9561f01e6f5997a275618a2f5ee35cc57c6ae2156",
+        "rgba_sha256": "8983eb541a41bb3913c299861189e7422b5883cc029376d7649dd0564decb5f1",
+        "width": 2056,
+        "height": 2056,
+        "frame": [
+          [
+            -4.031449043180828,
+            -4.031449043180828
+          ],
+          [
+            2056.0628980863617,
+            2056.0628980863617
+          ]
+        ],
+        "history_titles": 6
+      },
+      {
+        "path": "/private/tmp/xomo-ui-transform-rc1713-reopened-copy.xomoproject",
+        "bytes": 46505020,
+        "sha256": "d29a94f31ba4ee144abc273070bc4322384c6ee5ec89a2adf2e7dfe511e9ed16",
+        "stored_png_sha256": "682f90e35b1c413efe889eb9561f01e6f5997a275618a2f5ee35cc57c6ae2156",
+        "rgba_sha256": "8983eb541a41bb3913c299861189e7422b5883cc029376d7649dd0564decb5f1",
+        "width": 2056,
+        "height": 2056,
+        "frame": [
+          [
+            -4.031449043180828,
+            -4.031449043180828
+          ],
+          [
+            2056.0628980863617,
+            2056.0628980863617
+          ]
+        ],
+        "history_titles": 7
+      }
+    ],
+    "saved_selected_pixels_equal_after_reopen": true,
+    "frame_and_layer_identity_equal": true,
+    "original_fixture_unchanged": true,
+    "original_fixture_sha256": "52a86b8dac21f6816368e0c16eeb40fbf437e74eab8731113ff90f406b671a0c",
+    "canvas": [
+      2048,
+      2048
+    ],
+    "opened": {
+      "history": 5,
+      "undo": 0,
+      "redo": 0
+    },
+    "rotated": {
+      "history": 6,
+      "undo": 1,
+      "redo": 0
+    },
+    "undone_and_no_op_handle_click": {
+      "history": 5,
+      "undo": 0,
+      "redo": 1
+    },
+    "redone": {
+      "history": 6,
+      "undo": 1,
+      "redo": 0
+    },
+    "reopened": {
+      "history": 7,
+      "undo": 0,
+      "redo": 0
+    },
+    "copy_preserved_window_identity": true,
+    "exit_confirmed_by_process_check": true
+  },
+  "test_suites": [
+    "ImageEditorTransformFinalStateTests",
+    "ImageEditorTransformCancellationTests",
+    "ImageEditorRotationHandleGestureTests",
+    "ImageEditorTransformReferencePointTests",
+    "ImageEditorTransformLockTests",
+    "ImageEditorCenteredResizeTests",
+    "ImageEditorGroupResizeTests",
+    "ImageEditorUnlinkedMaskResizeTests",
+    "ImageEditorLayerTransformContextTests",
+    "ImageEditorInspectorResizeTests",
+    "ImageEditorLayerResizePointerEventTests",
+    "ImageEditorTransformHUDTests",
+    "ImageEditorHistoryTests",
+    "ImageEditorProjectSaveTests",
+    "ImageEditorProjectDocumentTests",
+    "ImageEditorProjectRevertTests",
+    "XomoDocumentCloseGuardTests",
+    "XomoRecentDocumentsTests",
+    "XomoExternalDocumentOpenTests",
+    "ImageEditorLayerBatchAppearanceTests",
+    "ImageEditorVectorLayerTests",
+    "ImageEditorScopeTests",
+    "ImageEditorPixelSelectionMoveTests",
+    "ImageEditorScaledPixelSelectionMoveTests",
+    "ImageEditorCanvasCursorTests",
+    "XomoLayerClipboardTests",
+    "XomoFigmaImportTransactionTests",
+    "ImageEditorGroupRotationTests",
+    "ImageEditorUnlinkedMaskRotationTests",
+    "ImageEditorRasterRotationTests",
+    "ImageEditorTextBoxCreationTests",
+    "ImageEditorParagraphLayoutTests",
+    "ImageEditorPixelMoveCoverageTests"
+  ],
+  "gate": {
+    "next": "rc1720",
+    "installed": "rc1680",
+    "installed_changed": false,
+    "published": false
+  },
+  "limitations": [
+    "Physical drag away then back and mid-drag Escape not automated; native model and callback regressions covered",
+    "No project serialization cost, displayed frame latency or GUI-memory improvement claim",
+    "Legacy giant View/ViewModel split debt remains"
+  ],
+  "next_milestone": "Measure project serialization, save and dirty-state checking using real editor workflow"
+}
