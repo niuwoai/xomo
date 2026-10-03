@@ -182,13 +182,21 @@ struct ImageEditorProjectDirtyStateTests {
                 "fixture_sha256": sha, "samples_ms": samples,
                 "median_ms": samples.mapValues { $0.sorted()[$0.count / 2] }])
         }
+        #if DEBUG
+        let configuration = "Debug native test host"
+        #else
+        let configuration = "Release native test host"
+        #endif
         let report: [String: Any] = ["version": AppVersion.current, "iterations": 3, "cases": cases,
-            "configuration": "Debug native model, App -O, tests -Onone",
+            "configuration": configuration,
             "scope": "Serialization and dirty window metadata; excludes displayed UI latency, disk writes and memory"]
-        let prefix = "/private/tmp/xomo-project-dirty-\(AppVersion.current)"
-        try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
-            .write(to: URL(fileURLWithPath: prefix + ".json"))
-        var rows = ["# Native project dirty-state profile", "", report["scope"] as! String, "",
+        let prefix = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-project-dirty-\(AppVersion.current)").path
+        let jsonURL = URL(fileURLWithPath: prefix + ".json")
+        let jsonData = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+        try jsonData.write(to: jsonURL)
+        #expect(try Data(contentsOf: jsonURL) == jsonData)
+        var rows = ["# Native project dirty-state profile", "", configuration, "", report["scope"] as! String, "",
                     "| Bitmap | Phase | Median ms |", "|---|---|---:|"]
         for item in cases {
             let medians = try #require(item["median_ms"] as? [String: Double])
@@ -196,7 +204,9 @@ struct ImageEditorProjectDirtyStateTests {
                 rows.append("| \(item["size"]!) | \(phase) | \(String(format: "%.3f", medians[phase]!)) |")
             }
         }
-        try (rows.joined(separator: "\n") + "\n").write(toFile: prefix + ".md", atomically: true, encoding: .utf8)
+        let markdown = rows.joined(separator: "\n") + "\n"
+        try markdown.write(toFile: prefix + ".md", atomically: true, encoding: .utf8)
+        #expect(try String(contentsOfFile: prefix + ".md", encoding: .utf8) == markdown)
         print("Project dirty-state profile: \(prefix).{json,md}")
     }
 

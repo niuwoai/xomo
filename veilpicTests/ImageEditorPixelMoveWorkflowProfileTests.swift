@@ -11,15 +11,23 @@ struct ImageEditorPixelMoveWorkflowProfileTests {
         for size in [1_024, 2_048] {
             cases.append(try profile(size: size))
         }
+        #if DEBUG
+        let configuration = "Debug native test host"
+        #else
+        let configuration = "Release native test host"
+        #endif
         let report: [String: Any] = ["version": AppVersion.current, "cases": cases,
-            "configuration": "Debug native test host", "iterations": 3,
+            "configuration": configuration, "iterations": 3,
             "scope": "Native model update and explicit composite; excludes event delivery and displayed frame latency",
             "memory_scope": "getrusage process lifetime high-water bytes, not per-phase allocations or GUI peak memory"]
-        let prefix = "/private/tmp/xomo-pixel-move-workflow-\(AppVersion.current)"
-        try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
-            .write(to: URL(fileURLWithPath: prefix + ".json"))
+        let prefix = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-pixel-move-workflow-\(AppVersion.current)").path
+        let jsonURL = URL(fileURLWithPath: prefix + ".json")
+        let jsonData = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+        try jsonData.write(to: jsonURL)
+        #expect(try Data(contentsOf: jsonURL) == jsonData)
         var rows = ["# Native pixel move workflow profile", "",
-            "Debug native host, 3 iterations. No UI frame latency or per-phase allocation claim.", "",
+            "\(configuration), 3 iterations. No UI frame latency or per-phase allocation claim.", "",
             "| Bitmap | Phase | Median ms |", "|---|---|---:|"]
         for item in cases {
             let phases = try #require(item["median_ms"] as? [String: Double])
@@ -28,7 +36,9 @@ struct ImageEditorPixelMoveWorkflowProfileTests {
             }
             rows.append("\nProcess lifetime high-water after this case: \(item["peak_resident_bytes"]!) bytes.\n")
         }
-        try (rows.joined(separator: "\n") + "\n").write(toFile: prefix + ".md", atomically: true, encoding: .utf8)
+        let markdown = rows.joined(separator: "\n") + "\n"
+        try markdown.write(toFile: prefix + ".md", atomically: true, encoding: .utf8)
+        #expect(try String(contentsOfFile: prefix + ".md", encoding: .utf8) == markdown)
         print("Pixel move workflow profile: \(prefix).{json,md}")
     }
 

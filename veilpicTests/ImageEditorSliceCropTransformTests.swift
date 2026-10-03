@@ -110,7 +110,7 @@ struct ImageEditorSliceCropTransformTests {
         viewModel.crop(to: CGRect(x: 20, y: 20, width: 60, height: 40))
 
         #expect(try atomicSnapshot(viewModel) == before)
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.cropInvalid"))
     }
 
     @Test func cropRepairsEverySliceScopeStateFromFinalSurvivors() {
