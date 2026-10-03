@@ -10,7 +10,7 @@ import Testing
 
 struct LocalizationResourceTests {
     private static let supportedLocalizationIDs: Set<String> = ["zh-Hans", "en", "ja"]
-    private static let supportedStringTableNames: Set<String> = ["InfoPlist", "Localizable", "FigmaImport"]
+    private static let supportedStringTableNames: Set<String> = ["InfoPlist", "Localizable", "FigmaImport", "WindowCommands"]
     private static let supportedStringTables = Set(supportedStringTableNames.map { "\($0).strings" })
 
     @Test func appShipsOnlyChineseEnglishAndJapaneseLocalizations() throws {

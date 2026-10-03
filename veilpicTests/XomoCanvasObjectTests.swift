@@ -495,7 +495,11 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("selection: $viewModel.moveToolBoxSelectionInclusion"))
         #expect(source.contains("image-editor-move-box-selection-inclusion"))
         #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
-        #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
+        let interruptionStart = try #require(source.range(of: "onCanvasLifecycleInterrupted: { _ in"))
+        let interruptionEnd = try #require(source.range(of: "onZoom:", range: interruptionStart.upperBound..<source.endIndex))
+        let interruptionBody = source[interruptionStart.upperBound..<interruptionEnd.lowerBound]
+        #expect(interruptionBody.contains("objectSelectionBoxDrag = nil"))
+        #expect(interruptionBody.contains("viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = false"))
         #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))
         #expect(source.contains("private func beginCanvasPointerSequence() {\n        // A lost mouse-up"))
     }

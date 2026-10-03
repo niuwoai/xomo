@@ -535,7 +535,7 @@
     "runtime_restore_not_tested": true
   },
   "gate": {
-    "status": "in_progress_not_passed",
+    "status": "failed_pending_repairs",
     "milestone": "rc1720",
     "installed": "2.12.0-rc1680",
     "installed_this_round": false,
@@ -573,15 +573,34 @@
       "native_inventory_disabled_tests": 0,
       "source_native_identifiers_match": true,
       "manifest": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/manifest.json",
-      "execution": "running_not_passed",
+      "execution": "failed_or_incomplete",
       "execution_session": 6594,
       "progress_json": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/report.json",
       "progress_markdown": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/report.md",
-      "snapshot_completed_suites": 8,
-      "snapshot_failed_groups": 0,
+      "snapshot_completed_suites": 223,
+      "snapshot_failed_groups": 5,
+      "started_at": "2026-10-04T02:25:31+08:00",
+      "finished_at": "2026-10-04T02:45:40+08:00",
+      "actual_methods": 3628,
+      "passed_runs": 4138,
+      "failed_methods": 5,
+      "skipped_methods": 0,
+      "missing_methods": 0,
+      "unexpected_methods": 0,
+      "source_inputs_after": {
+        "count": 409,
+        "sha256": "027b868722c4545374bfa636ddc73eacfde1b284fea79158c45e12e2f3257ad0"
+      },
+      "failed_identifiers": [
+        "ImageEditorPixelMoveWorkflowProfileTests/measureNativeLargeBitmapPreviewPhasesWithoutUITimingClaims()",
+        "ImageEditorProjectDirtyStateTests/profileNativeSerializationAndDirtyChecks()",
+        "ImageEditorSliceCropTransformTests/invalidSliceRejectsCropWithCompleteAtomicSnapshot()",
+        "LocalizationResourceTests/supportedLocalizationDirectoriesShipOnlyTrackedStringTables()",
+        "XomoCanvasObjectTests/moveToolBlankCanvasGestureOwnsBoxSelectionInsteadOfPan()"
+      ],
       "policy": "Serial Release test-without-building; verify actual method identifiers; preserve every result; no automatic timeout kill or retry."
     },
-    "full_unit_suite": "running_not_passed",
+    "full_unit_suite": "failed_or_incomplete",
     "release_test_injection_diagnosis": {
       "initial_enumeration": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/native-inventory.json",
       "initial_log": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/native-inventory.log",
@@ -607,7 +626,7 @@
     },
     "cli_release_and_tests": "not_started",
     "ui_and_cursor_smoke": "not_started",
-    "next_step": "Continue full serial Release unit session 6594 without restarting active groups; inspect actual coverage and failures, then serial CLI/UI and normal-candidate installed smoke gate; never install test-only debugging-entitlement artifact."
+    "next_step": "Original rc1720 full regression is terminal and failed. Repair five test failures in rc1721 without dropping assertions or sandbox restrictions; verify two remaining property transaction audit gaps before recertifying this same rc1720 gate cycle. Serial CLI/UI, physical workflow/cursors and a new normal candidate remain required; never install test-only debugging-entitlement artifact."
   },
   "limitations": [
     "Model callbacks are not a physical mid-drag UI acceptance.",
