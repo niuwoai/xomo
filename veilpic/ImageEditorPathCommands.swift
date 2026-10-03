@@ -535,6 +535,17 @@ extension ImageEditorViewModel {
         constrainedToAngleIncrement: Bool = false,
         preservingSmoothness: Bool = false
     ) {
+        guard hasActivePathAnchorMoveTransaction else { return }
+        applySelectedPathAnchorMove(to: point,
+            constrainedToAngleIncrement: constrainedToAngleIncrement,
+            preservingSmoothness: preservingSmoothness)
+    }
+
+    private func applySelectedPathAnchorMove(
+        to point: CGPoint?,
+        constrainedToAngleIncrement: Bool = false,
+        preservingSmoothness: Bool = false
+    ) {
         guard let point,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -2433,7 +2444,7 @@ extension ImageEditorViewModel {
         guard !pathPointsMatch(selectedPathAnchorCanvasPoint, boundedPoint) else { return }
         pushUndo()
         selectedPathControlRole = .anchor
-        moveSelectedPathAnchor(to: boundedPoint)
+        applySelectedPathAnchorMove(to: boundedPoint)
         appendHistory(L10n.text("imageEditor.history.pathAnchorMove"))
         statusText = L10n.text("imageEditor.status.pathAnchorMoved")
     }
