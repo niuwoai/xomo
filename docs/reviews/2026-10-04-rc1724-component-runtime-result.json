@@ -3,8 +3,9 @@
   "cycle": "rc1720",
   "baseline_main": "630005e11b7901d0fce46b33ad9064a4a6813167",
   "observed_at_utc": "2026-10-03 22:50:23 UTC",
-  "scope": "Physical component insertion and text editing observations only; incomplete cursor, history and project round-trip acceptance",
-  "status": "partial_not_accepted",
+  "scope": "Physical component insertion, editable text, history and project/export round-trip; actual cursor and full gate remain unaccepted",
+  "status": "component_workflow_passed_cursor_and_full_gate_pending",
+  "updated_at_utc": "2026-10-03 23:12:42 UTC",
   "observation_source": "CUA accessibility states and inline screenshots in this task; no saved raw AX transcript or screenshot artifact",
   "runtime": {
     "pid": 7217,
@@ -41,7 +42,7 @@
       "limitation": "AX confirms editable text state, not final composited glyph pixels or undo transaction equality"
     }
   ],
-  "unverified": {
+  "unverified_at_initial_observation": {
     "actual_system_or_tool_cursor": "Screenshots show a similar highlighted triangular pointer under different tool states. Capture overlay versus native NSCursor cannot be distinguished; no cursor pass or product regression claim",
     "component_save": "Save toolbar and Cmd-S / Cmd-Shift-S produced no observed dialog; later File menu items were disabled",
     "history": "Component text Undo/Redo was not completed or verified",
@@ -50,7 +51,7 @@
     "scratch_directory": "/private/tmp/xomo-rc1724-component-workflow.1ZDUMY",
     "scratch_files_observed": 0
   },
-  "interface_failure": {
+  "interface_failure_at_initial_observation": {
     "observations": [
       "File menu showed disabled document actions",
       "Cancel actions returned invalid or ambiguously matched AX elements",
@@ -74,7 +75,44 @@
     "main_thread": "NSApplication run -> nextEventMatchingMask -> CFRunLoop -> mach_msg2_trap",
     "interpretation": "Idle event-loop wait in all sampled main-thread stacks; no observed layout loop, synchronous save IO or main-thread lock. This short sample cannot exclude earlier or transient failures"
   },
-  "next_action": "Recover a verifiable editor window/interface without bypassing OS permissions; finish component text history/round-trip and actual cursor acceptance. Shared XCTest restart remains subject to pending human approval",
+  "follow_up": {
+    "baseline_main": "79d47a990b41839cb2289a5f633d71c2c592df48",
+    "interface_recovered_without_app_or_shared_service_restart": true,
+    "recovery_cause": "Unproven; successful later export and project Save dialogs do not establish the cause of earlier missing dialogs",
+    "physical_actions": [
+      "Undo component text to 继续; Redo to 立即开始",
+      "Export edited.png using native Save panel, PNG composite 1x",
+      "Save edited.xomoproject; Undo and Save As undone.xomoproject",
+      "Redo and Save As redone.xomoproject",
+      "Native Open exact redone.xomoproject; Save As reopened.xomoproject",
+      "Export reopened.png using PNG composite 1x",
+      "Observe readable 立即开始 glyphs in reopened app screenshot and exported PNG",
+      "Clean reopened project, normal Cmd-Q; independent process check confirms PID 7217 absent"
+    ],
+    "strict_readback": {
+      "reference": "2026-10-04-rc1724-component-readback.json",
+      "raw_report": "/private/tmp/xomo-rc1724-component-workflow.1ZDUMY/component-readback.json",
+      "raw_report_sha256": "827558bc2b1d7c2476bb072cbc0799bd91ac2596ba7061227eaaf2a99585366c",
+      "checks": 20,
+      "failed_checks": 0,
+      "initial_execution_exit": 0,
+      "initial_execution_seconds": 0.308,
+      "read_only_reverification": "All 20 checks recomputed in memory without overwriting reports; generated report equals original; six artifact hashes match",
+      "evidence": "Group, native text and shape remain distinct; Undo restores original text and preserves non-text fields; Redo complete project bytes equal edited; reopen all fields except added History equal; PNG bytes and decoded RGBA equal",
+      "limitation": "No saved project before initial text edit; do not claim Undo equals an independently saved pre-edit project in all fields. No cursor, interrupted-slider, UI latency or all-tool acceptance"
+    },
+    "normal_exit": {
+      "command": "CUA pressKey super+q",
+      "pid": 7217,
+      "independent_process_check_at_utc": "2026-10-03 23:12:42 UTC",
+      "pid_absent": true,
+      "force_terminated": false
+    },
+    "actual_cursor_verified": false,
+    "system_permissions_changed": false,
+    "shared_xctest_service_restarted": false
+  },
+  "next_action": "Verify actual component-library system arrow and semantic tool cursors plus interrupted slider event delivery. Shared XCTest recovery still requires human approval before current-version full regression; normal candidate and recoverable installation remain pending",
   "source_changed": false,
   "source_inputs": {
     "count": 412,
