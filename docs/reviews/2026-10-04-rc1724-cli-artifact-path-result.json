@@ -299,6 +299,34 @@
     "normal_app_exit_verified": true,
     "main_thread_sample": "Historical idle event-loop sample; no observed main-thread hang; later normal Cmd-Q exit verified"
   },
+  "paint_workflow_observation": {
+    "baseline_main": "4ee231026123b98f070aec72f911e5ad6446c981",
+    "reference": "2026-10-04-rc1724-paint-workflow.md",
+    "artifact_reference": "2026-10-04-rc1724-paint-readback.json",
+    "raw_report_sha256": "972f8a5f3ef008e2dc97f867a6cc2c94a6a092a794def7224f18461bbd815407",
+    "status": "single_brush_and_eraser_workflow_passed_not_full_gate",
+    "checks": 23,
+    "failed_checks": 0,
+    "execution_exit": 0,
+    "execution_seconds": 1.288,
+    "actual_ui_strokes": true,
+    "complete_project_bytes_restored_on_both_undo_and_redo": true,
+    "reopen_fields_equal_except_added_history": true,
+    "export_png_and_rgba_equal": true,
+    "normal_exit": {
+      "pid": 13523,
+      "command": "CUA pressKey super+q",
+      "pid_absent": true,
+      "force_terminated": false
+    },
+    "independent_exit_check_at_utc": "2026-10-03 23:26:38 UTC",
+    "shared_xctest_service_restarted": false,
+    "actual_cursor_verified": false,
+    "source_changed": false,
+    "read_only_reverification": "23 checks recomputed; all pass, raw and archived report bytes equal, artifact hashes match, 412 compiled inputs unchanged",
+    "documentation_contracts": "release 10 tests / 30 assertions; overview 3 tests / 22 assertions; README 29 assertions; all pass",
+    "installed_this_round": false
+  },
   "latest_four_hour_review": {
     "window_start": "2026-10-04T01:53:24+08:00",
     "window_end": "2026-10-04T05:53:24+08:00",

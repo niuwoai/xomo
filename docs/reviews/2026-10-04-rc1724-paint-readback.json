@@ -1,0 +1,95 @@
+{
+  "version": "2.12.0-rc1724",
+  "scope": "Physical single mouse brush stroke and crossing eraser stroke, history and project/export readback; not all brushes, tablet inputs, cursor, interrupted gesture or full gate acceptance",
+  "source_directory": "/private/tmp/xomo-rc1724-paint-workflow.gPTc5w",
+  "checks": {
+    "current_version_and_format": true,
+    "ordered_pixel_layers_and_ids_preserved": true,
+    "background_complete_layer_unchanged": true,
+    "target_metadata_and_frame_unchanged": true,
+    "non_edit_document_fields_unchanged": true,
+    "brush_undo_complete_project_bytes_exact": true,
+    "brush_redo_complete_project_bytes_exact": true,
+    "eraser_undo_complete_project_bytes_exact": true,
+    "eraser_redo_complete_project_bytes_exact": true,
+    "reopen_all_fields_except_added_history_exact": true,
+    "painted_adds_one_history": true,
+    "erased_adds_one_history": true,
+    "reopened_adds_one_history": true,
+    "target_bitmap_dimensions_preserved": true,
+    "baseline_target_pixels_fully_transparent": true,
+    "brush_creates_visible_ink": true,
+    "eraser_only_decreases_alpha": true,
+    "eraser_removes_pixels_and_retains_ink": true,
+    "surviving_ink_is_black": true,
+    "export_png_bytes_exact": true,
+    "export_rgba_exact": true,
+    "export_dimensions_match_canvas": true,
+    "export_rgba_equals_final_selected_bitmap": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "pixel_measurements": {
+    "painted_visible_pixels": 11702,
+    "erased_visible_pixels": 11400,
+    "alpha_decreased_pixels": 338,
+    "painted_alpha_sum": 2962408,
+    "erased_alpha_sum": 2880682,
+    "alpha_decrease_bounds": [
+      [
+        732,
+        750
+      ],
+      [
+        441,
+        458
+      ]
+    ]
+  },
+  "files": {
+    "baseline.xomoproject": {
+      "bytes": 83361,
+      "sha256": "ee1918bc1d1f8dbf2d91f707c1ebfba75dd6b4b6b630cedbba65c462c38b0a70"
+    },
+    "painted.xomoproject": {
+      "bytes": 84031,
+      "sha256": "a9d3066d7116734ccfc640926e7c019db1688fa8f4b472d4bf517c7f27f74715"
+    },
+    "paint-undone.xomoproject": {
+      "bytes": 83361,
+      "sha256": "ee1918bc1d1f8dbf2d91f707c1ebfba75dd6b4b6b630cedbba65c462c38b0a70"
+    },
+    "paint-redone.xomoproject": {
+      "bytes": 84031,
+      "sha256": "a9d3066d7116734ccfc640926e7c019db1688fa8f4b472d4bf517c7f27f74715"
+    },
+    "erased.xomoproject": {
+      "bytes": 84283,
+      "sha256": "e6f022f2756462e0b2caf70e870eed7a1527bfd517114d2c32777f8dd02a9220"
+    },
+    "eraser-undone.xomoproject": {
+      "bytes": 84031,
+      "sha256": "a9d3066d7116734ccfc640926e7c019db1688fa8f4b472d4bf517c7f27f74715"
+    },
+    "eraser-redone.xomoproject": {
+      "bytes": 84283,
+      "sha256": "e6f022f2756462e0b2caf70e870eed7a1527bfd517114d2c32777f8dd02a9220"
+    },
+    "reopened.xomoproject": {
+      "bytes": 84303,
+      "sha256": "53d828c91fd29d11f5800965013e20559cc943ceaf1f09b6d22f9e6c08629ad6"
+    },
+    "edited.png": {
+      "bytes": 23469,
+      "sha256": "960dd9e6852ef5ed6934e9295760483d990882df32158ebd195e4afa30e666f4"
+    },
+    "reopened.png": {
+      "bytes": 23469,
+      "sha256": "960dd9e6852ef5ed6934e9295760483d990882df32158ebd195e4afa30e666f4"
+    }
+  },
+  "verifier": {
+    "path": "/private/tmp/xomo-rc1724-paint-workflow.gPTc5w/assert_paint_workflow.rb",
+    "sha256": "8f10dad7586fe243751dcfd1265d1416e1e16e5f81079da6440e130ab908d620"
+  }
+}
