@@ -1373,10 +1373,11 @@ extension ImageEditorViewModel {
             let project = try projectDocument()
             let data = try project.encodedProjectData()
             let metadata = try? ImageEditorProjectSaveMetadata(project: project)
+            let contentCheckpoint = try? ImageEditorProjectContentCheckpoint(project: project)
             try dataWriter(data, url)
             let standardizedURL = url.standardizedFileURL
             updateCurrentProjectURL(standardizedURL)
-            updateProjectSaveBaseline(data, metadata: metadata)
+            updateProjectSaveBaseline(data, metadata: metadata, contentCheckpoint: contentCheckpoint)
             recentDocumentRegistrar(standardizedURL)
             statusText = L10n.format(
                 "imageEditor.status.projectSaved",
@@ -1444,7 +1445,8 @@ extension ImageEditorViewModel {
         do {
             let project = try projectDocument()
             let data = try project.encodedProjectData()
-            updateProjectSaveBaseline(data, metadata: try? ImageEditorProjectSaveMetadata(project: project))
+            updateProjectSaveBaseline(data, metadata: try? ImageEditorProjectSaveMetadata(project: project),
+                                      contentCheckpoint: try? ImageEditorProjectContentCheckpoint(project: project))
         } catch {
             // An unencodable document is always dirty; no valid baseline exists.
             updateProjectSaveBaseline(nil)

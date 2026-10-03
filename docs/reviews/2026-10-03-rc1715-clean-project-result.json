@@ -1,0 +1,360 @@
+{
+  "version": "2.12.0-rc1715",
+  "baseline_main": "04d4991a8f96155bfe1564d14f544a80c26bec3f",
+  "scope": "Debug native clean-state checkpoint and synthetic UI close/save/reopen; not full Release gate",
+  "result": "verified",
+  "implementation": {
+    "format": 10,
+    "clean_proof": "Exact selection coordinate bits and alpha-channel UTF-8/value fields plus freshly encoded remaining DTO bytes",
+    "fallback": "Unproved excluded value equality uses saved full project byte comparison",
+    "raster": "Fresh PNG serialization on every matching-metadata check; no NSImage identity cache"
+  },
+  "baseline": {
+    "path": "/private/tmp/veilpic-rc1715-clean-baseline-tests.xcresult",
+    "methods": 1,
+    "runs": 1,
+    "failed": 0,
+    "exit": 0,
+    "elapsed_seconds": 24.28
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1715-clean-green-tests.xcresult",
+    "methods": 10,
+    "runs": 40,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 347.71
+  },
+  "final": {
+    "path": "/private/tmp/veilpic-rc1715-expanded-tests.xcresult",
+    "suites": 42,
+    "methods": 846,
+    "runs": 1006,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 27.19,
+    "mode": "test-without-building",
+    "excluded": "profileNativeSerializationAndDirtyChecks already executed in specialized independent profile run"
+  },
+  "source_inputs": {
+    "count": 400,
+    "sha256_of_ordered_path_hash_json": "2739579b3c908515b9ae6ed777dac804dee0cdfad5b6d211f8147755ccd96d02",
+    "changed_since_specialized": [],
+    "changed_during_expanded": []
+  },
+  "profiles": {
+    "before": {
+      "cases": [
+        {
+          "median_ms": {
+            "clean_check": 10.492708359379321,
+            "dirty_check": 0.23574999067932367,
+            "dirty_window_metadata": 0.22737501421943307,
+            "reset_baseline": 10.388333350419998,
+            "serialization": 10.511500004213303,
+            "undone_check": 10.446208296343684
+          },
+          "project_bytes": 41043,
+          "samples_ms": {
+            "clean_check": [
+              10.492708359379321,
+              10.529416671488434,
+              10.447958367876709
+            ],
+            "dirty_check": [
+              0.25391665985807776,
+              0.23574999067932367,
+              0.23395835887640715
+            ],
+            "dirty_window_metadata": [
+              0.22970832651481032,
+              0.22737501421943307,
+              0.2240000176243484
+            ],
+            "reset_baseline": [
+              10.271916631609201,
+              10.388333350419998,
+              10.42212505126372
+            ],
+            "serialization": [
+              10.811958345584571,
+              10.337083309423178,
+              10.511500004213303
+            ],
+            "undone_check": [
+              10.472833353560418,
+              10.446208296343684,
+              10.407458350528032
+            ]
+          },
+          "size": 1024
+        },
+        {
+          "median_ms": {
+            "clean_check": 43.0413750000298,
+            "dirty_check": 0.2497083623893559,
+            "dirty_window_metadata": 0.230916659347713,
+            "reset_baseline": 41.976541688200086,
+            "serialization": 44.809125014580786,
+            "undone_check": 43.94158336799592
+          },
+          "project_bytes": 118199,
+          "samples_ms": {
+            "clean_check": [
+              44.53591664787382,
+              39.45712500717491,
+              43.0413750000298
+            ],
+            "dirty_check": [
+              0.2614999539218843,
+              0.2497083623893559,
+              0.235249986872077
+            ],
+            "dirty_window_metadata": [
+              0.230916659347713,
+              0.23179169511422515,
+              0.22170832380652428
+            ],
+            "reset_baseline": [
+              41.976541688200086,
+              39.824916690122336,
+              43.491166667081416
+            ],
+            "serialization": [
+              44.82483334140852,
+              40.89050000766292,
+              44.809125014580786
+            ],
+            "undone_check": [
+              43.94158336799592,
+              40.14054167782888,
+              44.88883336307481
+            ]
+          },
+          "size": 2048
+        },
+        {
+          "fixture_sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+          "median_ms": {
+            "clean_check": 1011.6401249542832,
+            "dirty_check": 0.4937499761581421,
+            "dirty_window_metadata": 0.4047499969601631,
+            "undone_check": 1013.5276666842401
+          },
+          "project_bytes": 46505000,
+          "samples_ms": {
+            "clean_check": [
+              1022.5956666399725,
+              1011.6401249542832,
+              1009.4830000307411
+            ],
+            "dirty_check": [
+              0.4933333257213235,
+              0.4937499761581421,
+              0.521916663274169
+            ],
+            "dirty_window_metadata": [
+              0.3992499550804496,
+              0.4047499969601631,
+              0.41625002631917596
+            ],
+            "undone_check": [
+              1012.6210833550431,
+              1013.5276666842401,
+              1020.7885833806358
+            ]
+          },
+          "size": "actual saved 2048² raster-selection project"
+        }
+      ],
+      "configuration": "Debug native model, App -O, tests -Onone",
+      "iterations": 3,
+      "scope": "Serialization and dirty window metadata; excludes displayed UI latency, disk writes and memory",
+      "version": "2.12.0-rc1714"
+    },
+    "after": {
+      "cases": [
+        {
+          "median_ms": {
+            "clean_check": 11.350958317052573,
+            "dirty_check": 0.23425003746524453,
+            "dirty_window_metadata": 0.23179169511422515,
+            "reset_baseline": 11.601166683249176,
+            "serialization": 11.494583333842456,
+            "undone_check": 11.431124992668629
+          },
+          "project_bytes": 41043,
+          "samples_ms": {
+            "clean_check": [
+              11.350958317052573,
+              10.930499993264675,
+              11.359166644979268
+            ],
+            "dirty_check": [
+              0.23012497695162892,
+              0.23425003746524453,
+              0.2519999979995191
+            ],
+            "dirty_window_metadata": [
+              0.22466666996479034,
+              0.23179169511422515,
+              0.244666647631675
+            ],
+            "reset_baseline": [
+              11.66587503394112,
+              11.589166708290577,
+              11.601166683249176
+            ],
+            "serialization": [
+              11.154333362355828,
+              11.494583333842456,
+              11.885958374477923
+            ],
+            "undone_check": [
+              11.59349997760728,
+              11.190458317287266,
+              11.431124992668629
+            ]
+          },
+          "size": 1024
+        },
+        {
+          "median_ms": {
+            "clean_check": 42.54979168763384,
+            "dirty_check": 0.2687916858121753,
+            "dirty_window_metadata": 0.2443333505652845,
+            "reset_baseline": 42.39216668065637,
+            "serialization": 42.389291629660875,
+            "undone_check": 41.201833344530314
+          },
+          "project_bytes": 118199,
+          "samples_ms": {
+            "clean_check": [
+              44.76229165447876,
+              42.54979168763384,
+              40.82954168552533
+            ],
+            "dirty_check": [
+              0.2687916858121753,
+              0.26225001784041524,
+              0.3023750032298267
+            ],
+            "dirty_window_metadata": [
+              0.2512916689738631,
+              0.2443333505652845,
+              0.2425833372399211
+            ],
+            "reset_baseline": [
+              42.08116664085537,
+              42.39216668065637,
+              42.694500007200986
+            ],
+            "serialization": [
+              43.67166664451361,
+              41.790249990299344,
+              42.389291629660875
+            ],
+            "undone_check": [
+              42.123666673433036,
+              40.48595833592117,
+              41.201833344530314
+            ]
+          },
+          "size": 2048
+        },
+        {
+          "fixture_sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+          "median_ms": {
+            "clean_check": 86.30754164187238,
+            "dirty_check": 0.4700833815149963,
+            "dirty_window_metadata": 0.43412495870143175,
+            "undone_check": 90.70512501057237
+          },
+          "project_bytes": 46505000,
+          "samples_ms": {
+            "clean_check": [
+              87.28212502319366,
+              85.32312500756234,
+              86.30754164187238
+            ],
+            "dirty_check": [
+              0.4700833815149963,
+              0.47758332220837474,
+              0.451708328910172
+            ],
+            "dirty_window_metadata": [
+              0.43412495870143175,
+              0.46312500489875674,
+              0.42379164369776845
+            ],
+            "undone_check": [
+              90.70512501057237,
+              94.37825001077726,
+              90.39874997688457
+            ]
+          },
+          "size": "actual saved 2048² raster-selection project"
+        }
+      ],
+      "configuration": "Debug native model, App -O, tests -Onone",
+      "iterations": 3,
+      "scope": "Serialization and dirty window metadata; excludes displayed UI latency, disk writes and memory",
+      "version": "2.12.0-rc1715"
+    }
+  },
+  "ui": {
+    "app": "/Users/rocky/Sites/veilpic/.codex/DerivedData/Build/Products/Debug/Xomo.app",
+    "version": "2.12.0-rc1715",
+    "build": 1715,
+    "source": {
+      "path": "/private/tmp/xomo-ui-transform-rc1713-saved.xomoproject",
+      "bytes": 46505000,
+      "sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+      "unchanged": true
+    },
+    "saved": {
+      "path": "/private/tmp/xomo-ui-checkpoint-rc1715-saved.xomoproject",
+      "bytes": 46505326,
+      "sha256": "d4702928e1b4c50895db170eb48018a4ae0d70df02d01d73657bede9c26d5dfa",
+      "format": 10,
+      "stored_history_titles": 8
+    },
+    "steps": [
+      "Open source: 2048² canvas, 7 history states, Undo 0, Redo 0",
+      "Right: 8 history states, Undo 1, Redo 0, one move-selected-pixels history",
+      "Native close button: Save / Don't Save / Cancel sheet",
+      "Cancel then Undo: 7 history states, Undo 0, Redo 1",
+      "Native close button after Undo closes without save sheet; next activation opens a fresh untitled canvas",
+      "Reopen source, Right, Save As unique saved file; title and represented URL update",
+      "Open saved file without replacement save warning; 2048² canvas, 9 history states, Undo 0, Redo 0",
+      "Cmd-Q exits; no Xomo/build/test process remains"
+    ],
+    "cmd_w": "No observed AX/window change; native close button worked. Shortcut route remains independently unverified.",
+    "window_dirty_dot": "Not independently read from rendered window; native close sheet and coordinator unit coverage are evidence"
+  },
+  "gate": {
+    "next": "rc1720",
+    "installed": "2.12.0-rc1680",
+    "installed_build": 1680,
+    "installed_this_round": false,
+    "published": false,
+    "backup_audit": {
+      "path": "/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app",
+      "directory_exists": true,
+      "info_plist_exists": false,
+      "macos_directory_empty": true,
+      "codesign_verify_exit": 1,
+      "restorable": false,
+      "action": "Validate a new complete recoverable backup before rc1720 installation; do not overwrite Applications now"
+    }
+  },
+  "limitations": [
+    "Save still uses full pretty-printed JSON; no save/disk/UI-frame/memory acceleration claim",
+    "Fresh PNG work remains; small raster-only fixtures do not show systemic speedup",
+    "Layer comp and other remaining data still reencoded; large multi-layer/comp scenarios unmeasured",
+    "Existing giant View/ViewModel splitting debt is not resolved"
+  ],
+  "next_milestone": "Trace Cmd-W actual command route and add an effective regression; extend real editor task validation before rc1720"
+}
