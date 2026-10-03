@@ -179,8 +179,10 @@ final class XomoAutomationRegistry {
             }
             if layer.isLocked != locked { viewModel.toggleLayerLock(id) }
         case "xomo.layer.set_opacity":
+            let opacity = try requiredNumber("opacity", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerOpacityChange()
-            viewModel.setSelectedLayerOpacity(try requiredNumber("opacity", in: arguments))
+            viewModel.setSelectedLayerOpacity(opacity)
             viewModel.commitSelectedLayerOpacityChange()
         case "xomo.layer.set_blend_mode":
             let rawValue = try requiredString("mode", in: arguments)
