@@ -1,0 +1,289 @@
+{
+  "version": "2.12.0-rc1719",
+  "baseline_main": "ac7397e9b98047aa2e2b5dcb2cb8259808af3d64",
+  "branch": "codex/property-redo-boundary-rc1719",
+  "date": "2026-10-04",
+  "result": "Passed",
+  "scope": "Finish preceding canvas preview before deferred Redo capture; real raster keyboard workflow, save/reopen/export and guarded normal quit. Not full Release gate or physical mid-drag acceptance.",
+  "review": {
+    "window_start": "2026-10-03T20:13:55+08:00",
+    "window_finish": "2026-10-04T00:13:55+08:00",
+    "baseline": "930b01fc6d153277101e6857e61a657499de77d2",
+    "end": "ac7397e9b98047aa2e2b5dcb2cb8259808af3d64",
+    "finding": "No-op property transaction could revive obsolete Redo after changed pixel move, or drop pending Redo after unchanged rotation/resize."
+  },
+  "initial_compile": {
+    "path": "/private/tmp/veilpic-rc1719-deferred-redo-red-tests.xcresult",
+    "exit": 65,
+    "elapsed_seconds": 57.25,
+    "cause": "Swift Testing macro accepts two parameter collections, not three; fixed declaration before executable baseline.",
+    "is_product_failure_baseline": false
+  },
+  "red": {
+    "path": "/private/tmp/veilpic-rc1719-deferred-redo-baseline-tests.xcresult",
+    "methods": 3,
+    "runs": 83,
+    "failed_methods": 2,
+    "failed_runs": 34,
+    "passed_runs": 49,
+    "issues": 123,
+    "exit": 65,
+    "elapsed_seconds": 64.83,
+    "production_logic": "rc1718 deferred transaction logic; rc1719 metadata and new tests"
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1719-deferred-redo-verified-tests.xcresult",
+    "result": "Passed",
+    "methods": 453,
+    "failed": 0,
+    "skipped": 0,
+    "start": 1791045094.392,
+    "finish": 1791045172.815,
+    "config": [
+      {
+        "passedTests": 580,
+        "failedTests": 0,
+        "skippedTests": 0
+      }
+    ],
+    "suites": 12,
+    "elapsed_seconds": 81.82,
+    "exit": 0,
+    "new_methods": 3,
+    "new_runs": 83,
+    "missing_requested_suites": []
+  },
+  "expanded": {
+    "path": "/private/tmp/veilpic-rc1719-expanded-tests.xcresult",
+    "result": "Passed",
+    "methods": 1009,
+    "failed": 0,
+    "skipped": 0,
+    "start": 1791045269.586,
+    "finish": 1791045329.026,
+    "config": [
+      {
+        "passedTests": 1291,
+        "failedTests": 0,
+        "skippedTests": 0
+      }
+    ],
+    "missing": [],
+    "suites": 59,
+    "elapsed_seconds": 63.14,
+    "exit": 0,
+    "mode": "test-without-building",
+    "excluded": "Only previously measured profileNativeSerializationAndDirtyChecks; no functional regression excluded."
+  },
+  "source_inputs": {
+    "count": 407,
+    "scope": "404 Swift/Xcode inputs plus 3 WindowCommands.strings",
+    "sha256": "7f94ebdd8b0360159421d314e5f890d9ddc5cf670399c03cf8bbf5338e477f21",
+    "changed_after_specialized": [],
+    "changed_after_expanded": [],
+    "changed_after_native_workflow": []
+  },
+  "coverage": {
+    "preview_types": [
+      "pixel move",
+      "rotation",
+      "resize"
+    ],
+    "changed_and_unchanged": true,
+    "no_op_deferred_edit_types": [
+      "opacity",
+      "fill opacity",
+      "Blend If",
+      "mask density",
+      "mask feather",
+      "path anchor",
+      "shape gradient",
+      "gradient overlay center",
+      "axis",
+      "stop",
+      "midpoint"
+    ],
+    "effective_property_types": [
+      "opacity",
+      "fill opacity",
+      "Blend If",
+      "mask density",
+      "mask feather"
+    ],
+    "checks": [
+      "Complete project data and theme Redo",
+      "Obsolete branch must stay discarded",
+      "Unchanged preview retains pending document/theme Redo",
+      "Independent property Undo/Redo",
+      "Actual automation same-opacity entry"
+    ],
+    "limitation": "Path/gradient entries in new parameterized test call their production Undo helpers; not proof of every physical handle or all simultaneous transaction types."
+  },
+  "ui": {
+    "root": "/private/tmp/xomo-rc1719-workflow.gSnfq4",
+    "source": "veilpic/Assets.xcassets/WorkbenchBackdrop.imageset/workbench-backdrop.png",
+    "source_sha256": "cfc382f81dcc23d58f3124f9d5570fd1ae51aa54a28f3a33c79bbf97eff79183",
+    "source_unchanged": true,
+    "source_kind": "Repository-owned detailed illustration; not photo or uniform synthetic color fixture",
+    "old_debug_pid": 44255,
+    "old_pid_gone_after_normal_quit": true,
+    "acceptance_pid": 57504,
+    "acceptance_pid_start": "2026-10-04T00:37:23+08:00",
+    "runtime_version_evidence": "Native-saved project appVersion, not disk-only bundle version",
+    "pixel_workflow": {
+      "runtime_versions": {
+        "baseline": "2.12.0-rc1719",
+        "moved": "2.12.0-rc1719",
+        "undone": "2.12.0-rc1719",
+        "redone": "2.12.0-rc1719"
+      },
+      "formats": {
+        "baseline": 10,
+        "moved": 10,
+        "undone": 10,
+        "redone": 10
+      },
+      "dimensions": {
+        "baseline": [
+          1586,
+          992
+        ],
+        "moved": [
+          1596,
+          992
+        ],
+        "undone": [
+          1586,
+          992
+        ],
+        "redone": [
+          1596,
+          992
+        ]
+      },
+      "undo_png_equal": true,
+      "undo_rgba_equal": true,
+      "undo_frame_equal": true,
+      "redo_full_project_equal": true,
+      "whole_source_shifted_10px": true,
+      "left_10px_transparent": true,
+      "files": {
+        "baseline": {
+          "bytes": 2977953,
+          "sha256": "502f7cd5cabcef310c5ff10949561e4e108b16805f429f01d064c7640423990c"
+        },
+        "moved": {
+          "bytes": 23418152,
+          "sha256": "054d021f18f51dae2e90e7c5859346905b54810e13de5e9da3b8b3e48f36a73a"
+        },
+        "undone": {
+          "bytes": 2978225,
+          "sha256": "8c41a8e19bc41d72afe305d5136e407bac467ca47946d5fc8dfdd611f8b543d9"
+        },
+        "redone": {
+          "bytes": 23418152,
+          "sha256": "054d021f18f51dae2e90e7c5859346905b54810e13de5e9da3b8b3e48f36a73a"
+        }
+      }
+    },
+    "reopen_workflow": {
+      "project_fields_equal_excluding_history": true,
+      "original_history": [
+        "打开",
+        "打开图像文件",
+        "全选",
+        "移动选中像素"
+      ],
+      "reopened_history": [
+        "打开",
+        "打开图像文件",
+        "全选",
+        "移动选中像素",
+        "打开项目"
+      ],
+      "export_dimensions": {
+        "edited": [
+          1586,
+          992
+        ],
+        "reopened": [
+          1586,
+          992
+        ]
+      },
+      "export_png_equal": true,
+      "export_rgba_equal": true,
+      "export_rgba_sha256": "abf75e3af875fb5f7cfa8e24a0c353e0d20d42a5044baad409edb85b265d09db",
+      "files": {
+        "edited.png": {
+          "bytes": 2128918,
+          "sha256": "4952f2e403b2212f039d46cbda81628557d910d56d62b1c81549e80b51ad9033"
+        },
+        "reopened.png": {
+          "bytes": 2128918,
+          "sha256": "4952f2e403b2212f039d46cbda81628557d910d56d62b1c81549e80b51ad9033"
+        },
+        "reopened.xomoproject": {
+          "bytes": 23418172,
+          "sha256": "a56f1f8a160c7d368ad2361dd728a57e89b9782707698295f73c5781874840a4"
+        }
+      }
+    },
+    "reopen_method": "Native Open panel reload of saved redone.xomoproject; no window close required",
+    "export": "PNG composite, 1x, 1586x992; actual exported file inspected, not native canvas screenshot",
+    "quit_guard": {
+      "unsaved_edit_history": "6 states / Undo 1 / Redo 0",
+      "super_q_prompt": "Save / Don't Save / Cancel",
+      "cancel_kept_document": true,
+      "after_cancel_history": "6 states / Undo 1 / Redo 0",
+      "undo_to_saved_point": "5 states / Undo 0 / Redo 1",
+      "normal_super_q": true,
+      "acceptance_pid_gone": true,
+      "remaining_xomo_build_test_processes": [],
+      "force_quit": false
+    },
+    "control_limitations": [
+      "First native Open sequence left a residual file panel; cancelled it before saving.",
+      "AX read after clean quit returned procNotFound/App quit; process absence independently verified, app not reactivated.",
+      "No native canvas screenshot or physical mid-drag acceptance."
+    ]
+  },
+  "contracts": {
+    "release": {
+      "runs": 10,
+      "assertions": 30,
+      "failed": 0
+    },
+    "archive": {
+      "runs": 3,
+      "assertions": 22,
+      "failed": 0
+    },
+    "readme": {
+      "assertions": 29,
+      "failed": 0
+    }
+  },
+  "gate": {
+    "next": "rc1720",
+    "installed": "2.12.0-rc1680",
+    "installed_this_round": false,
+    "backup": "Old backup lacks Info.plist and executable; create and validate complete recoverable backup before overwrite.",
+    "published": false
+  },
+  "limitations": [
+    "No full Release build or complete project gate this round.",
+    "No UI frame latency or idle CPU optimization claim.",
+    "Existing large View/ViewModel/test files remain architecture debt; no broad rewrite.",
+    "No Figma expansion or change to component-library arrow / semantic tool cursor policy."
+  ],
+  "next_milestone": "rc1720 full Release, complete project regression, real workflow/cursor smoke and validated recoverable /Applications install; fix any actual failure before declaring gate passed.",
+  "commands": {
+    "baseline": "ruby -e 'require \"open3\"; require \"json\"; File.open(\"/private/tmp/veilpic-build.lock\",File::RDWR|File::CREAT,0600) { |lock| abort \"Build lock busy\" unless lock.flock(File::LOCK_EX|File::LOCK_NB); start=Process.clock_gettime(Process::CLOCK_MONOTONIC); File.open(\"/private/tmp/veilpic-rc1719-deferred-redo-baseline-tests.log\",\"w\") { |log| Open3.popen2e(*JSON.parse(\"[\\\"xcodebuild\\\",\\\"-project\\\",\\\"veilpic.xcodeproj\\\",\\\"-scheme\\\",\\\"veilpic\\\",\\\"-configuration\\\",\\\"Debug\\\",\\\"-destination\\\",\\\"platform=macOS,arch=arm64\\\",\\\"-derivedDataPath\\\",\\\".codex/DerivedData\\\",\\\"-clonedSourcePackagesDirPath\\\",\\\".codex/SourcePackages\\\",\\\"-disableAutomaticPackageResolution\\\",\\\"QPIC_SKIP_ADHOC_SIGN=YES\\\",\\\"ENABLE_USER_SCRIPT_SANDBOXING=NO\\\",\\\"-parallel-testing-enabled\\\",\\\"NO\\\",\\\"-only-testing:veilpicTests/ImageEditorDeferredRedoBoundaryTests\\\",\\\"-resultBundlePath\\\",\\\"/private/tmp/veilpic-rc1719-deferred-redo-baseline-tests.xcresult\\\",\\\"test\\\"]\")) { |input,output,wait| input.close; output.each_line { |line| log.write(line); puts line[0,350] if line.match?(/error:|Executed|TEST.*FAILED|TEST.*SUCCEEDED|failed after|Test run with/) }; code=wait.value.exitstatus; puts JSON.generate({exit:code,elapsed_seconds:(Process.clock_gettime(Process::CLOCK_MONOTONIC)-start).round(2)}); exit code } } }'",
+    "specialized": "ruby -e 'require \"open3\"; require \"json\"; File.open(\"/private/tmp/veilpic-build.lock\",File::RDWR|File::CREAT,0600) { |lock| abort \"Build lock busy\" unless lock.flock(File::LOCK_EX|File::LOCK_NB); start=Process.clock_gettime(Process::CLOCK_MONOTONIC); File.open(\"/private/tmp/veilpic-rc1719-deferred-redo-verified-tests.log\",\"w\") { |log| Open3.popen2e(*JSON.parse(\"[\\\"xcodebuild\\\",\\\"-project\\\",\\\"veilpic.xcodeproj\\\",\\\"-scheme\\\",\\\"veilpic\\\",\\\"-configuration\\\",\\\"Debug\\\",\\\"-destination\\\",\\\"platform=macOS,arch=arm64\\\",\\\"-derivedDataPath\\\",\\\".codex/DerivedData\\\",\\\"-clonedSourcePackagesDirPath\\\",\\\".codex/SourcePackages\\\",\\\"-disableAutomaticPackageResolution\\\",\\\"QPIC_SKIP_ADHOC_SIGN=YES\\\",\\\"ENABLE_USER_SCRIPT_SANDBOXING=NO\\\",\\\"-parallel-testing-enabled\\\",\\\"NO\\\",\\\"-only-testing:veilpicTests/ImageEditorDeferredRedoBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformFinalStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformCancellationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerBatchAppearanceTests\\\",\\\"-only-testing:veilpicTests/ImageEditorScopeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorHistoryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDocumentTests\\\",\\\"-only-testing:veilpicTests/ImageEditorCanvasCursorTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGradientSelectionTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSavedPathTests\\\",\\\"-resultBundlePath\\\",\\\"/private/tmp/veilpic-rc1719-deferred-redo-verified-tests.xcresult\\\",\\\"test\\\"]\")) { |input,output,wait| input.close; output.each_line { |line| log.write(line); puts line[0,350] if line.match?(/error:|Executed|TEST.*FAILED|TEST.*SUCCEEDED|failed after|Test run with/) }; code=wait.value.exitstatus; puts JSON.generate({exit:code,elapsed_seconds:(Process.clock_gettime(Process::CLOCK_MONOTONIC)-start).round(2)}); exit code } } }'",
+    "expanded": "ruby -e 'require \"open3\"; require \"json\"; File.open(\"/private/tmp/veilpic-build.lock\",File::RDWR|File::CREAT,0600) { |lock| abort \"Build lock busy\" unless lock.flock(File::LOCK_EX|File::LOCK_NB); start=Process.clock_gettime(Process::CLOCK_MONOTONIC); File.open(\"/private/tmp/veilpic-rc1719-expanded-tests.log\",\"w\") { |log| Open3.popen2e(*JSON.parse(\"[\\\"xcodebuild\\\",\\\"-project\\\",\\\"veilpic.xcodeproj\\\",\\\"-scheme\\\",\\\"veilpic\\\",\\\"-configuration\\\",\\\"Debug\\\",\\\"-destination\\\",\\\"platform=macOS,arch=arm64\\\",\\\"-derivedDataPath\\\",\\\".codex/DerivedData\\\",\\\"-clonedSourcePackagesDirPath\\\",\\\".codex/SourcePackages\\\",\\\"-disableAutomaticPackageResolution\\\",\\\"QPIC_SKIP_ADHOC_SIGN=YES\\\",\\\"ENABLE_USER_SCRIPT_SANDBOXING=NO\\\",\\\"-parallel-testing-enabled\\\",\\\"NO\\\",\\\"-only-testing:veilpicTests/ImageEditorCanvasCursorTests\\\",\\\"-only-testing:veilpicTests/ImageEditorCenteredResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorDeferredRedoBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGradientSelectionTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGroupResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGroupRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorHistoryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorInspectorResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorKeyboardEventRoutingTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerBatchAppearanceTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerCompTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerGroupMovementConsistencyTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerResizePointerEventTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerTransformContextTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveActivationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveCandidateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveEventTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveReleaseTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPSDTests\\\",\\\"-only-testing:veilpicTests/ImageEditorParagraphLayoutTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveCoverageTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveMaskAlphaTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMovePreviewReuseTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelSelectionLayerBoundsTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelSelectionMoveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPrintTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectContentCheckpointTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDirtyStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDocumentTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectRevertTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectSaveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorQuickExportPNGTests\\\",\\\"-only-testing:veilpicTests/ImageEditorRasterRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorRotationHandleGestureTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSavedPathTests\\\",\\\"-only-testing:veilpicTests/ImageEditorScaledPixelSelectionMoveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorScopeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionClearSamplingTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionFillCoverageTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectContextTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectPlacementTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectSourceExportTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTextBoxCreationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformCancellationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformFinalStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformHUDTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformLockTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformReferencePointTests\\\",\\\"-only-testing:veilpicTests/ImageEditorUnlinkedMaskResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorUnlinkedMaskRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorVectorLayerTests\\\",\\\"-only-testing:veilpicTests/XomoCloseCommandTests\\\",\\\"-only-testing:veilpicTests/XomoDocumentCloseGuardTests\\\",\\\"-only-testing:veilpicTests/XomoExternalDocumentOpenTests\\\",\\\"-only-testing:veilpicTests/XomoFigmaImportTransactionTests\\\",\\\"-only-testing:veilpicTests/XomoLayerClipboardTests\\\",\\\"-only-testing:veilpicTests/XomoRecentDocumentsTests\\\",\\\"-skip-testing:veilpicTests/ImageEditorProjectDirtyStateTests/profileNativeSerializationAndDirtyChecks\\\",\\\"-resultBundlePath\\\",\\\"/private/tmp/veilpic-rc1719-expanded-tests.xcresult\\\",\\\"test-without-building\\\"]\")) { |input,output,wait| input.close; output.each_line { |line| log.write(line); puts line[0,350] if line.match?(/error:|Executed|TEST.*FAILED|TEST.*SUCCEEDED|failed after|Test run with/) }; code=wait.value.exitstatus; puts JSON.generate({exit:code,elapsed_seconds:(Process.clock_gettime(Process::CLOCK_MONOTONIC)-start).round(2)}); exit code } } }'",
+    "fingerprint": "ruby -rjson -rdigest -e 'paths=JSON.parse(\"[\\\"veilpic.xcodeproj/project.pbxproj\\\",\\\"veilpic/AboutView.swift\\\",\\\"veilpic/AppModels.swift\\\",\\\"veilpic/ClipboardImageWriter.swift\\\",\\\"veilpic/ImageDataEncoding.swift\\\",\\\"veilpic/ImageEditorAdjustmentLayerTransactions.swift\\\",\\\"veilpic/ImageEditorAdjustments.swift\\\",\\\"veilpic/ImageEditorBlendCompositing.swift\\\",\\\"veilpic/ImageEditorBrushDynamicsPreferences.swift\\\",\\\"veilpic/ImageEditorBrushPresetManager.swift\\\",\\\"veilpic/ImageEditorBrushPresetPanel.swift\\\",\\\"veilpic/ImageEditorBrushPresetQuery.swift\\\",\\\"veilpic/ImageEditorBrushPresetUsage.swift\\\",\\\"veilpic/ImageEditorBrushPressure.swift\\\",\\\"veilpic/ImageEditorBrushStroke.swift\\\",\\\"veilpic/ImageEditorCanvasCommands.swift\\\",\\\"veilpic/ImageEditorCanvasGeometry.swift\\\",\\\"veilpic/ImageEditorChannels.swift\\\",\\\"veilpic/ImageEditorCloneStamp.swift\\\",\\\"veilpic/ImageEditorColorRangeModels.swift\\\",\\\"veilpic/ImageEditorColorRangePanel.swift\\\",\\\"veilpic/ImageEditorColorWell.swift\\\",\\\"veilpic/ImageEditorDarkPanelControls.swift\\\",\\\"veilpic/ImageEditorDocumentModels.swift\\\",\\\"veilpic/ImageEditorExport.swift\\\",\\\"veilpic/ImageEditorExportPanel.swift\\\",\\\"veilpic/ImageEditorFillModels.swift\\\",\\\"veilpic/ImageEditorFilterLayerTransactions.swift\\\",\\\"veilpic/ImageEditorFilterModels.swift\\\",\\\"veilpic/ImageEditorFilters.swift\\\",\\\"veilpic/ImageEditorFixedLocalMask.swift\\\",\\\"veilpic/ImageEditorFractionalPixelMove.swift\\\",\\\"veilpic/ImageEditorGlowTechnique.swift\\\",\\\"veilpic/ImageEditorGradient.swift\\\",\\\"veilpic/ImageEditorGradientFillControls.swift\\\",\\\"veilpic/ImageEditorGradientOverlayCenterHandle.swift\\\",\\\"veilpic/ImageEditorGradientOverlayStops.swift\\\",\\\"veilpic/ImageEditorGroupResize.swift\\\",\\\"veilpic/ImageEditorGroupRotation.swift\\\",\\\"veilpic/ImageEditorGuides.swift\\\",\\\"veilpic/ImageEditorHealingBrush.swift\\\",\\\"veilpic/ImageEditorHistogram.swift\\\",\\\"veilpic/ImageEditorHotspotPanel.swift\\\",\\\"veilpic/ImageEditorImport.swift\\\",\\\"veilpic/ImageEditorKeyboardEventRouter.swift\\\",\\\"veilpic/ImageEditorLayerAlignment.swift\\\",\\\"veilpic/ImageEditorLayerBaseline.swift\\\",\\\"veilpic/ImageEditorLayerCompositeHierarchy.swift\\\",\\\"veilpic/ImageEditorLayerComps.swift\\\",\\\"veilpic/ImageEditorLayerDeletion.swift\\\",\\\"veilpic/ImageEditorLayerDuplication.swift\\\",\\\"veilpic/ImageEditorLayerGroupExpansionContext.swift\\\",\\\"veilpic/ImageEditorLayerGroupMovement.swift\\\",\\\"veilpic/ImageEditorLayerGrouping.swift\\\",\\\"veilpic/ImageEditorLayerLinks.swift\\\",\\\"veilpic/ImageEditorLayerLockContext.swift\\\",\\\"veilpic/ImageEditorLayerMaskCommands.swift\\\",\\\"veilpic/ImageEditorLayerMerge.swift\\\",\\\"veilpic/ImageEditorLayerMergeHierarchy.swift\\\",\\\"veilpic/ImageEditorLayerModel.swift\\\",\\\"veilpic/ImageEditorLayerOrdering.swift\\\",\\\"veilpic/ImageEditorLayerPanel.swift\\\",\\\"veilpic/ImageEditorLayerRotationHandle.swift\\\",\\\"veilpic/ImageEditorLayerStyleBuiltInPresets.swift\\\",\\\"veilpic/ImageEditorLayerStyleCommands.swift\\\",\\\"veilpic/ImageEditorLayerStyleGradientOverlayControls.swift\\\",\\\"veilpic/ImageEditorLayerStylePresetManager.swift\\\",\\\"veilpic/ImageEditorLayerStylePresetQuery.swift\\\",\\\"veilpic/ImageEditorLayerStylePresetThumbnail.swift\\\",\\\"veilpic/ImageEditorLayerStylePresetUsage.swift\\\",\\\"veilpic/ImageEditorLayerStylePresets.swift\\\",\\\"veilpic/ImageEditorLayerSummary.swift\\\",\\\"veilpic/ImageEditorLayerVisibilityContext.swift\\\",\\\"veilpic/ImageEditorMagicWand.swift\\\",\\\"veilpic/ImageEditorMaskSampling.swift\\\",\\\"veilpic/ImageEditorMenuBar.swift\\\",\\\"veilpic/ImageEditorModelImageOperations.swift\\\",\\\"veilpic/ImageEditorModels.swift\\\",\\\"veilpic/ImageEditorNormalBlendKernel.swift\\\",\\\"veilpic/ImageEditorObjectDragConstraint.swift\\\",\\\"veilpic/ImageEditorPSD.swift\\\",\\\"veilpic/ImageEditorPSDCompatibility.swift\\\",\\\"veilpic/ImageEditorPaintBucket.swift\\\",\\\"veilpic/ImageEditorPaintBucketSymbol.swift\\\",\\\"veilpic/ImageEditorPathBoolean.swift\\\",\\\"veilpic/ImageEditorPathCommands.swift\\\",\\\"veilpic/ImageEditorPercentageField.swift\\\",\\\"veilpic/ImageEditorPixelMoveMaskAlpha.swift\\\",\\\"veilpic/ImageEditorPixelSelectionMoveBacking.swift\\\",\\\"veilpic/ImageEditorPixelSelectionMovePixels.swift\\\",\\\"veilpic/ImageEditorPixelSelectionMoveTransaction.swift\\\",\\\"veilpic/ImageEditorPrint.swift\\\",\\\"veilpic/ImageEditorProjectContentCheckpoint.swift\\\",\\\"veilpic/ImageEditorProjectDocument.swift\\\",\\\"veilpic/ImageEditorProjectRasterData.swift\\\",\\\"veilpic/ImageEditorProjectSaveMetadata.swift\\\",\\\"veilpic/ImageEditorProjectSaveState.swift\\\",\\\"veilpic/ImageEditorQuickMaskPreferences.swift\\\",\\\"veilpic/ImageEditorRasterRotation.swift\\\",\\\"veilpic/ImageEditorRasterize.swift\\\",\\\"veilpic/ImageEditorRectangleCornerRadii.swift\\\",\\\"veilpic/ImageEditorRedEye.swift\\\",\\\"veilpic/ImageEditorSavedPaths.swift\\\",\\\"veilpic/ImageEditorScrollZoom.swift\\\",\\\"veilpic/ImageEditorSelectionBoolean.swift\\\",\\\"veilpic/ImageEditorSelectionClearTransaction.swift\\\",\\\"veilpic/ImageEditorSelectionCommands.swift\\\",\\\"veilpic/ImageEditorSelectionEdges.swift\\\",\\\"veilpic/ImageEditorSelectionEditCommands.swift\\\",\\\"veilpic/ImageEditorSelectionFillPanel.swift\\\",\\\"veilpic/ImageEditorSelectionMaskBounds.swift\\\",\\\"veilpic/ImageEditorSelectionMaskTranslation.swift\\\",\\\"veilpic/ImageEditorSelectionPixelBacking.swift\\\",\\\"veilpic/ImageEditorShapeCornerRadius.swift\\\",\\\"veilpic/ImageEditorShapeGradientHandles.swift\\\",\\\"veilpic/ImageEditorShapeStyle.swift\\\",\\\"veilpic/ImageEditorShapeStyleControls.swift\\\",\\\"veilpic/ImageEditorSlices.swift\\\",\\\"veilpic/ImageEditorSmartObjectContext.swift\\\",\\\"veilpic/ImageEditorSmartObjectSourceExport.swift\\\",\\\"veilpic/ImageEditorSpacebarPanEventRouter.swift\\\",\\\"veilpic/ImageEditorSpongeModeShortcut.swift\\\",\\\"veilpic/ImageEditorStackLayout.swift\\\",\\\"veilpic/ImageEditorStackLayoutControls.swift\\\",\\\"veilpic/ImageEditorTextBoxGeometry.swift\\\",\\\"veilpic/ImageEditorTextLayoutCommands.swift\\\",\\\"veilpic/ImageEditorToneAirbrush.swift\\\",\\\"veilpic/ImageEditorToneBrush.swift\\\",\\\"veilpic/ImageEditorToneRangeShortcut.swift\\\",\\\"veilpic/ImageEditorTransform.swift\\\",\\\"veilpic/ImageEditorTransformHUD.swift\\\",\\\"veilpic/ImageEditorUndoTransactionState.swift\\\",\\\"veilpic/ImageEditorVectorModels.swift\\\",\\\"veilpic/ImageEditorView.swift\\\",\\\"veilpic/ImageEditorViewModel.swift\\\",\\\"veilpic/Item.swift\\\",\\\"veilpic/L10n.swift\\\",\\\"veilpic/LosslessImageOptimizer.swift\\\",\\\"veilpic/PasteboardImageAccess.swift\\\",\\\"veilpic/SomeIMUpdateController.swift\\\",\\\"veilpic/Theme.swift\\\",\\\"veilpic/XomoApplicationCommands.swift\\\",\\\"veilpic/XomoAutomationAdjustmentSettings.swift\\\",\\\"veilpic/XomoAutomationFillSettings.swift\\\",\\\"veilpic/XomoAutomationFilterSettings.swift\\\",\\\"veilpic/XomoAutomationModels.swift\\\",\\\"veilpic/XomoAutomationRegistry.swift\\\",\\\"veilpic/XomoAutomationServer.swift\\\",\\\"veilpic/XomoCanvasObject.swift\\\",\\\"veilpic/XomoCanvasPreset.swift\\\",\\\"veilpic/XomoComponentInsertion.swift\\\",\\\"veilpic/XomoComponentTheme.swift\\\",\\\"veilpic/XomoDocumentCloseGuard.swift\\\",\\\"veilpic/XomoDocumentLoadingView.swift\\\",\\\"veilpic/XomoEditableSVGImporter.swift\\\",\\\"veilpic/XomoEditorWorkspaceView.swift\\\",\\\"veilpic/XomoExternalDocumentOpen.swift\\\",\\\"veilpic/XomoFigmaAuthorizedMetadataController.swift\\\",\\\"veilpic/XomoFigmaCredentialStore.swift\\\",\\\"veilpic/XomoFigmaImageAssetAPI.swift\\\",\\\"veilpic/XomoFigmaImageFilterBaker.swift\\\",\\\"veilpic/XomoFigmaImportAvailability.swift\\\",\\\"veilpic/XomoFigmaLink.swift\\\",\\\"veilpic/XomoFigmaLinkImportSheet.swift\\\",\\\"veilpic/XomoFigmaMetadataAPI.swift\\\",\\\"veilpic/XomoFigmaNodeContentAPI.swift\\\",\\\"veilpic/XomoFigmaNodeIdentityValidation.swift\\\",\\\"veilpic/XomoFigmaNodeImportController.swift\\\",\\\"veilpic/XomoFigmaNodeImportPlan.swift\\\",\\\"veilpic/XomoFigmaNodeMaterializer.swift\\\",\\\"veilpic/XomoHelp.swift\\\",\\\"veilpic/XomoLayerClipboard.swift\\\",\\\"veilpic/XomoLeftSidebar.swift\\\",\\\"veilpic/XomoNewCanvasSheet.swift\\\",\\\"veilpic/XomoRecentDocuments.swift\\\",\\\"veilpic/XomoSVGPathParser.swift\\\",\\\"veilpic/en.lproj/WindowCommands.strings\\\",\\\"veilpic/ja.lproj/WindowCommands.strings\\\",\\\"veilpic/veilpicApp.swift\\\",\\\"veilpic/zh-Hans.lproj/WindowCommands.strings\\\",\\\"veilpicTests/ClipboardImageWriterTests.swift\\\",\\\"veilpicTests/ImageEditorAdjustmentTests.swift\\\",\\\"veilpicTests/ImageEditorBackgroundLayerConversionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelAngleTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelDirectionTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelHighlightColorTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelOpacityTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelShadowColorTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelSizeTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBevelSoftenTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorBlendModeTests.swift\\\",\\\"veilpicTests/ImageEditorBrushDynamicsPreferencesTests.swift\\\",\\\"veilpicTests/ImageEditorBrushPresetQueryTests.swift\\\",\\\"veilpicTests/ImageEditorBrushPresetUsageTests.swift\\\",\\\"veilpicTests/ImageEditorBrushStrokeTests.swift\\\",\\\"veilpicTests/ImageEditorCanvasCommandTests.swift\\\",\\\"veilpicTests/ImageEditorCanvasCursorTests.swift\\\",\\\"veilpicTests/ImageEditorCanvasFileDropTests.swift\\\",\\\"veilpicTests/ImageEditorCanvasGeometryTests.swift\\\",\\\"veilpicTests/ImageEditorCenteredResizeTests.swift\\\",\\\"veilpicTests/ImageEditorChannelTests.swift\\\",\\\"veilpicTests/ImageEditorCloneStampSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorColorWellTests.swift\\\",\\\"veilpicTests/ImageEditorCombinedMaskSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorCopyAsSVGTests.swift\\\",\\\"veilpicTests/ImageEditorDarkPanelControlsTests.swift\\\",\\\"veilpicTests/ImageEditorDeferredRedoBoundaryTests.swift\\\",\\\"veilpicTests/ImageEditorEffectiveSelectionAutomationTests.swift\\\",\\\"veilpicTests/ImageEditorEmptySelectionGeometryTests.swift\\\",\\\"veilpicTests/ImageEditorEmptySelectionNudgeTests.swift\\\",\\\"veilpicTests/ImageEditorExportFormatTests.swift\\\",\\\"veilpicTests/ImageEditorFigmaProvenanceTests.swift\\\",\\\"veilpicTests/ImageEditorFilterTests.swift\\\",\\\"veilpicTests/ImageEditorGlobalLightLinkAutomationTests.swift\\\",\\\"veilpicTests/ImageEditorGradientSelectionTests.swift\\\",\\\"veilpicTests/ImageEditorGroupMaskTranslationTests.swift\\\",\\\"veilpicTests/ImageEditorGroupResizeTests.swift\\\",\\\"veilpicTests/ImageEditorGroupRotationTests.swift\\\",\\\"veilpicTests/ImageEditorGuideTests.swift\\\",\\\"veilpicTests/ImageEditorHealingBrushTests.swift\\\",\\\"veilpicTests/ImageEditorHistoryTests.swift\\\",\\\"veilpicTests/ImageEditorHotspotHTMLExporterTests.swift\\\",\\\"veilpicTests/ImageEditorHotspotOrthogonalTransformTests.swift\\\",\\\"veilpicTests/ImageEditorImageComparison.swift\\\",\\\"veilpicTests/ImageEditorInspectorResizeTests.swift\\\",\\\"veilpicTests/ImageEditorInspectorTranslationTests.swift\\\",\\\"veilpicTests/ImageEditorKeyboardEventRoutingTests.swift\\\",\\\"veilpicTests/ImageEditorLayerBatchAppearanceTests.swift\\\",\\\"veilpicTests/ImageEditorLayerCanvasAlignmentContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerCompTests.swift\\\",\\\"veilpicTests/ImageEditorLayerCompositeHierarchyTests.swift\\\",\\\"veilpicTests/ImageEditorLayerDeletionTests.swift\\\",\\\"veilpicTests/ImageEditorLayerDistributionContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerDuplicateTests.swift\\\",\\\"veilpicTests/ImageEditorLayerGroupExpansionContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerGroupExpansionTests.swift\\\",\\\"veilpicTests/ImageEditorLayerGroupMovementConsistencyTests.swift\\\",\\\"veilpicTests/ImageEditorLayerGroupingConsistencyTests.swift\\\",\\\"veilpicTests/ImageEditorLayerLinksContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerLockContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerMaskContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerMergeHierarchyTests.swift\\\",\\\"veilpicTests/ImageEditorLayerOrderingContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerPanelStyleTests.swift\\\",\\\"veilpicTests/ImageEditorLayerPeerAlignmentContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerRangeSelectionTests.swift\\\",\\\"veilpicTests/ImageEditorLayerResizePointerEventTests.swift\\\",\\\"veilpicTests/ImageEditorLayerRowBatchPropertyTests.swift\\\",\\\"veilpicTests/ImageEditorLayerSelectionAlignmentContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerSpacingDistributionContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStyleBuiltInPresetTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStylePresetManagerTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStylePresetQueryTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStylePresetTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStylePresetUsageTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStyleTests.swift\\\",\\\"veilpicTests/ImageEditorLayerStyleVisibilityScaleTests.swift\\\",\\\"veilpicTests/ImageEditorLayerThumbnailSelectionTests.swift\\\",\\\"veilpicTests/ImageEditorLayerTransformContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerVisibilityContextTests.swift\\\",\\\"veilpicTests/ImageEditorLayerVisibilityFocusContextTests.swift\\\",\\\"veilpicTests/ImageEditorMaskApplicationSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorMaskBoundsReference.swift\\\",\\\"veilpicTests/ImageEditorMaskFeatherSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorMaskLinkRenderingTests.swift\\\",\\\"veilpicTests/ImageEditorMaskSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorMaskTranslationReference.swift\\\",\\\"veilpicTests/ImageEditorMiddleMousePanCompletionTests.swift\\\",\\\"veilpicTests/ImageEditorMiddleMousePanEventTests.swift\\\",\\\"veilpicTests/ImageEditorNativePointerTestFixture.swift\\\",\\\"veilpicTests/ImageEditorNormalBlendKernelTests.swift\\\",\\\"veilpicTests/ImageEditorNormalBlendReference.swift\\\",\\\"veilpicTests/ImageEditorObjectDragConstraintTests.swift\\\",\\\"veilpicTests/ImageEditorObjectMoveActivationTests.swift\\\",\\\"veilpicTests/ImageEditorObjectMoveCandidateTests.swift\\\",\\\"veilpicTests/ImageEditorObjectMoveEventTests.swift\\\",\\\"veilpicTests/ImageEditorObjectMoveReleaseTests.swift\\\",\\\"veilpicTests/ImageEditorOptionsBarStyleTests.swift\\\",\\\"veilpicTests/ImageEditorPSDTests.swift\\\",\\\"veilpicTests/ImageEditorPaintBucketTests.swift\\\",\\\"veilpicTests/ImageEditorParagraphLayoutTests.swift\\\",\\\"veilpicTests/ImageEditorPatchToolTests.swift\\\",\\\"veilpicTests/ImageEditorPixelMoveCoverageTests.swift\\\",\\\"veilpicTests/ImageEditorPixelMoveEditBoundaryTests.swift\\\",\\\"veilpicTests/ImageEditorPixelMoveMaskAlphaTests.swift\\\",\\\"veilpicTests/ImageEditorPixelMovePreviewReuseTests.swift\\\",\\\"veilpicTests/ImageEditorPixelMoveReference.swift\\\",\\\"veilpicTests/ImageEditorPixelMoveWorkflowProfileTests.swift\\\",\\\"veilpicTests/ImageEditorPixelSelectionLayerBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorPixelSelectionMoveTests.swift\\\",\\\"veilpicTests/ImageEditorPixelSelectionOverlapTests.swift\\\",\\\"veilpicTests/ImageEditorPointerSequenceRecoveryTests.swift\\\",\\\"veilpicTests/ImageEditorPrintTests.swift\\\",\\\"veilpicTests/ImageEditorProjectContentCheckpointTests.swift\\\",\\\"veilpicTests/ImageEditorProjectDirtyStateTests.swift\\\",\\\"veilpicTests/ImageEditorProjectDocumentTests.swift\\\",\\\"veilpicTests/ImageEditorProjectRevertTests.swift\\\",\\\"veilpicTests/ImageEditorProjectSaveTests.swift\\\",\\\"veilpicTests/ImageEditorQuickExportPNGTests.swift\\\",\\\"veilpicTests/ImageEditorQuickMaskPreferencesTests.swift\\\",\\\"veilpicTests/ImageEditorRasterRotationTests.swift\\\",\\\"veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests.swift\\\",\\\"veilpicTests/ImageEditorRasterizeTargetTests.swift\\\",\\\"veilpicTests/ImageEditorRotationHandleGestureTests.swift\\\",\\\"veilpicTests/ImageEditorSVGImportTests.swift\\\",\\\"veilpicTests/ImageEditorSampledBrushPreviewTests.swift\\\",\\\"veilpicTests/ImageEditorSatinAutomationTransactionTests.swift\\\",\\\"veilpicTests/ImageEditorSavedPathTests.swift\\\",\\\"veilpicTests/ImageEditorScaledPixelSelectionMoveTests.swift\\\",\\\"veilpicTests/ImageEditorScopeTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionCenteringTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionClearSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionCopySamplingTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionCutSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionDeliveryBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionEdgeTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionExportBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionFillCoverageTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionFillDialogTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionInfoBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionMaskBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionMaskSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionMaskTranslationTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionOperationTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionPixelAvailabilityTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionResourceAvailabilityTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionSnapshotAvailabilityTests.swift\\\",\\\"veilpicTests/ImageEditorSelectionTargetBoundsTests.swift\\\",\\\"veilpicTests/ImageEditorShapeCornerRadiusTests.swift\\\",\\\"veilpicTests/ImageEditorShapeStyleTests.swift\\\",\\\"veilpicTests/ImageEditorSliceCanvasSizeTransformTests.swift\\\",\\\"veilpicTests/ImageEditorSliceCropTransformTests.swift\\\",\\\"veilpicTests/ImageEditorSliceImageSizeTransformTests.swift\\\",\\\"veilpicTests/ImageEditorSliceOrthogonalTransformTests.swift\\\",\\\"veilpicTests/ImageEditorSliceRevealAllTransformTests.swift\\\",\\\"veilpicTests/ImageEditorSmartObjectContextTests.swift\\\",\\\"veilpicTests/ImageEditorSmartObjectPlacementTests.swift\\\",\\\"veilpicTests/ImageEditorSmartObjectSourceExportTests.swift\\\",\\\"veilpicTests/ImageEditorSpacebarPanEventTests.swift\\\",\\\"veilpicTests/ImageEditorSparseColorSelectionTests.swift\\\",\\\"veilpicTests/ImageEditorSpongeModeShortcutTests.swift\\\",\\\"veilpicTests/ImageEditorStackLayoutTests.swift\\\",\\\"veilpicTests/ImageEditorStrokeCompletionTests.swift\\\",\\\"veilpicTests/ImageEditorStrokeWindowEventTests.swift\\\",\\\"veilpicTests/ImageEditorTextBoxCreationTests.swift\\\",\\\"veilpicTests/ImageEditorTextDecorationTests.swift\\\",\\\"veilpicTests/ImageEditorTextEditingLifecycleTests.swift\\\",\\\"veilpicTests/ImageEditorTextHitTestingTests.swift\\\",\\\"veilpicTests/ImageEditorTextInputShortcutTests.swift\\\",\\\"veilpicTests/ImageEditorTextLayoutModeTests.swift\\\",\\\"veilpicTests/ImageEditorToneAirbrushTests.swift\\\",\\\"veilpicTests/ImageEditorToneRangeShortcutTests.swift\\\",\\\"veilpicTests/ImageEditorToolCoordinateTests.swift\\\",\\\"veilpicTests/ImageEditorToolSmokeTests.swift\\\",\\\"veilpicTests/ImageEditorTransformCancellationTests.swift\\\",\\\"veilpicTests/ImageEditorTransformEditBoundaryTests.swift\\\",\\\"veilpicTests/ImageEditorTransformFinalStateTests.swift\\\",\\\"veilpicTests/ImageEditorTransformHUDTests.swift\\\",\\\"veilpicTests/ImageEditorTransformLockTests.swift\\\",\\\"veilpicTests/ImageEditorTransformReferencePointTests.swift\\\",\\\"veilpicTests/ImageEditorTransparentPixelLockTests.swift\\\",\\\"veilpicTests/ImageEditorUnlinkedMaskResizeTests.swift\\\",\\\"veilpicTests/ImageEditorUnlinkedMaskRotationTests.swift\\\",\\\"veilpicTests/ImageEditorUnlinkedMaskTranslationTests.swift\\\",\\\"veilpicTests/ImageEditorVectorLayerTests.swift\\\",\\\"veilpicTests/ImageEditorVectorMaskRasterizationSamplingTests.swift\\\",\\\"veilpicTests/ImageEditorVisibleLayerOrderingTests.swift\\\",\\\"veilpicTests/LocalizationResourceTests.swift\\\",\\\"veilpicTests/SomeIMUpdateConfigurationTests.swift\\\",\\\"veilpicTests/XomoAutomationHotspotCanvasResizeTests.swift\\\",\\\"veilpicTests/XomoAutomationHotspotCropRevealTests.swift\\\",\\\"veilpicTests/XomoAutomationHotspotOrthogonalTransformTests.swift\\\",\\\"veilpicTests/XomoAutomationHotspotResizeTests.swift\\\",\\\"veilpicTests/XomoAutomationSliceCanvasResizeTests.swift\\\",\\\"veilpicTests/XomoAutomationSliceCropTrimTests.swift\\\",\\\"veilpicTests/XomoAutomationSliceOrthogonalTransformTests.swift\\\",\\\"veilpicTests/XomoAutomationSliceResizeTests.swift\\\",\\\"veilpicTests/XomoAutomationSliceRevealAllTests.swift\\\",\\\"veilpicTests/XomoAutomationTests.swift\\\",\\\"veilpicTests/XomoCanvasObjectTests.swift\\\",\\\"veilpicTests/XomoCanvasPresetTests.swift\\\",\\\"veilpicTests/XomoCloseCommandTests.swift\\\",\\\"veilpicTests/XomoDocumentCloseGuardTests.swift\\\",\\\"veilpicTests/XomoExternalDocumentOpenTests.swift\\\",\\\"veilpicTests/XomoFigmaAuthorizedMetadataTests.swift\\\",\\\"veilpicTests/XomoFigmaCancellationTests.swift\\\",\\\"veilpicTests/XomoFigmaExportPresetTests.swift\\\",\\\"veilpicTests/XomoFigmaImageAssetTests.swift\\\",\\\"veilpicTests/XomoFigmaImageFilterTests.swift\\\",\\\"veilpicTests/XomoFigmaImagePaintDiagnosticsTests.swift\\\",\\\"veilpicTests/XomoFigmaImportLayoutScaleTests.swift\\\",\\\"veilpicTests/XomoFigmaImportSelectionTests.swift\\\",\\\"veilpicTests/XomoFigmaImportTransactionTests.swift\\\",\\\"veilpicTests/XomoFigmaLinkImportTests.swift\\\",\\\"veilpicTests/XomoFigmaLinkParserTests.swift\\\",\\\"veilpicTests/XomoFigmaMaskClippingTests.swift\\\",\\\"veilpicTests/XomoFigmaNodeIdentityTests.swift\\\",\\\"veilpicTests/XomoFigmaNodeImportPlanTests.swift\\\",\\\"veilpicTests/XomoFigmaRequestGenerationTests.swift\\\",\\\"veilpicTests/XomoHelpTests.swift\\\",\\\"veilpicTests/XomoLayerClipboardTests.swift\\\",\\\"veilpicTests/XomoLayerStyleScaleAutomationTests.swift\\\",\\\"veilpicTests/XomoLeftSidebarTests.swift\\\",\\\"veilpicTests/XomoRecentDocumentsTests.swift\\\",\\\"veilpicTests/XomoSelectionGetAutomationTests.swift\\\",\\\"veilpicTests/XomoSmartObjectAutomationTests.swift\\\",\\\"veilpicTests/veilpicTests.swift\\\"]\"); hashes=paths.to_h { |p| [p,Digest::SHA256.file(p).hexdigest] }; puts JSON.generate({count:paths.count,sha256:Digest::SHA256.hexdigest(JSON.generate(hashes))})'",
+    "pixel_readback": "ruby -e 'require \"json\"; require \"base64\"; require \"digest\"; require \"open3\"; root=\"/private/tmp/xomo-rc1719-workflow.gSnfq4\"; projects=%w[baseline moved undone redone].to_h { |n| [n,JSON.parse(File.read(File.join(root,n+\".xomoproject\")))] }; layers=projects.transform_values { |j| j[\"layers\"].find { |l| l[\"id\"]==j[\"selectedLayerID\"] } }; rgba={}; dimensions={}; layers.each { |n,l| png=Base64.strict_decode64(l[\"imageData\"]); w,h=png.byteslice(16,8).unpack(\"N2\"); bytes,error,status=Open3.capture3(\"magick\",\"png:-\",\"-depth\",\"8\",\"rgba:-\",stdin_data:png); abort error[0,300] unless status.success? && bytes.bytesize==w*h*4; rgba[n]=bytes; dimensions[n]=[w,h] }; bw,bh=dimensions[\"baseline\"]; mw,mh=dimensions[\"moved\"]; shift=10; shifted=mh==bh && mw==bw+shift && (0...bh).all? { |y| rgba[\"moved\"].byteslice((y*mw+shift)*4,bw*4)==rgba[\"baseline\"].byteslice(y*bw*4,bw*4) }; transparent=(0...mh).all? { |y| (0...shift).all? { |x| rgba[\"moved\"].getbyte((y*mw+x)*4+3)==0 } }; puts JSON.generate({runtime_versions:projects.transform_values { |j| j[\"appVersion\"] },formats:projects.transform_values { |j| j[\"formatVersion\"] },dimensions:dimensions,undo_png_equal:layers[\"baseline\"][\"imageData\"]==layers[\"undone\"][\"imageData\"],undo_rgba_equal:rgba[\"baseline\"]==rgba[\"undone\"],undo_frame_equal:layers[\"baseline\"][\"frame\"]==layers[\"undone\"][\"frame\"],redo_full_project_equal:File.binread(File.join(root,\"moved.xomoproject\"))==File.binread(File.join(root,\"redone.xomoproject\")),whole_source_shifted_10px:shifted,left_10px_transparent:transparent,files:projects.keys.to_h { |n| p=File.join(root,n+\".xomoproject\"); [n,{bytes:File.size(p),sha256:Digest::SHA256.file(p).hexdigest}] }})'",
+    "reopen_readback": "ruby -e 'require \"json\"; require \"digest\"; require \"open3\"; root=\"/private/tmp/xomo-rc1719-workflow.gSnfq4\"; original=JSON.parse(File.read(File.join(root,\"redone.xomoproject\"))); reopened=JSON.parse(File.read(File.join(root,\"reopened.xomoproject\"))); strip=lambda { |j| j.reject { |k,v| k==\"historyTitles\" } }; pngs=%w[edited reopened].to_h { |n| [n,File.binread(File.join(root,n+\".png\"))] }; decoded=pngs.transform_values { |png| bytes,e,s=Open3.capture3(\"magick\",\"png:-\",\"-depth\",\"8\",\"rgba:-\",stdin_data:png); abort e[0,250] unless s.success?; bytes }; puts JSON.generate({project_fields_equal_excluding_history:strip.call(original)==strip.call(reopened),original_history:original[\"historyTitles\"],reopened_history:reopened[\"historyTitles\"],export_dimensions:pngs.transform_values { |p| p.byteslice(16,8).unpack(\"N2\") },export_png_equal:pngs[\"edited\"]==pngs[\"reopened\"],export_rgba_equal:decoded[\"edited\"]==decoded[\"reopened\"],export_rgba_sha256:Digest::SHA256.hexdigest(decoded[\"edited\"]),files:%w[edited.png reopened.png reopened.xomoproject].to_h { |n| p=File.join(root,n); [n,{bytes:File.size(p),sha256:Digest::SHA256.file(p).hexdigest}] }})'"
+  }
+}
