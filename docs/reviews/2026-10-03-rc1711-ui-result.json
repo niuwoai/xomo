@@ -1,0 +1,33 @@
+{
+  "version": "2.12.0-rc1711",
+  "result": "Passed",
+  "scope": "Synthetic actual UI save/reopen/export task, not full Release gate",
+  "baseline_main": "8607dbe63795b856c6f17319cc2c5e258d2b94dd",
+  "tested_save_checkpoint": "3b2afe05f29b9c49a3fef1360929690624fc4db5",
+  "native_tests": {"suites": 9, "methods": 89, "runs": 127, "failed": 0, "skipped": 0},
+  "source": "/private/tmp/xomo-ui-selection-task-source.png",
+  "dimensions": [2048, 2048],
+  "project_paths": [
+    "/private/tmp/xomo-ui-selection-task-rc1711-moved.xomoproject",
+    "/private/tmp/xomo-ui-selection-task-rc1711-save-as.xomoproject",
+    "/private/tmp/xomo-ui-selection-task-rc1711-copy.xomoproject"
+  ],
+  "each_project_bytes": 46498099,
+  "equal_project_sha256": "52a86b8dac21f6816368e0c16eeb40fbf437e74eab8731113ff90f406b671a0c",
+  "undo_source_rgba_sha256": "064180d38ce813878a9d0c999de23ec47791dc01b9e27933a843378a0b37e764",
+  "export_rgba_sha256": "e64ed359e895cf8830d890c63e9625d03829aa3a5b86b24e0e0f057186d3cf36",
+  "exported_pixels_equal_after_reopen": true,
+  "saved_selected_layer_equals_export": true,
+  "green": {"bounds": [1400, 0, 1431, 2047], "count": 65536},
+  "ui_observations": {
+    "move_history": "4 states, Undo 2, Redo 0, only one pixel-move history addition",
+    "undo_then_save": "3 states, Undo 1, Redo 1; selected layer equals original source RGBA",
+    "redo_then_save": "Full project SHA256 restored to first saved move",
+    "save_as_identity": "Window title changed to save-as project",
+    "copy_identity": "Window title remained save-as project",
+    "actual_reopen": "Native file panel opened copy; history titles retained, open-project appended, Undo/Redo stacks reset",
+    "exit": "App quit normally without unsaved-project prompt"
+  },
+  "full_gate": {"next": "rc1720", "installed": "rc1680", "installed_changed": false},
+  "limitations": ["No displayed frame latency or GUI-memory claim", "Historical titles are not persisted Undo snapshots"]
+}
