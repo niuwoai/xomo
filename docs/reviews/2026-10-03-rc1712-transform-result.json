@@ -1,0 +1,102 @@
+{
+  "version": "2.12.0-rc1712",
+  "baseline_main": "7a050767b912109f0fc6458ae40b02c1452f6c97",
+  "result": "Passed",
+  "scope": "Transform transaction regression and actual no-op handle UI task, not full Release gate",
+  "red": {
+    "path": "/private/tmp/veilpic-rc1712-transform-red-tests.xcresult",
+    "methods": 8,
+    "runs": 17,
+    "failed_methods": 2,
+    "issues": 34
+  },
+  "initial_broad": {
+    "path": "/private/tmp/veilpic-rc1712-transform-green-tests.xcresult",
+    "result": "Failed",
+    "suites": 20,
+    "methods": 601,
+    "runs": 653,
+    "failed_methods": 3,
+    "issues": 5
+  },
+  "final": {
+    "path": "/private/tmp/veilpic-rc1712-transform-final-tests.xcresult",
+    "suites": 22,
+    "methods": 611,
+    "runs": 673,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 76.29
+  },
+  "test_repairs": [
+    "Select and unlock nonempty pixel source for filter/invert shortcut history",
+    "Verify actual isolated pasteboard dependency in cut source contract",
+    "Use private pasteboard for component cut/paste regression"
+  ],
+  "source_inputs": {
+    "count": 393,
+    "unchanged_after_final_test": true,
+    "changed_file_sha256": {
+      "veilpic/ImageEditorUndoTransactionState.swift": "16d4f0d3eea8035bf74ebf1afe8575b4b53b6e7cc71cf47ba37e1a92e8cd7728",
+      "veilpic/ImageEditorTransform.swift": "089c856eca71bd3c158f2a8b3f566c656a2ab1baae76e0e51427d5ab8290c60a",
+      "veilpic/ImageEditorViewModel.swift": "c402d59966eac5159a761fbefbc7225f1228815c4f1f2188d569c3c719518497",
+      "veilpicTests/ImageEditorTransformCancellationTests.swift": "ce14c0a2a907828fb0bbdb9cbda824a5b0c9b73d3ba40afa14423783490957e5",
+      "veilpicTests/ImageEditorRotationHandleGestureTests.swift": "5857fc68cc391643ce94a40201c66d3624eccbda16461618f3391506c172f896",
+      "veilpicTests/ImageEditorHistoryTests.swift": "ca6cec7e880081f7295e995bd25f30b0b7be8f58eea71f2dfadb5a00c93977f9",
+      "veilpicTests/ImageEditorScopeTests.swift": "7ae1a5d3b2865b9846b47f0429e9c891a3ef56e8526204f45d39e0ed257931ed",
+      "veilpicTests/XomoLayerClipboardTests.swift": "28044641f8a80e65f30ce8557af2d3d802c492479525d3b3e3d9fc7042320ab6"
+    }
+  },
+  "app": {
+    "path": "/Users/rocky/Sites/veilpic/.codex/DerivedData/Build/Products/Debug/Xomo.app",
+    "version": "2.12.0-rc1712",
+    "build": "1712"
+  },
+  "ui": {
+    "dimensions": [
+      2048,
+      2048
+    ],
+    "project": "/private/tmp/xomo-ui-selection-task-rc1711-copy.xomoproject",
+    "opened": {
+      "history": 5,
+      "undo": 0,
+      "redo": 0
+    },
+    "rotated": {
+      "history": 6,
+      "undo": 1,
+      "redo": 0
+    },
+    "undone": {
+      "history": 5,
+      "undo": 0,
+      "redo": 1
+    },
+    "after_no_op_rotation_and_resize_clicks": {
+      "history": 5,
+      "undo": 0,
+      "redo": 1
+    },
+    "redone": {
+      "history": 6,
+      "undo": 1,
+      "redo": 0
+    },
+    "exit": "Undone to opened document; normal quit; no unsaved prompt; original project not written"
+  },
+  "clipboard_note": "Old existing component cut test cleared the system clipboard in the first added run; prior contents unknown. Final test uses a private pasteboard.",
+  "limitations": [
+    "Physical mid-drag Escape/Undo/Redo not automated; native model/handle callback sequence covered",
+    "Return-to-origin final no-op semantics not yet proven",
+    "No displayed frame latency or GUI-memory improvement claim",
+    "Legacy giant View/ViewModel split debt remains"
+  ],
+  "gate": {
+    "next": "rc1720",
+    "installed": "rc1680",
+    "installed_changed": false,
+    "published": false
+  }
+}

@@ -2566,7 +2566,7 @@ struct ImageEditorScopeTests {
         )
         #expect(
             selectionEditSource.contains(
-                "guard hasSelection else {\n            return cutSelectedLayersToClipboard()"
+                "guard hasSelection else {\n            return cutSelectedLayersToClipboard(to: pasteboard)"
             )
         )
         #expect(

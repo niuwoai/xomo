@@ -188,17 +188,18 @@ struct ImageEditorHistoryTests {
         #expect(ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch(event: nil))
     }
 
-    @Test func onePhysicalRepeatLastFilterShortcutCommitsOnlyOneFilter() {
+    @Test func onePhysicalRepeatLastFilterShortcutCommitsOnlyOneFilter() throws {
         ImageEditorLastFilterCommandDispatchGate.reset()
         defer { ImageEditorLastFilterCommandDispatchGate.reset() }
 
-        let image = testImage(color: .systemRed, size: NSSize(width: 24, height: 18))
-        let viewModel = ImageEditorViewModel(sourceName: "filter.png", image: image) { _ in }
-        viewModel.convertBackgroundToLayer()
+        let viewModel = try makePixelShortcutViewModel()
         viewModel.selectedFilter = .gaussianBlur
         viewModel.filterIntensity = 0.35
+        viewModel.filterGaussianBlurRadius = 1
         viewModel.applySelectedFilter()
+        let original = try viewModel.projectData()
         let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
         let event = ImageEditorKeyboardShortcutEventSignature(
             windowNumber: 31,
             eventNumber: 951,
@@ -215,6 +216,7 @@ struct ImageEditorHistoryTests {
         }
 
         #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
         #expect(
             viewModel.document.history.last?.title
                 == L10n.format(
@@ -222,6 +224,12 @@ struct ImageEditorHistoryTests {
                     ImageEditorFilter.gaussianBlur.title
                 )
         )
+        let edited = try viewModel.projectData()
+        #expect(edited != original)
+        viewModel.undo()
+        #expect(try viewModel.projectData() == original)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == edited)
     }
 
     @Test func repeatLastFilterMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
@@ -236,10 +244,10 @@ struct ImageEditorHistoryTests {
         ImageEditorPixelCorrectionCommandDispatchGate.reset()
         defer { ImageEditorPixelCorrectionCommandDispatchGate.reset() }
 
-        let image = testImage(color: .systemRed, size: NSSize(width: 24, height: 18))
-        let viewModel = ImageEditorViewModel(sourceName: "invert.png", image: image) { _ in }
-        viewModel.convertBackgroundToLayer()
+        let viewModel = try makePixelShortcutViewModel()
+        let original = try viewModel.projectData()
         let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
         let event = ImageEditorKeyboardShortcutEventSignature(
             windowNumber: 29,
             eventNumber: 941,
@@ -257,7 +265,14 @@ struct ImageEditorHistoryTests {
         }
 
         #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.invert"))
+        let edited = try viewModel.projectData()
+        #expect(edited != original)
+        viewModel.undo()
+        #expect(try viewModel.projectData() == original)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == edited)
     }
 
     @Test func pixelCorrectionMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
@@ -1420,6 +1435,21 @@ struct ImageEditorHistoryTests {
         #expect(source.contains("ForEach(viewModel.filteredHistoryEntries)"))
         #expect(source.contains("ForEach(viewModel.filteredHistorySnapshots)"))
         #expect(source.contains("imageEditor.history.searchPlaceholder"))
+    }
+
+    private func makePixelShortcutViewModel() throws -> ImageEditorViewModel {
+        let image = try #require(NSImage.rendered(size: NSSize(width: 24, height: 18)) { rect in
+            NSColor.red.setFill()
+            rect.fill()
+            NSColor.blue.setFill()
+            CGRect(x: rect.midX, y: 0, width: rect.width / 2, height: rect.height).fill()
+        })
+        let model = ImageEditorViewModel(sourceName: "pixel-shortcut.png", image: image) { _ in }
+        let sourceID = try #require(model.document.layers.first?.id)
+        model.selectLayer(sourceID)
+        try #require(model.canConvertBackgroundToLayer)
+        model.convertBackgroundToLayer()
+        return model
     }
 
     private func testImage(color: NSColor, size: NSSize) -> NSImage {

@@ -101,24 +101,38 @@ struct ImageEditorRotationHandleGestureTests {
 
     @Test func cancelledHandleCannotCommitWhenReleaseArrives() throws {
         let model = try ImageEditorPixelMoveWorkflowFixture.model()
+        model.renameSelectedLayer(to: "Pending redo layer")
+        let pendingRedo = try model.projectData()
+        model.undo()
         let original = try model.projectData()
         let historyCount = model.document.history.count
         let undoCount = model.undoStack.count
         var rotating = false
         var ends = 0
+        var begins = 0
         let handle = ImageEditorLayerRotationHandle(rect: CGRect(x: 0, y: 0, width: 64, height: 64),
             isRotating: Binding(get: { rotating }, set: { rotating = $0 }), canBegin: { true },
-            onBegan: { model.beginRotatingSelectedLayer(from: $0) },
+            onBegan: { begins += 1; model.beginRotatingSelectedLayer(from: $0) },
             onChanged: { model.rotateSelectedLayer(to: $0) },
             onEnded: { ends += 1; model.finishRotatingSelectedLayer() })
         handle.dragChanged(startLocation: handle.handlePoint, location: CGPoint(x: 88, y: 32))
         #expect(model.cancelTransformingSelectedLayer())
-        rotating = false
+        // Production Escape retains the local handle until mouse-up. Further
+        // drag changes must not reacquire a cancelled model transaction.
+        #expect(rotating)
+        handle.dragChanged(startLocation: handle.handlePoint, location: CGPoint(x: 32, y: 88))
+        handle.dragChanged(startLocation: handle.handlePoint, location: handle.handlePoint)
+        #expect(model.rotatingLayerIDs.isEmpty)
+        #expect(try model.projectData() == original)
         handle.dragEnded()
-        #expect(ends == 0)
+        handle.dragEnded()
+        #expect(begins == 1 && ends == 1 && !rotating)
         #expect(try model.projectData() == original)
         #expect(model.document.history.count == historyCount)
         #expect(model.undoStack.count == undoCount)
+        #expect(model.redoStack.count == 1)
+        model.redo()
+        #expect(try model.projectData() == pendingRedo)
     }
 
     @Test func hitRegionIsBoundedAndRejectsNonfiniteCoordinates() {
