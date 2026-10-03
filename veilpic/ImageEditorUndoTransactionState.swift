@@ -44,6 +44,15 @@ extension ImageEditorViewModel {
         } else if !resizingLayerIDs.isEmpty {
             finishResizingSelectedLayer()
         }
+        // Handle transactions also own a private stack-top snapshot. Finish
+        // them before another command can replace that snapshot's ownership.
+        // Path begin prepares its geometry before activating its Undo owner.
+        if hasActivePathAnchorMoveTransaction { finishMovingPathAnchor() }
+        finishEditingSelectedShapeGradient()
+        finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
+        finishEditingSelectedLayerGradientOverlayCanvasStop()
+        finishEditingSelectedLayerGradientOverlayCanvasAxis()
+        finishEditingSelectedLayerGradientOverlayCanvasCenter()
         // Pixel move clears its ownership before pushing its own snapshot,
         // so its nested pushUndo cannot recursively finish this transaction.
         finishPixelSelectionMove()
@@ -61,7 +70,7 @@ extension ImageEditorViewModel {
     @discardableResult
     func beginTransformUndoTransaction() -> Bool {
         guard !hasActiveSelectedLayerTransformTransaction else { return false }
-        finishPixelSelectionMove()
+        finishActiveCanvasEditForNewCommand()
         undoTransactionState.transformRedo = ImageEditorTransformRedoSnapshot(
             documents: redoStack, themes: undoTransactionState.redoThemes
         )
