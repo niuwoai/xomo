@@ -540,11 +540,32 @@
     "installed": "2.12.0-rc1680",
     "installed_this_round": false,
     "published": false,
-    "full_release": "not_started",
+    "full_release": "running_not_passed",
+    "full_release_observation": {
+      "observed_at": "2026-10-04T02:09:00+08:00",
+      "source_checkpoint_main": "aedae2e0f4e5cb9f8e02520847a891d38cfa08e9",
+      "session": 16284,
+      "pid": 63970,
+      "log": "/private/tmp/veilpic-rc1720-universal-release-build.log",
+      "result_bundle": "/private/tmp/veilpic-rc1720-universal-release-build.xcresult",
+      "terminal_exit": null,
+      "source_inputs_still_match": true
+    },
+    "full_unit_runner_preparation": {
+      "path": "/private/tmp/veilpic-rc1720-full-gate.56wXkJ/run_full_release.rb",
+      "contract_tests": 7,
+      "assertions": 8,
+      "failed": 0,
+      "candidate_suites": 223,
+      "candidate_methods": 3628,
+      "native_inventory": "pending_release_build_completion",
+      "execution": "not_started",
+      "policy": "Serial Release test-without-building; verify actual method identifiers; preserve every result; no automatic timeout kill or retry."
+    },
     "full_unit_suite": "not_started",
     "cli_release_and_tests": "not_started",
     "ui_and_cursor_smoke": "not_started",
-    "next_step": "After commit/integration, serialize Universal Release build-for-testing, then full isolated unit/CLI/UI and installed smoke gate; no candidate installation before verification."
+    "next_step": "Continue existing Release session 16284 without restart; after verified terminal success enumerate native tests and run full isolated Release unit/CLI/UI and installed smoke gate; no candidate installation before verification."
   },
   "limitations": [
     "Model callbacks are not a physical mid-drag UI acceptance.",

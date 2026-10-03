@@ -62,7 +62,7 @@
 
 - `v2.12.0-rc1681`：选区位移先拒绝 NaN/无穷值；极大有限位移在超过画布边长时直接解析为空选区，不再转换成可能溢出的整数像素偏移。增加撤销和 History 事务回归；Figma 功能范围不变。
 
-- `v2.12.0-rc1680`：第 40 个小版本质量门槛；Release App/CLI 和 App、单测、UI 测试目标的 `build-for-testing` 编译通过（测试编译需 `ENABLE_TESTABILITY=YES`）；Cursor/Scope/SelectionEdge 334 项与 CLI 2 项测试通过。XCUITest Runner 未能连接，改用安装版实际完成组件插入、撤销和系统箭头指针冒烟。`/Applications/Xomo.app` 当前为 rc1680，rc1641 可从 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app` 恢复；未公开发布。下一周期完整门槛为 rc1720。
+- `v2.12.0-rc1680`：第 40 个小版本质量门槛；Release App/CLI 和 App、单测、UI 测试目标的 `build-for-testing` 编译通过（测试编译需 `ENABLE_TESTABILITY=YES`）；Cursor/Scope/SelectionEdge 334 项与 CLI 2 项测试通过。XCUITest Runner 未能连接，改用安装版实际完成组件插入、撤销和系统箭头指针冒烟。`/Applications/Xomo.app` 当前为 rc1680；后续实查旧 `/private/tmp/veilpic-rc1680-backup/Xomo-rc1641.app` 缺失 Info.plist 与可执行文件，不能作为可用回退包。rc1720 门槛已重新备份当前 rc1680，内容与签名核验见该门槛记录，尚未做实际回退启动验收。未公开发布。下一周期完整门槛为 rc1720。
 
 - `v2.12.0-rc1679`：Marquee 在现有选区内原地点击（栅格吸附后零位移）视为普通点击，不改变状态提示、不创建空 History/Undo；实际移动继续可撤销。
 

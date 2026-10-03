@@ -28,7 +28,7 @@
 
 ## 可恢复备份与分发边界
 
-源码检查点已集成至 main `53c0d64b2be7f6eb9b0139b33ac3624b0c20bb42`，分支与 `v2.12.0-rc1720` 标签一起推送；标签说明明确完整门槛仍待验收。暂存检查随后发现新测试文件 EOF 多余空行，未把该次检查记为通过。在同一进行中的门槛从 main 拉 `codex/quality-gate-rc1720-finalize`，只删除该空行，文件由 690 降为 689 行，不改已有标签。最终重新编译回归 `/private/tmp/veilpic-rc1720-checkpoint-final-input-tests.xcresult`：64 套件/1476 方法/1809 次运行、零失败/跳过、退出 0、195.07 秒。请求套件全部实测通过，最终 409 输入前后相同，指纹 `027b868722c4545374bfa636ddc73eacfde1b284fea79158c45e12e2f3257ad0`，格式检查退出 0。此前 `8aa...` 指纹属于空行校正前的同一生产行为版本，不能混作最终输入指纹。
+源码检查点已集成至 main `53c0d64b2be7f6eb9b0139b33ac3624b0c20bb42`，分支与 `v2.12.0-rc1720` 标签一起推送；标签说明明确完整门槛仍待验收。提交前暂存检查曾报告新测试文件 EOF 多余空行，但该次命令序列没有在检查失败后中止；未把该次检查记为通过。在同一进行中的门槛从 main 拉 `codex/quality-gate-rc1720-finalize`，只删除该空行，文件由 690 降为 689 行，不改已有标签。最终重新编译回归 `/private/tmp/veilpic-rc1720-checkpoint-final-input-tests.xcresult`：64 套件/1476 方法/1809 次运行、零失败/跳过、退出 0、195.07 秒。请求套件全部实测通过，最终 409 输入前后相同，指纹 `027b868722c4545374bfa636ddc73eacfde1b284fea79158c45e12e2f3257ad0`，格式检查退出 0。此前 `8aa...` 指纹属于空行校正前的同一生产行为版本，不能混作最终输入指纹。
 
 新备份 `/private/tmp/veilpic-rc1720-backup.m1TMsJ/Xomo-rc1680.app`：143 个目录/文件/符号链接项与 `/Applications/Xomo.app` 完全一致，Info.plist 和可执行文件齐全，版本 rc1680；有序清单 SHA256 `d813c275aba2564991ed2d4d46d884c0f3faaab86b999bee43751337b862e945`。清单和核验 JSON 在备份目录。初次沙箱签名读取得到失败，使用必需系统权限复跑同一严格验证，原包与副本都退出 0；没有重新签名或覆盖安装。未做备份启动/实际回退验收。
 
@@ -39,3 +39,11 @@ App、CLI、Xcode 六配置同步 rc1720/1720；版本契约 10 项/30 断言、
 ## 未通过的完整门槛
 
 完整 Universal Release App/单测/UI 目标编译、全项目隔离回归、CLI Release/测试、UI Runner 与真实工作流/组件库箭头/语义光标冒烟、覆盖安装及安装版版本/签名核验均未完成。当前安装仍 rc1680，不公开发布。继续同一个 rc1720 门槛，不用更多小版本掩盖全量验收欠账。已有巨型 View/ViewModel/路径/旧测试文件仍属架构债务，本轮仅有限生产修复和小测试文件拆出。
+
+## 2026-10-04 02:09 进行中检查点
+
+最终源码 main `aedae2e0f4e5cb9f8e02520847a891d38cfa08e9` 已核对 GitHub。唯一 Universal Release `build-for-testing` 仍由 PID 63970、执行会话 16284 运行，编译子进程持续消耗 CPU；日志 `/private/tmp/veilpic-rc1720-universal-release-build.log`，结果包 `/private/tmp/veilpic-rc1720-universal-release-build.xcresult`。未出现终态退出码，不能记为编译通过。409 个编译输入仍匹配最终指纹；本次仅修改证据文档，不修改编译输入。
+
+临时全量回归执行器在 `/private/tmp/veilpic-rc1720-full-gate.56wXkJ/run_full_release.rb`，其覆盖判定契约测试 7 项/8 断言通过。准备不等于执行：必须等当前编译结束，再原生枚举实际 Release 测试，串行 `test-without-building`，逐组保留独立日志、结果包及 JSON/Markdown 进度；不自动重试、删除失败结果或静默超时终止。源码候选 223 套件/3628 方法包含脏状态性能方法，不能用候选数冒充实测覆盖。
+
+本次四小时只读审查（21:58:08–01:58:08，基线 `930b01fc`、终点 `aedae2e0`）没有启动新构建或修改代码。发现 `xomo.layer.set_opacity` 参数校验在开始事务之后，失败请求已有 Undo/Redo 副作用（源码调用链确认，未运行复现）；属性滑块被自动化重命名打断后仍依赖栈顶、可能弹错快照与恢复过期 Redo（待交错测试验证）。既有测试只验证画布预览到属性编辑的方向，没有证明属性预览被普通命令打断。本 Goal 续轮只纠正旧备份恢复说明并记录执行准备，不将上述缺口记为已修复。
