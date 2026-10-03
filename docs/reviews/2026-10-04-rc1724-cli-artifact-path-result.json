@@ -97,7 +97,7 @@
     "cycle": "rc1720",
     "status": "not_passed",
     "current_app_build": {
-      "status": "running_not_passed",
+      "status": "passed_test_build_only",
       "session": 95279,
       "started_at": "2026-10-04T05:28:21+08:00",
       "baseline_main": "eeea375ca9959f11c859e7c470a8550706f61b54",
@@ -135,16 +135,146 @@
         "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-test-build.xcresult"
       ],
       "test_only_injection": true,
-      "installable": false
+      "installable": false,
+      "exit": 0,
+      "executor_seconds": 810.99,
+      "native_started_at": "2026-10-04T05:28:22.145+08:00",
+      "native_finished_at": "2026-10-04T05:41:51.410+08:00",
+      "native_build_status": "succeeded",
+      "app_version": "2.12.0-rc1724",
+      "archs": [
+        "x86_64",
+        "arm64"
+      ],
+      "source_inputs_after": {
+        "count": 412,
+        "sha256": "68659c8c9392c7e017645c42e09d476dbee448596475534214d1e70df26403a1"
+      }
     },
-    "current_full_units": "not_started",
-    "ui": "not_started",
-    "physical_workflow_and_cursors": "not_started",
+    "current_full_units": {
+      "status": "running_not_passed",
+      "session": 88350,
+      "started_at": "2026-10-04T06:03:08+08:00",
+      "baseline_main": "aa772e3fac00c78cff960e6f0b688a8f72929652",
+      "requested_suites": 225,
+      "requested_methods": 3637,
+      "manifest": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/manifest.json",
+      "manifest_sha256": "803f7942ed3d2c2c50e26aec27c431d7a5777d5e3e7424bb0d225fbf7af54fd9",
+      "report": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-full/report.json",
+      "source_inputs_before": {
+        "count": 412,
+        "sha256": "68659c8c9392c7e017645c42e09d476dbee448596475534214d1e70df26403a1"
+      },
+      "completed_suites_at_start_checkpoint": 1,
+      "first_completed_suite": "ClipboardImageWriterTests",
+      "first_completed_methods": 16,
+      "first_completed_runs": 16,
+      "checkpoint_at": "2026-10-04T06:04:39+08:00"
+    },
+    "ui": {
+      "status": "runner_initialization_failed_before_product_assertions",
+      "inventory_exit": 0,
+      "inventory_errors": 1,
+      "inventory_enabled_placeholder": 1,
+      "execution_exit": 65,
+      "execution_seconds": 79.82,
+      "passed_product_tests": 0,
+      "failure": "Timed out while enabling automation mode",
+      "inventory": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-ui-native-inventory.json",
+      "log": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-ui-full.log",
+      "result_bundle": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-ui-full.xcresult",
+      "limitation": "Full UI run was a separate diagnostic attempt, not a validated 10-method enumeration/run"
+    },
+    "physical_workflow_and_cursors": {
+      "editing_workflow": "passed_current_runtime_and_strict_artifacts",
+      "cursor_acceptance": "pending",
+      "slider_interruption_order": "pending_not_physically_reproduced",
+      "app_pid": 2433,
+      "app_executable": "/Users/rocky/Sites/veilpic/.codex/ReleaseDerivedData/Build/Products/Release/Xomo.app/Contents/MacOS/Xomo",
+      "source_image": "veilpic/Assets.xcassets/WorkbenchBackdrop.imageset/workbench-backdrop.png",
+      "source_image_sha256": "cfc382f81dcc23d58f3124f9d5570fd1ae51aa54a28f3a33c79bbf97eff79183",
+      "source_canvas": [
+        1586,
+        992
+      ],
+      "physical_actions": [
+        "native Open image",
+        "Save baseline",
+        "Cmd-A then Shift-Right pixel move",
+        "Save moved",
+        "Undo then Save undone",
+        "Redo then Save redone",
+        "UI export edited PNG, composite 1x",
+        "native Open redone",
+        "Save reopened",
+        "UI export reopened PNG, composite 1x",
+        "Right 1px, Cmd-Q, unsaved warning, Cancel",
+        "Undo back to save point, normal Cmd-Q, PID absent"
+      ],
+      "artifact_report": "2026-10-04-rc1724-workflow-readback.json",
+      "raw_report": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/physical-workflow/workflow-readback.json",
+      "raw_report_sha256": "7c23b52c3d0662117aad8bcfbd47ed165d8f889166c74a5c4b75cd2d4f9f5c6a",
+      "artifact_checks": 16,
+      "failed_checks": 0,
+      "rendered_screenshot_observed": true,
+      "quit_guard_and_normal_exit": "passed"
+    },
     "normal_candidate": "not_started",
     "installed": "2.12.0-rc1680",
     "installed_this_round": false,
-    "published": false
+    "published": false,
+    "current_native_inventory": {
+      "suites": 225,
+      "methods": 3637,
+      "errors": 0,
+      "disabled": 0,
+      "path": "/private/tmp/veilpic-rc1724-gate-cycle.5dtTIx/release-native-inventory.json",
+      "sha256": "32e378cca7d4539d551aca052e91a2c1fe26ca22da7650b01e4625df87cbec3a"
+    }
   },
   "script_sha256": "068f6f4eeddc5eb1d18c0be810ba1538f6752092fc8fc07d39dcb76740ff6edf",
-  "contract_script_sha256": "4b7a4643efe26da255ba1528390a6f6ce5035bf7747f9bffd165e90ab8ee1e28"
+  "contract_script_sha256": "4b7a4643efe26da255ba1528390a6f6ce5035bf7747f9bffd165e90ab8ee1e28",
+  "documentation_contracts": {
+    "release": { "command": "ruby scripts/test_release_contract.rb", "tests": 10, "assertions": 30, "failures": 0, "exit": 0 },
+    "overview": { "command": "ruby scripts/test_product_overview_archive.rb", "tests": 3, "assertions": 22, "failures": 0, "exit": 0 },
+    "readme": { "command": "ruby scripts/verify_readme.rb", "assertions": 29, "failures": 0, "exit": 0 },
+    "readme_invocation_correction": "Initial guessed scripts/test_readme_contract.rb was absent (exit 1); discovered and executed the existing verify_readme.rb successfully",
+    "workflow_evidence": "Committed JSON equals original parsed readback report",
+    "compiled_inputs": "412 inputs still match compiled SHA256; documentation only"
+  },
+  "full_run_wait_observation": {
+    "observed_at": "2026-10-04T06:07:11+08:00",
+    "runner_pid": 4173,
+    "xcodebuild_pid": 4197,
+    "suite": "ImageEditorAdjustmentTests",
+    "sample": "/tmp/xcodebuild_2026-10-04_060711_a9p5.sample.txt",
+    "sample_exit": 0,
+    "main_thread": "Xcode3CommandLineBuildTool waitForBuildWithBuildLog -> CFRunLoopRun -> mach_msg2_trap",
+    "interpretation": "Live native process waiting; no terminal result. Cause not established, no restart/termination or second native workflow"
+  },
+  "latest_four_hour_review": {
+    "window_start": "2026-10-04T01:53:24+08:00",
+    "window_end": "2026-10-04T05:53:24+08:00",
+    "baseline_sha": "aedae2e0f4e5cb9f8e02520847a891d38cfa08e9",
+    "end_sha": "aa772e3fac00c78cff960e6f0b688a8f72929652",
+    "clean_worktree": true,
+    "main_and_remote_tags_verified": true,
+    "figma_expansion": false,
+    "findings": [
+      {
+        "priority": "P1",
+        "state": "risk_gui_event_delivery_unverified",
+        "scenario": "late Binding value callback after Undo or reload mutates current selection without new undo",
+        "implementation": "veilpic/ImageEditorViewModel.swift:7437,7737",
+        "test_gap": "ImageEditorLayerPropertyOwnershipTests only delivers delayed end, not delayed value"
+      },
+      {
+        "priority": "P2",
+        "state": "confirmed_api_ownership_gap_gui_order_unverified",
+        "scenario": "old black Blend If end arrives while new white preview is active",
+        "implementation": "veilpic/ImageEditorViewModel.swift:7618; veilpic/ImageEditorLayerPanel.swift:2126,2142",
+        "test_gap": "anotherPropertyGetsExclusiveSnapshot ends second before first"
+      }
+    ]
+  }
 }
