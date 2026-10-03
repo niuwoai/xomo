@@ -1,0 +1,59 @@
+{
+  "scope": "Component artifact readback only; physical actions are separately observed. Does not prove cursors, UI latency or all editor workflows",
+  "version": "2.12.0-rc1724",
+  "source_directory": "/private/tmp/xomo-rc1724-component-workflow.1ZDUMY",
+  "checks": {
+    "current_runtime_version": true,
+    "format_10": true,
+    "ordered_layer_ids_preserved": true,
+    "group_text_shape_not_flattened": true,
+    "edited_text_content": true,
+    "undo_restores_original_text": true,
+    "undo_changes_only_text_layer": true,
+    "undo_preserves_text_style": true,
+    "undo_changes_only_text_render_fields": true,
+    "undo_changes_only_expected_document_fields": true,
+    "redo_complete_project_bytes_exact": true,
+    "text_edit_adds_one_history": true,
+    "reopen_all_other_fields_exact": true,
+    "reopen_adds_one_history": true,
+    "text_bitmap_changes_on_edit": true,
+    "text_bitmap_preserved_after_redo_and_reopen": true,
+    "export_png_bytes_exact": true,
+    "export_rgba_exact": true,
+    "export_canvas_dimensions": true,
+    "export_has_visible_pixels": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "files": {
+    "edited.xomoproject": {
+      "bytes": 149098,
+      "sha256": "723e1981c59868c14de51a451cbb215c040a02ad2cdbb7d91e36973ffce05a30"
+    },
+    "undone.xomoproject": {
+      "bytes": 149036,
+      "sha256": "713c6cbb491482386b1e1731a46d2a1025860fdc02df4ca43097e1f26364f1b2"
+    },
+    "redone.xomoproject": {
+      "bytes": 149098,
+      "sha256": "723e1981c59868c14de51a451cbb215c040a02ad2cdbb7d91e36973ffce05a30"
+    },
+    "reopened.xomoproject": {
+      "bytes": 149118,
+      "sha256": "4427884a04ad1faa89c9ce83be058fa917253c6d2c4a4fe5418e008848fc1acd"
+    },
+    "edited.png": {
+      "bytes": 25334,
+      "sha256": "dc1bc277082b8d33a4db6dc211089e9069d04f8dd379b5c5b65c4f57d2da48d1"
+    },
+    "reopened.png": {
+      "bytes": 25334,
+      "sha256": "dc1bc277082b8d33a4db6dc211089e9069d04f8dd379b5c5b65c4f57d2da48d1"
+    }
+  },
+  "verifier": {
+    "path": "/private/tmp/xomo-rc1724-component-workflow.1ZDUMY/assert_component_workflow.rb",
+    "sha256": "50659f3e006a9514f2d119b3c4f3e0007b7e3b09b7a4b9d993257122f947c793"
+  }
+}
