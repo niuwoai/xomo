@@ -616,6 +616,7 @@ extension ImageEditorViewModel {
     }
 
     func nudgeSelectionOrSelectedLayer(by delta: CGSize) {
+        guard delta != .zero else { return }
         // A pointer drag already owns the transform transaction. Letting an
         // arrow-key nudge reuse it would finish the mouse drag immediately,
         // leaving later pointer samples attached to a transaction that no

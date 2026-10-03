@@ -368,10 +368,11 @@ extension ImageEditorViewModel {
     @discardableResult
     func beginPixelSelectionMove() -> Bool {
         guard pixelSelectionMoveTransaction == nil,
-              canBeginPixelSelectionMove(),
-              let layer = document.selectedLayer
+              canBeginPixelSelectionMove()
         else { return false }
 
+        finishSelectedLayerTransformForNewEdit()
+        guard let layer = document.selectedLayer else { return false }
         var transaction = ImageEditorPixelSelectionMoveTransaction(
             originalDocument: document,
             layerID: layer.id,
@@ -383,7 +384,8 @@ extension ImageEditorViewModel {
     }
 
     func nudgePixelSelection(by delta: CGSize) {
-        guard delta.width.isFinite,
+        guard delta != .zero,
+              delta.width.isFinite,
               delta.height.isFinite,
               beginPixelSelectionMove()
         else { return }

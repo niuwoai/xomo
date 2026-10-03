@@ -1,0 +1,166 @@
+{
+  "version": "2.12.0-rc1717",
+  "baseline_main": "930b01fc6d153277101e6857e61a657499de77d2",
+  "result": "Passed",
+  "scope": "Native transform/edit transaction boundaries; not full Release or physical mid-drag desktop acceptance",
+  "policy": "Complete the last successful transform preview before an ordinary editor command captures Undo; deferred pixel move completes before its original-document capture",
+  "red": {
+    "path": "/private/tmp/veilpic-rc1717-edit-boundary-red-tests.xcresult",
+    "methods": 2,
+    "runs": 10,
+    "failed_methods": 1,
+    "issues": 104,
+    "exit": 65,
+    "elapsed_seconds": 67.29,
+    "production_logic": "rc1716 transform logic, rc1717 version inputs"
+  },
+  "first_partial": {
+    "path": "/private/tmp/veilpic-rc1717-edit-boundary-first-green-tests.xcresult",
+    "suites": 4,
+    "methods": 20,
+    "runs": 56,
+    "failed_methods": 1,
+    "issues": 2,
+    "exit": 65,
+    "elapsed_seconds": 310.89,
+    "remaining": "Pixel move deferred commit overwrote transform history in both transform types"
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1717-edit-boundary-verified-tests.xcresult",
+    "suites": 6,
+    "methods": 33,
+    "runs": 103,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 366.96
+  },
+  "expanded": {
+    "path": "/private/tmp/veilpic-rc1717-expanded-tests.xcresult",
+    "suites": 45,
+    "methods": 864,
+    "runs": 1037,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 213.47,
+    "mode": "test-without-building",
+    "start": "2026-10-03T22:26:09+08:00",
+    "finish": "2026-10-03T22:29:07+08:00",
+    "excluded": "Only previously measured profileNativeSerializationAndDirtyChecks; no functional regression excluded"
+  },
+  "coverage": {
+    "new_methods": 4,
+    "new_runs": 15,
+    "interleaving_subscenarios": 20,
+    "transform_types": [
+      "resize",
+      "rotation"
+    ],
+    "edits": [
+      "rename",
+      "theme",
+      "object nudge",
+      "pixel selection nudge",
+      "component insertion"
+    ],
+    "checks": [
+      "Full project-data control and staged Undo/Redo restoration",
+      "Theme restoration and pending Redo replacement",
+      "Unchanged transform does not add an empty Undo step",
+      "Rejected rename, same theme and zero nudges do not terminate the transform",
+      "Automation rename uses the same production boundary",
+      "Production rotation-handle residual callbacks cannot restart or overwrite edit"
+    ]
+  },
+  "source_inputs": {
+    "count": 405,
+    "scope": "402 Swift/Xcode inputs plus 3 WindowCommands.strings resources",
+    "sha256_of_ordered_path_hash_json": "0bcb88d60f328616006095e33a51f5866e8a21d3eca80504dc103636017bf1d2",
+    "changed_after_specialized": [],
+    "changed_after_expanded": []
+  },
+  "contracts": {
+    "release": {
+      "runs": 10,
+      "assertions": 30,
+      "failed": 0
+    },
+    "archive": {
+      "runs": 3,
+      "assertions": 22,
+      "failed": 0,
+      "initial_failure": "Overview had not yet been synchronized; corrected and rerun"
+    },
+    "readme": {
+      "assertions": 29,
+      "failed": 0
+    }
+  },
+  "app": {
+    "debug_version": "2.12.0-rc1717",
+    "debug_build": 1717
+  },
+  "test_suites": [
+    "ImageEditorCanvasCursorTests",
+    "ImageEditorCenteredResizeTests",
+    "ImageEditorGroupResizeTests",
+    "ImageEditorGroupRotationTests",
+    "ImageEditorHistoryTests",
+    "ImageEditorInspectorResizeTests",
+    "ImageEditorKeyboardEventRoutingTests",
+    "ImageEditorLayerBatchAppearanceTests",
+    "ImageEditorLayerCompTests",
+    "ImageEditorLayerResizePointerEventTests",
+    "ImageEditorLayerTransformContextTests",
+    "ImageEditorPSDTests",
+    "ImageEditorParagraphLayoutTests",
+    "ImageEditorPixelMoveCoverageTests",
+    "ImageEditorPixelSelectionMoveTests",
+    "ImageEditorPrintTests",
+    "ImageEditorProjectContentCheckpointTests",
+    "ImageEditorProjectDirtyStateTests",
+    "ImageEditorProjectDocumentTests",
+    "ImageEditorProjectRevertTests",
+    "ImageEditorProjectSaveTests",
+    "ImageEditorQuickExportPNGTests",
+    "ImageEditorRasterRotationTests",
+    "ImageEditorRotationHandleGestureTests",
+    "ImageEditorScaledPixelSelectionMoveTests",
+    "ImageEditorScopeTests",
+    "ImageEditorSmartObjectContextTests",
+    "ImageEditorSmartObjectPlacementTests",
+    "ImageEditorSmartObjectSourceExportTests",
+    "ImageEditorTextBoxCreationTests",
+    "ImageEditorTransformCancellationTests",
+    "ImageEditorTransformEditBoundaryTests",
+    "ImageEditorTransformFinalStateTests",
+    "ImageEditorTransformHUDTests",
+    "ImageEditorTransformLockTests",
+    "ImageEditorTransformReferencePointTests",
+    "ImageEditorUnlinkedMaskResizeTests",
+    "ImageEditorUnlinkedMaskRotationTests",
+    "ImageEditorVectorLayerTests",
+    "XomoCloseCommandTests",
+    "XomoDocumentCloseGuardTests",
+    "XomoExternalDocumentOpenTests",
+    "XomoFigmaImportTransactionTests",
+    "XomoLayerClipboardTests",
+    "XomoRecentDocumentsTests"
+  ],
+  "gate": {
+    "next": "rc1720",
+    "installed": "2.12.0-rc1680",
+    "installed_this_round": false,
+    "published": false,
+    "backup": "Old fallback is invalid; validate a complete recoverable backup before overwrite"
+  },
+  "limitations": [
+    "No physical mid-drag desktop sequence or rendered dirty-dot acceptance this round",
+    "Direct native menu click and Cmd-Q exit remain unverified; own prior Debug app still resident",
+    "Not a global proof for all overlapping editor transaction types",
+    "Large View/ViewModel/test files remain existing architecture debt",
+    "No performance or GUI memory improvement claim; no Figma expansion"
+  ],
+  "next_milestone": "Independently verify native close/quit and a complete image-editing task before rc1720 gate"
+}

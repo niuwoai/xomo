@@ -29,6 +29,24 @@ extension ImageEditorViewModel {
     }
 
     func pushUndo() {
+        // A new editor command owns a separate undo step. Commit the last
+        // successful transform preview before capturing that command's input;
+        // otherwise cancellation would pop the command's snapshot instead.
+        finishSelectedLayerTransformForNewEdit()
+        appendUndoSnapshot()
+    }
+
+    /// Deferred commands must call this before capturing their own original
+    /// document, not after replaying that document at commit time.
+    func finishSelectedLayerTransformForNewEdit() {
+        if !rotatingLayerIDs.isEmpty {
+            finishRotatingSelectedLayer()
+        } else if !resizingLayerIDs.isEmpty {
+            finishResizingSelectedLayer()
+        }
+    }
+
+    private func appendUndoSnapshot() {
         undoStack.append(document)
         undoTransactionState.undoThemes.append(ImageEditorXomoThemeUndoState(
             theme: xomoComponentTheme, tokenSnapshot: xomoLocalThemeTokenSnapshot
@@ -43,7 +61,8 @@ extension ImageEditorViewModel {
         undoTransactionState.transformRedo = ImageEditorTransformRedoSnapshot(
             documents: redoStack, themes: undoTransactionState.redoThemes
         )
-        pushUndo()
+        // Begin must not route through pushUndo's ordinary-command boundary.
+        appendUndoSnapshot()
         return true
     }
 
