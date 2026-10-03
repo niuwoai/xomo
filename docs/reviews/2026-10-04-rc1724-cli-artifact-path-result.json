@@ -327,6 +327,38 @@
     "documentation_contracts": "release 10 tests / 30 assertions; overview 3 tests / 22 assertions; README 29 assertions; all pass",
     "installed_this_round": false
   },
+  "crop_workflow_observation": {
+    "baseline_main": "a4d43456aae9d7eaf9f35feac93cd5077e4382fe",
+    "reference": "2026-10-04-rc1724-crop-workflow.md",
+    "artifact_reference": "2026-10-04-rc1724-crop-readback.json",
+    "raw_report_sha256": "3e995d94172e314504c3e786879d62b2399ac73f057d1472a80d525fb64a2333",
+    "status": "rectangular_crop_workflow_passed_not_full_gate",
+    "checks": 23,
+    "failed_checks": 0,
+    "execution_exit": 0,
+    "execution_seconds": 1.034,
+    "actual_ui_preview_cancel_and_commit": true,
+    "crop_rectangle": { "x": 200, "y": 100, "width": 1000, "height": 700 },
+    "cancel_and_undo_complete_project_bytes_exact": true,
+    "redo_complete_project_bytes_exact": true,
+    "reopen_fields_equal_except_added_history": true,
+    "source_bitmap_and_layer_metadata_preserved": true,
+    "export_rgba_equals_independent_source_rectangle": true,
+    "export_png_bytes_exact": true,
+    "normal_exit": {
+      "pid": 14694,
+      "command": "CUA pressKey super+q",
+      "pid_absent": true,
+      "force_terminated": false
+    },
+    "shared_xctest_service_restarted": false,
+    "actual_cursor_verified": false,
+    "complex_crop_document_verified": false,
+    "source_changed": false,
+    "read_only_reverification": "23 checks recomputed; all pass, raw and archived report bytes equal, artifact hashes match, 412 compiled inputs unchanged",
+    "documentation_contracts": "release 10 tests / 30 assertions; overview 3 tests / 22 assertions; README 29 assertions; all pass",
+    "installed_this_round": false
+  },
   "latest_four_hour_review": {
     "window_start": "2026-10-04T01:53:24+08:00",
     "window_end": "2026-10-04T05:53:24+08:00",

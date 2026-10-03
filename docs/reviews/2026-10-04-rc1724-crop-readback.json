@@ -1,0 +1,81 @@
+{
+  "version": "2.12.0-rc1724",
+  "scope": "Physical rectangular crop preview cancel and commit, Undo/Redo, save/reopen and PNG readback; not all crop handles, slices/hotspots, cursor, interruptions or full gate acceptance",
+  "source_directory": "/private/tmp/xomo-rc1724-crop-workflow.n7UYfL",
+  "source_image": "/Users/rocky/Sites/veilpic/veilpic/Assets.xcassets/WorkbenchBackdrop.imageset/workbench-backdrop.png",
+  "crop_rectangle": {
+    "x": 200,
+    "y": 100,
+    "width": 1000,
+    "height": 700
+  },
+  "checks": {
+    "current_version_and_format": true,
+    "original_canvas_dimensions": true,
+    "cropped_canvas_dimensions": true,
+    "ordered_pixel_layers_and_ids_preserved": true,
+    "cancel_complete_project_bytes_exact": true,
+    "undo_complete_project_bytes_exact": true,
+    "redo_complete_project_bytes_exact": true,
+    "reopen_all_fields_except_added_history_exact": true,
+    "crop_changes_only_expected_document_fields": true,
+    "layer_bitmap_and_metadata_preserved": true,
+    "original_layer_frames": true,
+    "cropped_layer_frames_offset_without_bitmap_trimming": true,
+    "cropped_selection_covers_canvas": true,
+    "cropped_adds_one_history": true,
+    "reopened_adds_one_history": true,
+    "source_image_hash_matches_fixture": true,
+    "baseline_export_rgba_equals_source_image": true,
+    "imported_layer_rgba_equals_source_image": true,
+    "cropped_export_dimensions": true,
+    "cropped_export_rgba_equals_source_rectangle": true,
+    "reopened_export_rgba_equals_source_rectangle": true,
+    "cropped_and_reopened_png_bytes_exact": true,
+    "source_has_nonuniform_visible_pixels": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "files": {
+    "baseline.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "a57f10fca908d669d7ee9de8bbf22b7009b52645c2322ef1d7ddd344ad0bd842"
+    },
+    "cancelled.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "a57f10fca908d669d7ee9de8bbf22b7009b52645c2322ef1d7ddd344ad0bd842"
+    },
+    "cropped.xomoproject": {
+      "bytes": 2978237,
+      "sha256": "8f20fd0bea2ca92cd8a43aa8643c0708c91bb85137fa6b633e17158d3fc55db0"
+    },
+    "undone.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "a57f10fca908d669d7ee9de8bbf22b7009b52645c2322ef1d7ddd344ad0bd842"
+    },
+    "redone.xomoproject": {
+      "bytes": 2978237,
+      "sha256": "8f20fd0bea2ca92cd8a43aa8643c0708c91bb85137fa6b633e17158d3fc55db0"
+    },
+    "reopened.xomoproject": {
+      "bytes": 2978257,
+      "sha256": "7b45c7c63cb9cfec6486bd7ef134f1dde46b90c52bc622572daf83bf0a20fede"
+    },
+    "baseline.png": {
+      "bytes": 2139607,
+      "sha256": "c958da589ae499e62ef6574da8a6cd6ecbaef672669d3f02c1160ef71035b24e"
+    },
+    "cropped.png": {
+      "bytes": 843118,
+      "sha256": "28ad2739eba336364082a9222cfd968b0ce1bc66b6b6d8705ed133f6e3c10e26"
+    },
+    "reopened.png": {
+      "bytes": 843118,
+      "sha256": "28ad2739eba336364082a9222cfd968b0ce1bc66b6b6d8705ed133f6e3c10e26"
+    }
+  },
+  "verifier": {
+    "path": "/private/tmp/xomo-rc1724-crop-workflow.n7UYfL/assert_crop_workflow.rb",
+    "sha256": "34368454670125f54e2ec7f2a5e381900fbc3722dcb2fd2abc11751a63a19e1e"
+  }
+}
