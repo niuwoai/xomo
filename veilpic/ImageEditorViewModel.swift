@@ -135,11 +135,6 @@ private struct ImageEditorSmartObjectConversionPlan {
     var insertionIndex: Int
 }
 
-private struct ImageEditorXomoThemeUndoState {
-    var theme: XomoComponentTheme
-    var tokenSnapshot: XomoComponentThemeTokenSnapshot?
-}
-
 private enum ImageEditorLayerMaskPropertyEditKind {
     case density
     case feather
@@ -911,8 +906,15 @@ final class ImageEditorViewModel: ObservableObject {
     var redoStack: [ImageEditorDocument] = []
     private var optionClickLayerIsolationSnapshot: [UUID: Bool]?
     private var optionClickLayerIsolationTargetID: UUID?
-    private var undoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
-    private var redoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    var undoTransactionState = ImageEditorUndoTransactionState()
+    private var undoXomoThemeStates: [ImageEditorXomoThemeUndoState] {
+        get { undoTransactionState.undoThemes }
+        set { undoTransactionState.undoThemes = newValue }
+    }
+    private var redoXomoThemeStates: [ImageEditorXomoThemeUndoState] {
+        get { undoTransactionState.redoThemes }
+        set { undoTransactionState.redoThemes = newValue }
+    }
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
     private var activeLayerMaskPropertyEdit: ImageEditorLayerMaskPropertyEditKind?
     private var activeLayerMaskPropertyTargetIDs = Set<UUID>()
@@ -1489,7 +1491,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canRedo: Bool {
-        if hasActivePathAnchorMoveTransaction
+        if hasActiveSelectedLayerTransformTransaction
+            || hasActivePathAnchorMoveTransaction
             || hasActiveGradientOverlayCenterTransaction
             || hasActiveGradientOverlayAxisTransaction
             || hasActiveGradientOverlayStopTransaction
@@ -5231,6 +5234,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         guard !cancelMovingSelectedLayer() else { return }
+        guard !cancelTransformingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
         clearOptionClickLayerIsolationSnapshot()
         lastDocumentLayerCompState = nil
@@ -5269,6 +5273,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         guard !cancelMovingSelectedLayer() else { return }
+        guard !cancelTransformingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
         clearOptionClickLayerIsolationSnapshot()
         lastDocumentLayerCompState = nil
@@ -12235,13 +12240,6 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    func pushUndo() {
-        undoStack.append(document)
-        undoXomoThemeStates.append(currentXomoThemeUndoState)
-        redoStack.removeAll()
-        redoXomoThemeStates.removeAll()
-    }
-
     func beginPathAnchorMoveUndoTransaction() {
         guard !isPathAnchorMoveUndoTransactionActive else { return }
         activePathAnchorMoveRedoStack = redoStack
@@ -12411,16 +12409,8 @@ final class ImageEditorViewModel: ObservableObject {
         activePathAnchorMoveRedoThemeStates = []
     }
 
-    @discardableResult
-    func discardLastUndoSnapshot() -> ImageEditorDocument? {
-        let snapshot = undoStack.popLast()
-        if !undoXomoThemeStates.isEmpty {
-            undoXomoThemeStates.removeLast()
-        }
-        return snapshot
-    }
-
     func clearUndoHistory() {
+        resetSelectedLayerTransformTransaction()
         undoStack.removeAll()
         redoStack.removeAll()
         undoXomoThemeStates.removeAll()

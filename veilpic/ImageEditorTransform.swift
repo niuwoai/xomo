@@ -764,7 +764,7 @@ extension ImageEditorViewModel {
             return
         }
         _ = handle
-        pushUndo()
+        guard beginTransformUndoTransaction() else { return }
         resizingOriginalFrames = transformFramesIncludingGroups(for: indices)
         resizingLayerIDs = Set(resizingOriginalFrames.keys)
         resizingOriginalParagraphTextContents = [:]
@@ -835,9 +835,9 @@ extension ImageEditorViewModel {
                     : "imageEditor.history.textBoxResize"
             ))
         } else {
-            _ = discardLastUndoSnapshot()
             updateStatus()
         }
+        finishTransformUndoTransaction(didChange: resizingLayerDidChange)
         resetResizingSelectedLayerState()
     }
 
@@ -863,7 +863,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
-        pushUndo()
+        guard beginTransformUndoTransaction() else { return }
         rotatingOriginalLayers = transformLayersIncludingGroups(for: indices)
         rotatingLayerIDs = Set(rotatingOriginalLayers.keys)
         rotatingOriginalTransformFrame = transformFrame
@@ -908,9 +908,9 @@ extension ImageEditorViewModel {
         if rotatingLayerDidChange {
             appendHistory(L10n.text("imageEditor.history.layerRotate"))
         } else {
-            _ = discardLastUndoSnapshot()
             updateStatus()
         }
+        finishTransformUndoTransaction(didChange: rotatingLayerDidChange)
         resetRotatingSelectedLayerState()
         if shouldPreserveReferencePoint, let referencePoint {
             setSelectedLayerTransformReferencePoint(referencePoint)
@@ -926,12 +926,19 @@ extension ImageEditorViewModel {
         guard !resizingLayerIDs.isEmpty || !rotatingLayerIDs.isEmpty,
               let originalDocument = undoStack.last
         else { return false }
-        _ = discardLastUndoSnapshot()
+        finishTransformUndoTransaction(didChange: false)
         document = originalDocument
-        resetResizingSelectedLayerState()
-        resetRotatingSelectedLayerState()
+        resetSelectedLayerTransformTransaction()
         updateStatus()
         return true
+    }
+
+    /// Clearing history or replacing a document must not later resurrect a
+    /// discarded Redo stack when the old pointer sequence releases.
+    func resetSelectedLayerTransformTransaction() {
+        undoTransactionState.transformRedo = nil
+        resetResizingSelectedLayerState()
+        resetRotatingSelectedLayerState()
     }
 
     private func resetRotatingSelectedLayerState() {

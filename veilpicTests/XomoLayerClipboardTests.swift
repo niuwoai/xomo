@@ -95,12 +95,12 @@ struct XomoLayerClipboardTests {
         }
         let originalIDs = Set(originalSubtree.map(\.id))
         let historyBeforeCut = viewModel.document.history.count
-        let pasteboard = NSPasteboard.general
+        let pasteboard = NSPasteboard.withUniqueName()
         pasteboard.clearContents()
         defer { pasteboard.clearContents() }
 
         #expect(viewModel.canCutSelectedLayersToClipboard)
-        #expect(viewModel.cutSelectionToClipboard())
+        #expect(viewModel.cutSelectionToClipboard(to: pasteboard))
         #expect(viewModel.document.layers.allSatisfy { !originalIDs.contains($0.id) })
         #expect(viewModel.document.history.count == historyBeforeCut + 1)
         #expect(pasteboard.data(forType: XomoLayerClipboardArchive.pasteboardType) != nil)
