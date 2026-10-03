@@ -1,0 +1,387 @@
+{
+  "version": "2.12.0-rc1714",
+  "baseline_main": "067ba4c05d46e73f59ef518a6dc67a5b13a80f58",
+  "result": "Passed",
+  "scope": "Native project dirty-state fast path; not full Release gate or displayed UI latency",
+  "baseline": {
+    "path": "/private/tmp/veilpic-rc1714-real-project-baseline-tests.xcresult",
+    "methods": 4,
+    "runs": 12,
+    "failed": 0,
+    "exit": 0,
+    "elapsed_seconds": 58.37,
+    "production_inputs_unchanged_from_rc1713": true
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1714-dirty-green-tests.xcresult",
+    "methods": 6,
+    "runs": 17,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 404.19,
+    "inputs_unchanged_after_test": true
+  },
+  "first_regression": {
+    "path": "/private/tmp/veilpic-rc1714-expanded-tests.xcresult",
+    "suites": 41,
+    "methods": 842,
+    "runs": 983,
+    "failed_methods": 1,
+    "issues": 3,
+    "exit": 65,
+    "elapsed_seconds": 39.55
+  },
+  "isolated_failure": {
+    "path": "/private/tmp/veilpic-rc1714-favorite-isolated-tests.xcresult",
+    "methods": 1,
+    "issues": 3,
+    "exit": 65,
+    "elapsed_seconds": 21.56
+  },
+  "failure_resolution": "Existing favorite navigation fixture assumed unchanged update switches selection. Production and fixture inputs matched rc1713. Added no-op keeps duplicate selected assertion then explicit selection before navigation; no navigation assertion removed.",
+  "final": {
+    "path": "/private/tmp/veilpic-rc1714-expanded-green-tests.xcresult",
+    "suites": 41,
+    "methods": 842,
+    "runs": 983,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 46.05,
+    "already_measured_profile_method_excluded": true
+  },
+  "source_inputs": {
+    "count": 397,
+    "unchanged_after_final_test": true,
+    "changed_file_sha256": {
+      "veilpic/AppModels.swift": "6bd13faf6a2b209b1a7fe9ad8228eca10a24b3654cf75cabc7adc180d59c5e8d",
+      "veilpic/ImageEditorProjectDocument.swift": "ce702e4fdff5da87a4b3262f657c595e8de04dbc078fd14e8aaf2af6c1900a6d",
+      "veilpic/ImageEditorProjectSaveMetadata.swift": "6dee187bd7968e7c284b02428733eb1f21fa1d55e67736d2c558c8b1f17140e7",
+      "veilpic/ImageEditorViewModel.swift": "5531da8f02b0b2cfe1ca01b8f0c551c3374bd1f6c4929b5bc751372272122c8e",
+      "veilpicTests/ImageEditorLayerCompTests.swift": "b13b3e1c46f715781edfc94680aad99a723d1a14d6fb79ec3314a68a37f97b93",
+      "veilpicTests/ImageEditorProjectDirtyStateTests.swift": "4673cc5897ee9feb343a2df466912483cbd70fb057219116d39ebc50f709c5e2",
+      "veilpic.xcodeproj/project.pbxproj": "258d027ccf99a4cee7d20315ab8eff097e8e3f4d491c1ba64115c0b249d52880"
+    },
+    "only_input_changed_after_specialized_profile": "veilpicTests/ImageEditorLayerCompTests.swift"
+  },
+  "profiles": {
+    "before": {
+      "cases": [
+        {
+          "median_ms": {
+            "clean_check": 9.57837502937764,
+            "dirty_check": 9.59029165096581,
+            "dirty_window_metadata": 9.641208336688578,
+            "reset_baseline": 9.628958359826356,
+            "serialization": 9.983666706830263,
+            "undone_check": 9.593249997124076
+          },
+          "project_bytes": 41043,
+          "samples_ms": {
+            "clean_check": [
+              9.669624967500567,
+              9.57837502937764,
+              9.45474999025464
+            ],
+            "dirty_check": [
+              9.65066667413339,
+              9.59029165096581,
+              9.438958368264139
+            ],
+            "dirty_window_metadata": [
+              9.641208336688578,
+              9.514749981462955,
+              9.70491667976603
+            ],
+            "reset_baseline": [
+              9.823791682720184,
+              9.628874948248267,
+              9.628958359826356
+            ],
+            "serialization": [
+              10.325249982997775,
+              9.983666706830263,
+              9.795208345167339
+            ],
+            "undone_check": [
+              9.243583306670189,
+              9.842416679020971,
+              9.593249997124076
+            ]
+          },
+          "size": 1024
+        },
+        {
+          "median_ms": {
+            "clean_check": 36.701166711281985,
+            "dirty_check": 38.502458366565406,
+            "dirty_window_metadata": 39.921208284795284,
+            "reset_baseline": 36.58862499287352,
+            "serialization": 38.537416665349156,
+            "undone_check": 40.48362502362579
+          },
+          "project_bytes": 118199,
+          "samples_ms": {
+            "clean_check": [
+              36.701166711281985,
+              36.46516666049138,
+              37.122500012628734
+            ],
+            "dirty_check": [
+              36.572500015608966,
+              39.090750040486455,
+              38.502458366565406
+            ],
+            "dirty_window_metadata": [
+              36.80591669399291,
+              39.921208284795284,
+              41.8291250243783
+            ],
+            "reset_baseline": [
+              36.178166687022895,
+              37.43620833847672,
+              36.58862499287352
+            ],
+            "serialization": [
+              37.6798749784939,
+              39.89679162623361,
+              38.537416665349156
+            ],
+            "undone_check": [
+              36.49541665799916,
+              40.48362502362579,
+              40.89733329601586
+            ]
+          },
+          "size": 2048
+        },
+        {
+          "fixture_sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+          "median_ms": {
+            "clean_check": 1064.6962083410472,
+            "dirty_check": 1053.462749987375,
+            "dirty_window_metadata": 1047.6012083236128,
+            "undone_check": 1053.8460416719317
+          },
+          "project_bytes": 46505000,
+          "samples_ms": {
+            "clean_check": [
+              1064.6962083410472,
+              1068.4706249739975,
+              1061.4330417010933
+            ],
+            "dirty_check": [
+              1053.462749987375,
+              1071.5263750171289,
+              1045.79391668085
+            ],
+            "dirty_window_metadata": [
+              1075.3441666602157,
+              1047.6012083236128,
+              1047.2116250311956
+            ],
+            "undone_check": [
+              1078.8918749894947,
+              1051.3660833239555,
+              1053.8460416719317
+            ]
+          },
+          "size": "actual saved 2048² raster-selection project"
+        }
+      ],
+      "configuration": "Debug native model, App -O, tests -Onone",
+      "iterations": 3,
+      "scope": "Serialization and dirty window metadata; excludes displayed UI latency, disk writes and memory",
+      "version": "2.12.0-rc1713"
+    },
+    "after": {
+      "cases": [
+        {
+          "median_ms": {
+            "clean_check": 10.669791663531214,
+            "dirty_check": 0.25079166516661644,
+            "dirty_window_metadata": 0.2606666530482471,
+            "reset_baseline": 10.35125000635162,
+            "serialization": 10.439125006087124,
+            "undone_check": 10.718500008806586
+          },
+          "project_bytes": 41043,
+          "samples_ms": {
+            "clean_check": [
+              10.638166684657335,
+              11.384041688870639,
+              10.669791663531214
+            ],
+            "dirty_check": [
+              0.2502499846741557,
+              0.2971250214613974,
+              0.25079166516661644
+            ],
+            "dirty_window_metadata": [
+              0.23758335737511516,
+              0.26445830008015037,
+              0.2606666530482471
+            ],
+            "reset_baseline": [
+              10.039416665676981,
+              11.1275416566059,
+              10.35125000635162
+            ],
+            "serialization": [
+              10.164583334699273,
+              10.443333361763507,
+              10.439125006087124
+            ],
+            "undone_check": [
+              10.718500008806586,
+              11.5486666909419,
+              10.625666647683829
+            ]
+          },
+          "size": 1024
+        },
+        {
+          "median_ms": {
+            "clean_check": 43.45237498637289,
+            "dirty_check": 0.2947499742731452,
+            "dirty_window_metadata": 0.23700000019744039,
+            "reset_baseline": 43.644624995067716,
+            "serialization": 42.47112502343953,
+            "undone_check": 43.15212502842769
+          },
+          "project_bytes": 118199,
+          "samples_ms": {
+            "clean_check": [
+              44.317541702184826,
+              43.45237498637289,
+              43.448791664559394
+            ],
+            "dirty_check": [
+              0.2947499742731452,
+              0.24137500440701842,
+              0.29912503669038415
+            ],
+            "dirty_window_metadata": [
+              0.2513749641366303,
+              0.2278333413414657,
+              0.23700000019744039
+            ],
+            "reset_baseline": [
+              43.00499998498708,
+              43.644624995067716,
+              44.21399999409914
+            ],
+            "serialization": [
+              42.47112502343953,
+              45.08308332879096,
+              41.93916666554287
+            ],
+            "undone_check": [
+              45.693833322729915,
+              42.76749998098239,
+              43.15212502842769
+            ]
+          },
+          "size": 2048
+        },
+        {
+          "fixture_sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+          "median_ms": {
+            "clean_check": 1071.0672499844804,
+            "dirty_check": 0.5275833536870778,
+            "dirty_window_metadata": 0.4370416863821447,
+            "undone_check": 1054.6221666736528
+          },
+          "project_bytes": 46505000,
+          "samples_ms": {
+            "clean_check": [
+              1071.0672499844804,
+              1052.3895833757706,
+              1087.6940416637808
+            ],
+            "dirty_check": [
+              0.5075833760201931,
+              0.5275833536870778,
+              0.5757082835771143
+            ],
+            "dirty_window_metadata": [
+              0.3984166542068124,
+              0.4370416863821447,
+              0.4532916354946792
+            ],
+            "undone_check": [
+              1054.6221666736528,
+              1051.9367499509826,
+              1059.2100833309814
+            ]
+          },
+          "size": "actual saved 2048² raster-selection project"
+        }
+      ],
+      "configuration": "Debug native model, App -O, tests -Onone",
+      "iterations": 3,
+      "scope": "Serialization and dirty window metadata; excludes displayed UI latency, disk writes and memory",
+      "version": "2.12.0-rc1714"
+    }
+  },
+  "test_suites": [
+    "ImageEditorTransformFinalStateTests",
+    "ImageEditorTransformCancellationTests",
+    "ImageEditorRotationHandleGestureTests",
+    "ImageEditorTransformReferencePointTests",
+    "ImageEditorTransformLockTests",
+    "ImageEditorCenteredResizeTests",
+    "ImageEditorGroupResizeTests",
+    "ImageEditorUnlinkedMaskResizeTests",
+    "ImageEditorLayerTransformContextTests",
+    "ImageEditorInspectorResizeTests",
+    "ImageEditorLayerResizePointerEventTests",
+    "ImageEditorTransformHUDTests",
+    "ImageEditorHistoryTests",
+    "ImageEditorProjectSaveTests",
+    "ImageEditorProjectDocumentTests",
+    "ImageEditorProjectRevertTests",
+    "XomoDocumentCloseGuardTests",
+    "XomoRecentDocumentsTests",
+    "XomoExternalDocumentOpenTests",
+    "ImageEditorLayerBatchAppearanceTests",
+    "ImageEditorVectorLayerTests",
+    "ImageEditorScopeTests",
+    "ImageEditorPixelSelectionMoveTests",
+    "ImageEditorScaledPixelSelectionMoveTests",
+    "ImageEditorCanvasCursorTests",
+    "XomoLayerClipboardTests",
+    "XomoFigmaImportTransactionTests",
+    "ImageEditorGroupRotationTests",
+    "ImageEditorUnlinkedMaskRotationTests",
+    "ImageEditorRasterRotationTests",
+    "ImageEditorTextBoxCreationTests",
+    "ImageEditorParagraphLayoutTests",
+    "ImageEditorPixelMoveCoverageTests",
+    "ImageEditorProjectDirtyStateTests",
+    "ImageEditorPrintTests",
+    "ImageEditorQuickExportPNGTests",
+    "ImageEditorSmartObjectSourceExportTests",
+    "ImageEditorSmartObjectContextTests",
+    "ImageEditorSmartObjectPlacementTests",
+    "ImageEditorLayerCompTests",
+    "ImageEditorPSDTests"
+  ],
+  "gate": {
+    "next": "rc1720",
+    "debug_version": "rc1714",
+    "debug_build": 1714,
+    "installed_version": "rc1680",
+    "installed_build": 1680,
+    "installed_changed": false,
+    "published": false
+  },
+  "limitations": [
+    "Clean and Undo-to-baseline checks still serialize full project and take about 1 second in actual fixture",
+    "No displayed UI latency, disk-write throughput, GUI peak-memory or overall build-speed claim",
+    "Optional actual synthetic fixture verified by SHA; portable self-contained cases remain when absent",
+    "Legacy giant View/ViewModel split debt remains"
+  ],
+  "next_milestone": "Verify dirty window metadata and close protection in actual raster selection editing task; measure clean-state and save costs without weakening mutable-image validation"
+}

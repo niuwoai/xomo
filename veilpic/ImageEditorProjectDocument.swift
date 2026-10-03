@@ -99,18 +99,20 @@ struct ImageEditorProjectDocument: Codable {
         colorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb,
         colorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree,
         colorSamplerSource: ImageEditorColorSamplerSource = .composite,
-        colorSamplerIgnoresAdjustmentLayers: Bool = false
+        colorSamplerIgnoresAdjustmentLayers: Bool = false,
+        rasterEncoder: (NSImage) -> Data? = { $0.qingtuPNGData() }
     ) throws {
         formatVersion = Self.formatVersion
         appVersion = AppVersion.current
         sourceName = document.sourceName
         canvasSize = document.canvasSize
-        smartObjectSources = try Self.sharedSmartObjectSources(from: document.layers)
+        smartObjectSources = try Self.sharedSmartObjectSources(from: document.layers, rasterEncoder: rasterEncoder)
         let sharedSmartObjectSourceIDs = Set((smartObjectSources ?? []).map(\.sourceID))
         layers = try document.layers.map { layer in
             try ImageEditorProjectLayer(
                 layer: layer,
-                sharedSmartObjectSourceIDs: sharedSmartObjectSourceIDs
+                sharedSmartObjectSourceIDs: sharedSmartObjectSourceIDs,
+                rasterEncoder: rasterEncoder
             )
         }
         selectedLayerID = document.selectedLayerID
@@ -255,14 +257,16 @@ struct ImageEditorProjectDocument: Codable {
         return document
     }
 
-    private static func sharedSmartObjectSources(from layers: [ImageEditorLayer]) throws -> [ImageEditorProjectSmartObjectSource]? {
+    private static func sharedSmartObjectSources(
+        from layers: [ImageEditorLayer], rasterEncoder: (NSImage) -> Data?
+    ) throws -> [ImageEditorProjectSmartObjectSource]? {
         var seenSourceIDs: Set<UUID> = []
         var sources: [ImageEditorProjectSmartObjectSource] = []
         for layer in layers {
             guard let sourceID = layer.smartObjectContent?.sourceID,
                   !seenSourceIDs.contains(sourceID)
             else { continue }
-            guard let imageData = layer.image.qingtuPNGData() else {
+            guard let imageData = rasterEncoder(layer.image) else {
                 throw ImageEditorProjectDocumentError.imageEncodingFailed(layer.name)
             }
             seenSourceIDs.insert(sourceID)
@@ -338,21 +342,25 @@ struct ImageEditorProjectLayer: Codable {
     }
 
     @MainActor
-    init(layer: ImageEditorLayer, sharedSmartObjectSourceIDs: Set<UUID>) throws {
+    init(layer: ImageEditorLayer, sharedSmartObjectSourceIDs: Set<UUID>,
+         rasterEncoder: (NSImage) -> Data? = { $0.qingtuPNGData() }) throws {
         let shouldUseSharedSmartObjectSource = layer.smartObjectContent
             .map { sharedSmartObjectSourceIDs.contains($0.sourceID) } ?? false
-        let imageData = shouldUseSharedSmartObjectSource ? nil : layer.image.qingtuPNGData()
+        let imageData = shouldUseSharedSmartObjectSource ? nil : rasterEncoder(layer.image)
         if !shouldUseSharedSmartObjectSource, imageData == nil {
             throw ImageEditorProjectDocumentError.imageEncodingFailed(layer.name)
         }
-        if let mask = layer.mask, mask.qingtuPNGData() == nil {
-            throw ImageEditorProjectDocumentError.imageEncodingFailed(layer.name)
+        let encodedMask = try layer.mask.map { mask in
+            guard let data = rasterEncoder(mask) else {
+                throw ImageEditorProjectDocumentError.imageEncodingFailed(layer.name)
+            }
+            return data
         }
 
         id = layer.id
         name = layer.name
         self.imageData = imageData
-        maskData = layer.mask?.qingtuPNGData()
+        maskData = encodedMask
         isMaskEnabled = layer.isMaskEnabled
         isMaskLinked = layer.isMaskLinked
         maskDensity = layer.maskDensity
@@ -405,7 +413,7 @@ struct ImageEditorProjectLayer: Codable {
             ? nil
             : layer.xomoFigmaComponentPropertyDefaults
         xomoFigmaImageFill = layer.xomoFigmaImageFill
-        xomoFigmaImageFillSourceImageData = layer.xomoFigmaImageFillSourceImage?.qingtuPNGData()
+        xomoFigmaImageFillSourceImageData = layer.xomoFigmaImageFillSourceImage.flatMap(rasterEncoder)
         xomoFigmaImageFillFiltersEnabled = layer.xomoFigmaImageFillFiltersEnabled
         xomoFigmaSourceURL = layer.xomoFigmaSourceURL
     }
@@ -1246,20 +1254,8 @@ extension ImageEditorViewModel {
         XomoExternalDocumentOpenPolicy.supports(url)
     }
 
-    func projectData() throws -> Data {
-        let project = try ImageEditorProjectDocument(
-            document: document,
-            xomoComponentTheme: xomoComponentTheme,
-            xomoLocalThemeTokenSnapshot: xomoLocalThemeTokenSnapshot,
-            colorSamplerPoints: colorSamplerPoints,
-            colorSamplerReadoutMode: selectedColorSamplerReadoutMode,
-            colorSamplerSampleSize: selectedColorSamplerSampleSize,
-            colorSamplerSource: selectedColorSamplerSource,
-            colorSamplerIgnoresAdjustmentLayers: colorSamplerIgnoresAdjustmentLayers
-        )
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return try encoder.encode(project)
+    func projectData(rasterEncoder: (NSImage) -> Data? = { $0.qingtuPNGData() }) throws -> Data {
+        try projectDocument(rasterEncoder: rasterEncoder).encodedProjectData()
     }
 
     func loadProjectData(_ data: Data) throws {
@@ -1374,11 +1370,13 @@ extension ImageEditorViewModel {
         }
     ) -> Bool {
         do {
-            let data = try projectData()
+            let project = try projectDocument()
+            let data = try project.encodedProjectData()
+            let metadata = try? ImageEditorProjectSaveMetadata(project: project)
             try dataWriter(data, url)
             let standardizedURL = url.standardizedFileURL
             updateCurrentProjectURL(standardizedURL)
-            updateProjectSaveBaseline(data)
+            updateProjectSaveBaseline(data, metadata: metadata)
             recentDocumentRegistrar(standardizedURL)
             statusText = L10n.format(
                 "imageEditor.status.projectSaved",
@@ -1443,12 +1441,18 @@ extension ImageEditorViewModel {
     }
 
     func resetProjectSaveBaseline() {
-        updateProjectSaveBaseline(try? projectData())
+        do {
+            let project = try projectDocument()
+            let data = try project.encodedProjectData()
+            updateProjectSaveBaseline(data, metadata: try? ImageEditorProjectSaveMetadata(project: project))
+        } catch {
+            // An unencodable document is always dirty; no valid baseline exists.
+            updateProjectSaveBaseline(nil)
+        }
     }
 
     var hasUnsavedProjectChanges: Bool {
-        guard let currentData = try? projectData() else { return true }
-        return !projectDataMatchesSaveBaseline(currentData)
+        projectHasUnsavedChanges()
     }
 
     func presentProjectRevertConfirmation() {

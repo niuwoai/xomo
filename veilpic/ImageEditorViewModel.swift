@@ -1007,17 +1007,24 @@ final class ImageEditorViewModel: ObservableObject {
     private var selectionEdgeGeometrySource: ImageEditorSelection?
     private var selectionEdgeGeometryCanvasSize: CGSize = .zero
     private var projectSaveBaselineData: Data?
+    private var projectSaveBaselineMetadata: ImageEditorProjectSaveMetadata?
 
     func updateCurrentProjectURL(_ url: URL?) {
         currentProjectURL = url?.standardizedFileURL
     }
 
-    func updateProjectSaveBaseline(_ data: Data?) {
+    func updateProjectSaveBaseline(_ data: Data?, metadata: ImageEditorProjectSaveMetadata? = nil) {
         projectSaveBaselineData = data
+        projectSaveBaselineMetadata = data == nil ? nil : metadata
     }
 
     func projectDataMatchesSaveBaseline(_ data: Data) -> Bool {
         projectSaveBaselineData == data
+    }
+
+    func projectMetadataDiffersFromSaveBaseline(_ metadata: ImageEditorProjectSaveMetadata) -> Bool {
+        guard let projectSaveBaselineMetadata else { return false }
+        return projectSaveBaselineMetadata != metadata
     }
 
     init(
