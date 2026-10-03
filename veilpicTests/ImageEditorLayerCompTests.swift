@@ -1057,12 +1057,14 @@ struct ImageEditorLayerCompTests {
         let duplicate = try #require(viewModel.duplicateLayerComp(desktopID))
         #expect(duplicate.isFavorite)
         viewModel.updateLayerComp(desktopID)
+        #expect(viewModel.document.selectedLayerCompID == duplicate.id)
         #expect(viewModel.document.layerComps.first { $0.id == desktopID }?.isFavorite == true)
         #expect(ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
             matching: "desktop",
             favoritesOnly: true
         ).map(\.id) == [desktopID, duplicate.id])
+        viewModel.selectLayerComp(desktopID)
         #expect(!viewModel.canSelectPreviousFavoriteLayerComp)
         #expect(viewModel.canSelectNextFavoriteLayerComp)
         #expect(viewModel.applyNextFavoriteLayerComp())
