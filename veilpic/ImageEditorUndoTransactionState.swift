@@ -30,20 +30,23 @@ extension ImageEditorViewModel {
 
     func pushUndo() {
         // A new editor command owns a separate undo step. Commit the last
-        // successful transform preview before capturing that command's input;
+        // successful canvas preview before capturing that command's input;
         // otherwise cancellation would pop the command's snapshot instead.
-        finishSelectedLayerTransformForNewEdit()
+        finishActiveCanvasEditForNewCommand()
         appendUndoSnapshot()
     }
 
     /// Deferred commands must call this before capturing their own original
     /// document, not after replaying that document at commit time.
-    func finishSelectedLayerTransformForNewEdit() {
+    func finishActiveCanvasEditForNewCommand() {
         if !rotatingLayerIDs.isEmpty {
             finishRotatingSelectedLayer()
         } else if !resizingLayerIDs.isEmpty {
             finishResizingSelectedLayer()
         }
+        // Pixel move clears its ownership before pushing its own snapshot,
+        // so its nested pushUndo cannot recursively finish this transaction.
+        finishPixelSelectionMove()
     }
 
     private func appendUndoSnapshot() {
@@ -58,6 +61,7 @@ extension ImageEditorViewModel {
     @discardableResult
     func beginTransformUndoTransaction() -> Bool {
         guard !hasActiveSelectedLayerTransformTransaction else { return false }
+        finishPixelSelectionMove()
         undoTransactionState.transformRedo = ImageEditorTransformRedoSnapshot(
             documents: redoStack, themes: undoTransactionState.redoThemes
         )

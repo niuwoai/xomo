@@ -1,0 +1,183 @@
+{
+  "version": "2.12.0-rc1718",
+  "baseline_main": "7ba67afc6fa0cdc67a558835cb193abc02983098",
+  "result": "Passed",
+  "scope": "Pixel move ownership across five ordinary edits, rotation/resize, Undo/Redo and project lifecycle; not full Release or physical mid-drag acceptance",
+  "red": {
+    "path": "/private/tmp/veilpic-rc1718-pixel-edit-boundary-red-tests.xcresult",
+    "methods": 6,
+    "runs": 18,
+    "failed_methods": 5,
+    "failed_runs": 17,
+    "issues": 90,
+    "exit": 65,
+    "elapsed_seconds": 295.83,
+    "production_logic": "rc1717 pixel move/history logic; rc1718 version inputs and tests"
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1718-pixel-edit-boundary-verified-tests.xcresult",
+    "suites": 11,
+    "methods": 266,
+    "runs": 315,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 1733.1,
+    "new_methods": 7,
+    "new_runs": 20,
+    "start_epoch": 1791040342.821,
+    "finish_epoch": 1791042060.982
+  },
+  "expanded": {
+    "path": "/private/tmp/veilpic-rc1718-expanded-tests.xcresult",
+    "suites": 56,
+    "methods": 966,
+    "runs": 1168,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 157.6,
+    "mode": "test-without-building",
+    "start": "2026-10-03T23:44:28+08:00",
+    "finish": "2026-10-03T23:46:44+08:00",
+    "start_epoch": 1791042268.561,
+    "finish_epoch": 1791042404.765,
+    "missing_requested_suites": [],
+    "excluded": "Only previously measured profileNativeSerializationAndDirtyChecks; no functional regression excluded"
+  },
+  "source_inputs": {
+    "count": 406,
+    "scope": "403 Swift/Xcode inputs plus 3 WindowCommands.strings resources",
+    "sha256_of_ordered_path_hash_json": "3c538300af714b66fd85bec8b03a1c984a42d4512fc8d410b4ad8570c3b54449",
+    "changed_after_specialized": [],
+    "changed_after_expanded": []
+  },
+  "contracts": {
+    "release": {
+      "runs": 10,
+      "assertions": 30,
+      "failed": 0
+    },
+    "archive": {
+      "runs": 3,
+      "assertions": 22,
+      "failed": 0
+    },
+    "readme": {
+      "assertions": 29,
+      "failed": 0
+    }
+  },
+  "app": {
+    "debug_version": "2.12.0-rc1718",
+    "debug_build": 1718
+  },
+  "coverage": {
+    "new_methods": 7,
+    "new_runs": 20,
+    "edits": [
+      "rename",
+      "theme",
+      "fill",
+      "clear",
+      "component insertion"
+    ],
+    "checks": [
+      "Full project-data control and independent staged Undo/Redo",
+      "No-op/rejected edits preserve pixel ownership and pending Redo",
+      "Automation rename survives cancellation and residual pixel events",
+      "First Undo/Redo cancels the preview without consuming history",
+      "History availability with empty stacks",
+      "Rotation/resize begins after pixel move commits",
+      "History clear and project reload discard stale ownership"
+    ]
+  },
+  "test_suites": [
+    "ImageEditorCanvasCursorTests",
+    "ImageEditorCenteredResizeTests",
+    "ImageEditorGroupResizeTests",
+    "ImageEditorGroupRotationTests",
+    "ImageEditorHistoryTests",
+    "ImageEditorInspectorResizeTests",
+    "ImageEditorKeyboardEventRoutingTests",
+    "ImageEditorLayerBatchAppearanceTests",
+    "ImageEditorLayerCompTests",
+    "ImageEditorLayerGroupMovementConsistencyTests",
+    "ImageEditorLayerResizePointerEventTests",
+    "ImageEditorLayerTransformContextTests",
+    "ImageEditorObjectMoveActivationTests",
+    "ImageEditorObjectMoveCandidateTests",
+    "ImageEditorObjectMoveEventTests",
+    "ImageEditorObjectMoveReleaseTests",
+    "ImageEditorPSDTests",
+    "ImageEditorParagraphLayoutTests",
+    "ImageEditorPixelMoveCoverageTests",
+    "ImageEditorPixelMoveEditBoundaryTests",
+    "ImageEditorPixelMoveMaskAlphaTests",
+    "ImageEditorPixelMovePreviewReuseTests",
+    "ImageEditorPixelSelectionLayerBoundsTests",
+    "ImageEditorPixelSelectionMoveTests",
+    "ImageEditorPrintTests",
+    "ImageEditorProjectContentCheckpointTests",
+    "ImageEditorProjectDirtyStateTests",
+    "ImageEditorProjectDocumentTests",
+    "ImageEditorProjectRevertTests",
+    "ImageEditorProjectSaveTests",
+    "ImageEditorQuickExportPNGTests",
+    "ImageEditorRasterRotationTests",
+    "ImageEditorRotationHandleGestureTests",
+    "ImageEditorScaledPixelSelectionMoveTests",
+    "ImageEditorScopeTests",
+    "ImageEditorSelectionClearSamplingTests",
+    "ImageEditorSelectionFillCoverageTests",
+    "ImageEditorSmartObjectContextTests",
+    "ImageEditorSmartObjectPlacementTests",
+    "ImageEditorSmartObjectSourceExportTests",
+    "ImageEditorTextBoxCreationTests",
+    "ImageEditorTransformCancellationTests",
+    "ImageEditorTransformEditBoundaryTests",
+    "ImageEditorTransformFinalStateTests",
+    "ImageEditorTransformHUDTests",
+    "ImageEditorTransformLockTests",
+    "ImageEditorTransformReferencePointTests",
+    "ImageEditorUnlinkedMaskResizeTests",
+    "ImageEditorUnlinkedMaskRotationTests",
+    "ImageEditorVectorLayerTests",
+    "XomoCloseCommandTests",
+    "XomoDocumentCloseGuardTests",
+    "XomoExternalDocumentOpenTests",
+    "XomoFigmaImportTransactionTests",
+    "XomoLayerClipboardTests",
+    "XomoRecentDocumentsTests"
+  ],
+  "ui": {
+    "old_debug_pid": 17030,
+    "old_pid_gone_after_super_q": true,
+    "next_observed_pid": 44255,
+    "next_pid_start": "2026-10-03T23:31:31+08:00",
+    "closed_after_observation_unproven": true,
+    "direct_native_menu_click_verified": false,
+    "screenshot_available": false,
+    "unsaved_quit_verified": false,
+    "force_quit": false
+  },
+  "gate": {
+    "next": "rc1720",
+    "installed": "2.12.0-rc1680",
+    "installed_this_round": false,
+    "backup": "Old fallback lacks Info.plist/executable; verify a complete recoverable backup before overwrite"
+  },
+  "limitations": [
+    "No physical mid-drag or rendered pixel acceptance this round",
+    "No proof that app stays closed after UI readback; no unsaved quit acceptance",
+    "Not a global proof for all overlapping editor transaction types",
+    "Large View/ViewModel/test files remain architecture debt",
+    "No performance improvement or Figma expansion claim",
+    "Compiler sampling target had already ended; no sampling diagnosis"
+  ],
+  "next_milestone": "Complete a real image-editing, save/reopen, export and normal-quit workflow before rc1720 gate",
+  "commands": {
+    "specialized": "ruby -e 'require \"open3\"; require \"json\"; File.open(\"/private/tmp/veilpic-build.lock\",File::RDWR|File::CREAT,0600) { |lock| abort \"Build lock busy\" unless lock.flock(File::LOCK_EX|File::LOCK_NB); start=Process.clock_gettime(Process::CLOCK_MONOTONIC); File.open(\"/private/tmp/veilpic-rc1718-pixel-edit-boundary-verified-tests.log\",\"w\") { |log| Open3.popen2e(*JSON.parse(\"[\\\"xcodebuild\\\",\\\"-project\\\",\\\"veilpic.xcodeproj\\\",\\\"-scheme\\\",\\\"veilpic\\\",\\\"-configuration\\\",\\\"Debug\\\",\\\"-destination\\\",\\\"platform=macOS,arch=arm64\\\",\\\"-derivedDataPath\\\",\\\".codex/DerivedData\\\",\\\"-clonedSourcePackagesDirPath\\\",\\\".codex/SourcePackages\\\",\\\"-disableAutomaticPackageResolution\\\",\\\"QPIC_SKIP_ADHOC_SIGN=YES\\\",\\\"ENABLE_USER_SCRIPT_SANDBOXING=NO\\\",\\\"-parallel-testing-enabled\\\",\\\"NO\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformCancellationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformFinalStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelSelectionMoveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMovePreviewReuseTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionFillCoverageTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionClearSamplingTests\\\",\\\"-only-testing:veilpicTests/ImageEditorHistoryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDocumentTests\\\",\\\"-only-testing:veilpicTests/ImageEditorCanvasCursorTests\\\",\\\"-resultBundlePath\\\",\\\"/private/tmp/veilpic-rc1718-pixel-edit-boundary-verified-tests.xcresult\\\",\\\"test\\\"]\")) { |input,output,wait| input.close; output.each_line { |line| log.write(line); puts line[0,350] if line.match?(/error:|Executed|TEST.*FAILED|TEST.*SUCCEEDED|failed after|Test run with/) }; code=wait.value.exitstatus; puts JSON.generate({exit:code,elapsed_seconds:(Process.clock_gettime(Process::CLOCK_MONOTONIC)-start).round(2)}); exit code } } }'",
+    "expanded": "ruby -e 'require \"open3\"; require \"json\"; File.open(\"/private/tmp/veilpic-build.lock\",File::RDWR|File::CREAT,0600) { |lock| abort \"Build lock busy\" unless lock.flock(File::LOCK_EX|File::LOCK_NB); start=Process.clock_gettime(Process::CLOCK_MONOTONIC); File.open(\"/private/tmp/veilpic-rc1718-expanded-tests.log\",\"w\") { |log| Open3.popen2e(*JSON.parse(\"[\\\"xcodebuild\\\",\\\"-project\\\",\\\"veilpic.xcodeproj\\\",\\\"-scheme\\\",\\\"veilpic\\\",\\\"-configuration\\\",\\\"Debug\\\",\\\"-destination\\\",\\\"platform=macOS,arch=arm64\\\",\\\"-derivedDataPath\\\",\\\".codex/DerivedData\\\",\\\"-clonedSourcePackagesDirPath\\\",\\\".codex/SourcePackages\\\",\\\"-disableAutomaticPackageResolution\\\",\\\"QPIC_SKIP_ADHOC_SIGN=YES\\\",\\\"ENABLE_USER_SCRIPT_SANDBOXING=NO\\\",\\\"-parallel-testing-enabled\\\",\\\"NO\\\",\\\"-only-testing:veilpicTests/ImageEditorCanvasCursorTests\\\",\\\"-only-testing:veilpicTests/ImageEditorCenteredResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGroupResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorGroupRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorHistoryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorInspectorResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorKeyboardEventRoutingTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerBatchAppearanceTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerCompTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerGroupMovementConsistencyTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerResizePointerEventTests\\\",\\\"-only-testing:veilpicTests/ImageEditorLayerTransformContextTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveActivationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveCandidateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveEventTests\\\",\\\"-only-testing:veilpicTests/ImageEditorObjectMoveReleaseTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPSDTests\\\",\\\"-only-testing:veilpicTests/ImageEditorParagraphLayoutTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveCoverageTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMoveMaskAlphaTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelMovePreviewReuseTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelSelectionLayerBoundsTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPixelSelectionMoveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorPrintTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectContentCheckpointTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDirtyStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectDocumentTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectRevertTests\\\",\\\"-only-testing:veilpicTests/ImageEditorProjectSaveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorQuickExportPNGTests\\\",\\\"-only-testing:veilpicTests/ImageEditorRasterRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorRotationHandleGestureTests\\\",\\\"-only-testing:veilpicTests/ImageEditorScaledPixelSelectionMoveTests\\\",\\\"-only-testing:veilpicTests/ImageEditorScopeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionClearSamplingTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSelectionFillCoverageTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectContextTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectPlacementTests\\\",\\\"-only-testing:veilpicTests/ImageEditorSmartObjectSourceExportTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTextBoxCreationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformCancellationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformEditBoundaryTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformFinalStateTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformHUDTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformLockTests\\\",\\\"-only-testing:veilpicTests/ImageEditorTransformReferencePointTests\\\",\\\"-only-testing:veilpicTests/ImageEditorUnlinkedMaskResizeTests\\\",\\\"-only-testing:veilpicTests/ImageEditorUnlinkedMaskRotationTests\\\",\\\"-only-testing:veilpicTests/ImageEditorVectorLayerTests\\\",\\\"-only-testing:veilpicTests/XomoCloseCommandTests\\\",\\\"-only-testing:veilpicTests/XomoDocumentCloseGuardTests\\\",\\\"-only-testing:veilpicTests/XomoExternalDocumentOpenTests\\\",\\\"-only-testing:veilpicTests/XomoFigmaImportTransactionTests\\\",\\\"-only-testing:veilpicTests/XomoLayerClipboardTests\\\",\\\"-only-testing:veilpicTests/XomoRecentDocumentsTests\\\",\\\"-skip-testing:veilpicTests/ImageEditorProjectDirtyStateTests/profileNativeSerializationAndDirtyChecks\\\",\\\"-resultBundlePath\\\",\\\"/private/tmp/veilpic-rc1718-expanded-tests.xcresult\\\",\\\"test-without-building\\\"]\")) { |input,output,wait| input.close; output.each_line { |line| log.write(line); puts line[0,350] if line.match?(/error:|Executed|TEST.*FAILED|TEST.*SUCCEEDED|failed after|Test run with/) }; code=wait.value.exitstatus; puts JSON.generate({exit:code,elapsed_seconds:(Process.clock_gettime(Process::CLOCK_MONOTONIC)-start).round(2)}); exit code } } }'"
+  }
+}

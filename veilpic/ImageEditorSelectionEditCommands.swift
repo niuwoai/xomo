@@ -371,7 +371,7 @@ extension ImageEditorViewModel {
               canBeginPixelSelectionMove()
         else { return false }
 
-        finishSelectedLayerTransformForNewEdit()
+        finishActiveCanvasEditForNewCommand()
         guard let layer = document.selectedLayer else { return false }
         var transaction = ImageEditorPixelSelectionMoveTransaction(
             originalDocument: document,
@@ -484,10 +484,12 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionPixelsMoved")
     }
 
-    func cancelPixelSelectionMove() {
-        guard let transaction = pixelSelectionMoveTransaction else { return }
+    @discardableResult
+    func cancelPixelSelectionMove() -> Bool {
+        guard let transaction = pixelSelectionMoveTransaction else { return false }
         pixelSelectionMoveTransaction = nil
         document = transaction.originalDocument
+        return true
     }
 
     private static func imagesAreEquivalent(_ lhs: NSImage?, _ rhs: NSImage) -> Bool {
