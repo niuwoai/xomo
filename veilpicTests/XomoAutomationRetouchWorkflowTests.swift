@@ -687,4 +687,3 @@ struct XomoAutomationRetouchWorkflowTests {
             name: name, arguments: arguments)
     }
 }
-

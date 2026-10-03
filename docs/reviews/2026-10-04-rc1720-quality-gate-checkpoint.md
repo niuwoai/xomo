@@ -28,6 +28,8 @@
 
 ## 可恢复备份与分发边界
 
+源码检查点已集成至 main `53c0d64b2be7f6eb9b0139b33ac3624b0c20bb42`，分支与 `v2.12.0-rc1720` 标签一起推送；标签说明明确完整门槛仍待验收。暂存检查随后发现新测试文件 EOF 多余空行，未把该次检查记为通过。在同一进行中的门槛从 main 拉 `codex/quality-gate-rc1720-finalize`，只删除该空行，文件由 690 降为 689 行，不改已有标签。最终重新编译回归 `/private/tmp/veilpic-rc1720-checkpoint-final-input-tests.xcresult`：64 套件/1476 方法/1809 次运行、零失败/跳过、退出 0、195.07 秒。请求套件全部实测通过，最终 409 输入前后相同，指纹 `027b868722c4545374bfa636ddc73eacfde1b284fea79158c45e12e2f3257ad0`，格式检查退出 0。此前 `8aa...` 指纹属于空行校正前的同一生产行为版本，不能混作最终输入指纹。
+
 新备份 `/private/tmp/veilpic-rc1720-backup.m1TMsJ/Xomo-rc1680.app`：143 个目录/文件/符号链接项与 `/Applications/Xomo.app` 完全一致，Info.plist 和可执行文件齐全，版本 rc1680；有序清单 SHA256 `d813c275aba2564991ed2d4d46d884c0f3faaab86b999bee43751337b862e945`。清单和核验 JSON 在备份目录。初次沙箱签名读取得到失败，使用必需系统权限复跑同一严格验证，原包与副本都退出 0；没有重新签名或覆盖安装。未做备份启动/实际回退验收。
 
 依据 build-test-acceleration 技能持 `/private/tmp/veilpic-build.lock` 串行复用缓存，无 clean、无因观察超时而重启。依据 release-macos-app 技能限定本轮为本地质量/安装，不运行发布引擎 run/metadata，不上传 DMG、不更新 appcast 或创建 GitHub Release。
