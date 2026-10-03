@@ -7597,6 +7597,7 @@ final class ImageEditorViewModel: ObservableObject {
 
         let indices = selectedLayerBlendIfTargetIndices()
         guard !indices.isEmpty else { return }
+        finishActiveCanvasEditForNewCommand()
         activeLayerBlendIfRedoStack = redoStack
         activeLayerBlendIfRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -7668,6 +7669,9 @@ final class ImageEditorViewModel: ObservableObject {
             ? selectedLayerOpacityTargetIndices()
             : selectedLayerFillOpacityTargetIndices()
         guard !indices.isEmpty else { return }
+        // Finalize the preceding preview's branch before saving the Redo
+        // state that this property's no-op completion may later restore.
+        finishActiveCanvasEditForNewCommand()
         activeLayerOpacityRedoStack = redoStack
         activeLayerOpacityRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -7756,6 +7760,7 @@ final class ImageEditorViewModel: ObservableObject {
 
         let indices = selectedLayerMaskPropertyTargetIndices()
         guard !indices.isEmpty else { return }
+        finishActiveCanvasEditForNewCommand()
         activeLayerMaskPropertyRedoStack = redoStack
         activeLayerMaskPropertyRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12236,6 +12241,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func beginPathAnchorMoveUndoTransaction() {
         guard !isPathAnchorMoveUndoTransactionActive else { return }
+        finishActiveCanvasEditForNewCommand()
         activePathAnchorMoveRedoStack = redoStack
         activePathAnchorMoveRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12243,6 +12249,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginShapeGradientUndoTransaction() {
+        finishActiveCanvasEditForNewCommand()
         activeShapeGradientRedoStack = redoStack
         activeShapeGradientRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12259,6 +12266,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginGradientOverlayCenterUndoTransaction() {
+        finishActiveCanvasEditForNewCommand()
         activeGradientOverlayCenterRedoStack = redoStack
         activeGradientOverlayCenterRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12289,6 +12297,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginGradientOverlayAxisUndoTransaction() {
+        finishActiveCanvasEditForNewCommand()
         activeGradientOverlayAxisRedoStack = redoStack
         activeGradientOverlayAxisRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12318,6 +12327,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginGradientOverlayStopUndoTransaction() {
+        finishActiveCanvasEditForNewCommand()
         activeGradientOverlayStopRedoStack = redoStack
         activeGradientOverlayStopRedoThemeStates = redoXomoThemeStates
         pushUndo()
@@ -12347,6 +12357,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginGradientOverlayMidpointUndoTransaction() {
+        finishActiveCanvasEditForNewCommand()
         activeGradientOverlayMidpointRedoStack = redoStack
         activeGradientOverlayMidpointRedoThemeStates = redoXomoThemeStates
         pushUndo()
