@@ -1,0 +1,62 @@
+{
+  "scope": "Artifact readback only; does not itself prove physical editing, live cursor or UI latency",
+  "expected_runtime_version": "2.12.0-rc1724",
+  "runtime_versions": {
+    "baseline": "2.12.0-rc1724",
+    "moved": "2.12.0-rc1724",
+    "undone": "2.12.0-rc1724",
+    "redone": "2.12.0-rc1724",
+    "reopened": "2.12.0-rc1724"
+  },
+  "checks": {
+    "current_runtime_version": true,
+    "format_10": true,
+    "canvas_identity": true,
+    "selection_identity": true,
+    "undo_png_exact": true,
+    "undo_rgba_exact": true,
+    "undo_frame_exact": true,
+    "redo_complete_project_exact": true,
+    "move_dimensions": true,
+    "whole_source_shifted_10px": true,
+    "left_10px_transparent": true,
+    "reopen_all_other_project_fields_exact": true,
+    "reopen_adds_exactly_one_history": true,
+    "export_png_exact": true,
+    "export_rgba_exact": true,
+    "export_canvas_dimensions": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "source_directory": "/private/tmp/xomo-rc1724-workflow.JtXoTd",
+  "files": {
+    "baseline.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "8bbaf9a6d6804186011431786c3ba6e438a2e6bc856a07cb1e22aa2ba7580cc1"
+    },
+    "moved.xomoproject": {
+      "bytes": 23418152,
+      "sha256": "4a7e1efce1e1b9ce8cf5f42ec4421b7f403e81a7b5b0d12655234113b14e563d"
+    },
+    "undone.xomoproject": {
+      "bytes": 2978225,
+      "sha256": "1c0269168043aba3cacd9a36474364e4a555da157c2aefb6bcfc19bf42af8d44"
+    },
+    "redone.xomoproject": {
+      "bytes": 23418152,
+      "sha256": "4a7e1efce1e1b9ce8cf5f42ec4421b7f403e81a7b5b0d12655234113b14e563d"
+    },
+    "reopened.xomoproject": {
+      "bytes": 23418172,
+      "sha256": "8a7f543a832aea62a6777c30f93aea9df684e8dc1ca28c3c32b1b3c506016e36"
+    },
+    "edited.png": {
+      "bytes": 2128918,
+      "sha256": "4952f2e403b2212f039d46cbda81628557d910d56d62b1c81549e80b51ad9033"
+    },
+    "reopened.png": {
+      "bytes": 2128918,
+      "sha256": "4952f2e403b2212f039d46cbda81628557d910d56d62b1c81549e80b51ad9033"
+    }
+  }
+}
