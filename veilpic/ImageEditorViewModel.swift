@@ -1474,6 +1474,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canUndo: Bool {
+        if pixelSelectionMoveTransaction != nil { return true }
         if hasPendingPenPathTransaction {
             return canDeletePendingPenPoint
         }
@@ -1481,7 +1482,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canRedo: Bool {
-        if hasActiveSelectedLayerTransformTransaction
+        if pixelSelectionMoveTransaction != nil
+            || hasActiveSelectedLayerTransformTransaction
             || hasActivePathAnchorMoveTransaction
             || hasActiveGradientOverlayCenterTransaction
             || hasActiveGradientOverlayAxisTransaction
@@ -5214,6 +5216,7 @@ final class ImageEditorViewModel: ObservableObject {
         // that snapshot as ordinary history would restore the document while
         // leaving the transform transaction active. The first history command
         // therefore cancels the preview; a subsequent command reaches history.
+        guard !cancelPixelSelectionMove() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasMidpoint() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasStop() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasAxis() else { return }
@@ -5253,6 +5256,7 @@ final class ImageEditorViewModel: ObservableObject {
     func redo() {
         // Redo follows the same transaction boundary as Undo: an unfinished
         // pointer move is cancelled before either history stack can change.
+        guard !cancelPixelSelectionMove() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasMidpoint() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasStop() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasAxis() else { return }
@@ -12400,6 +12404,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func clearUndoHistory() {
+        // A replaced document must not be restored by an old pointer release.
+        pixelSelectionMoveTransaction = nil
         resetSelectedLayerTransformTransaction()
         undoStack.removeAll()
         redoStack.removeAll()
