@@ -5211,32 +5211,46 @@ final class XomoAutomationRegistry {
         let property = try requiredString("property", in: arguments)
         switch property {
         case "fillOpacity":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerFillOpacityChange()
-            viewModel.setSelectedLayerFillOpacity(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerFillOpacity(value)
             viewModel.commitSelectedLayerFillOpacityChange()
         case "blendIfSourceBlack":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerBlendIfSourceBlackChange()
-            viewModel.setSelectedLayerBlendIfSourceBlack(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerBlendIfSourceBlack(value)
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfSourceWhite":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
-            viewModel.setSelectedLayerBlendIfSourceWhite(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerBlendIfSourceWhite(value)
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfUnderlyingBlack":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
-            viewModel.setSelectedLayerBlendIfUnderlyingBlack(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerBlendIfUnderlyingBlack(value)
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfUnderlyingWhite":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
-            viewModel.setSelectedLayerBlendIfUnderlyingWhite(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerBlendIfUnderlyingWhite(value)
             viewModel.commitSelectedLayerBlendIfChange()
         case "maskDensity":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerMaskDensityChange()
-            viewModel.setSelectedLayerMaskDensity(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerMaskDensity(value)
             viewModel.commitSelectedLayerMaskDensityChange()
         case "maskFeather":
+            let value = try requiredNumber("value", in: arguments)
+            viewModel.finishActiveCanvasEditForNewCommand()
             viewModel.beginSelectedLayerMaskFeatherChange()
-            viewModel.setSelectedLayerMaskFeather(try requiredNumber("value", in: arguments))
+            viewModel.setSelectedLayerMaskFeather(value)
             viewModel.commitSelectedLayerMaskFeatherChange()
         case "clippingMask": viewModel.toggleSelectedLayerClippingMask()
         case "lock":
