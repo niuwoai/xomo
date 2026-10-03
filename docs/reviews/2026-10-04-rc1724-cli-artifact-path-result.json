@@ -285,6 +285,15 @@
     "interpretation": "Live native process waiting; no terminal result. Cause not established, no restart/termination or second native workflow",
     "resolved_by": "Native group exit 65; failed before connection. Whole owned workflow subsequently terminated with exit 143."
   },
+  "component_runtime_observation": {
+    "reference": "2026-10-04-rc1724-component-runtime-result.json",
+    "status": "partial_not_accepted",
+    "editable_component_text_observed": true,
+    "component_history_and_round_trip_verified": false,
+    "actual_cursor_verified": false,
+    "interface_recovery_pending": true,
+    "main_thread_sample": "Idle event-loop wait; no observed main-thread hang; App not killed or restarted"
+  },
   "latest_four_hour_review": {
     "window_start": "2026-10-04T01:53:24+08:00",
     "window_end": "2026-10-04T05:53:24+08:00",

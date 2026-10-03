@@ -1,0 +1,87 @@
+{
+  "version": "2.12.0-rc1724",
+  "cycle": "rc1720",
+  "baseline_main": "630005e11b7901d0fce46b33ad9064a4a6813167",
+  "observed_at_utc": "2026-10-03 22:50:23 UTC",
+  "scope": "Physical component insertion and text editing observations only; incomplete cursor, history and project round-trip acceptance",
+  "status": "partial_not_accepted",
+  "observation_source": "CUA accessibility states and inline screenshots in this task; no saved raw AX transcript or screenshot artifact",
+  "runtime": {
+    "pid": 7217,
+    "path": "/Users/rocky/Sites/veilpic/.codex/ReleaseDerivedData/Build/Products/Release/Xomo.app",
+    "sample_verified_version": "2.12.0-rc1724 (1724)",
+    "canvas_pixels": [1440, 900],
+    "initial_tool": "brush",
+    "test_document": "New untitled test canvas; not a user document"
+  },
+  "observed_ui_steps": [
+    {
+      "action": "Select component-library tab after Brush",
+      "result": "Component-library mode selected; canvas AX details changed from Brush to Move"
+    },
+    {
+      "action": "Click built-in button component",
+      "result": "Selected button component; inserted group with separate text and shape child rows; Undo became enabled",
+      "group_id": "E67F20ED-5738-4CD5-8F00-152B506FC981",
+      "text_layer_id": "5038F48F-F442-461C-BE28-CAC60B62EC65",
+      "shape_layer_id": "C05B4E03-84BB-4D10-A967-262B2B9528D1"
+    },
+    {
+      "action": "Right-click canvas then Escape",
+      "result": "Layer-choice menu appeared; subsequent AX state reported layer selection cleared",
+      "limitation": "Right-click introduced menu behavior; not a pure hover or cursor-state probe"
+    },
+    {
+      "action": "Select text child, expand properties, select Text tool and click canvas center",
+      "result": "Existing text editor opened with value 继续; same child layer remained editable"
+    },
+    {
+      "action": "Set text to 立即开始 and click text-editor commit",
+      "result": "Same text child row and name changed to 文字：立即开始; displayed width changed from 38 to 68 px",
+      "limitation": "AX confirms editable text state, not final composited glyph pixels or undo transaction equality"
+    }
+  ],
+  "unverified": {
+    "actual_system_or_tool_cursor": "Screenshots show a similar highlighted triangular pointer under different tool states. Capture overlay versus native NSCursor cannot be distinguished; no cursor pass or product regression claim",
+    "component_save": "Save toolbar and Cmd-S / Cmd-Shift-S produced no observed dialog; later File menu items were disabled",
+    "history": "Component text Undo/Redo was not completed or verified",
+    "project_round_trip": "No component project was saved, reopened or exported",
+    "rendered_text": "Final edited component glyph pixels were not verified",
+    "scratch_directory": "/private/tmp/xomo-rc1724-component-workflow.1ZDUMY",
+    "scratch_files_observed": 0
+  },
+  "interface_failure": {
+    "observations": [
+      "File menu showed disabled document actions",
+      "Cancel actions returned invalid or ambiguously matched AX elements",
+      "Screenshot unavailable for the bound app",
+      "Resetting only CUA bindings and reselecting the same app path did not recover editor observations"
+    ],
+    "interpretation": "Current window, menu or automation-interface state remains unresolved; observations do not prove a product save regression",
+    "app_restarted": false,
+    "app_terminated": false,
+    "system_permissions_changed": false,
+    "shared_xctest_service_restarted": false
+  },
+  "read_only_sample": {
+    "command": "sample 7217 3 -mayDie",
+    "exit": 0,
+    "sampled_at": "2026-10-04T06:48:11.730+08:00",
+    "path": "/tmp/Xomo_2026-10-04_064811_CNWt.sample.txt",
+    "sha256": "0a20faa6f26d5aedafd35f8b7b8c2dd4eeafe877560ad8c96efef521ccc4cec6",
+    "cpu_percent_before_sampling": 0.0,
+    "main_thread_samples": 2586,
+    "main_thread": "NSApplication run -> nextEventMatchingMask -> CFRunLoop -> mach_msg2_trap",
+    "interpretation": "Idle event-loop wait in all sampled main-thread stacks; no observed layout loop, synchronous save IO or main-thread lock. This short sample cannot exclude earlier or transient failures"
+  },
+  "next_action": "Recover a verifiable editor window/interface without bypassing OS permissions; finish component text history/round-trip and actual cursor acceptance. Shared XCTest restart remains subject to pending human approval",
+  "source_changed": false,
+  "source_inputs": {
+    "count": 412,
+    "sha256": "68659c8c9392c7e017645c42e09d476dbee448596475534214d1e70df26403a1"
+  },
+  "installed": "2.12.0-rc1680",
+  "installed_this_round": false,
+  "published": false,
+  "gate_passed": false
+}
