@@ -25,7 +25,9 @@
 
 唯一双架构 Release 测试编译会话 63725 退出 0，622.13 秒；日志 `/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/release-test-build.log`。App 为 rc1723/1723，App、单测及 UI Runner 可执行文件均含 arm64、x86_64，严格 App 签名核验退出 0。仍是测试注入权限产物，不得安装。
 
-Release 原生枚举会话退出 0、7.25 秒，225 套件/3637 方法，零错误/禁用，与源码候选及 Debug 原生标识逐项匹配；清单为 `release-native-inventory.json`。枚举不等于执行。全量原生串行回归会话 82575 已启动，使用 `release-full/run_full_release.rb` 和完整 `manifest.json`；进度 `release-full/report.{json,md}`。执行器契约 7 项/8 断言已过，逐组检查结果树、方法标识与 412 输入，不排除失败、不自动重试、不按静默超时终止。尚未完成，不能称全部通过；源码继续冻结。
+Release 原生枚举退出 0、7.25 秒，225 套件/3637 方法，零错误/禁用，与源码候选及 Debug 原生标识逐项匹配；清单为 `release-native-inventory.json`。随后全量原生串行回归会话 82575 于 2026-10-04 04:51:39–05:10:19 +08:00 完成，退出 0：225 套件/3637 方法/4584 次运行全部通过，零失败/跳过/缺失/额外方法，412 输入保持上述指纹。使用 `release-full/run_full_release.rb` 和完整 `manifest.json`，不排除失败、不自动重试、不按静默超时终止。[完整机器报告](2026-10-04-rc1723-release-full-result.json) 保存逐组数量、方法标识哈希、原始报告哈希和四份 Release 性能报告归档。不据此声称 GUI 性能改善。
+
+随后 CLI 构建退出 0 但实际交付 rc1200：固定旧 `.build/apple/Products/Release` 路径复制了历史二进制，当前 SwiftPM 输出已为 `.build/out/Products/Release`。这是实际交付失败，集中修复为 rc1724；rc1723 全量结果作为独立历史证据保留，不冒充 rc1724 编译输入。完整 rc1720 周期仍未通过。
 
 ## 验收边界
 

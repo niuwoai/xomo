@@ -1,0 +1,110 @@
+{
+  "version": "2.12.0-rc1724",
+  "baseline_main": "eb96080ee64f4e725cd6b1aede10dc71ce271cec",
+  "branch": "codex/cli-release-artifact-path-rc1724",
+  "scope": "Fix CLI artifact delivery, not editing algorithms or Figma expansion",
+  "original_native_failure": {
+    "build_exit": 0,
+    "seconds": 10.13,
+    "source_version": "2.12.0-rc1723",
+    "delivered_version": "2.12.0-rc1200",
+    "delivered_archs": [
+      "x86_64",
+      "arm64"
+    ],
+    "binary_sha256": "4b849830fea4fa16fdc58357eb1c3af586c89429d2c6c75efb6f10532fee80cc",
+    "log": "/private/tmp/veilpic-rc1723-gate-cycle.pdbG1A/cli-release-build.log",
+    "reason": "Fixed legacy .build/apple/Products/Release path; actual SwiftPM path is .build/out/Products/Release"
+  },
+  "contract_red": {
+    "tests": 7,
+    "assertions": 11,
+    "failures": 6,
+    "passed_tests": 1,
+    "errors": 0,
+    "skips": 0,
+    "exit": 1,
+    "log": "/private/tmp/veilpic-rc1724-cli-contract-final-red.log"
+  },
+  "contract_green": {
+    "tests": 7,
+    "assertions": 24,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "command": [
+      "ruby",
+      "scripts/test_xomo_cli_release_build.rb"
+    ],
+    "log": "/private/tmp/veilpic-rc1724-cli-contract-final-green.log"
+  },
+  "preserved_native_failures": [
+    {
+      "exit": 1,
+      "seconds": 5.21,
+      "log": "/private/tmp/veilpic-rc1724-cli-release-build.log"
+    },
+    {
+      "exit": 1,
+      "seconds": 1.78,
+      "log": "/private/tmp/veilpic-rc1724-cli-release-final-build.log"
+    }
+  ],
+  "universal_cli": {
+    "status": "passed",
+    "exit": 0,
+    "seconds": 5.07,
+    "command": [
+      "bash",
+      "scripts/build_xomo_cli_release.sh"
+    ],
+    "version": "2.12.0-rc1724",
+    "archs": [
+      "x86_64",
+      "arm64"
+    ],
+    "path": "dist/xomo-macos-universal",
+    "sha256": "ee210cba2a2a5ea08e55a6a2efc30aee30899cad9e2c2e4f30b7456d6d3ce02b",
+    "log": "/private/tmp/veilpic-rc1724-cli-release-final-verified-build.log"
+  },
+  "cli_tests": {
+    "exit": 0,
+    "seconds": 6.88,
+    "methods": 2,
+    "failures": 0,
+    "command": [
+      "swift",
+      "test",
+      "--package-path",
+      "xomo-cli",
+      "--configuration",
+      "release",
+      "--disable-index-store"
+    ],
+    "log": "/private/tmp/veilpic-rc1724-cli-release-tests.log",
+    "runtime_arch": "arm64"
+  },
+  "offline_mcp": {
+    "status": "passed",
+    "version": "2.12.0-rc1724",
+    "responses": 2,
+    "tools": 127,
+    "catalog_sha256": "a0facd19d6798f1bdd7823836b10a95e4361360900d73454d547e24cc6bae6fc",
+    "scope": "initialize and fallback tools/list, not live app integration"
+  },
+  "rc1723_full_units_reference": "2026-10-04-rc1723-release-full-result.json",
+  "gate": {
+    "cycle": "rc1720",
+    "status": "not_passed",
+    "current_app_build": "not_started",
+    "current_full_units": "not_started",
+    "ui": "not_started",
+    "physical_workflow_and_cursors": "not_started",
+    "normal_candidate": "not_started",
+    "installed": "2.12.0-rc1680",
+    "installed_this_round": false,
+    "published": false
+  },
+  "script_sha256": "068f6f4eeddc5eb1d18c0be810ba1538f6752092fc8fc07d39dcb76740ff6edf",
+  "contract_script_sha256": "4b7a4643efe26da255ba1528390a6f6ce5035bf7747f9bffd165e90ab8ee1e28"
+}
