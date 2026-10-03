@@ -853,9 +853,12 @@ struct XomoFileMenuItems: View {
             }
             .disabled(actions == nil)
         case .cancel:
-            Button(L10n.text("imageEditor.action.cancel")) {
+            Button {
                 actions?.cancel()
+            } label: {
+                Text("imageEditor.action.close", tableName: "WindowCommands")
             }
+            .keyboardShortcut("w", modifiers: [.command])
             .disabled(actions == nil)
         }
     }
