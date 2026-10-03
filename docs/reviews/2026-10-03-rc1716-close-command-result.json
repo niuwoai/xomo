@@ -1,0 +1,120 @@
+{
+  "version": "2.12.0-rc1716",
+  "baseline_main": "799adc7f629d7fedf997f429b849438c8e27c326",
+  "result": "targeted and expanded regression passed; native Cmd-W dirty/cancel/clean/save/reopen acceptance passed",
+  "scope": "Restore localized Close/Cmd-W through existing guarded action; no custom event interceptor, project format change or Figma expansion",
+  "red": {
+    "path": "/private/tmp/veilpic-rc1716-close-baseline-tests.xcresult",
+    "methods": 1,
+    "runs": 1,
+    "failed_methods": 1,
+    "issues": 2,
+    "exit": 65,
+    "elapsed_seconds": 63.11,
+    "confirmed": "Native File menu had zero Command-W close items"
+  },
+  "first_green": {
+    "path": "/private/tmp/veilpic-rc1716-close-green-tests.xcresult",
+    "methods": 51,
+    "runs": 53,
+    "failed_methods": 1,
+    "exit": 65,
+    "elapsed_seconds": 41.09,
+    "reason": "Fixture wrongly required NSMenuItem.action != nil for a SwiftUI-dispatched command; shortcut/title checks passed. Native actual Cmd-W invoked existing confirmation."
+  },
+  "specialized": {
+    "path": "/private/tmp/veilpic-rc1716-close-verified-tests.xcresult",
+    "methods": 51,
+    "runs": 53,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 34.86
+  },
+  "expanded": {
+    "path": "/private/tmp/veilpic-rc1716-expanded-tests.xcresult",
+    "suites": 44,
+    "methods": 860,
+    "runs": 1022,
+    "failed": 0,
+    "skipped": 0,
+    "exit": 0,
+    "elapsed_seconds": 26.45,
+    "mode": "test-without-building",
+    "excluded": "Only previously measured dirty-state performance method; no functional regression skipped"
+  },
+  "source_inputs": {
+    "count": 404,
+    "scope": "401 Swift/Xcode inputs plus three new WindowCommands.strings resources",
+    "sha256_of_ordered_path_hash_json": "8aa7762478bd2a5adaef5e68b1e20d411cb1b40ede890950376826a30e45907d",
+    "changed_after_verified_build": [],
+    "ui_production_inputs_unchanged": true,
+    "only_change_after_first_green": "XomoCloseCommandTests.swift removed the invalid selector assumption"
+  },
+  "ui": {
+    "fixture": "/private/tmp/xomo-ui-transform-rc1713-saved.xomoproject",
+    "fixture_bytes": 46505000,
+    "fixture_sha256": "ed0f8bf54993038d1f121a86d9ef55922c906dd0847ecac2d260e9136107a16d",
+    "dirty_cmd_w": "Right adds move history; Command-W presents Save/Discard/Cancel",
+    "cancel": "Document remains, 8 history states / Undo 1 / Redo 0",
+    "undo_to_clean": "7 history states / Undo 0 / Redo 1; Command-W closes with no save prompt, reactivation shows untitled",
+    "save_as": "/private/tmp/xomo-ui-close-rc1716-saved.xomoproject",
+    "save_as_bytes": 46505326,
+    "save_as_sha256": "478442af2dd2bff46b75a5689701b435b08c9b343b82499d0e74b445bbeb1f3c",
+    "save_as_history": 8,
+    "close_save": "Another Right then Command-W and Save writes project before closing",
+    "saved_bytes": 46505480,
+    "saved_sha256": "f519369b4dc50f062ebdc474d1c00503649d5a03a00b01bf845cf4e3cfe583e4",
+    "saved_history": 9,
+    "format": 10,
+    "reopen": "Actual panel reopens new project, 2048 squared, 10 history states / Undo 0 / Redo 0",
+    "limits": [
+      "Direct AX click on native menu repeatedly returned invalid element indices; not counted as passed",
+      "Later UI controller returned only stale File menu with Unknown window; Command-Q exit not confirmed, own Debug process remained. No force quit.",
+      "No new export RGBA comparison or independent rendered dirty-dot check"
+    ]
+  },
+  "archive": {
+    "history_preserved": true,
+    "history_sha": "5efa1684b561cb8308a62c8e3c084c1c34b4a9f893e60a0a568d9f627a530883",
+    "core_preserved": true,
+    "core_sha": "8fc23ee2abc489bdf663bad653e3a6d65c58a50862cc4277abd2cef3c5bbb8b4",
+    "expected_lines": 2448,
+    "actual_lines": 2448,
+    "files": 3,
+    "overview_lines": 559,
+    "relative_review_links_relocated": true,
+    "ruby_tests": {
+      "runs": 3,
+      "assertions": 22,
+      "failed": 0
+    }
+  },
+  "release_contract": {
+    "runs": 10,
+    "assertions": 30,
+    "failed": 0
+  },
+  "readme": {
+    "assertions": 29,
+    "failed": 0
+  },
+  "gate": {
+    "next": "rc1720",
+    "installed": "2.12.0-rc1680",
+    "installed_this_round": false,
+    "published": false,
+    "backup": "Existing rc1680 fallback bundle is invalid; validate a complete recoverable backup before overwrite"
+  },
+  "review": {
+    "window": "2026-10-03 10:26:39-14:26:39 Asia/Shanghai",
+    "main_baseline": "8607dbe63795b856c6f17319cc2c5e258d2b94dd",
+    "main_end": "799adc7f629d7fedf997f429b849438c8e27c326",
+    "finding": "No Figma expansion; transform transaction interleaving with other mutation remains unverified"
+  },
+  "next_milestone": "Prove transform cancellation and Undo/Redo under non-transform edits, then resolve native menu/exit UI verification boundary before rc1720",
+  "limitations": [
+    "Existing oversized View/ViewModel/Scope test files not fully split",
+    "Targeted Debug regression is not the complete Release/install gate"
+  ]
+}
