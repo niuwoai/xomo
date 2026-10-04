@@ -359,6 +359,28 @@
     "documentation_contracts": "release 10 tests / 30 assertions; overview 3 tests / 22 assertions; README 29 assertions; all pass",
     "installed_this_round": false
   },
+  "property_viewport_observation": {
+    "baseline_main": "398b89f93682fdae68f54d45087050ca3bb0c548",
+    "reference": "2026-10-04-rc1724-property-viewport.md",
+    "artifact_reference": "2026-10-04-rc1724-property-layout-probe.json",
+    "raw_report_sha256": "9c01ee8d289554feacb8816705d43cae55eacb3d04c8c2ae32d38a7c577e7eef",
+    "priority": "P1",
+    "status": "confirmed_runtime_controls_invisible_not_fixed",
+    "expanded_state_verified_twice": true,
+    "rendered_controls_visible": false,
+    "physical_slider_history_verified": false,
+    "causal_evidence": "Simplified offscreen fixture: six width/row-count pairs, legacy viewport height 0, reserved viewport height 112. Not a production-component test or fixed-App acceptance.",
+    "fixture_compile_exit": 0,
+    "fixture_runtime_exit": 0,
+    "fixture_seconds": 3.661,
+    "normal_exit": { "pid": 16715, "pid_absent": true, "force_terminated": false },
+    "shared_xctest_service_restarted": false,
+    "production_source_changed": false,
+    "next_milestone": "Restore usable advanced-property viewport, split oversized panel file, add production-component layout regressions and verify real slider Undo/Redo/save/reopen",
+    "read_only_reverification": "All 12 fixture measurements match preserved report; archived JSON bytes equal raw JSON; 412 compiled inputs unchanged",
+    "documentation_contracts": "release 10 tests / 30 assertions; overview 3 tests / 22 assertions; README 29 assertions; all pass",
+    "installed_this_round": false
+  },
   "latest_four_hour_review": {
     "window_start": "2026-10-04T01:53:24+08:00",
     "window_end": "2026-10-04T05:53:24+08:00",
