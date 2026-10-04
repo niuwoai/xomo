@@ -1,0 +1,91 @@
+{
+  "version": "2.12.0-rc1725",
+  "scope": "Completed mouse opacity/fill edits and separate Undo/Redo, save/reopen/export readback; not keyboard property, drag interruptions, cursors or full gate acceptance",
+  "source_directory": "/private/tmp/xomo-rc1725-property-workflow.gOw30C",
+  "checks": {
+    "current_version_and_format": true,
+    "canvas_dimensions": true,
+    "ordered_layer_ids_preserved": true,
+    "other_layers_unchanged": true,
+    "target_bitmap_and_metadata_preserved": true,
+    "non_edit_document_fields_preserved": true,
+    "opacity_values_exact": true,
+    "fill_values_exact": true,
+    "ordinary_frames_unchanged": true,
+    "observed_keyboard_action_is_canvas_nudge": true,
+    "opacity_undo_complete_bytes_exact": true,
+    "opacity_redo_complete_bytes_exact": true,
+    "nudge_undo_complete_bytes_exact": true,
+    "fill_undo_complete_bytes_exact": true,
+    "fill_redo_complete_bytes_exact": true,
+    "reopen_all_fields_except_history_exact": true,
+    "mouse_adds_one_history": true,
+    "fill_adds_one_history": true,
+    "keyboard-observed_adds_one_history": true,
+    "reopened_adds_one_history": true,
+    "observed_keyboard_history_is_layer_move": true,
+    "export_png_bytes_exact": true,
+    "export_rgba_exact": true,
+    "export_dimensions": true,
+    "export_has_nonuniform_visible_pixels": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "keyboard_property_acceptance": false,
+  "keyboard_observation": "Right after track click moved selected layer one pixel; slider focus was not established",
+  "drag_property_acceptance": false,
+  "files": {
+    "baseline.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "0918a3d070b7e4ba5644adeadc93323734429440e9b784008f9a96acb6ea4820"
+    },
+    "mouse.xomoproject": {
+      "bytes": 2977987,
+      "sha256": "cd19c7b5fcb33a29664dec7e0361d515d9f93ac6dc1d3553d3a87686c2f0f91f"
+    },
+    "mouse-undone.xomoproject": {
+      "bytes": 2977953,
+      "sha256": "0918a3d070b7e4ba5644adeadc93323734429440e9b784008f9a96acb6ea4820"
+    },
+    "mouse-redone.xomoproject": {
+      "bytes": 2977987,
+      "sha256": "cd19c7b5fcb33a29664dec7e0361d515d9f93ac6dc1d3553d3a87686c2f0f91f"
+    },
+    "keyboard-observed.xomoproject": {
+      "bytes": 2978013,
+      "sha256": "ef83e54c7e6f0f5b8ce9f2751c4979405c755c5a73de776941362911dc36cfb4"
+    },
+    "mouse-restored.xomoproject": {
+      "bytes": 2977987,
+      "sha256": "cd19c7b5fcb33a29664dec7e0361d515d9f93ac6dc1d3553d3a87686c2f0f91f"
+    },
+    "fill.xomoproject": {
+      "bytes": 2978027,
+      "sha256": "5cffd24d1591baa4c3e0330805081989d67f2c4c6a630f06e6264d8b73cc0392"
+    },
+    "fill-undone.xomoproject": {
+      "bytes": 2977987,
+      "sha256": "cd19c7b5fcb33a29664dec7e0361d515d9f93ac6dc1d3553d3a87686c2f0f91f"
+    },
+    "fill-redone.xomoproject": {
+      "bytes": 2978027,
+      "sha256": "5cffd24d1591baa4c3e0330805081989d67f2c4c6a630f06e6264d8b73cc0392"
+    },
+    "reopened.xomoproject": {
+      "bytes": 2978047,
+      "sha256": "fa147dc8a98d090ca1c14c84661b0170d87d520918ad52f609f01dda14988efe"
+    },
+    "edited.png": {
+      "bytes": 1263317,
+      "sha256": "0f95dadaae2ccec9d5c2897dfa07011dfe7578f9f2fff8e3fae707cd5721246d"
+    },
+    "reopened.png": {
+      "bytes": 1263317,
+      "sha256": "0f95dadaae2ccec9d5c2897dfa07011dfe7578f9f2fff8e3fae707cd5721246d"
+    }
+  },
+  "verifier": {
+    "path": "/Users/rocky/Sites/veilpic/scripts/verify_layer_property_workflow.rb",
+    "sha256": "7b6e1ad4265959df47fe5c115b4bc2d408b0a29af0bd789b686f811458d22f83"
+  }
+}

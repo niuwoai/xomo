@@ -868,7 +868,7 @@ struct ImageEditorSavedPathTests {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let panel = try source(root, "veilpic/ImageEditorLayerPanel.swift")
+        let panel = try source(root, "veilpic/ImageEditorLayerAuxiliaryPanels.swift")
         let channels = try source(root, "veilpic/ImageEditorChannels.swift")
         let menu = try source(root, "veilpic/ImageEditorMenuBar.swift")
         let project = try source(root, "veilpic/ImageEditorProjectDocument.swift")

@@ -588,7 +588,7 @@ struct ImageEditorLayerCompTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         let source = try String(
-            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerAuxiliaryPanels.swift"),
             encoding: .utf8
         )
         let contextStart = try #require(source.range(
