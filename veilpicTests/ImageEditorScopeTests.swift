@@ -5155,7 +5155,7 @@ struct ImageEditorScopeTests {
 
     @Test func channelsPanelKeepsRowsBoundedAndUsesCachedThumbnails() throws {
         let panelSource = try String(
-            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerAuxiliaryPanels.swift"),
             encoding: .utf8
         )
         let viewModelSource = try String(
