@@ -1,0 +1,62 @@
+{
+  "version": "2.12.0-rc1727",
+  "scope": "Actual Universal CLI build, version/architecture readback and Release CLI tests; not App MCP/UI or full gate",
+  "steps": [
+    {
+      "name": "universal-build",
+      "command": [
+        "bash",
+        "scripts/build_xomo_cli_release.sh"
+      ],
+      "exit": 0,
+      "seconds": 13.783
+    },
+    {
+      "name": "version",
+      "command": [
+        "/Users/rocky/Sites/veilpic/dist/xomo-macos-universal",
+        "version"
+      ],
+      "exit": 0,
+      "seconds": 0.009
+    },
+    {
+      "name": "arm64-check",
+      "command": [
+        "lipo",
+        "/Users/rocky/Sites/veilpic/dist/xomo-macos-universal",
+        "-verify_arch",
+        "arm64"
+      ],
+      "exit": 0,
+      "seconds": 0.022
+    },
+    {
+      "name": "intel-check",
+      "command": [
+        "lipo",
+        "/Users/rocky/Sites/veilpic/dist/xomo-macos-universal",
+        "-verify_arch",
+        "x86_64"
+      ],
+      "exit": 0,
+      "seconds": 0.022
+    },
+    {
+      "name": "release-tests",
+      "command": [
+        "swift",
+        "test",
+        "--package-path",
+        "xomo-cli",
+        "--configuration",
+        "release"
+      ],
+      "exit": 0,
+      "seconds": 28.409
+    }
+  ],
+  "binary_sha256": "df2ca2f3adf27a7926488466a0b5724789eb98d6938929e5a2979e91985b6a94",
+  "passed": true,
+  "finished_at": "2026-10-04T11:04:32+08:00"
+}
