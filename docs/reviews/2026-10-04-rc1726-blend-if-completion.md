@@ -20,7 +20,7 @@ rc1726 让四个 Blend If 滑块的结束回调携带属性身份，避免旧属
 
 独立执行器编译真实生产身份规则与同一测试夹具，不复制候选算法，不使用或重启共享 XCTest 服务。命令为 `ruby scripts/test_blend_if_completion_ownership.rb <新的空输出目录>`，持有 `/private/tmp/veilpic-build.lock`。目录 `/private/tmp/xomo-rc1726-completion-unit.20261004-25110-f4acxr`：编译和运行退出 0、2.791 秒，四属性的 16 种活动/结束组合与 4 种无活动组合全部通过。原始报告原样归档至[单元结果](2026-10-04-rc1726-completion-unit.json)，SHA256 `4b7e75547b75b055e0b664ac9b574b9d63e1c99d5de7a2678899f02b4a985a64`。它只证明身份判断，不证明完整模型事务或 GUI 顺序。
 
-完整模型新增 `delayedBlendIfEndDoesNotFinishAnotherActiveSlider`：12 种不同属性对乘以先前属性有/无变化，共 24 场景。旧结束先于新结束到达时，比较完整项目和 History/Undo/Redo/主题快照，并验证活动状态和后续 Undo/Redo。原有断言均保留，批量外观测试的九项已有 Blend If 调用点补与 begin 对应的类型；其它已有调用点同样只补类型，保持原场景。该模型回归尚未执行，不能记为 24 场景通过；没有以规则测试充当完整模型 RED 或 GREEN。
+完整模型新增 `delayedBlendIfEndDoesNotFinishAnotherActiveSlider`：12 种不同属性对乘以先前属性有/无变化，共 24 场景。旧结束先于新结束到达时，比较完整项目和 History/Undo/Redo/主题快照，并验证活动状态和后续 Undo/Redo。原有断言均保留，批量外观测试的九项已有 Blend If 调用点补与 begin 对应的类型；其它已有调用点同样只补类型，保持原场景。提交时该模型回归尚未执行，没有以规则测试充当完整模型 RED 或 GREEN；后续同源码的直接执行已完成并通过 24 个内部场景，相关七套件 339 方法／851 次运行通过，LayerComp 四处源码接线失败仍保留，详见[直接回归记录](2026-10-04-rc1726-direct-model.md)。该结果不等于共享 XCTest 服务恢复或完整门槛通过。
 
 版本契约首次实际失败：10 项/23 断言、1 失败，测试期待构建号 1725、实际为 1726；修正该遗漏后 10 项/30 断言通过。CLI 构建脚本契约 7 项/24 断言通过，6.096411 秒；新增执行器 Ruby 语法检查通过。产品概览在更新前也实际失败（3 项/17 断言、1 失败），不把中途文档未同步写成最初全绿。
 
