@@ -600,6 +600,19 @@ struct ImageEditorLayerCompTests {
         ))
         let contextSource = source[contextStart.lowerBound..<contextEnd.lowerBound]
 
+        let sharedPanelSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let searchFieldStart = try #require(sharedPanelSource.range(
+            of: "struct ImageEditorLayerSearchField: NSViewRepresentable"
+        ))
+        let searchFieldEnd = try #require(sharedPanelSource.range(
+            of: "struct ImageEditorLayerPanelTabLabel: NSViewRepresentable",
+            range: searchFieldStart.upperBound..<sharedPanelSource.endIndex
+        ))
+        let searchFieldSource = sharedPanelSource[searchFieldStart.lowerBound..<searchFieldEnd.lowerBound]
+
         #expect(source.contains(".contextMenu {\n            layerCompContextMenu(comp)"))
         #expect(source.contains("viewModel.isLayerCompApplied(comp.id)"))
         #expect(source.components(
@@ -621,11 +634,16 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.setLayerCompFavorite("))
         #expect(source.contains("image-editor-layer-comp-favorite-\\(comp.id.uuidString)"))
         #expect(source.contains("viewModel.applyPreferredLayerCompSearchResult("))
-        #expect(source.contains("#selector(NSResponder.insertNewline(_:))"))
-        #expect(source.contains("#selector(NSResponder.cancelOperation(_:))"))
+        #expect(source.contains("ImageEditorLayerSearchField("))
+        #expect(source.contains("onSubmit: {"))
+        #expect(source.contains("onCancel: layerCompSearchQuery.isEmpty ? nil : {"))
+        #expect(searchFieldSource.contains("#selector(NSResponder.insertNewline(_:))"))
+        #expect(searchFieldSource.contains("#selector(NSResponder.cancelOperation(_:))"))
         #expect(source.contains("viewModel.selectAdjacentLayerCompSearchResult("))
-        #expect(source.contains("#selector(NSResponder.moveUp(_:))"))
-        #expect(source.contains("#selector(NSResponder.moveDown(_:))"))
+        #expect(source.contains("onMovePrevious: {"))
+        #expect(source.contains("onMoveNext: {"))
+        #expect(searchFieldSource.contains("#selector(NSResponder.moveUp(_:))"))
+        #expect(searchFieldSource.contains("#selector(NSResponder.moveDown(_:))"))
         #expect(source.contains("ScrollViewReader { proxy in"))
         #expect(source.contains("proxy.scrollTo(selectedID, anchor: .center)"))
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
