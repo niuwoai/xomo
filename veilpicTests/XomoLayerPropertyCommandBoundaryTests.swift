@@ -187,7 +187,10 @@ struct XomoLayerPropertyCommandBoundaryTests {
         case .fillOpacity: model.commitSelectedLayerFillOpacityChange()
         case .maskDensity: model.commitSelectedLayerMaskDensityChange()
         case .maskFeather: model.commitSelectedLayerMaskFeatherChange()
-        default: model.commitSelectedLayerBlendIfChange()
+        case .blendIfSourceBlack: model.commitSelectedLayerBlendIfChange(.sourceBlack)
+        case .blendIfSourceWhite: model.commitSelectedLayerBlendIfChange(.sourceWhite)
+        case .blendIfUnderlyingBlack: model.commitSelectedLayerBlendIfChange(.underlyingBlack)
+        case .blendIfUnderlyingWhite: model.commitSelectedLayerBlendIfChange(.underlyingWhite)
         }
     }
 

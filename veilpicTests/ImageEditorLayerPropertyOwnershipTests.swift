@@ -158,6 +158,50 @@ struct ImageEditorLayerPropertyOwnershipTests {
         #expect(model.undoStack.isEmpty && model.redoStack.isEmpty)
     }
 
+    @Test func delayedBlendIfEndDoesNotFinishAnotherActiveSlider() throws {
+        let properties: [Property] = [.sourceBlack, .sourceWhite, .underlyingBlack, .underlyingWhite]
+        for first in properties {
+            for second in properties where second != first {
+                for changedFirst in [false, true] {
+                    let model = try fixture()
+                    let reference = try fixture()
+                    reference.document = model.document
+                    let original = try model.projectData()
+                    begin(first, in: reference)
+                    if changedFirst { change(first, in: reference) }
+                    end(first, in: reference)
+                    let firstCommitted = try reference.projectData()
+                    begin(second, in: reference)
+                    change(second, in: reference)
+                    end(second, in: reference)
+                    let expected = try reference.projectData()
+
+                    begin(first, in: model)
+                    if changedFirst { change(first, in: model) }
+                    begin(second, in: model)
+                    change(second, in: model)
+                    let pending = try snapshot(model)
+                    end(first, in: model) // old mouse-up arrives before the new one
+                    #expect(try snapshot(model) == pending)
+                    #expect(model.hasActiveLayerPropertyEdit)
+                    end(second, in: model)
+                    #expect(!model.hasActiveLayerPropertyEdit)
+                    #expect(try model.projectData() == expected)
+                    #expect(model.undoStack.count == (changedFirst ? 2 : 1))
+                    model.undo()
+                    #expect(try model.projectData() == firstCommitted)
+                    if changedFirst {
+                        model.undo()
+                        #expect(try model.projectData() == original)
+                        model.redo()
+                    }
+                    model.redo()
+                    #expect(try model.projectData() == expected)
+                }
+            }
+        }
+    }
+
     private func fixture() throws -> ImageEditorViewModel {
         let model = try ImageEditorPixelMoveWorkflowFixture.model()
         let index = try #require(model.document.selectedLayerIndex)
@@ -219,7 +263,10 @@ struct ImageEditorLayerPropertyOwnershipTests {
         switch property {
         case .opacity: model.commitSelectedLayerOpacityChange()
         case .fill: model.commitSelectedLayerFillOpacityChange()
-        case .sourceBlack, .sourceWhite, .underlyingBlack, .underlyingWhite: model.commitSelectedLayerBlendIfChange()
+        case .sourceBlack: model.commitSelectedLayerBlendIfChange(.sourceBlack)
+        case .sourceWhite: model.commitSelectedLayerBlendIfChange(.sourceWhite)
+        case .underlyingBlack: model.commitSelectedLayerBlendIfChange(.underlyingBlack)
+        case .underlyingWhite: model.commitSelectedLayerBlendIfChange(.underlyingWhite)
         case .density: model.commitSelectedLayerMaskDensityChange()
         case .feather: model.commitSelectedLayerMaskFeatherChange()
         }

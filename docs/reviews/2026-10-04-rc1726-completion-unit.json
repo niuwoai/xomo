@@ -1,0 +1,142 @@
+{
+  "cases": [
+    {
+      "active": "sourceBlack",
+      "ending": "sourceBlack",
+      "may_finish": true,
+      "passed": true
+    },
+    {
+      "active": "sourceWhite",
+      "ending": "sourceBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingBlack",
+      "ending": "sourceBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingWhite",
+      "ending": "sourceBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "none",
+      "ending": "sourceBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceBlack",
+      "ending": "sourceWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceWhite",
+      "ending": "sourceWhite",
+      "may_finish": true,
+      "passed": true
+    },
+    {
+      "active": "underlyingBlack",
+      "ending": "sourceWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingWhite",
+      "ending": "sourceWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "none",
+      "ending": "sourceWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceBlack",
+      "ending": "underlyingBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceWhite",
+      "ending": "underlyingBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingBlack",
+      "ending": "underlyingBlack",
+      "may_finish": true,
+      "passed": true
+    },
+    {
+      "active": "underlyingWhite",
+      "ending": "underlyingBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "none",
+      "ending": "underlyingBlack",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceBlack",
+      "ending": "underlyingWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "sourceWhite",
+      "ending": "underlyingWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingBlack",
+      "ending": "underlyingWhite",
+      "may_finish": false,
+      "passed": true
+    },
+    {
+      "active": "underlyingWhite",
+      "ending": "underlyingWhite",
+      "may_finish": true,
+      "passed": true
+    },
+    {
+      "active": "none",
+      "ending": "underlyingWhite",
+      "may_finish": false,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Actual production completion identity policy only; not full ViewModel history, UI ordering or full gate",
+  "command": [
+    "xcrun",
+    "swiftc",
+    "-D",
+    "XOMO_STANDALONE_BLEND_IF_TESTS",
+    "/Users/rocky/Sites/veilpic/veilpic/ImageEditorLayerBlendIfCompletionOwnership.swift",
+    "/Users/rocky/Sites/veilpic/veilpicTests/ImageEditorLayerBlendIfCompletionOwnershipTests.swift",
+    "-o",
+    "/private/tmp/xomo-rc1726-completion-unit.20261004-25110-f4acxr/completion-tests"
+  ],
+  "compile_exit": 0,
+  "runtime_exit": 0,
+  "seconds": 2.791,
+  "production_sha256": "5cf1f29a79eda3ae73da12098c81a883f50f4c48bd346d1e8ed41de7e954eda1",
+  "fixture_sha256": "6a90172694027b1aed3038e26d94b3fe1e6aa726348ad3d7a2328cdfe9ecd7a5",
+  "shared_xctest_service_used_or_restarted": false
+}

@@ -1,0 +1,87 @@
+{
+  "version": "2.12.0-rc1726",
+  "scope": "Physical source black/white edits, independent Undo/Redo, save/reopen and PNG readback; not delayed UI ordering, same-property session ownership, underlying controls or full gate",
+  "source_directory": "/private/tmp/xomo-rc1726-blend-workflow.Q5Hxiu",
+  "checks": {
+    "current_version_and_format": true,
+    "canvas_dimensions": true,
+    "ordered_layer_ids_preserved": true,
+    "other_layers_unchanged": true,
+    "target_bitmap_and_other_properties_preserved": true,
+    "other_document_fields_preserved": true,
+    "black_values_match_observed_mouse_result": true,
+    "white_values_match_observed_mouse_result": true,
+    "white_undo_restores_complete_black_project": true,
+    "black_undo_restores_complete_baseline": true,
+    "black_redo_restores_complete_black_project": true,
+    "white_redo_restores_complete_white_project": true,
+    "reopen_all_fields_except_added_history_exact": true,
+    "black_adds_one_history": true,
+    "white_adds_one_history": true,
+    "reopened_adds_one_history": true,
+    "edited_and_reopened_png_bytes_exact": true,
+    "edited_and_reopened_rgba_exact": true,
+    "all_export_dimensions": true,
+    "blend_if_changes_actual_export_pixels": true,
+    "blend_if_reveals_transparency_and_retains_visible_content": true
+  },
+  "passed": true,
+  "failed_checks": [],
+  "delayed_ui_ordering_accepted": false,
+  "full_native_model_regression_executed": false,
+  "pixels": {
+    "changed": 1503664,
+    "visible_before": 1573312,
+    "visible_after": 69648
+  },
+  "files": {
+    "baseline.xomoproject": {
+      "bytes": 2977973,
+      "sha256": "070a6d0ae0d9171c58cacca814e274fa5020aecb70ced9b936b5e53054ee78dc"
+    },
+    "black.xomoproject": {
+      "bytes": 2978016,
+      "sha256": "44511b7ce32ef3575a5d8cee9deac9e412d766585d248ef81cb222ceb32d12d7"
+    },
+    "white.xomoproject": {
+      "bytes": 2978059,
+      "sha256": "56917469994f8497b3a1363fd2f0f2b782c15f3ad8cc876345a26187a1a305fe"
+    },
+    "white-undone.xomoproject": {
+      "bytes": 2978016,
+      "sha256": "44511b7ce32ef3575a5d8cee9deac9e412d766585d248ef81cb222ceb32d12d7"
+    },
+    "black-undone.xomoproject": {
+      "bytes": 2977973,
+      "sha256": "070a6d0ae0d9171c58cacca814e274fa5020aecb70ced9b936b5e53054ee78dc"
+    },
+    "black-redone.xomoproject": {
+      "bytes": 2978016,
+      "sha256": "44511b7ce32ef3575a5d8cee9deac9e412d766585d248ef81cb222ceb32d12d7"
+    },
+    "white-redone.xomoproject": {
+      "bytes": 2978059,
+      "sha256": "56917469994f8497b3a1363fd2f0f2b782c15f3ad8cc876345a26187a1a305fe"
+    },
+    "reopened.xomoproject": {
+      "bytes": 2978079,
+      "sha256": "45cabefa30d5b4cd37dcdc7dbd0fe6d7aa01b2c4f7d86a35acd8d56ab3edfde7"
+    },
+    "baseline.png": {
+      "bytes": 2139607,
+      "sha256": "c958da589ae499e62ef6574da8a6cd6ecbaef672669d3f02c1160ef71035b24e"
+    },
+    "edited.png": {
+      "bytes": 218015,
+      "sha256": "4b93cc83549a65df033890284a00fe0038df12b488bca63fb68d3ce96c6609f0"
+    },
+    "reopened.png": {
+      "bytes": 218015,
+      "sha256": "4b93cc83549a65df033890284a00fe0038df12b488bca63fb68d3ce96c6609f0"
+    }
+  },
+  "verifier": {
+    "path": "/Users/rocky/Sites/veilpic/scripts/verify_layer_blend_if_workflow.rb",
+    "sha256": "f60537520e5bf2347019922ac9ca9efd6cc7e10d143784ef2badb9292ee95293"
+  }
+}
