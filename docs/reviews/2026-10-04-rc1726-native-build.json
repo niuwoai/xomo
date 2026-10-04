@@ -1,0 +1,394 @@
+{
+  "actionTitle" : "Build for Testing \"veilpic\"",
+  "analyzerWarningCount" : 0,
+  "analyzerWarnings" : [
+
+  ],
+  "destination" : {
+    "architecture" : "arm64",
+    "deviceId" : "[redacted-device-id]",
+    "deviceName" : "My Mac",
+    "modelName" : "MacBook Pro",
+    "osBuildNumber" : "25G83",
+    "osVersion" : "26.6.2",
+    "platform" : "macOS"
+  },
+  "endTime" : 1791077614.367,
+  "errorCount" : 0,
+  "errors" : [
+
+  ],
+  "startTime" : 1791076904.047,
+  "status" : "succeeded",
+  "warningCount" : 62,
+  "warnings" : [
+    {
+      "className" : "Xcode3ProjectDocumentLocation",
+      "issueType" : "Warning",
+      "message" : "The Copy Bundle Resources build phase contains this target's Info.plist file '/Users/rocky/Sites/veilpic/veilpic/Info.plist'.",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic.xcodeproj#Timestamp=812769704.067848&XcodeLocation=%7B%22Selection%22:%7B%22Editor%22:%22Xcode3TargetEditor%22,%22Targets%22:%5B%22veilpic%22%5D,%22Xcode3BuildPhasesEditorLocations%22:%5B%7B%2211d01c9e1865b88abc31c17fd55b69fe9184b730cf1f3bb6467067e3e72322a2%22:%5B%5B%22%5C/fXViBFhHMdcw%5C/e2D9VDr5zwLn+Z5O0YS5oqb6JY8DI%3D%22%5D%5D%7D%5D,%22Xcode3TargetEditorLocations%22:%5B%7B%22Selected%20Build%20Files%22:%5B%5B%22%5C/fXViBFhHMdcw%5C/e2D9VDr5zwLn+Z5O0YS5oqb6JY8DI%3D%22%5D%5D%7D%5D%7D%7D"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'classic' can not be referenced from a nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorLayerComps.swift#EndingColumnNumber=62&EndingLineNumber=673&StartingColumnNumber=62&StartingLineNumber=673&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated initializer 'init(content:)' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorLayerComps.swift#EndingColumnNumber=32&EndingLineNumber=529&StartingColumnNumber=32&StartingLineNumber=529&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated instance method 'qingtuPNGData()' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorProjectDocument.swift#EndingColumnNumber=49&EndingLineNumber=102&StartingColumnNumber=49&StartingLineNumber=102&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated instance method 'qingtuPNGData()' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorProjectDocument.swift#EndingColumnNumber=50&EndingLineNumber=345&StartingColumnNumber=50&StartingLineNumber=345&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated instance method 'qingtuPNGData()' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorProjectDocument.swift#EndingColumnNumber=62&EndingLineNumber=1256&StartingColumnNumber=62&StartingLineNumber=1256&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated instance method 'qingtuPNGData()' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorProjectSaveMetadata.swift#EndingColumnNumber=66&EndingLineNumber=49&StartingColumnNumber=66&StartingLineNumber=49&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated instance method 'qingtuPNGData()' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorProjectSaveMetadata.swift#EndingColumnNumber=75&EndingLineNumber=63&StartingColumnNumber=75&StartingLineNumber=63&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorSolidColorFillContent' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=39&EndingLineNumber=541&StartingColumnNumber=39&StartingLineNumber=541&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorGradientFillContent' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=42&EndingLineNumber=542&StartingColumnNumber=42&StartingLineNumber=542&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'supportedPSDKeys' can not be referenced from a nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=37&EndingLineNumber=546&StartingColumnNumber=37&StartingLineNumber=546&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseSavedPaths(_:canvasSize:)' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=25&EndingLineNumber=639&StartingColumnNumber=25&StartingLineNumber=639&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseTextToolObject' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=27&EndingLineNumber=1608&StartingColumnNumber=27&StartingLineNumber=1608&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseEngineDataText' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=27&EndingLineNumber=1611&StartingColumnNumber=27&StartingLineNumber=1611&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseVectorMask' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=33&EndingLineNumber=1614&StartingColumnNumber=33&StartingLineNumber=1614&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseVectorStroke' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=35&EndingLineNumber=1617&StartingColumnNumber=35&StartingLineNumber=1617&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseVectorStrokeContent' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=33&EndingLineNumber=1620&StartingColumnNumber=33&StartingLineNumber=1620&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseSolidColorFill' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=35&EndingLineNumber=1627&StartingColumnNumber=35&StartingLineNumber=1627&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseGradientFill' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=34&EndingLineNumber=1630&StartingColumnNumber=34&StartingLineNumber=1630&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ActorIsolatedCall",
+      "message" : "Call to main actor-isolated static method 'parseEngineDataStyle' in a synchronous nonisolated context",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorPSD.swift#EndingColumnNumber=43&EndingLineNumber=1917&StartingColumnNumber=43&StartingLineNumber=1917&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ImplicitStrongCapture",
+      "message" : "'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorScrollZoom.swift#EndingColumnNumber=45&EndingLineNumber=641&StartingColumnNumber=45&StartingLineNumber=641&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "ImplicitStrongCapture",
+      "message" : "'weak' ownership of capture 'recognizer' differs from implicitly-captured strong reference in outer scope",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorScrollZoom.swift#EndingColumnNumber=56&EndingLineNumber=641&StartingColumnNumber=56&StartingLineNumber=641&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'fileprivate' modifier is redundant for instance method declared in a private (equivalent to fileprivate) extension",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpic/ImageEditorSelectionEditCommands.swift#EndingColumnNumber=4&EndingLineNumber=2635&StartingColumnNumber=4&StartingLineNumber=2635&Timestamp=812769704.067848"
+    },
+    {
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorSelectionMask' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0041ImageEditorCanvasGeometryTestsswift_owGDnfMX543_8_6expectfMf8_.swift#EndingColumnNumber=15&EndingLineNumber=5&StartingColumnNumber=15&StartingLineNumber=5&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0041ImageEditorCanvasGeometryTestsswift_owGDnfMX560_8_6expectfMf11_.swift#EndingColumnNumber=15&EndingLineNumber=5&StartingColumnNumber=15&StartingLineNumber=5&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0041ImageEditorCanvasGeometryTestsswift_owGDnfMX704_8_6expectfMf_.swift#EndingColumnNumber=15&EndingLineNumber=5&StartingColumnNumber=15&StartingLineNumber=5&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0041ImageEditorCanvasGeometryTestsswift_owGDnfMX722_8_6expectfMf2_.swift#EndingColumnNumber=15&EndingLineNumber=5&StartingColumnNumber=15&StartingLineNumber=5&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0041ImageEditorCanvasGeometryTestsswift_owGDnfMX761_12_6expectfMf_.swift#EndingColumnNumber=19&EndingLineNumber=6&StartingColumnNumber=19&StartingLineNumber=6&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'scenarios' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests035ImageEditorCanvasHandleEditBoundaryB0V04nextg7CommitsF23PreviewBeforeItsOwnUndo4TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorObjectDragAxis' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0047ImageEditorObjectDragConstraintTestsswift_DcHAqfMX6_8_6expectfMf_.swift#EndingColumnNumber=19&EndingLineNumber=4&StartingColumnNumber=19&StartingLineNumber=4&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorObjectDragAxis' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0047ImageEditorObjectDragConstraintTestsswift_DcHAqfMX13_8_6expectfMf0_.swift#EndingColumnNumber=19&EndingLineNumber=4&StartingColumnNumber=19&StartingLineNumber=4&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorObjectDragAxis' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0047ImageEditorObjectDragConstraintTestsswift_DcHAqfMX33_8_6expectfMf_.swift#EndingColumnNumber=19&EndingLineNumber=4&StartingColumnNumber=19&StartingLineNumber=4&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "UnnecessaryEffectMarker",
+      "message" : "No calls to throwing functions occur within 'try' expression",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0045ImageEditorPixelSelectionMoveTestsswift_yGGBpfMX44_8_6expectfMf2_.swift#EndingColumnNumber=21&EndingLineNumber=0&StartingColumnNumber=21&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "UnnecessaryEffectMarker",
+      "message" : "No calls to throwing functions occur within 'try' expression",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0045ImageEditorPixelSelectionMoveTestsswift_yGGBpfMX68_8_6expectfMf2_.swift#EndingColumnNumber=21&EndingLineNumber=0&StartingColumnNumber=21&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'source.builtInLayerStylePresets[3]' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorLayerStyleBuiltInPresetTests.swift#EndingColumnNumber=35&EndingLineNumber=92&StartingColumnNumber=35&StartingLineNumber=92&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "NoUsage",
+      "message" : "Result of call to 'createPreset(named:viewModel:)' is unused",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorLayerStylePresetUsageTests.swift#EndingColumnNumber=16&EndingLineNumber=64&StartingColumnNumber=16&StartingLineNumber=64&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'NSImage.alphaMaskImage(width: width, height: height, alpha: alpha)' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorLayerThumbnailSelectionTests.swift#EndingColumnNumber=12&EndingLineNumber=299&StartingColumnNumber=12&StartingLineNumber=299&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'NSImage.alphaMaskImage(width: width, height: height, alpha: alpha)' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorLayerThumbnailSelectionTests.swift#EndingColumnNumber=12&EndingLineNumber=632&StartingColumnNumber=12&StartingLineNumber=632&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'invalidArguments' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests033ImageEditorLayerPropertyOwnershipB0V43invalidOpacityRequestPreservesCompleteState4TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'scenarios' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests033ImageEditorLayerPropertyOwnershipB0V028ordinaryCommandOwnsUndoAfterF7Preview4TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'pairs' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests033ImageEditorLayerPropertyOwnershipB0V07anotherF21GetsExclusiveSnapshot4TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'scenarios' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests033ImageEditorLayerPropertyOwnershipB0V025historyCommandCancelsOnlyF7Preview4TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorExportSettings' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Main actor-isolated static property 'scenarios' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests031ImageEditorDeferredRedoBoundaryB0V023noOpTransactionCapturesf11AfterCanvasG04TestfMp_.swift#EndingColumnNumber=25&EndingLineNumber=15&StartingColumnNumber=25&StartingLineNumber=15&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'ImageEditorSelection.ellipse(CGRect(x: 20, y: 10, width: 40, height: 30))' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorExportFormatTests.swift#EndingColumnNumber=12&EndingLineNumber=2037&StartingColumnNumber=12&StartingLineNumber=2037&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "WeakMutability",
+      "message" : "Weak variable 'releasedOwner' was never mutated; consider changing to 'let' constant",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorKeyboardEventRoutingTests.swift#EndingColumnNumber=17&EndingLineNumber=45&StartingColumnNumber=17&StartingLineNumber=45&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Passing non-Sendable parameter '$3' to function expecting a '@Sendable' closure",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0038ImageEditorProjectSaveTestsswift_yoBAmfMX22_8_6expectfMf_.swift#EndingColumnNumber=73&EndingLineNumber=1&StartingColumnNumber=73&StartingLineNumber=1&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "Passing non-Sendable parameter '$3' to function expecting a '@Sendable' closure",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0038ImageEditorProjectSaveTestsswift_yoBAmfMX56_8_6expectfMf_.swift#EndingColumnNumber=73&EndingLineNumber=1&StartingColumnNumber=73&StartingLineNumber=1&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorProjectColor' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorSatinAutomationTransactionTests.swift#EndingColumnNumber=16&EndingLineNumber=158&StartingColumnNumber=16&StartingLineNumber=158&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'NSImage.rendered(size: CGSize(width: 12, height: 12)) { rect in\n            NSColor.white.setFill()\n            rect.fill()\n        }' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorSelectionClearSamplingTests.swift#EndingColumnNumber=34&EndingLineNumber=113&StartingColumnNumber=34&StartingLineNumber=113&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'NSImage.rendered(size: CGSize(width: 12, height: 12)) { _ in\n            NSColor.white.setFill()\n            CGRect(x: 4, y: 6, width: 1, height: 1).fill()\n        }' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorSelectionCopySamplingTests.swift#EndingColumnNumber=53&EndingLineNumber=111&StartingColumnNumber=53&StartingLineNumber=111&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "Swift Compiler Warning",
+      "message" : "'#require(_:_:)' is redundant because 'viewModel.document.selectedLayerID' never equals 'nil' (from macro 'require')",
+      "sourceURL" : "file:///Users/rocky/Sites/veilpic/veilpicTests/ImageEditorVectorLayerTests.swift#EndingColumnNumber=44&EndingLineNumber=4296&StartingColumnNumber=44&StartingLineNumber=4296&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorContextualDocumentDeleteAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX258_8_6expectfMf_.swift#EndingColumnNumber=19&EndingLineNumber=4&StartingColumnNumber=19&StartingLineNumber=4&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorContextualDocumentDeleteAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX272_8_6expectfMf1_.swift#EndingColumnNumber=19&EndingLineNumber=4&StartingColumnNumber=19&StartingLineNumber=4&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX304_12_6expectfMf_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX325_8_6expectfMf_.swift#EndingColumnNumber=53&EndingLineNumber=0&StartingColumnNumber=53&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX343_12_6expectfMf1_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX353_12_6expectfMf3_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX394_12_6expectfMf_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX414_12_6expectfMf_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    },
+    {
+      "className" : "DVTTextDocumentLocation",
+      "issueType" : "IsolatedConformances",
+      "message" : "Main actor-isolated conformance of 'ImageEditorKeyboardShortcutAction' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL" : "file:///var/folders/np/rjc0y5w52x324x21pv6g33440000gp/T/swift-generated-sources/@__swiftmacro_12veilpicTests0044ImageEditorTextInputShortcutTestsswift_eEBHofMX432_12_6expectfMf_.swift#EndingColumnNumber=43&EndingLineNumber=0&StartingColumnNumber=43&StartingLineNumber=0&Timestamp=812769704.067848"
+    }
+  ]
+}

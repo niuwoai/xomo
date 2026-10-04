@@ -450,7 +450,7 @@ extension ImageEditorView {
                 if editing {
                     viewModel.beginSelectedLayerBlendIfSourceBlackChange()
                 } else {
-                    viewModel.commitSelectedLayerBlendIfChange()
+                    viewModel.commitSelectedLayerBlendIfChange(.sourceBlack)
                 }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
@@ -466,7 +466,7 @@ extension ImageEditorView {
                 if editing {
                     viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
                 } else {
-                    viewModel.commitSelectedLayerBlendIfChange()
+                    viewModel.commitSelectedLayerBlendIfChange(.sourceWhite)
                 }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
@@ -494,7 +494,7 @@ extension ImageEditorView {
                 if editing {
                     viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
                 } else {
-                    viewModel.commitSelectedLayerBlendIfChange()
+                    viewModel.commitSelectedLayerBlendIfChange(.underlyingBlack)
                 }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
@@ -510,7 +510,7 @@ extension ImageEditorView {
                 if editing {
                     viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
                 } else {
-                    viewModel.commitSelectedLayerBlendIfChange()
+                    viewModel.commitSelectedLayerBlendIfChange(.underlyingWhite)
                 }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)

@@ -315,7 +315,7 @@ struct ImageEditorLayerStyleTests {
         )
         viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
         viewModel.setSelectedLayerBlendIfUnderlyingBlack(0.5)
-        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.commitSelectedLayerBlendIfChange(.underlyingBlack)
 
         let darkBackdrop = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 4))?.usingColorSpace(.deviceRGB))
         let brightBackdrop = try #require(viewModel.currentImage.color(at: CGPoint(x: 14, y: 4))?.usingColorSpace(.deviceRGB))
@@ -348,7 +348,7 @@ struct ImageEditorLayerStyleTests {
         // threshold that still separates the dark and bright gradient ends.
         viewModel.beginSelectedLayerBlendIfSourceBlackChange()
         viewModel.setSelectedLayerBlendIfSourceBlack(0.1)
-        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.commitSelectedLayerBlendIfChange(.sourceBlack)
 
         let darkSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 4))?.usingColorSpace(.deviceRGB))
         let brightSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 14, y: 4))?.usingColorSpace(.deviceRGB))

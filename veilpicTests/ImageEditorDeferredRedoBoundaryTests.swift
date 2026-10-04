@@ -174,7 +174,7 @@ struct ImageEditorDeferredRedoBoundaryTests {
         switch edit {
         case .opacity: model.commitSelectedLayerOpacityChange()
         case .fillOpacity: model.commitSelectedLayerFillOpacityChange()
-        case .blendIf: model.commitSelectedLayerBlendIfChange()
+        case .blendIf: model.commitSelectedLayerBlendIfChange(.sourceBlack)
         case .maskDensity: model.commitSelectedLayerMaskDensityChange()
         case .maskFeather: model.commitSelectedLayerMaskFeatherChange()
         case .pathAnchor: model.finishPathAnchorMoveUndoTransaction(didChange: false)

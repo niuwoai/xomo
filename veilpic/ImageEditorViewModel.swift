@@ -135,36 +135,6 @@ private struct ImageEditorSmartObjectConversionPlan {
     var insertionIndex: Int
 }
 
-private enum ImageEditorLayerMaskPropertyEditKind {
-    case density
-    case feather
-
-    var historyKey: String {
-        switch self {
-        case .density: "imageEditor.history.layerMaskDensity"
-        case .feather: "imageEditor.history.layerMaskFeather"
-        }
-    }
-}
-
-private enum ImageEditorLayerOpacityEditKind {
-    case opacity
-    case fillOpacity
-
-    var historyKey: String {
-        switch self {
-        case .opacity: "imageEditor.history.layerOpacity"
-        case .fillOpacity: "imageEditor.history.layerFillOpacity"
-        }
-    }
-}
-
-private enum ImageEditorLayerBlendIfEditKind {
-    case sourceBlack
-    case sourceWhite
-    case underlyingBlack
-    case underlyingWhite
-}
 
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
@@ -916,18 +886,7 @@ final class ImageEditorViewModel: ObservableObject {
         set { undoTransactionState.redoThemes = newValue }
     }
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
-    private var activeLayerMaskPropertyEdit: ImageEditorLayerMaskPropertyEditKind?
-    private var activeLayerMaskPropertyTargetIDs = Set<UUID>()
-    private var activeLayerMaskPropertyRedoStack: [ImageEditorDocument] = []
-    private var activeLayerMaskPropertyRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
-    private var activeLayerOpacityEdit: ImageEditorLayerOpacityEditKind?
-    private var activeLayerOpacityTargetIDs = Set<UUID>()
-    private var activeLayerOpacityRedoStack: [ImageEditorDocument] = []
-    private var activeLayerOpacityRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
-    private var activeLayerBlendIfEdit: ImageEditorLayerBlendIfEditKind?
-    private var activeLayerBlendIfTargetIDs = Set<UUID>()
-    private var activeLayerBlendIfRedoStack: [ImageEditorDocument] = []
-    private var activeLayerBlendIfRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    let layerPropertyTransactionState = ImageEditorLayerPropertyTransactionState()
     private var activePathAnchorMoveRedoStack: [ImageEditorDocument] = []
     private var activePathAnchorMoveRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     private var isPathAnchorMoveUndoTransactionActive = false
@@ -7434,426 +7393,6 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    func setSelectedLayerOpacity(_ opacity: Double) {
-        let normalizedOpacity = max(0, min(1, opacity))
-        let indices = layerOpacityTargetIndices(for: .opacity).filter {
-            document.layers[$0].opacity != normalizedOpacity
-        }
-        guard !indices.isEmpty else { return }
-        for index in indices {
-            document.layers[index].opacity = normalizedOpacity
-        }
-        invalidateRenderedImageCaches()
-        updateStatus()
-    }
-
-    func setSelectedLayerFillOpacity(_ fillOpacity: Double) {
-        let normalizedOpacity = max(0, min(1, fillOpacity))
-        let indices = layerOpacityTargetIndices(for: .fillOpacity).filter {
-            document.layers[$0].fillOpacity != normalizedOpacity
-        }
-        guard !indices.isEmpty else { return }
-        for index in indices {
-            document.layers[index].fillOpacity = normalizedOpacity
-        }
-        invalidateRenderedImageCaches()
-        updateStatus()
-    }
-
-    func setSelectedLayerBlendIfSourceBlack(_ value: Double) {
-        let indices = layerBlendIfTargetIndices(for: .sourceBlack)
-        guard !indices.isEmpty else { return }
-        var didChange = false
-        for index in indices {
-            let white = document.layers[index].blendIfSourceWhite
-            let nextValue = min(max(0, value), white)
-            guard document.layers[index].blendIfSourceBlack != nextValue else { continue }
-            document.layers[index].blendIfSourceBlack = nextValue
-            didChange = true
-        }
-        if didChange {
-            updateStatus()
-        }
-    }
-
-    func setSelectedLayerBlendIfSourceWhite(_ value: Double) {
-        let indices = layerBlendIfTargetIndices(for: .sourceWhite)
-        guard !indices.isEmpty else { return }
-        var didChange = false
-        for index in indices {
-            let black = document.layers[index].blendIfSourceBlack
-            let nextValue = max(black, min(1, value))
-            guard document.layers[index].blendIfSourceWhite != nextValue else { continue }
-            document.layers[index].blendIfSourceWhite = nextValue
-            didChange = true
-        }
-        if didChange {
-            updateStatus()
-        }
-    }
-
-    func setSelectedLayerBlendIfUnderlyingBlack(_ value: Double) {
-        let indices = layerBlendIfTargetIndices(for: .underlyingBlack)
-        guard !indices.isEmpty else { return }
-        var didChange = false
-        for index in indices {
-            let white = document.layers[index].blendIfUnderlyingWhite
-            let nextValue = min(max(0, value), white)
-            guard document.layers[index].blendIfUnderlyingBlack != nextValue else { continue }
-            document.layers[index].blendIfUnderlyingBlack = nextValue
-            didChange = true
-        }
-        if didChange {
-            updateStatus()
-        }
-    }
-
-    func setSelectedLayerBlendIfUnderlyingWhite(_ value: Double) {
-        let indices = layerBlendIfTargetIndices(for: .underlyingWhite)
-        guard !indices.isEmpty else { return }
-        var didChange = false
-        for index in indices {
-            let black = document.layers[index].blendIfUnderlyingBlack
-            let nextValue = max(black, min(1, value))
-            guard document.layers[index].blendIfUnderlyingWhite != nextValue else { continue }
-            document.layers[index].blendIfUnderlyingWhite = nextValue
-            didChange = true
-        }
-        if didChange {
-            updateStatus()
-        }
-    }
-
-    func setSelectedLayerMaskDensity(_ density: Double) {
-        let normalizedDensity = max(0, min(1, density))
-        let indices = layerMaskPropertyTargetIndices(for: .density).filter {
-            document.layers[$0].maskDensity != normalizedDensity
-        }
-        guard !indices.isEmpty else { return }
-        for index in indices {
-            document.layers[index].maskDensity = normalizedDensity
-        }
-        updateStatus()
-    }
-
-    func setSelectedLayerMaskFeather(_ feather: Double) {
-        let normalizedFeather = max(0, min(80, feather))
-        let indices = layerMaskPropertyTargetIndices(for: .feather).filter {
-            document.layers[$0].maskFeather != normalizedFeather
-        }
-        guard !indices.isEmpty else { return }
-        for index in indices {
-            document.layers[index].maskFeather = normalizedFeather
-        }
-        updateStatus()
-    }
-
-    func setSelectedLayerBlendMode(_ blendMode: ImageEditorBlendMode) {
-        let indices = selectedLayerBlendModeTargetIndices(for: blendMode).filter { document.layers[$0].blendMode != blendMode }
-        guard !indices.isEmpty else { return }
-        pushUndo()
-        for index in indices {
-            document.layers[index].blendMode = blendMode
-        }
-        appendHistory(L10n.text("imageEditor.history.layerBlendMode"))
-    }
-
-    var hasActiveLayerPropertyEdit: Bool {
-        activeLayerOpacityEdit != nil || activeLayerBlendIfEdit != nil || activeLayerMaskPropertyEdit != nil
-    }
-
-    func finishActiveLayerPropertyEditForNewCommand() {
-        finishActiveLayerOpacityPropertyChange()
-        finishActiveLayerBlendIfChange()
-        finishActiveLayerMaskPropertyChange()
-    }
-
-    func resetLayerPropertyEditTransactions() {
-        activeLayerOpacityEdit = nil
-        activeLayerOpacityTargetIDs = []
-        activeLayerOpacityRedoStack = []
-        activeLayerOpacityRedoThemeStates = []
-        activeLayerBlendIfEdit = nil
-        activeLayerBlendIfTargetIDs = []
-        activeLayerBlendIfRedoStack = []
-        activeLayerBlendIfRedoThemeStates = []
-        activeLayerMaskPropertyEdit = nil
-        activeLayerMaskPropertyTargetIDs = []
-        activeLayerMaskPropertyRedoStack = []
-        activeLayerMaskPropertyRedoThemeStates = []
-    }
-
-    func beginSelectedLayerOpacityChange() {
-        beginSelectedLayerOpacityPropertyChange(.opacity)
-    }
-
-    func commitSelectedLayerOpacityChange() {
-        finishSelectedLayerOpacityPropertyChange(.opacity)
-    }
-
-    func beginSelectedLayerFillOpacityChange() {
-        beginSelectedLayerOpacityPropertyChange(.fillOpacity)
-    }
-
-    func commitSelectedLayerFillOpacityChange() {
-        finishSelectedLayerOpacityPropertyChange(.fillOpacity)
-    }
-
-    func beginSelectedLayerBlendIfSourceBlackChange() {
-        beginSelectedLayerBlendIfChange(.sourceBlack)
-    }
-
-    func beginSelectedLayerBlendIfSourceWhiteChange() {
-        beginSelectedLayerBlendIfChange(.sourceWhite)
-    }
-
-    func beginSelectedLayerBlendIfUnderlyingBlackChange() {
-        beginSelectedLayerBlendIfChange(.underlyingBlack)
-    }
-
-    func beginSelectedLayerBlendIfUnderlyingWhiteChange() {
-        beginSelectedLayerBlendIfChange(.underlyingWhite)
-    }
-
-    func commitSelectedLayerBlendIfChange() {
-        finishActiveLayerBlendIfChange()
-    }
-
-    private func beginSelectedLayerBlendIfChange(_ kind: ImageEditorLayerBlendIfEditKind) {
-        if activeLayerBlendIfEdit == kind { return }
-        finishActiveLayerBlendIfChange()
-
-        let indices = selectedLayerBlendIfTargetIndices()
-        guard !indices.isEmpty else { return }
-        finishActiveCanvasEditForNewCommand()
-        activeLayerBlendIfRedoStack = redoStack
-        activeLayerBlendIfRedoThemeStates = redoXomoThemeStates
-        pushUndo()
-        activeLayerBlendIfEdit = kind
-        activeLayerBlendIfTargetIDs = Set(indices.map { document.layers[$0].id })
-    }
-
-    private func finishActiveLayerBlendIfChange() {
-        guard let kind = activeLayerBlendIfEdit else { return }
-        let targetIDs = activeLayerBlendIfTargetIDs
-        let snapshot = undoStack.last
-        let didChange = snapshot.map {
-            layerBlendIfValuesDiffer(kind, targetIDs: targetIDs, from: $0)
-        } ?? false
-
-        activeLayerBlendIfEdit = nil
-        activeLayerBlendIfTargetIDs = []
-        if didChange {
-            appendHistory(L10n.text("imageEditor.history.layerBlendIf"))
-        } else {
-            _ = discardLastUndoSnapshot()
-            redoStack = activeLayerBlendIfRedoStack
-            redoXomoThemeStates = activeLayerBlendIfRedoThemeStates
-            updateStatus()
-        }
-        activeLayerBlendIfRedoStack = []
-        activeLayerBlendIfRedoThemeStates = []
-    }
-
-    private func layerBlendIfTargetIndices(for kind: ImageEditorLayerBlendIfEditKind) -> [Int] {
-        guard activeLayerBlendIfEdit == kind else {
-            return selectedLayerBlendIfTargetIndices()
-        }
-        return document.layers.indices.filter {
-            activeLayerBlendIfTargetIDs.contains(document.layers[$0].id)
-                && !document.isEffectivelyLocked(document.layers[$0])
-                && !document.layers[$0].isGroup
-        }
-    }
-
-    private func layerBlendIfValuesDiffer(
-        _ kind: ImageEditorLayerBlendIfEditKind,
-        targetIDs: Set<UUID>,
-        from snapshot: ImageEditorDocument
-    ) -> Bool {
-        for id in targetIDs {
-            guard let current = document.layers.first(where: { $0.id == id }),
-                  let previous = snapshot.layers.first(where: { $0.id == id })
-            else { return true }
-            switch kind {
-            case .sourceBlack:
-                if current.blendIfSourceBlack != previous.blendIfSourceBlack { return true }
-            case .sourceWhite:
-                if current.blendIfSourceWhite != previous.blendIfSourceWhite { return true }
-            case .underlyingBlack:
-                if current.blendIfUnderlyingBlack != previous.blendIfUnderlyingBlack { return true }
-            case .underlyingWhite:
-                if current.blendIfUnderlyingWhite != previous.blendIfUnderlyingWhite { return true }
-            }
-        }
-        return false
-    }
-
-    private func beginSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {
-        if activeLayerOpacityEdit == kind { return }
-        finishActiveLayerOpacityPropertyChange()
-
-        let indices = kind == .opacity
-            ? selectedLayerOpacityTargetIndices()
-            : selectedLayerFillOpacityTargetIndices()
-        guard !indices.isEmpty else { return }
-        // Finalize the preceding preview's branch before saving the Redo
-        // state that this property's no-op completion may later restore.
-        finishActiveCanvasEditForNewCommand()
-        activeLayerOpacityRedoStack = redoStack
-        activeLayerOpacityRedoThemeStates = redoXomoThemeStates
-        pushUndo()
-        activeLayerOpacityEdit = kind
-        activeLayerOpacityTargetIDs = Set(indices.map { document.layers[$0].id })
-    }
-
-    private func finishSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {
-        guard activeLayerOpacityEdit == kind else { return }
-        finishActiveLayerOpacityPropertyChange()
-    }
-
-    private func finishActiveLayerOpacityPropertyChange() {
-        guard let kind = activeLayerOpacityEdit else { return }
-        let targetIDs = activeLayerOpacityTargetIDs
-        let snapshot = undoStack.last
-        let didChange = snapshot.map {
-            layerOpacityValuesDiffer(kind, targetIDs: targetIDs, from: $0)
-        } ?? false
-
-        activeLayerOpacityEdit = nil
-        activeLayerOpacityTargetIDs = []
-        if didChange {
-            appendHistory(L10n.text(kind.historyKey))
-        } else {
-            _ = discardLastUndoSnapshot()
-            redoStack = activeLayerOpacityRedoStack
-            redoXomoThemeStates = activeLayerOpacityRedoThemeStates
-            updateStatus()
-        }
-        activeLayerOpacityRedoStack = []
-        activeLayerOpacityRedoThemeStates = []
-    }
-
-    private func layerOpacityTargetIndices(for kind: ImageEditorLayerOpacityEditKind) -> [Int] {
-        guard activeLayerOpacityEdit == kind else {
-            return kind == .opacity
-                ? selectedLayerOpacityTargetIndices()
-                : selectedLayerFillOpacityTargetIndices()
-        }
-        return document.layers.indices.filter {
-            activeLayerOpacityTargetIDs.contains(document.layers[$0].id)
-                && !document.isEffectivelyLocked(document.layers[$0])
-                && (kind == .opacity || !document.layers[$0].isGroup)
-        }
-    }
-
-    private func layerOpacityValuesDiffer(
-        _ kind: ImageEditorLayerOpacityEditKind,
-        targetIDs: Set<UUID>,
-        from snapshot: ImageEditorDocument
-    ) -> Bool {
-        for id in targetIDs {
-            guard let current = document.layers.first(where: { $0.id == id }),
-                  let previous = snapshot.layers.first(where: { $0.id == id })
-            else { return true }
-            switch kind {
-            case .opacity:
-                if current.opacity != previous.opacity { return true }
-            case .fillOpacity:
-                if current.fillOpacity != previous.fillOpacity { return true }
-            }
-        }
-        return false
-    }
-
-    func beginSelectedLayerMaskDensityChange() {
-        beginSelectedLayerMaskPropertyChange(.density)
-    }
-
-    func commitSelectedLayerMaskDensityChange() {
-        finishSelectedLayerMaskPropertyChange(.density)
-    }
-
-    func beginSelectedLayerMaskFeatherChange() {
-        beginSelectedLayerMaskPropertyChange(.feather)
-    }
-
-    func commitSelectedLayerMaskFeatherChange() {
-        finishSelectedLayerMaskPropertyChange(.feather)
-    }
-
-    private func beginSelectedLayerMaskPropertyChange(_ kind: ImageEditorLayerMaskPropertyEditKind) {
-        if activeLayerMaskPropertyEdit == kind { return }
-        finishActiveLayerMaskPropertyChange()
-
-        let indices = selectedLayerMaskPropertyTargetIndices()
-        guard !indices.isEmpty else { return }
-        finishActiveCanvasEditForNewCommand()
-        activeLayerMaskPropertyRedoStack = redoStack
-        activeLayerMaskPropertyRedoThemeStates = redoXomoThemeStates
-        pushUndo()
-        activeLayerMaskPropertyEdit = kind
-        activeLayerMaskPropertyTargetIDs = Set(indices.map { document.layers[$0].id })
-    }
-
-    private func finishSelectedLayerMaskPropertyChange(_ kind: ImageEditorLayerMaskPropertyEditKind) {
-        guard activeLayerMaskPropertyEdit == kind else { return }
-        finishActiveLayerMaskPropertyChange()
-    }
-
-    private func finishActiveLayerMaskPropertyChange() {
-        guard let kind = activeLayerMaskPropertyEdit else { return }
-        let targetIDs = activeLayerMaskPropertyTargetIDs
-        let snapshot = undoStack.last
-        let didChange = snapshot.map {
-            layerMaskPropertyValuesDiffer(kind, targetIDs: targetIDs, from: $0)
-        } ?? false
-
-        activeLayerMaskPropertyEdit = nil
-        activeLayerMaskPropertyTargetIDs = []
-        if didChange {
-            appendHistory(L10n.text(kind.historyKey))
-        } else {
-            _ = discardLastUndoSnapshot()
-            redoStack = activeLayerMaskPropertyRedoStack
-            redoXomoThemeStates = activeLayerMaskPropertyRedoThemeStates
-            updateStatus()
-        }
-        activeLayerMaskPropertyRedoStack = []
-        activeLayerMaskPropertyRedoThemeStates = []
-    }
-
-    private func layerMaskPropertyTargetIndices(
-        for kind: ImageEditorLayerMaskPropertyEditKind
-    ) -> [Int] {
-        guard activeLayerMaskPropertyEdit == kind else {
-            return selectedLayerMaskPropertyTargetIndices()
-        }
-        return document.layers.indices.filter {
-            activeLayerMaskPropertyTargetIDs.contains(document.layers[$0].id)
-                && !document.isEffectivelyLocked(document.layers[$0])
-                && document.layers[$0].mask != nil
-        }
-    }
-
-    private func layerMaskPropertyValuesDiffer(
-        _ kind: ImageEditorLayerMaskPropertyEditKind,
-        targetIDs: Set<UUID>,
-        from snapshot: ImageEditorDocument
-    ) -> Bool {
-        for id in targetIDs {
-            guard let current = document.layers.first(where: { $0.id == id }),
-                  let previous = snapshot.layers.first(where: { $0.id == id })
-            else { return true }
-            switch kind {
-            case .density:
-                if current.maskDensity != previous.maskDensity { return true }
-            case .feather:
-                if current.maskFeather != previous.maskFeather { return true }
-            }
-        }
-        return false
-    }
 
     func toggleSelectedLayerClippingMask() {
         guard let index = document.selectedLayerIndex else { return }
@@ -11668,19 +11207,19 @@ final class ImageEditorViewModel: ObservableObject {
             && !document.isEffectivelyPixelsLocked(layer)
     }
 
-    private func selectedLayerOpacityTargetIndices() -> [Int] {
+    func selectedLayerOpacityTargetIndices() -> [Int] {
         selectedLayerIndices.filter { !document.isEffectivelyLocked(document.layers[$0]) }
     }
 
-    private func selectedLayerFillOpacityTargetIndices() -> [Int] {
+    func selectedLayerFillOpacityTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerFillOpacity(document.layers[$0]) }
     }
 
-    private func selectedLayerBlendIfTargetIndices() -> [Int] {
+    func selectedLayerBlendIfTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerBlendIf(document.layers[$0]) }
     }
 
-    private func selectedLayerMaskPropertyTargetIndices() -> [Int] {
+    func selectedLayerMaskPropertyTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerMaskProperties(document.layers[$0]) }
     }
 
@@ -11709,7 +11248,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerSmartFilterUpdateTargetIndices()
     }
 
-    private func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
+    func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
         selectedLayerIndices.filter { index in
             canSetLayerBlendMode(document.layers[index], to: blendMode)
         }
@@ -12947,7 +12486,7 @@ final class ImageEditorViewModel: ObservableObject {
         return image
     }
 
-    private func invalidateRenderedImageCaches() {
+    func invalidateRenderedImageCaches() {
         cachedCurrentImage = nil
         resetPointerSampleCache()
         cachedCloneStampOverlaySource = nil
