@@ -158,7 +158,7 @@ Xomo is built to be forked, and the automation surface was deliberately kept in 
 
 - **macOS 13 Ventura or newer** (Apple silicon or Intel — the release DMG is universal)
 - Working in the canvas, painting and exporting needs no account and no cloud service
-- Building from source: **Xcode 26 or newer.** The app target uses Swift 6.2 nonisolated-nonsending semantics plus `-default-isolation=MainActor`, which Xcode 16.x rejects with `expression is 'async' but is not marked with 'await'`. The `xomo` CLI package is more forgiving: `swift-tools-version 6.0`. CI runs on `macos-26` for the same reason.
+- Building from source: **Xcode 26 or newer.** The app target sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and `SWIFT_APPROACHABLE_CONCURRENCY = YES` (Swift 6.2 nonisolated-nonsending). Xcode 16.x does not support those settings and fails with `expression is 'async' but is not marked with 'await'` at `veilpic/ImageEditorPSD.swift:417`. The `xomo` CLI package is more forgiving: `swift-tools-version 6.0`. CI runs on `macos-26` for the same reason.
 
 ## Install
 
