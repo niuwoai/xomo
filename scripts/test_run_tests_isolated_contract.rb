@@ -52,5 +52,10 @@ assert(
   runner_source.include?("'-parallel-testing-enabled', 'NO'"),
   'Xcode 内建多宿主并发必须关闭，只允许 --jobs 控制独立进程并发'
 )
+assert(
+  runner_source.include?("summary.fetch('totalTestCount', 0).to_i") &&
+    runner_source.include?('Xcode 返回成功，但 xcresult 确认执行了 0 个测试。'),
+  'Xcode 返回成功但未执行测试时，运行器必须将其判定为失败'
+)
 
 puts 'run_tests_isolated contract: PASS'

@@ -1476,27 +1476,54 @@ extension ImageEditorViewModel {
             return
         }
         guard let index = document.selectedLayerIndex,
-              var backing = document.layers[index].selectionPixelEditingBacking(),
-              let selectionCopy = selectionClipboardCopy(
-                image: document.layers[index].visibleImage,
-                selection: selection,
-                layerFrame: document.layers[index].frame,
-                feather: feather,
-                selectionIsApplied: false
-              ),
-              let clearedImage = backing.image.cleared(
+              var backing = document.layers[index].selectionPixelEditingBacking()
+        else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+        let originalLayer = document.layers[index]
+
+        let preservesFilteredOutput = backing.smartFilters.contains {
+            $0.isEnabled && !$0.appliesToBackdrop && $0.normalizedOpacity > 0 && $0.normalizedIntensity != 0
+        }
+        guard let selectionCopy = selectionClipboardCopy(
+            image: preservesFilteredOutput ? originalLayer.visibleImage : document.layers[index].visibleImage,
+            selection: selection,
+            layerFrame: originalLayer.frame,
+            feather: feather,
+            selectionIsApplied: false
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+        let cutoutMask = preservesFilteredOutput
+            ? selectionCutoutMask(for: selection, layer: backing)
+            : nil
+        let clearedImage: NSImage?
+        if cutoutMask == nil {
+            clearedImage = backing.image.cleared(
                 selection: selection,
                 layerFrame: backing.frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
-        else {
+            )
+        } else {
+            clearedImage = nil
+        }
+        guard cutoutMask != nil || clearedImage != nil else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
         pushUndo()
-        backing.image = clearedImage.normalizedBitmapImage()
+        if let cutoutMask {
+            backing = originalLayer
+            backing.mask = cutoutMask
+            backing.isMaskEnabled = true
+            backing.isMaskLinked = true
+        } else if let clearedImage {
+            backing.image = clearedImage.normalizedBitmapImage()
+        }
         document.layers[index] = backing
         let sourceLayer = document.layers[index]
         var layer = ImageEditorLayer.blank(
@@ -1525,6 +1552,45 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.selectionCutLayer"))
         statusText = L10n.text("imageEditor.status.selectionCutToLayer")
+    }
+
+    private func selectionCutoutMask(
+        for selection: ImageEditorSelection,
+        layer: ImageEditorLayer
+    ) -> NSImage? {
+        guard layer.maskDensity == 1,
+              layer.maskFeather == 0,
+              layer.mask == nil || (layer.isMaskEnabled && layer.isMaskLinked),
+              let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+                width: max(layer.image.size.width, layer.mask?.size.width ?? 0),
+                height: max(layer.image.size.height, layer.mask?.size.height ?? 0)
+              ))
+        else { return nil }
+
+        let width = Int(outputSize.width)
+        let height = Int(outputSize.height)
+        guard let selectedImage = selection.layerMask(
+                layerFrame: layer.frame,
+                layerSize: outputSize,
+                canvasSize: document.canvasSize,
+                feather: feather
+              ),
+              let selectedAlpha = selectedImage.alphaMask(width: width, height: height)?.alpha
+        else { return nil }
+
+        let currentAlpha: [UInt8]
+        if let existingMask = layer.mask {
+            guard let alpha = existingMask.alphaMask(width: width, height: height)?.alpha else { return nil }
+            currentAlpha = alpha
+        } else {
+            currentAlpha = [UInt8](repeating: .max, count: width * height)
+        }
+        guard currentAlpha.count == selectedAlpha.count else { return nil }
+
+        let cutoutAlpha = zip(currentAlpha, selectedAlpha).map { current, selected in
+            UInt8((Double(current) * Double(UInt8.max - selected) / Double(UInt8.max)).rounded())
+        }
+        return NSImage.alphaMaskImage(width: width, height: height, alpha: cutoutAlpha)
     }
 
     @discardableResult

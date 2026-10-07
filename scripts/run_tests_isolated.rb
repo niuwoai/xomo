@@ -29,7 +29,8 @@
 #   XOMO_DERIVED_DATA_PATH=/tmp/xomo-tests ruby scripts/run_tests_isolated.rb --skip-build
 #
 # 说明：
-#   - 每个测试跑一次独立 xcodebuild，慢，但结果确定、可全绿，适合 CI。
+#   - 默认每个测试方法跑一次独立 xcodebuild，慢；Swift Testing 参数案例按方法执行。
+#   - 每次执行后读取 xcresult 实际测试数，防止 Xcode 空选择器成功导致假绿。
 #   - --jobs N 用多个"各跑一个测试"的独立进程并行；每个进程仍只跑一个测试，
 #     不引入进程内并发，因此依然安全，只是同时占用多个 App Host / GPU。
 # =============================================================================
@@ -201,7 +202,34 @@ def run_one(test, logs_dir, timeout_seconds)
   File.write(log_path, out)
 
   passed = status.success?
+  validation_issue = nil
+  if passed
+    summary_output, summary_status = Open3.capture2e(
+      'xcrun', 'xcresulttool', 'get', 'test-results', 'summary', '--path', result_bundle_path
+    )
+    if summary_status.success?
+      begin
+        summary = JSON.parse(summary_output)
+        executed_count = summary.fetch('totalTestCount', 0).to_i
+        failed_count = summary.fetch('failedTests', 0).to_i
+        if executed_count.zero?
+          passed = false
+          validation_issue = 'Xcode 返回成功，但 xcresult 确认执行了 0 个测试。'
+        elsif failed_count.positive?
+          passed = false
+          validation_issue = "xcresult 报告 #{failed_count} 个失败测试。"
+        end
+      rescue JSON::ParserError, KeyError => e
+        passed = false
+        validation_issue = "无法验证 xcresult 测试数量：#{e.message}"
+      end
+    else
+      passed = false
+      validation_issue = "无法读取 xcresult 测试摘要：#{summary_output.lines.last(5).join.strip}"
+    end
+  end
   issues = out.scan(/recorded an issue at .*/).map(&:strip).uniq
+  issues << validation_issue if validation_issue
 
   {
     suite: test[:suite],
