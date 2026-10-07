@@ -309,6 +309,46 @@ struct ImageEditorSelectionCutSamplingTests {
         #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == after)
     }
 
+    @Test func filteredClippingLayerCutPreservesBaseRelationAndComposite() throws {
+        let model = try fixture()
+        let sourceID = try #require(model.document.selectedLayerID)
+        model.document.layers[0].isClippingMask = true
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 1,
+                                   settings: .init(gaussianBlurRadius: 2))
+        ]
+        var baseLayer = ImageEditorLayer.blank(name: "Clipping base", size: CGSize(width: 4, height: 4))
+        baseLayer.frame = model.document.layers[0].frame
+        baseLayer.image = try #require(NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
+            NSColor.systemPink.setFill()
+            CGRect(x: 0, y: 0, width: 2, height: rect.height).fill()
+        })
+        model.document.layers.append(baseLayer)
+        let originalProject = try model.projectData()
+        let originalComposite = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+
+        model.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(model.document.selectedLayer)
+        #expect(cutLayer.isClippingMask)
+        #expect(cutLayer.smartFilters.isEmpty)
+        let source = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(source.isClippingMask)
+        #expect(source.smartFilters.count == 1)
+        #expect(source.postFilterCutoutMask != nil)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == originalComposite)
+
+        let cutProject = try model.projectData()
+        model.undo()
+        #expect(try model.projectData() == originalProject)
+        model.redo()
+        #expect(try model.projectData() == cutProject)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == originalComposite)
+        let reopened = try fixture()
+        try reopened.loadProjectData(cutProject)
+        #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == originalComposite)
+    }
+
     @Test(arguments: [false, true])
     func cuttingSelectionFromFilteredLayerPreservesCompositePixels(hasRasterMask: Bool) throws {
         let model = try fixture()
