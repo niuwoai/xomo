@@ -389,18 +389,13 @@ extension ImageEditorView {
             }
             .font(.system(size: 11, weight: .medium))
 
-            Slider(value: selectedLayerOpacityBinding, in: 0...1, step: 0.05) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerOpacity, viewModel: viewModel,
+                                          property: .opacity, in: 0...1, step: 0.05) {
                 Text(L10n.text("imageEditor.option.opacity"))
             } minimumValueLabel: {
                 Text("0")
             } maximumValueLabel: {
                 Text("100")
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerOpacityChange()
-                } else {
-                    viewModel.commitSelectedLayerOpacityChange()
-                }
             }
             .font(.system(size: 10, weight: .medium).monospacedDigit())
 
@@ -412,18 +407,13 @@ extension ImageEditorView {
             .font(.system(size: 11, weight: .medium))
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Slider(value: selectedLayerFillOpacityBinding, in: 0...1, step: 0.05) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerFillOpacity, viewModel: viewModel,
+                                          property: .fillOpacity, in: 0...1, step: 0.05) {
                 Text(L10n.text("imageEditor.option.fillOpacity"))
             } minimumValueLabel: {
                 Text("0")
             } maximumValueLabel: {
                 Text("100")
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerFillOpacityChange()
-                } else {
-                    viewModel.commitSelectedLayerFillOpacityChange()
-                }
             }
             .disabled(!viewModel.canEditSelectedLayerFillOpacity)
             .font(.system(size: 10, weight: .medium).monospacedDigit())
@@ -440,34 +430,24 @@ extension ImageEditorView {
             }
             .font(.system(size: 11, weight: .medium))
 
-            Slider(value: selectedLayerBlendIfSourceBlackBinding, in: 0...1, step: 1 / 255) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerBlendIfSourceBlack, viewModel: viewModel,
+                                          property: .sourceBlack, in: 0...1, step: 1 / 255) {
                 Text(L10n.text("imageEditor.option.blendIfBlack"))
             } minimumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfBlackShort"))
             } maximumValueLabel: {
                 Text("")
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerBlendIfSourceBlackChange()
-                } else {
-                    viewModel.commitSelectedLayerBlendIfChange(.sourceBlack)
-                }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
             .font(.system(size: 10, weight: .medium).monospacedDigit())
 
-            Slider(value: selectedLayerBlendIfSourceWhiteBinding, in: 0...1, step: 1 / 255) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerBlendIfSourceWhite, viewModel: viewModel,
+                                          property: .sourceWhite, in: 0...1, step: 1 / 255) {
                 Text(L10n.text("imageEditor.option.blendIfWhite"))
             } minimumValueLabel: {
                 Text("")
             } maximumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfWhiteShort"))
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
-                } else {
-                    viewModel.commitSelectedLayerBlendIfChange(.sourceWhite)
-                }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
             .font(.system(size: 10, weight: .medium).monospacedDigit())
@@ -484,34 +464,24 @@ extension ImageEditorView {
             }
             .font(.system(size: 11, weight: .medium))
 
-            Slider(value: selectedLayerBlendIfUnderlyingBlackBinding, in: 0...1, step: 1 / 255) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerBlendIfUnderlyingBlack, viewModel: viewModel,
+                                          property: .underlyingBlack, in: 0...1, step: 1 / 255) {
                 Text(L10n.text("imageEditor.option.blendIfUnderlyingBlack"))
             } minimumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfBlackShort"))
             } maximumValueLabel: {
                 Text("")
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
-                } else {
-                    viewModel.commitSelectedLayerBlendIfChange(.underlyingBlack)
-                }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
             .font(.system(size: 10, weight: .medium).monospacedDigit())
 
-            Slider(value: selectedLayerBlendIfUnderlyingWhiteBinding, in: 0...1, step: 1 / 255) {
+            ImageEditorLayerPropertySlider(value: viewModel.selectedLayerBlendIfUnderlyingWhite, viewModel: viewModel,
+                                          property: .underlyingWhite, in: 0...1, step: 1 / 255) {
                 Text(L10n.text("imageEditor.option.blendIfUnderlyingWhite"))
             } minimumValueLabel: {
                 Text("")
             } maximumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfWhiteShort"))
-            } onEditingChanged: { editing in
-                if editing {
-                    viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
-                } else {
-                    viewModel.commitSelectedLayerBlendIfChange(.underlyingWhite)
-                }
             }
             .disabled(!viewModel.canEditSelectedLayerBlendIf)
             .font(.system(size: 10, weight: .medium).monospacedDigit())
@@ -530,18 +500,13 @@ extension ImageEditorView {
                 .font(.system(size: 11, weight: .medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Slider(value: selectedLayerMaskDensityBinding, in: 0...1, step: 0.05) {
+                ImageEditorLayerPropertySlider(value: viewModel.selectedLayerMaskDensity, viewModel: viewModel,
+                                              property: .maskDensity, in: 0...1, step: 0.05) {
                     Text(L10n.text("imageEditor.option.maskDensity"))
                 } minimumValueLabel: {
                     Text("0")
                 } maximumValueLabel: {
                     Text("100")
-                } onEditingChanged: { editing in
-                    if editing {
-                        viewModel.beginSelectedLayerMaskDensityChange()
-                    } else {
-                        viewModel.commitSelectedLayerMaskDensityChange()
-                    }
                 }
                 .disabled(!viewModel.canEditSelectedLayerMaskProperties)
                 .font(.system(size: 10, weight: .medium).monospacedDigit())
@@ -554,18 +519,13 @@ extension ImageEditorView {
                 .font(.system(size: 11, weight: .medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Slider(value: selectedLayerMaskFeatherBinding, in: 0...80, step: 1) {
+                ImageEditorLayerPropertySlider(value: viewModel.selectedLayerMaskFeather, viewModel: viewModel,
+                                              property: .maskFeather, in: 0...80, step: 1) {
                     Text(L10n.text("imageEditor.option.maskFeather"))
                 } minimumValueLabel: {
                     Text("0")
                 } maximumValueLabel: {
                     Text("80")
-                } onEditingChanged: { editing in
-                    if editing {
-                        viewModel.beginSelectedLayerMaskFeatherChange()
-                    } else {
-                        viewModel.commitSelectedLayerMaskFeatherChange()
-                    }
                 }
                 .disabled(!viewModel.canEditSelectedLayerMaskProperties)
                 .font(.system(size: 10, weight: .medium).monospacedDigit())
@@ -2618,70 +2578,6 @@ extension ImageEditorView {
     private func vectorMaskThumbnailStroke(for layer: ImageEditorLayer) -> Color {
         let selected = viewModel.isPrimaryLayer(layer.id) && !viewModel.isEditingLayerMask
         return selected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.9) : Color.white.opacity(0.22)
-    }
-
-    private var selectedLayerOpacityBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerOpacity
-        } set: { value in
-            viewModel.setSelectedLayerOpacity(value)
-        }
-    }
-
-    private var selectedLayerFillOpacityBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerFillOpacity
-        } set: { value in
-            viewModel.setSelectedLayerFillOpacity(value)
-        }
-    }
-
-    private var selectedLayerBlendIfSourceBlackBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerBlendIfSourceBlack
-        } set: { value in
-            viewModel.setSelectedLayerBlendIfSourceBlack(value)
-        }
-    }
-
-    private var selectedLayerBlendIfSourceWhiteBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerBlendIfSourceWhite
-        } set: { value in
-            viewModel.setSelectedLayerBlendIfSourceWhite(value)
-        }
-    }
-
-    private var selectedLayerBlendIfUnderlyingBlackBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerBlendIfUnderlyingBlack
-        } set: { value in
-            viewModel.setSelectedLayerBlendIfUnderlyingBlack(value)
-        }
-    }
-
-    private var selectedLayerBlendIfUnderlyingWhiteBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerBlendIfUnderlyingWhite
-        } set: { value in
-            viewModel.setSelectedLayerBlendIfUnderlyingWhite(value)
-        }
-    }
-
-    private var selectedLayerMaskDensityBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerMaskDensity
-        } set: { value in
-            viewModel.setSelectedLayerMaskDensity(value)
-        }
-    }
-
-    private var selectedLayerMaskFeatherBinding: Binding<Double> {
-        Binding {
-            viewModel.selectedLayerMaskFeather
-        } set: { value in
-            viewModel.setSelectedLayerMaskFeather(value)
-        }
     }
 
     private var selectedLayerBlendModeBinding: Binding<ImageEditorBlendMode> {
