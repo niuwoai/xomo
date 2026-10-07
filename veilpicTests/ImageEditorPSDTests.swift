@@ -606,6 +606,12 @@ struct ImageEditorPSDTests {
         #expect(selection.name == "Gray Selection")
         #expect(selection.mask.alpha == Array(repeating: [0, 32, 96, 255], count: 4).flatMap { $0 })
         #expect(spot.name == "Gray Spot")
+        #expect(spot.kind == .spot)
+        #expect(spot.spotColor == ImageEditorPSDSpotColor(
+            colorSpace: 0,
+            components: [65535, 0, 65535, 0],
+            opacity: 49152
+        ))
         #expect(spot.mask.alpha == Array(repeating: [255, 160, 96, 0], count: 4).flatMap { $0 })
         let report = try ImageEditorPSDCodec.compatibilityReport(data)
         #expect(report.issues.isEmpty)
@@ -613,6 +619,16 @@ struct ImageEditorPSDTests {
         let project = try ImageEditorProjectDocument(document: document)
         let restored = try project.restoredDocument()
         #expect(restored.alphaChannels == document.alphaChannels)
+
+        let exportedPSD = try ImageEditorPSDCodec.encode(document: restored)
+        let reopened = try ImageEditorPSDCodec.decode(exportedPSD, sourceName: "grayscale-extra-alpha-roundtrip.psd")
+        #expect(reopened.alphaChannels.count == document.alphaChannels.count)
+        for index in document.alphaChannels.indices where reopened.alphaChannels.indices.contains(index) {
+            #expect(reopened.alphaChannels[index].name == document.alphaChannels[index].name)
+            #expect(reopened.alphaChannels[index].kind == document.alphaChannels[index].kind)
+            #expect(reopened.alphaChannels[index].spotColor == document.alphaChannels[index].spotColor)
+            #expect(reopened.alphaChannels[index].mask == document.alphaChannels[index].mask)
+        }
     }
 
     @Test func externalExtraAlphaChannelBecomesEditableChannel() throws {

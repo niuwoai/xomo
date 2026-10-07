@@ -54,13 +54,14 @@
     },
     {
       "file": "grayscale-extra-alpha.psd",
-      "sha256": "d5531ecf1580b46239cdf7299f0f32a933f1aa417888bf809372c436fb72ce8e",
+      "sha256": "21c5c7e5b9c0df210c175442cbc8d7e1b099d54aab5dd91d7f6c2ea75c958742",
       "expected": [
         "grayscale",
         "flattened_composite",
         "transparency",
         "additional_alpha_channels",
-        "alpha_names"
+        "alpha_names",
+        "spot_display_info"
       ]
     },
     {

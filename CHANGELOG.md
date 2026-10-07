@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1739 - 2026-10-08
+
+### Fixed
+- 灰度 PSD 外部兼容夹具现在包含真正的 spot display info；补上选择 alpha 与专色 alpha 从外部 PSD 导入、项目保存恢复、再导出 PSD 的通道语义闭环检查，避免仅凭名称误认专色支持。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1739`/1739；本版不是四十版本完整门槛，不覆盖安装，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。
+
+### Verification
+- PSD 专项 63/63 通过，重导入比较稳定的通道字段（名称、类型、颜色参数、mask），不比较每次导入重新生成的 UUID。未运行全量门槛、真实 UI 冒烟或安装；下一门槛仍为 rc1760。
+
 ## 2.12.0-rc1738 - 2026-10-08
 
 ### Fixed

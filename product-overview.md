@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1738
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1739
 
-rc1738 补齐 8 位灰度 PSD 的无透明度图层与多个附加 alpha plane，并验证直接 PSD 导出像素往返；PSD 专项 63/63 通过。没有运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布。当前安装版仍为 rc1729，下一门槛为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)。rc1737 已支持 8 位灰度 PSD 的基础分层和扁平导入，详见[验证记录](docs/reviews/2026-10-08-rc1737-grayscale-psd-import.md)；rc1736 修复高密度滤镜后裁切遮罩的图层栅格化保真，详情见[验证记录](docs/reviews/2026-10-08-rc1736-filtered-cutout-rasterize.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1739 端到端验证灰度 PSD 的选择 alpha 与真正专色 alpha 通道：从含 spot display info 的外部 PSD 导入，经过项目恢复后再次导出，通道名称、类型、颜色参数和 mask 保持；PSD 专项 63/63 通过。没有运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布。当前安装版仍为 rc1729，下一门槛为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。rc1738 补齐 8 位灰度 PSD 的无透明度图层和附加 alpha plane 往返，详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)；rc1737 支持基础分层和扁平灰度导入，详见[验证记录](docs/reviews/2026-10-08-rc1737-grayscale-psd-import.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 

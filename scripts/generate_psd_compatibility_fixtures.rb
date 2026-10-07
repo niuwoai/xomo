@@ -370,7 +370,7 @@ def path_resource_block(id:, name:, payload:)
   block
 end
 
-def image_resources(include_icc: false, path_resources: [], alpha_names: [])
+def image_resources(include_icc: false, path_resources: [], alpha_names: [], alpha_display_info: [])
   blocks = []
   if include_icc
     profile = "TEST"
@@ -380,6 +380,16 @@ def image_resources(include_icc: false, path_resources: [], alpha_names: [])
   unless alpha_names.empty?
     payload = alpha_names.map { |name| pascal(name, alignment: 2) }.join
     blocks << ("8BIM" + u16(1006) + pascal("", alignment: 2) + u32(payload.bytesize) + payload)
+    blocks << "\0" if payload.bytesize.odd?
+  end
+  unless alpha_display_info.empty?
+    payload = u32(1) + alpha_display_info.map do |info|
+      components = Array(info.fetch(:components)).first(4)
+      components += Array.new(4 - components.length, 0)
+      u16(info.fetch(:color_space)) + components.map { |value| u16(value) }.join +
+        u16(info.fetch(:opacity)) + [info.fetch(:kind)].pack("C")
+    end.join
+    blocks << ("8BIM" + u16(1077) + pascal("", alignment: 2) + u32(payload.bytesize) + payload)
     blocks << "\0" if payload.bytesize.odd?
   end
   payload = blocks.join
@@ -446,15 +456,20 @@ def grayscale_extra_alpha_fixture
     composite: u16(0) + gray + transparency + selection + spot,
     channels: 4,
     color_mode: 1,
-    alpha_names: ["Gray Selection", "Gray Spot"]
+    alpha_names: ["Gray Selection", "Gray Spot"],
+    alpha_display_info: [
+      { color_space: 0, components: [0, 0, 0, 0], opacity: 65535, kind: 0 },
+      { color_space: 0, components: [65535, 0, 65535, 0], opacity: 49152, kind: 2 }
+    ]
   )
 end
 
-def psd(layer_payload:, composite:, channels: 4, color_mode: 3, include_icc: false, path_resources: [], alpha_names: [])
+def psd(layer_payload:, composite:, channels: 4, color_mode: 3, include_icc: false, path_resources: [], alpha_names: [], alpha_display_info: [])
   header(channels: channels, color_mode: color_mode) + u32(0) + image_resources(
     include_icc: include_icc,
     path_resources: path_resources,
-    alpha_names: alpha_names
+    alpha_names: alpha_names,
+    alpha_display_info: alpha_display_info
   ) + layer_payload + composite
 end
 
@@ -897,7 +912,7 @@ expectations = {
   "grayscale-layer.psd" => %w[grayscale editable_layer transparency zip_prediction],
   "grayscale-composite.psd" => %w[grayscale flattened_composite transparency raw],
   "grayscale-opaque-layer.psd" => %w[grayscale editable_layer opaque zip_prediction],
-  "grayscale-extra-alpha.psd" => %w[grayscale flattened_composite transparency additional_alpha_channels alpha_names],
+  "grayscale-extra-alpha.psd" => %w[grayscale flattened_composite transparency additional_alpha_channels alpha_names spot_display_info],
   "extra-alpha.psd" => %w[raw flattened_composite additional_alpha_channel alpha_name],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],

@@ -2,7 +2,8 @@
 
 ## 当前状态（2026-10-08）
 
-- rc1738 在 rc1737 灰度导入基础上补齐单通道、无透明度图层与多个附加 alpha plane，并覆盖项目恢复和 PSD 直接导出像素往返；PSD 专项 63/63 通过。当前工作待提交并合入本地 `main`；没有运行全量门槛、界面冒烟或安装，下一完整门槛仍为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)。
+- rc1739 将灰度 PSD 选择 alpha 与真正 spot alpha（含 spot display info）贯通外部导入、Xomo 项目恢复和 PSD 再导出；重读后通道名称、类型、spot 参数及 alpha mask 一致。PSD 专项 63/63 通过；本版本待提交并合入本地 `main`，不运行全量门槛、真实 UI 冒烟或安装，下一门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。
+- rc1738 已合入本地 `main`（`592522d0`），补齐灰度无透明度图层及多 alpha plane 的外部 fixture 和直接 PSD 像素往返，PSD 套件 63/63 通过；不代表项目 PNG 与 PSD 之间的 ICC 视觉等价已验证。详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)。
 - rc1737 已集成到本地 `main`（`432dba2b`），当前远端跟踪分支和 `/Applications` 版本仍需按后续发布/门槛授权另行核验；当前安装版已知为 rc1729，下一四十版本门槛为 rc1760。
 - rc1737 新增 8 位灰度 PSD 导入，将灰度 plane 展开为 RGB，保留分层像素/alpha 与扁平背景；外部规格夹具覆盖 ZIP Prediction、透明度和兼容性扫描，PSD 套件 61/61 通过。全量构建、界面冒烟和安装未执行，下一周期门槛仍为 rc1760；详见[验证记录](docs/reviews/2026-10-08-rc1737-grayscale-psd-import.md)。
 - rc1736 修复高密度滤镜后裁切遮罩的栅格化像素变化：沿用显示合成的提升采样网格烘焙，保留普通可编辑蒙版；精确画布像素、Undo/Redo 和栅格化项目重开回归通过。定向 Debug 回归、19 项选区裁切套件及版本/CLI 发布合同通过；未运行完整门槛、真实界面冒烟或安装。详见[验证记录](docs/reviews/2026-10-08-rc1736-filtered-cutout-rasterize.md)。
