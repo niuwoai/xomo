@@ -43,6 +43,27 @@
       ]
     },
     {
+      "file": "grayscale-opaque-layer.psd",
+      "sha256": "d797a8d80986fcb53adc8eb775f6dab218170b4f2cdca63d79cb920a9abf3705",
+      "expected": [
+        "grayscale",
+        "editable_layer",
+        "opaque",
+        "zip_prediction"
+      ]
+    },
+    {
+      "file": "grayscale-extra-alpha.psd",
+      "sha256": "d5531ecf1580b46239cdf7299f0f32a933f1aa417888bf809372c436fb72ce8e",
+      "expected": [
+        "grayscale",
+        "flattened_composite",
+        "transparency",
+        "additional_alpha_channels",
+        "alpha_names"
+      ]
+    },
+    {
       "file": "extra-alpha.psd",
       "sha256": "0abf522a12e4e21c9f0f11c48c793bc974dba0ec4d43261c418c9e89b32de749",
       "expected": [

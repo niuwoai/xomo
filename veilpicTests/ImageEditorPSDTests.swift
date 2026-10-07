@@ -548,6 +548,73 @@ struct ImageEditorPSDTests {
         #expect(report.issues.isEmpty)
     }
 
+    @Test func externalOpaqueGrayscaleLayerRemainsEditableAcrossProjectAndPSDRoundTrips() throws {
+        let data = try psdFixtureData("grayscale-opaque-layer.psd")
+        let imported = try ImageEditorPSDCodec.decode(data, sourceName: "grayscale-opaque-layer.psd")
+        let layer = try #require(imported.layers.first)
+        #expect(imported.layers.count == 1)
+        let pixels = psdRGBA(layer.image, width: 4, height: 4)
+        #expect(pixels.count == 64)
+        if pixels.count == 64 {
+            for index in 0..<16 {
+                let offset = index * 4
+                #expect(pixels[offset] == pixels[offset + 1])
+                #expect(pixels[offset + 1] == pixels[offset + 2])
+                #expect(abs(Int(pixels[offset]) - (16 + index * 10)) <= 1)
+                #expect(pixels[offset + 3] == 255)
+            }
+        }
+
+        let project = try ImageEditorProjectDocument(document: imported)
+        let projectRestored = try project.restoredDocument()
+        let restoredLayer = try #require(projectRestored.layers.first)
+        let restoredProjectPixels = psdRGBA(restoredLayer.image, width: 4, height: 4)
+        #expect(restoredProjectPixels.count == pixels.count)
+        if restoredProjectPixels.count == 64 {
+            for index in 0..<16 {
+                let offset = index * 4
+                #expect(restoredProjectPixels[offset] == restoredProjectPixels[offset + 1])
+                #expect(restoredProjectPixels[offset + 1] == restoredProjectPixels[offset + 2])
+                #expect(restoredProjectPixels[offset + 3] == 255)
+            }
+        }
+        let exportedPSD = try ImageEditorPSDCodec.encode(document: imported)
+        let reopenedPSD = try ImageEditorPSDCodec.decode(exportedPSD, sourceName: "grayscale-roundtrip.psd")
+        let reopenedLayer = try #require(reopenedPSD.layers.first)
+        let reopenedPixels = psdRawRGBA(reopenedLayer.image, width: 4, height: 4)
+        let importedRawPixels = psdRawRGBA(layer.image, width: 4, height: 4)
+        #expect(reopenedPixels.count == 64)
+        #expect(importedRawPixels.count == 64)
+        if reopenedPixels.count == 64 {
+            for index in 0..<16 {
+                let offset = index * 4
+                #expect(reopenedPixels[offset] == reopenedPixels[offset + 1])
+                #expect(reopenedPixels[offset + 1] == reopenedPixels[offset + 2])
+                #expect(reopenedPixels[offset] == importedRawPixels[offset])
+                #expect(reopenedPixels[offset + 3] == 255)
+            }
+        }
+    }
+
+    @Test func externalGrayscaleCompositePreservesMultipleAdditionalAlphaPlanes() throws {
+        let data = try psdFixtureData("grayscale-extra-alpha.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "grayscale-extra-alpha.psd")
+
+        #expect(document.alphaChannels.count == 2)
+        let selection = try #require(document.alphaChannels.first)
+        let spot = try #require(document.alphaChannels.last)
+        #expect(selection.name == "Gray Selection")
+        #expect(selection.mask.alpha == Array(repeating: [0, 32, 96, 255], count: 4).flatMap { $0 })
+        #expect(spot.name == "Gray Spot")
+        #expect(spot.mask.alpha == Array(repeating: [255, 160, 96, 0], count: 4).flatMap { $0 })
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.isEmpty)
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        #expect(restored.alphaChannels == document.alphaChannels)
+    }
+
     @Test func externalExtraAlphaChannelBecomesEditableChannel() throws {
         let data = try psdFixtureData("extra-alpha.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "extra-alpha.psd")
@@ -2225,7 +2292,10 @@ private func psdMaskAlpha(_ image: NSImage, width: Int, height: Int) -> [UInt8] 
 }
 
 private func psdRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
-    guard let representation = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first else { return [] }
+    guard let representation = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+          representation.pixelsWide >= width,
+          representation.pixelsHigh >= height
+    else { return [] }
     return (0..<height).flatMap { row in
         (0..<width).flatMap { column in
             let imageY = height - row - 1
@@ -2234,6 +2304,28 @@ private func psdRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
             }
             return [color.redComponent, color.greenComponent, color.blueComponent, color.alphaComponent]
                 .map { UInt8(($0 * 255).rounded()) }
+        }
+    }
+}
+
+private func psdRawRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
+    guard let bitmap = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+          bitmap.pixelsWide == width,
+          bitmap.pixelsHigh == height,
+          bitmap.bitsPerSample == 8,
+          bitmap.samplesPerPixel == 4,
+          bitmap.bitsPerPixel == 32,
+          !bitmap.isPlanar,
+          bitmap.colorSpaceName == .deviceRGB,
+          bitmap.bitmapFormat.contains(.alphaNonpremultiplied),
+          bitmap.bytesPerRow >= width * 4,
+          let pixels = bitmap.bitmapData
+    else { return [] }
+    return (0..<height).flatMap { row in
+        (0..<width).flatMap { column in
+            let imageY = height - row - 1
+            let offset = imageY * bitmap.bytesPerRow + column * 4
+            return Array(UnsafeBufferPointer(start: pixels.advanced(by: offset), count: 4))
         }
     }
 }

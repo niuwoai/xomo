@@ -2862,7 +2862,44 @@ enum ImageEditorPSDCodec {
         return alphaMaskImage(width: width, height: height, topDownAlpha: alpha)
     }
 
+    private static func rawDeviceRGBChannels(
+        image: NSImage,
+        width: Int,
+        height: Int
+    ) -> PSDChannels? {
+        guard width > 0, height > 0,
+              let bitmap = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+              bitmap.pixelsWide == width,
+              bitmap.pixelsHigh == height,
+              bitmap.bitsPerSample == 8,
+              bitmap.samplesPerPixel == 4,
+              bitmap.bitsPerPixel == 32,
+              !bitmap.isPlanar,
+              bitmap.colorSpaceName == .deviceRGB,
+              bitmap.bitmapFormat.contains(.alphaNonpremultiplied),
+              bitmap.bytesPerRow >= width * 4,
+              let pixels = bitmap.bitmapData
+        else { return nil }
+
+        var channels = PSDChannels.empty(pixelCount: width * height)
+        for row in 0..<height {
+            let imageY = height - row - 1
+            for x in 0..<width {
+                let source = imageY * bitmap.bytesPerRow + x * 4
+                let destination = row * width + x
+                channels.red[destination] = pixels[source]
+                channels.green[destination] = pixels[source + 1]
+                channels.blue[destination] = pixels[source + 2]
+                channels.alpha[destination] = pixels[source + 3]
+            }
+        }
+        return channels
+    }
+
     private static func rgbaChannels(image: NSImage, width: Int, height: Int) -> PSDChannels? {
+        if let rawChannels = rawDeviceRGBChannels(image: image, width: width, height: height) {
+            return rawChannels
+        }
         guard width > 0, height > 0,
               let rendered = NSImage.rendered(size: CGSize(width: width, height: height), actions: { rect in
                   image.draw(in: rect, from: CGRect(origin: .zero, size: image.size), operation: .copy, fraction: 1)

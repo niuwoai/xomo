@@ -8,6 +8,8 @@
 | `zip-composite.psd` | 无图层 PSD 的 ZIP 合成图解码 |
 | `grayscale-layer.psd` | 8 位灰度 PSD 的 ZIP Prediction 图层、独立透明度和可编辑图层导入 |
 | `grayscale-composite.psd` | 无图层 8 位灰度 PSD 的灰度扩展与透明度合成导入 |
+| `grayscale-opaque-layer.psd` | 单通道、无透明度的灰度 PSD；导入为不透明可编辑图层 |
+| `grayscale-extra-alpha.psd` | 灰度+透明度+两个额外 alpha plane；验证选区通道名称和 plane 偏移 |
 | `unsupported-features.psd` | 文字、矢量、智能对象、图层效果、填充层和未知混合模式的兼容性报告 |
 | `editable-text.psd` | 外部生成的 TySh 文字层，读取纯文本、字体、字号、颜色、基础段落对齐和字符样式 |
 | `vector-mask.psd` | 外部生成的 vmsk 简单闭合三点路径，导入为 Xomo 原生矢量蒙版 |

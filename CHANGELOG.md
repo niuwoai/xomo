@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1738 - 2026-10-08
+
+### Fixed
+- 补齐 8 位灰度 PSD 的无透明度可编辑图层和多个附加 alpha plane；PSD 导出在符合条件时直接读取未预乘设备 RGB 位图通道，避免不必要的色彩空间往返。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1738`/1738；本版不是四十版本完整门槛，不覆盖安装，详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)。
+
+### Verification
+- PSD 专项 63/63 通过，包含灰度无 alpha 图层直接 PSD 像素往返、项目序列化恢复及两个附加 alpha plane。未运行全量门槛、真实界面冒烟或安装；下一门槛仍为 rc1760。
+
 ## 2.12.0-rc1736 - 2026-10-08
 
 ### Fixed

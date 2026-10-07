@@ -421,6 +421,35 @@ def grayscale_composite_fixture
   )
 end
 
+def grayscale_opaque_layer_fixture
+  gray = (0...16).map { |index| 16 + index * 10 }.pack("C*")
+  layer_channels = { 0 => zip_channel(gray, prediction: true) }
+  record = layer_record(name: "Opaque Gray Layer", channels: layer_channels)
+  layer_info = i16(1) + record + layer_channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(2) + Zlib::Deflate.deflate(gray),
+    channels: 1,
+    color_mode: 1
+  )
+end
+
+def grayscale_extra_alpha_fixture
+  gray = (0...16).map { |index| 32 + index * 8 }.pack("C*")
+  transparency = ([255, 224, 192, 160] * 4).pack("C*")
+  selection = ([0, 32, 96, 255] * 4).pack("C*")
+  spot = ([255, 160, 96, 0] * 4).pack("C*")
+  psd(
+    layer_payload: u32(0),
+    composite: u16(0) + gray + transparency + selection + spot,
+    channels: 4,
+    color_mode: 1,
+    alpha_names: ["Gray Selection", "Gray Spot"]
+  )
+end
+
 def psd(layer_payload:, composite:, channels: 4, color_mode: 3, include_icc: false, path_resources: [], alpha_names: [])
   header(channels: channels, color_mode: color_mode) + u32(0) + image_resources(
     include_icc: include_icc,
@@ -818,6 +847,8 @@ fixtures = {
   "zip-composite.psd" => composite_only_fixture,
   "grayscale-layer.psd" => grayscale_layer_fixture,
   "grayscale-composite.psd" => grayscale_composite_fixture,
+  "grayscale-opaque-layer.psd" => grayscale_opaque_layer_fixture,
+  "grayscale-extra-alpha.psd" => grayscale_extra_alpha_fixture,
   "extra-alpha.psd" => extra_alpha_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
@@ -865,6 +896,8 @@ expectations = {
   "zip-composite.psd" => %w[zip flattened_composite],
   "grayscale-layer.psd" => %w[grayscale editable_layer transparency zip_prediction],
   "grayscale-composite.psd" => %w[grayscale flattened_composite transparency raw],
+  "grayscale-opaque-layer.psd" => %w[grayscale editable_layer opaque zip_prediction],
+  "grayscale-extra-alpha.psd" => %w[grayscale flattened_composite transparency additional_alpha_channels alpha_names],
   "extra-alpha.psd" => %w[raw flattened_composite additional_alpha_channel alpha_name],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
