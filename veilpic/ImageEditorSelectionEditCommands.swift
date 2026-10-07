@@ -1564,8 +1564,8 @@ extension ImageEditorViewModel {
         layer: ImageEditorLayer
     ) -> NSImage? {
         guard let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
-            width: max(layer.image.size.width, layer.mask?.size.width ?? 0),
-            height: max(layer.image.size.height, layer.mask?.size.height ?? 0)
+            width: max(layer.image.size.width, max(layer.mask?.size.width ?? 0, layer.postFilterCutoutMask?.size.width ?? 0)),
+            height: max(layer.image.size.height, max(layer.mask?.size.height ?? 0, layer.postFilterCutoutMask?.size.height ?? 0))
         ))
         else { return nil }
 
@@ -1585,7 +1585,11 @@ extension ImageEditorViewModel {
         let cutoutAlpha = selectedAlpha.map { selected in
             UInt8(UInt8.max - selected)
         }
-        return NSImage.alphaMaskImage(width: width, height: height, alpha: cutoutAlpha)
+        guard let selectionCutout = NSImage.alphaMaskImage(width: width, height: height, alpha: cutoutAlpha) else {
+            return nil
+        }
+        guard let existingCutout = layer.postFilterCutoutMask else { return selectionCutout }
+        return existingCutout.compositedWithAlphaMask(selectionCutout)
     }
 
     @discardableResult
@@ -1705,12 +1709,6 @@ extension ImageEditorViewModel {
                 layerFrame: document.layers[index].frame,
                 feather: feather,
                 selectionIsApplied: false
-              ),
-              let output = backing.image.cleared(
-                selection: selection,
-                layerFrame: backing.frame,
-                canvasSize: document.canvasSize,
-                feather: feather
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -1718,6 +1716,31 @@ extension ImageEditorViewModel {
         }
 
         let sourceLayer = document.layers[index]
+        let preservesFilteredOutput = backing.smartFilters.contains {
+            $0.isEnabled && !$0.appliesToBackdrop && $0.normalizedOpacity > 0 && $0.normalizedIntensity != 0
+        }
+        let cutoutMask: NSImage?
+        if preservesFilteredOutput {
+            guard let filteredCutoutMask = selectionCutoutMask(for: selection, layer: backing) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return false
+            }
+            cutoutMask = filteredCutoutMask
+            backing = sourceLayer
+        } else {
+            guard let output = backing.image.cleared(
+                selection: selection,
+                layerFrame: backing.frame,
+                canvasSize: document.canvasSize,
+                feather: feather
+            ) else {
+                statusText = L10n.text("imageEditor.status.selectionEmpty")
+                return false
+            }
+            backing.image = output.normalizedBitmapImage()
+            cutoutMask = nil
+        }
+
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
             preferredFileName: "\(sourceLayer.name)-selection.png",
@@ -1730,7 +1753,9 @@ extension ImageEditorViewModel {
 
         XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
         pushUndo()
-        backing.image = output.normalizedBitmapImage()
+        if let cutoutMask {
+            backing.postFilterCutoutMask = cutoutMask
+        }
         document.layers[index] = backing
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
         statusText = L10n.text("imageEditor.status.selectionCutToClipboard")
