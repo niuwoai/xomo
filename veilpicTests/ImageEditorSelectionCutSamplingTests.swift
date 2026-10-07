@@ -148,21 +148,22 @@ struct ImageEditorSelectionCutSamplingTests {
         model.cutSelectionToNewLayer()
         let source = try #require(model.document.layers.first { $0.id == sourceID })
         let retainedFilter = try #require(source.smartFilters.first)
+        #expect(source.image.size == CGSize(width: 4, height: 4))
         #expect(retainedFilter.id == filter.id)
         #expect(retainedFilter.opacity == filter.opacity)
         #expect(retainedFilter.intensity == filter.intensity)
         #expect(retainedFilter.settings == filter.settings)
-        #expect(retainedFilter.pixelSamplingScale == 3)
+        #expect(retainedFilter.pixelSamplingScale == filter.pixelSamplingScale)
         let reference = try #require(source.image.applyingFilter(kind: .gaussianBlur, intensity: 0.5,
-                                        settings: .init(gaussianBlurRadius: 6), mask: nil, opacity: 0.75))
-        #expect(imageEditorRGBABytes(source.contentImage, width: 12, height: 12)
-            == imageEditorRGBABytes(reference, width: 12, height: 12))
+                                        settings: .init(gaussianBlurRadius: 2), mask: nil, opacity: 0.75))
+        #expect(imageEditorRGBABytes(source.contentImage, width: 4, height: 4)
+            == imageEditorRGBABytes(reference, width: 4, height: 4))
         let reopened = try fixture()
         try reopened.loadProjectData(model.projectData())
         let restored = try #require(reopened.document.layers.first { $0.id == sourceID })
         #expect(restored.smartFilters == source.smartFilters)
-        #expect(imageEditorRGBABytes(restored.contentImage, width: 12, height: 12)
-            == imageEditorRGBABytes(reference, width: 12, height: 12))
+        #expect(imageEditorRGBABytes(restored.contentImage, width: 4, height: 4)
+            == imageEditorRGBABytes(reference, width: 4, height: 4))
         model.selectLayer(sourceID)
         #expect(model.loadSmartFilterIntoControls(retainedFilter.id))
         let undoCount = model.undoStack.count
@@ -173,6 +174,57 @@ struct ImageEditorSelectionCutSamplingTests {
         #expect(model.document.history.count == historyCount)
         model.undo()
         #expect(try model.projectData() == original)
+    }
+
+    @Test(arguments: [false, true])
+    func cuttingSelectionFromFilteredLayerPreservesCompositePixels(hasRasterMask: Bool) throws {
+        let model = try fixture()
+        if hasRasterMask {
+            model.document.layers[0].mask = try #require(NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
+                NSColor.white.withAlphaComponent(0.5).setFill()
+                rect.fill()
+            })
+        }
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(
+                kind: .gaussianBlur,
+                intensity: 1,
+                settings: .init(gaussianBlurRadius: 2)
+            )
+        ]
+        let originalProject = try model.projectData()
+        let originalComposite = try #require(imageEditorRGBABytes(
+            model.document.compositedImage,
+            width: 24,
+            height: 20
+        ))
+
+        model.cutSelectionToNewLayer()
+
+        let cutComposite = try #require(imageEditorRGBABytes(
+            model.document.compositedImage,
+            width: 24,
+            height: 20
+        ))
+        let differingBytes = zip(originalComposite, cutComposite).enumerated().compactMap { index, values in
+            values.0 == values.1 ? nil : (index, values.0, values.1)
+        }.prefix(12)
+        #expect(differingBytes.isEmpty, "First differing RGBA bytes (offset, before, after): \(Array(differingBytes))")
+        model.undo()
+        #expect(try model.projectData() == originalProject)
+        model.redo()
+        #expect(try #require(imageEditorRGBABytes(
+            model.document.compositedImage,
+            width: 24,
+            height: 20
+        )) == originalComposite)
+        let reopened = try fixture()
+        try reopened.loadProjectData(model.projectData())
+        #expect(try #require(imageEditorRGBABytes(
+            reopened.document.compositedImage,
+            width: 24,
+            height: 20
+        )) == originalComposite)
     }
 
     @Test func failedCutLeavesClipboardDocumentAndHistoryUntouched() throws {
