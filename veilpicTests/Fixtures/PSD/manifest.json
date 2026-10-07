@@ -23,6 +23,26 @@
       ]
     },
     {
+      "file": "grayscale-layer.psd",
+      "sha256": "9fd55045aaa970e381aef79e08b2bceca9727cfba1e4985d00310ef930f2a004",
+      "expected": [
+        "grayscale",
+        "editable_layer",
+        "transparency",
+        "zip_prediction"
+      ]
+    },
+    {
+      "file": "grayscale-composite.psd",
+      "sha256": "355c1407baabcfce685f176a3a4813438855e6ab2dfa01038e591643cfe98001",
+      "expected": [
+        "grayscale",
+        "flattened_composite",
+        "transparency",
+        "raw"
+      ]
+    },
+    {
       "file": "extra-alpha.psd",
       "sha256": "0abf522a12e4e21c9f0f11c48c793bc974dba0ec4d43261c418c9e89b32de749",
       "expected": [

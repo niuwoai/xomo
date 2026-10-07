@@ -30,6 +30,17 @@
 ### Verification
 - 精确像素栅格化回归 1/1、选区裁切套件 19/19、版本/发布合同 10 runs/30 assertions、CLI 发布构建合同 7 runs/24 assertions 通过；未运行全量构建、真实界面冒烟或覆盖安装。
 
+## 2.12.0-rc1737 - 2026-10-08
+
+### Added
+- 支持导入 8 位灰度 PSD：将灰度映射至 RGB 画布，同时保留可编辑像素层、透明度和扁平 PSD 背景像素。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1737`/1737；本版不是四十版本完整门槛，不覆盖安装，详见[验证记录](docs/reviews/2026-10-08-rc1737-grayscale-psd-import.md)。
+
+### Verification
+- PSD 导入/导出套件 61/61 通过，覆盖分层 ZIP Prediction 灰度+alpha、无图层灰度+透明度以及兼容性报告；全量构建、界面冒烟和安装仍待 rc1760 门槛。
+
 ## 2.12.0-rc1730 - 2026-10-08
 
 ### Fixed

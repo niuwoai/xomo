@@ -505,6 +505,49 @@ struct ImageEditorPSDTests {
         #expect(report.issues.isEmpty)
     }
 
+    @Test func externalGrayscaleLayerFixturePreservesGrayPixelsAndTransparency() throws {
+        let data = try psdFixtureData("grayscale-layer.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "grayscale-layer.psd")
+
+        #expect(document.canvasSize == CGSize(width: 4, height: 4))
+        #expect(document.layers.count == 1)
+        let layer = try #require(document.layers.first)
+        #expect(layer.name == "Gray Pixel Layer")
+        let layerPixels = psdRGBA(layer.image, width: 4, height: 4)
+        #expect(layerPixels.count == 64)
+        for index in 0..<16 {
+            let offset = index * 4
+            #expect(layerPixels[offset] == layerPixels[offset + 1])
+            #expect(layerPixels[offset + 1] == layerPixels[offset + 2])
+            #expect(abs(Int(layerPixels[offset]) - (24 + index * 12)) <= 1)
+            #expect(layerPixels[offset + 3] == [255, 192, 128, 64][index % 4])
+        }
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.isEmpty)
+        #expect(report.compressions.contains(.zipPrediction))
+    }
+
+    @Test func externalGrayscaleCompositeFixtureExpandsGrayAndKeepsTransparency() throws {
+        let data = try psdFixtureData("grayscale-composite.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "grayscale-composite.psd")
+
+        #expect(document.layers.count == 1)
+        let background = try #require(document.layers.first)
+        let compositePixels = psdRGBA(background.image, width: 4, height: 4)
+        #expect(compositePixels.count == 64)
+        if compositePixels.count == 64 {
+            for index in 0..<16 {
+                let offset = index * 4
+                #expect(compositePixels[offset] == compositePixels[offset + 1])
+                #expect(compositePixels[offset + 1] == compositePixels[offset + 2])
+                #expect(abs(Int(compositePixels[offset]) - (240 - index * 12)) <= 1)
+                #expect(compositePixels[offset + 3] == [255, 220, 180, 140][index % 4])
+            }
+        }
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.isEmpty)
+    }
+
     @Test func externalExtraAlphaChannelBecomesEditableChannel() throws {
         let data = try psdFixtureData("extra-alpha.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "extra-alpha.psd")
@@ -2177,6 +2220,20 @@ private func psdMaskAlpha(_ image: NSImage, width: Int, height: Int) -> [UInt8] 
         (0..<width).map { column in
             let imageY = height - row - 1
             return UInt8(((representation.colorAt(x: column, y: imageY)?.alphaComponent ?? 0) * 255).rounded())
+        }
+    }
+}
+
+private func psdRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
+    guard let representation = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first else { return [] }
+    return (0..<height).flatMap { row in
+        (0..<width).flatMap { column in
+            let imageY = height - row - 1
+            guard let color = representation.colorAt(x: column, y: imageY)?.usingColorSpace(.deviceRGB) else {
+                return [UInt8](repeating: 0, count: 4)
+            }
+            return [color.redComponent, color.greenComponent, color.blueComponent, color.alphaComponent]
+                .map { UInt8(($0 * 255).rounded()) }
         }
     }
 }

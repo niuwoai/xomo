@@ -6,6 +6,8 @@
 |---|---|
 | `zip-group-mask.psd` | ZIP Prediction 图层通道、ZIP 合成图、嵌套结构标记、栅格蒙版、Linear Light、Fill、透明/像素/位置锁、ICC 资源提示 |
 | `zip-composite.psd` | 无图层 PSD 的 ZIP 合成图解码 |
+| `grayscale-layer.psd` | 8 位灰度 PSD 的 ZIP Prediction 图层、独立透明度和可编辑图层导入 |
+| `grayscale-composite.psd` | 无图层 8 位灰度 PSD 的灰度扩展与透明度合成导入 |
 | `unsupported-features.psd` | 文字、矢量、智能对象、图层效果、填充层和未知混合模式的兼容性报告 |
 | `editable-text.psd` | 外部生成的 TySh 文字层，读取纯文本、字体、字号、颜色、基础段落对齐和字符样式 |
 | `vector-mask.psd` | 外部生成的 vmsk 简单闭合三点路径，导入为 Xomo 原生矢量蒙版 |

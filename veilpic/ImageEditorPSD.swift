@@ -433,7 +433,7 @@ enum ImageEditorPSDCodec {
         let depth = Int(try reader.uint16())
         let colorMode = Int(try reader.uint16())
 
-        guard (3...56).contains(channelCount), width > 0, height > 0 else {
+        guard (1...56).contains(channelCount), width > 0, height > 0 else {
             throw ImageEditorPSDCodecError.invalidFile
         }
 
@@ -443,9 +443,9 @@ enum ImageEditorPSDCodec {
         }
         if version != 1 { addIssue(.unsupportedVersion) }
         if depth != 8 { addIssue(.unsupportedBitDepth) }
-        if colorMode != 3 { addIssue(.unsupportedColorMode) }
+        if colorMode != 1 && colorMode != 3 { addIssue(.unsupportedColorMode) }
         // Additional alpha and spot channels are decoded into editable Xomo channels.
-        // Keep the compatibility issue reserved for a future unsupported channel mode.
+        // Grayscale uses one color plane followed by transparency when present.
 
         guard version == 1 else {
             return compatibilityReport(
@@ -630,7 +630,10 @@ enum ImageEditorPSDCodec {
         let width = Int(try reader.uint32())
         let depth = try reader.uint16()
         let colorMode = try reader.uint16()
-        guard (3...56).contains(channelCount), width > 0, height > 0, depth == 8, colorMode == 3 else {
+        let minimumChannelCount = colorMode == 1 ? 1 : 3
+        guard (minimumChannelCount...56).contains(channelCount), width > 0, height > 0, depth == 8,
+              colorMode == 1 || colorMode == 3
+        else {
             throw ImageEditorPSDCodecError.unsupportedDocument
         }
         try reader.skipLengthPrefixed32()
@@ -657,7 +660,7 @@ enum ImageEditorPSDCodec {
                     records.append(try readLayerRecord(&reader))
                 }
                 for record in records {
-                    let channels = try readLayerChannels(&reader, record: record)
+                    let channels = try readLayerChannels(&reader, record: record, colorMode: Int(colorMode))
                     decodedLayers.append(PSDParsedLayer(record: record, channels: channels))
                 }
             }
@@ -670,6 +673,7 @@ enum ImageEditorPSDCodec {
             width: width,
             height: height,
             channelCount: channelCount,
+            colorMode: Int(colorMode),
             alphaChannelNames: alphaChannelNames,
             alphaChannelDisplayInfo: alphaChannelDisplayInfo
         )
@@ -1704,7 +1708,8 @@ enum ImageEditorPSDCodec {
 
     nonisolated private static func readLayerChannels(
         _ reader: inout PSDReader,
-        record: PSDLayerRecord
+        record: PSDLayerRecord,
+        colorMode: Int
     ) throws -> PSDChannels {
         let width = max(0, record.right - record.left)
         let height = max(0, record.bottom - record.top)
@@ -1721,9 +1726,14 @@ enum ImageEditorPSDCodec {
             switch identifier {
             case -1: result.alpha = decoded
             case -3, -2: result.userMask = decoded
-            case 0: result.red = decoded
-            case 1: result.green = decoded
-            case 2: result.blue = decoded
+            case 0:
+                result.red = decoded
+                if colorMode == 1 {
+                    result.green = decoded
+                    result.blue = decoded
+                }
+            case 1 where colorMode == 3: result.green = decoded
+            case 2 where colorMode == 3: result.blue = decoded
             default: break
             }
             reader.offset = end
@@ -1736,6 +1746,7 @@ enum ImageEditorPSDCodec {
         width: Int,
         height: Int,
         channelCount: Int,
+        colorMode: Int,
         alphaChannelNames: [String],
         alphaChannelDisplayInfo: [PSDAlphaChannelDisplayInfo]
     ) throws -> PSDCompositeChannels {
@@ -1777,11 +1788,18 @@ enum ImageEditorPSDCodec {
             throw ImageEditorPSDCodecError.unsupportedCompression
         }
         var channels = PSDChannels.empty(pixelCount: pixelCount)
-        if planes.indices.contains(0) { channels.red = planes[0] }
-        if planes.indices.contains(1) { channels.green = planes[1] }
-        if planes.indices.contains(2) { channels.blue = planes[2] }
-        if planes.indices.contains(3) { channels.alpha = planes[3] }
-        let alphaChannels = planes.dropFirst(4).enumerated().map { index, plane in
+        let colorPlaneCount = colorMode == 1 ? 1 : 3
+        if planes.indices.contains(0) {
+            channels.red = planes[0]
+            if colorMode == 1 {
+                channels.green = planes[0]
+                channels.blue = planes[0]
+            }
+        }
+        if colorMode == 3, planes.indices.contains(1) { channels.green = planes[1] }
+        if colorMode == 3, planes.indices.contains(2) { channels.blue = planes[2] }
+        if planes.indices.contains(colorPlaneCount) { channels.alpha = planes[colorPlaneCount] }
+        let alphaChannels = planes.dropFirst(colorPlaneCount + 1).enumerated().map { index, plane in
             let fallbackName = "Alpha \(index + 1)"
             let importedName = alphaChannelNames.indices.contains(index)
                 ? alphaChannelNames[index].trimmingCharacters(in: .whitespacesAndNewlines)

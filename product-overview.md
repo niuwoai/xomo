@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1736
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1737
 
-rc1736 修复带高密度滤镜后裁切遮罩的图层栅格化：烘焙时沿用显示合成的提升采样网格，保持画布像素；普通栅格蒙版仍独立可编辑。目标回归和选区裁切套件 19/19 通过，覆盖 Undo/Redo、保存重开；版本/发布合同 10 runs/30 assertions、CLI 发布构建合同 7 runs/24 assertions 通过。未运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布。当前安装版仍为 rc1729，下一门槛为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1736-filtered-cutout-rasterize.md)。此前 rc1735 剪贴图层裁切组合验收记录见[验证记录](docs/reviews/2026-10-08-rc1735-filtered-clipping-cut.md)，完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1737 新增 8 位灰度 PSD 导入：灰度像素映射到 RGB 画布，分层 PSD 保留像素层与透明度，无图层 PSD 保留背景像素；61 项 PSD 套件通过。未运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布。当前安装版仍为 rc1729，下一门槛为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1737-grayscale-psd-import.md)。上一版本 rc1736 修复高密度滤镜后裁切遮罩的图层栅格化保真，详情见[验证记录](docs/reviews/2026-10-08-rc1736-filtered-cutout-rasterize.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 

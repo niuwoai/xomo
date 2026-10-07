@@ -390,8 +390,39 @@ def composite_zip(red:, green:, blue:, alpha:)
   u16(2) + Zlib::Deflate.deflate(red + green + blue + alpha)
 end
 
-def psd(layer_payload:, composite:, channels: 4, include_icc: false, path_resources: [], alpha_names: [])
-  header(channels: channels) + u32(0) + image_resources(
+def grayscale_layer_fixture
+  gray = (0...16).map { |index| 24 + index * 12 }.pack("C*")
+  alpha = ([255, 192, 128, 64] * 4).pack("C*")
+  layer_channels = {
+    -1 => zip_channel(alpha, prediction: true),
+    0 => zip_channel(gray, prediction: true)
+  }
+  record = layer_record(name: "Gray Pixel Layer", channels: layer_channels)
+  layer_info = i16(1) + record + layer_channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  composite_alpha = ([255] * 16).pack("C*")
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(2) + Zlib::Deflate.deflate(gray + composite_alpha),
+    channels: 2,
+    color_mode: 1
+  )
+end
+
+def grayscale_composite_fixture
+  gray = (0...16).map { |index| 240 - index * 12 }.pack("C*")
+  alpha = ([255, 220, 180, 140] * 4).pack("C*")
+  psd(
+    layer_payload: u32(0),
+    composite: u16(0) + gray + alpha,
+    channels: 2,
+    color_mode: 1
+  )
+end
+
+def psd(layer_payload:, composite:, channels: 4, color_mode: 3, include_icc: false, path_resources: [], alpha_names: [])
+  header(channels: channels, color_mode: color_mode) + u32(0) + image_resources(
     include_icc: include_icc,
     path_resources: path_resources,
     alpha_names: alpha_names
@@ -785,6 +816,8 @@ FileUtils.mkdir_p(OUTPUT_DIR)
 fixtures = {
   "zip-group-mask.psd" => group_mask_fixture,
   "zip-composite.psd" => composite_only_fixture,
+  "grayscale-layer.psd" => grayscale_layer_fixture,
+  "grayscale-composite.psd" => grayscale_composite_fixture,
   "extra-alpha.psd" => extra_alpha_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
@@ -830,6 +863,8 @@ end
 expectations = {
   "zip-group-mask.psd" => %w[zip zip_prediction group raster_mask fill_opacity layer_locks],
   "zip-composite.psd" => %w[zip flattened_composite],
+  "grayscale-layer.psd" => %w[grayscale editable_layer transparency zip_prediction],
+  "grayscale-composite.psd" => %w[grayscale flattened_composite transparency raw],
   "extra-alpha.psd" => %w[raw flattened_composite additional_alpha_channel alpha_name],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
