@@ -66,7 +66,7 @@ nonisolated struct XomoExternalFigmaLinkImportRequest: Equatable, Identifiable {
 @MainActor
 enum XomoExternalImageDocumentFactory {
     static func make(sourceName: String, image: NSImage) -> ImageEditorDocument {
-        let normalized = image.normalizedBitmapImage()
+        let normalized = image.normalizedImportedBitmapImage()
         let transparentCanvas = NSImage.transparent(size: normalized.size)
         var document = ImageEditorDocument(
             sourceName: sourceName,

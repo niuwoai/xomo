@@ -40,7 +40,21 @@ extension NSImage {
               source.height > 0
         else { return normalizedBitmapImage() }
 
+        guard let sRGB = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                data: nil,
+                width: source.width,
+                height: source.height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: sRGB,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ) else { return normalizedBitmapImage() }
+        context.interpolationQuality = .none
+        context.draw(source, in: CGRect(x: 0, y: 0, width: source.width, height: source.height))
+        guard let normalized = context.makeImage() else { return normalizedBitmapImage() }
+
         let pixelSize = CGSize(width: source.width, height: source.height)
-        return NSImage(cgImage: source, size: pixelSize).normalizedBitmapImage()
+        return NSImage(cgImage: normalized, size: pixelSize)
     }
 }

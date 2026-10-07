@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1742 扩展色彩正确性到普通广色域图片：外部 PNG/栅格导入在进入文档前明确转换为 sRGB CGImage，P3 PNG→项目保存重开 RGBA 精确匹配；专项 1/1、外部打开 24/24、拖入 10/10 通过。仍未覆盖所有格式/profile 与扁平导出，下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)。
 - rc1741 针对 rc1740 暴露的项目文件色差，将 ICC profile 转换结果明确标记为 sRGB，避免把 sRGB 分量错误标成设备相关 RGB；项目 PNG 编码沿用既有路径，以 P3 PSD 导入→Xomo 项目 JSON 保存→恢复后的 sRGB 像素逐通道回归检查，专项 1/1、完整 PSD 套件 65/65 通过。详见[验证记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)。本版本不宣称其他 profile、扁平导出或任意 PNG 的 ICC 全链路一致；下一完整门槛 rc1760。
 - rc1740 为 PSD 导入增加匹配模式的 RGB/灰阶 ICC 转换；Display P3 与灰阶 ICC→sRGB 数值和 alpha 用例通过，完整 PSD 套件 65/65 通过。项目 PNG 往返和导出色彩一致性仍未通过/未验证，不宣称完整色彩管理。待提交并合入本地 `main`；不运行全量门槛、UI 冒烟或安装，下一门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。
 - rc1739 将灰度 PSD 选择 alpha 与真正 spot alpha（含 spot display info）贯通外部导入、Xomo 项目恢复和 PSD 再导出；重读后通道名称、类型、spot 参数及 alpha mask 一致。PSD 专项 63/63 通过；本版本待提交并合入本地 `main`，不运行全量门槛、真实 UI 冒烟或安装，下一门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。

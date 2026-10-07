@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1741
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1742
 
-rc1741 针对 P3 PSD 导入图层在项目 PNG 保存/恢复时的颜色漂移，将 ICC 转换输出明确标记为 sRGB；PNG 编码仍沿用原路径，并用 PSD→项目 JSON→恢复像素的逐通道回归验证，专项 1/1 及完整 PSD 套件 65/65 通过。rc1740 增加 RGB/灰阶 PSD ICC 导入转换。其他 PNG 输入、扁平导出与多种 profile 仍待验证，不宣称完整色彩管理。未运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1742 修复普通广色域栅格导入的色彩归一化：导入图像按源 ICC 转换到明确的 sRGB CGImage，覆盖 P3 PNG→编辑图层→项目 JSON 保存恢复，专项 1/1、外部打开 24/24、文件拖入 10/10 通过。rc1741 解决 P3 PSD 图层项目往返；rc1740 支持匹配模式的 RGB/灰阶 PSD ICC 转换。其余格式/profile、扁平导出仍待验证，不宣称完整色彩管理；未运行四十版本全量门槛、真实界面冒烟或覆盖安装；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1742 验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)、[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 
