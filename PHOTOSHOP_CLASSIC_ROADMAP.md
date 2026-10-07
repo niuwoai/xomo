@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1743 继续贯通色彩工作流到最终导出：PNG 合成图显式归一化为 sRGB 后编码；P3 源 PNG→编辑文档→Quick Export→PNG 重读 RGBA 与参考值一致，专项 1/1、Quick Export 套件 5/5 通过。JPEG/WebP/PDF/PSD 导出仍需另行验证，完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)。
 - rc1742 扩展色彩正确性到普通广色域图片：外部 PNG/栅格导入在进入文档前明确转换为 sRGB CGImage，P3 PNG→项目保存重开 RGBA 精确匹配；专项 1/1、外部打开 24/24、拖入 10/10 通过。仍未覆盖所有格式/profile 与扁平导出，下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)。
 - rc1741 针对 rc1740 暴露的项目文件色差，将 ICC profile 转换结果明确标记为 sRGB，避免把 sRGB 分量错误标成设备相关 RGB；项目 PNG 编码沿用既有路径，以 P3 PSD 导入→Xomo 项目 JSON 保存→恢复后的 sRGB 像素逐通道回归检查，专项 1/1、完整 PSD 套件 65/65 通过。详见[验证记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)。本版本不宣称其他 profile、扁平导出或任意 PNG 的 ICC 全链路一致；下一完整门槛 rc1760。
 - rc1740 为 PSD 导入增加匹配模式的 RGB/灰阶 ICC 转换；Display P3 与灰阶 ICC→sRGB 数值和 alpha 用例通过，完整 PSD 套件 65/65 通过。项目 PNG 往返和导出色彩一致性仍未通过/未验证，不宣称完整色彩管理。待提交并合入本地 `main`；不运行全量门槛、UI 冒烟或安装，下一门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。

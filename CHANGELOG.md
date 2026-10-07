@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1743 - 2026-10-08
+
+### Fixed
+- PNG 导出前显式把合成结果归一化到 sRGB，避免广色域图层导入后在 quick export 中丢失色彩空间并产生颜色偏差。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1743`/1743；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- Display P3→Quick Export PNG→重读像素专项 1/1、完整 Quick Export 套件 5/5、版本合同 10/10、CLI 合同 7/7、概览合同 3/3 通过；下一完整门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)。
+
 ## 2.12.0-rc1742 - 2026-10-08
 
 ### Fixed

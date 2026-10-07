@@ -6,14 +6,65 @@
 //
 
 import AppKit
+import CoreFoundation
 import Foundation
+import ImageIO
 import Testing
+import UniformTypeIdentifiers
 @testable import musepic
 
 @MainActor
 struct ImageEditorQuickExportPNGTests {
     private enum ExportFailure: Error {
         case denied
+    }
+
+    @Test func displayP3CompositeQuickExportEncodesSRGBReferencePixels() throws {
+        let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let sourceBytes: [UInt8] = [200, 120, 40, 255]
+        let provider = try #require(CGDataProvider(data: Data(sourceBytes) as CFData))
+        let source = try #require(CGImage(
+            width: 1,
+            height: 1,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: 4,
+            space: sourceSpace,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ))
+        let importedImage = NSImage(cgImage: source, size: CGSize(width: 1, height: 1))
+        let importedDocument = XomoExternalImageDocumentFactory.make(
+            sourceName: "p3.png",
+            image: importedImage
+        )
+        let viewModel = ImageEditorViewModel(
+            sourceName: "initial.png",
+            image: NSImage.transparent(size: CGSize(width: 1, height: 1))
+        ) { _ in }
+        viewModel.document = importedDocument
+
+        let pngData = try #require(viewModel.quickExportPNGData())
+        let decoded = try #require(NSImage(data: pngData))
+        let decodedCGImage = try #require(decoded.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        #expect(decodedCGImage.colorSpace?.name == CGColorSpace.sRGB)
+
+        let sourceColor = try #require(CGColor(
+            colorSpace: sourceSpace,
+            components: [200 / 255, 120 / 255, 40 / 255, 1]
+        ))
+        let sRGB = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        let expectedColor = try #require(sourceColor.converted(
+            to: sRGB,
+            intent: .relativeColorimetric,
+            options: nil
+        ))
+        let expectedComponents = try #require(expectedColor.components)
+        let expected = expectedComponents.prefix(3).map { UInt8(($0 * 255).rounded()) } + [255]
+        #expect(imageEditorRGBABytes(decoded, width: 1, height: 1) == expected)
     }
 
     @Test func quickExportWritesOneTimesCompositePNGWithoutChangingEditorState() throws {

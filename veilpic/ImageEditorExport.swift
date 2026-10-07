@@ -420,7 +420,7 @@ extension ImageEditorViewModel {
         let scaled = image.scaled(by: normalized.scale)
         switch normalized.format {
         case .png:
-            return scaled.qingtuPNGData()
+            return scaled.normalizedImportedBitmapImage().qingtuPNGData()
         case .jpeg:
             return scaled.flattened(on: .white).bitmapData(type: .jpeg, quality: normalized.quality)
         case .webp:
