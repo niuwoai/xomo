@@ -1496,9 +1496,16 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
-        let cutoutMask = preservesFilteredOutput
-            ? selectionCutoutMask(for: selection, layer: backing)
-            : nil
+        let cutoutMask: NSImage?
+        if preservesFilteredOutput {
+            guard let filteredCutoutMask = selectionCutoutMask(for: selection, layer: backing) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            cutoutMask = filteredCutoutMask
+        } else {
+            cutoutMask = nil
+        }
         let clearedImage: NSImage?
         if cutoutMask == nil {
             clearedImage = backing.image.cleared(

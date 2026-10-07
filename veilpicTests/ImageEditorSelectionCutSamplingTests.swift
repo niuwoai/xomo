@@ -2,6 +2,12 @@ import AppKit
 import Testing
 @testable import musepic
 
+enum FilteredCutMaskVariation: CaseIterable {
+    case reducedDensity
+    case feathered
+    case unlinked
+}
+
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSelectionCutSamplingTests {
@@ -225,6 +231,49 @@ struct ImageEditorSelectionCutSamplingTests {
             width: 24,
             height: 20
         )) == originalComposite)
+    }
+
+    @Test(arguments: FilteredCutMaskVariation.allCases)
+    func cuttingFilteredLayerWithUnsupportedRasterMaskFailsAtomically(
+        variation: FilteredCutMaskVariation
+    ) throws {
+        let model = try fixture()
+        model.document.layers[0].mask = try #require(NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
+            NSColor.white.setFill()
+            if variation == .reducedDensity { NSColor.black.setFill() }
+            rect.fill()
+        })
+        switch variation {
+        case .reducedDensity:
+            model.document.layers[0].maskDensity = 0.5
+        case .feathered:
+            model.document.layers[0].maskFeather = 1
+        case .unlinked:
+            model.document.layers[0].isMaskLinked = false
+        }
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(
+                kind: .gaussianBlur,
+                intensity: 1,
+                settings: .init(gaussianBlurRadius: 2)
+            )
+        ]
+        let originalComposite = try #require(imageEditorRGBABytes(
+            model.document.compositedImage,
+            width: 24,
+            height: 20
+        ))
+        let originalProject = try model.projectData()
+        let originalUndoCount = model.undoStack.count
+        let originalLayerCount = model.document.layers.count
+
+        model.cutSelectionToNewLayer()
+
+        #expect(try model.projectData() == originalProject)
+        #expect(model.undoStack.count == originalUndoCount)
+        #expect(model.document.layers.count == originalLayerCount)
+        #expect(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20) == originalComposite)
+        #expect(model.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
     @Test func failedCutLeavesClipboardDocumentAndHistoryUntouched() throws {
