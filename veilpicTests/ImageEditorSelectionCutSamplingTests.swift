@@ -182,6 +182,93 @@ struct ImageEditorSelectionCutSamplingTests {
         #expect(try model.projectData() == original)
     }
 
+    @Test(arguments: FilteredCutMaskVariation.allCases)
+    func filteredClipboardCutPreservesExistingMaskAndSourceThroughUndoRedo(
+        variation: FilteredCutMaskVariation
+    ) throws {
+        let model = try fixture()
+        model.document.layers[0].mask = try #require(NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+            NSColor.black.setFill()
+            CGRect(x: 2, y: 0, width: 2, height: 4).fill()
+        })
+        switch variation {
+        case .reducedDensity:
+            model.document.layers[0].maskDensity = 0.5
+        case .feathered:
+            model.document.layers[0].maskFeather = 1
+        case .unlinked:
+            model.document.layers[0].isMaskLinked = false
+        }
+        let filter = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 1,
+            settings: .init(gaussianBlurRadius: 2)
+        )
+        model.document.layers[0].smartFilters = [filter]
+        let source = try #require(model.document.selectedLayer)
+        let sourceID = source.id
+        let originalProject = try model.projectData()
+        let originalComposite = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+        var cutComposite = originalComposite
+        let selectedOffset = (Int(selectedRect.minY) * 24 + Int(selectedRect.minX)) * 4
+        cutComposite.replaceSubrange(selectedOffset..<(selectedOffset + 4), with: [0, 0, 0, 0])
+        let expectedPasteboard = isolatedPasteboard()
+        defer { expectedPasteboard.clearContents() }
+        #expect(model.copySelectionToClipboard(to: expectedPasteboard))
+        let expectedClipboardImage = try #require(expectedPasteboard.readImage())
+        let expectedClipboardPixels = try #require(imageEditorRGBABytes(expectedClipboardImage, width: 1, height: 1))
+
+        let pasteboard = isolatedPasteboard()
+        defer { pasteboard.clearContents() }
+        #expect(model.cutSelectionToClipboard(to: pasteboard))
+
+        let sourceAfterCut = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(sourceAfterCut.image.size == source.image.size)
+        #expect(sourceAfterCut.smartFilters == [filter])
+        #expect(sourceAfterCut.postFilterCutoutMask != nil)
+        #expect(sourceAfterCut.mask?.qingtuPNGData() == source.mask?.qingtuPNGData())
+        #expect(sourceAfterCut.maskDensity == source.maskDensity)
+        #expect(sourceAfterCut.maskFeather == source.maskFeather)
+        #expect(sourceAfterCut.isMaskLinked == source.isMaskLinked)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == cutComposite)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectedRect)
+        let actualClipboardImage = try #require(pasteboard.readImage())
+        let actualClipboardPixels = try #require(imageEditorRGBABytes(actualClipboardImage, width: 1, height: 1))
+        #expect(actualClipboardPixels == expectedClipboardPixels)
+
+        let firstCutProject = try model.projectData()
+        let secondSelection = ImageEditorSelection.rectangle(CGRect(x: 10, y: 9, width: 1, height: 1))
+        model.document.selection = secondSelection
+        let beforeSecondCutProject = try model.projectData()
+        var twiceCutComposite = cutComposite
+        let secondSelectedOffset = (9 * 24 + 10) * 4
+        twiceCutComposite.replaceSubrange(secondSelectedOffset..<(secondSelectedOffset + 4), with: [0, 0, 0, 0])
+        let secondPasteboard = isolatedPasteboard()
+        defer { secondPasteboard.clearContents() }
+        #expect(model.cutSelectionToClipboard(to: secondPasteboard))
+        let secondCutProject = try model.projectData()
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == twiceCutComposite)
+
+        model.undo()
+        #expect(try model.projectData() == beforeSecondCutProject)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == cutComposite)
+        model.undo()
+        #expect(try model.projectData() == originalProject)
+        model.redo()
+        let firstRedoProject = try model.projectData()
+        #expect(model.document.layers.first { $0.id == sourceID }?.postFilterCutoutMask != nil)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == cutComposite)
+        model.redo()
+        #expect(try model.projectData() == secondCutProject)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == twiceCutComposite)
+        let reopened = try fixture()
+        try reopened.loadProjectData(secondCutProject)
+        #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == twiceCutComposite)
+        #expect(firstCutProject != firstRedoProject)
+    }
+
     @Test(arguments: [false, true])
     func cuttingSelectionFromFilteredLayerPreservesCompositePixels(hasRasterMask: Bool) throws {
         let model = try fixture()
