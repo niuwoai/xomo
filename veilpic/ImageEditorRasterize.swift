@@ -167,8 +167,18 @@ extension ImageEditorViewModel {
                 output = rasterizedSmartObject(source)
             } else if source.isText || source.isShape || isGeneratedFillLayer(source) || source.hasSmartFilters
                         || source.postFilterCutoutMask != nil {
-                let content = source.contentImage.applyingAlphaMask(
-                    source.postFilterCutoutMask ?? .opaqueMask(size: source.image.size)
+                // A post-filter cutout may carry more samples than the source
+                // bitmap. Bake it on the same promoted grid used by compositing,
+                // otherwise rasterizing silently changes its soft edge.
+                let renderingLayer = source.postFilterCutoutMask == nil
+                    ? nil
+                    : source.highResolutionMaskRenderingLayer()?.layer
+                let contentSource = renderingLayer ?? source
+                if let renderingLayer, source.vectorMask != nil {
+                    output.vectorMask = renderingLayer.vectorMask
+                }
+                let content = contentSource.contentImage.applyingAlphaMask(
+                    contentSource.postFilterCutoutMask ?? .opaqueMask(size: contentSource.image.size)
                 ) ?? source.contentImage
                 output.image = content.normalizedBitmapImage()
                 output.kind = .pixel

@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1736 - 2026-10-08
+
+### Fixed
+- 栅格化带高密度滤镜后裁切遮罩的图层时，沿用显示合成的提升采样网格烘焙遮罩，避免保存重开后栅格化改变软边与画布像素；保留普通可编辑蒙版，并验证 Undo/Redo 与栅格化项目重开。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1736`/1736；本版本不是四十版本完整门槛，不覆盖安装，详见[验证记录](docs/reviews/2026-10-08-rc1736-filtered-cutout-rasterize.md)。
+
+### Verification
+- 精确像素栅格化回归 1/1、选区裁切套件 19/19、版本/发布合同 10 runs/30 assertions、CLI 发布构建合同 7 runs/24 assertions 通过；未运行全量构建、真实界面冒烟或覆盖安装。
+
 ## 2.12.0-rc1730 - 2026-10-08
 
 ### Fixed

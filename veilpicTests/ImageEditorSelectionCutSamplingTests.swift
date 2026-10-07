@@ -556,22 +556,74 @@ struct ImageEditorSelectionCutSamplingTests {
 
     @Test func filteredCutoutMaskFollowsLayerResizeAndRotation() throws {
         let model = try fixture()
+        var source = model.document.layers[0]
+        source.mask = NSImage.rendered(size: source.image.size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor.white.setFill()
+            CGRect(x: 0, y: 0, width: 3, height: 4).fill()
+        }
+        source.isMaskEnabled = true
+        model.document.layers[0] = source
         model.document.layers[0].smartFilters = [
             ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 1,
                                    settings: .init(gaussianBlurRadius: 2))
         ]
         let sourceID = try #require(model.document.selectedLayerID)
         model.cutSelectionToNewLayer()
-        model.document.selectedLayerID = sourceID
-        model.document.selectedLayerIDs = [sourceID]
+        let cutProject = try model.projectData()
+        let baked = try fixture()
+        try baked.loadProjectData(cutProject)
+        let beforeRasterization = try #require(imageEditorRGBABytes(baked.document.compositedImage, width: 24, height: 20))
+        let sourceBeforeRasterization = try #require(baked.document.layers.first { $0.id == sourceID })
+        let ordinaryMaskBeforeRasterization = try #require(sourceBeforeRasterization.mask)
+        let ordinaryMaskPixels = try #require(imageEditorRGBABytes(ordinaryMaskBeforeRasterization, width: 4, height: 4))
+        #expect(sourceBeforeRasterization.image.size == CGSize(width: 4, height: 4))
+        #expect(sourceBeforeRasterization.postFilterCutoutMask?.size == CGSize(width: 12, height: 12))
+        baked.selectLayer(sourceID)
+        #expect(baked.document.selectedLayerIDs == [sourceID])
+        #expect(baked.canRasterizeSelectedLayers(.layer))
+        baked.rasterizeSelectedLayers(.layer)
+        let afterRasterization = try #require(imageEditorRGBABytes(baked.document.compositedImage, width: 24, height: 20))
+        #expect(afterRasterization == beforeRasterization)
+        let rasterizedLayer = try #require(baked.document.layers.first { $0.id == sourceID })
+        #expect(rasterizedLayer.postFilterCutoutMask == nil)
+        #expect(rasterizedLayer.smartFilters.isEmpty)
+        #expect(rasterizedLayer.image.size == CGSize(width: 12, height: 12))
+        #expect(rasterizedLayer.mask != nil)
+        #expect(rasterizedLayer.isMaskEnabled)
+        let rasterizedMask = try #require(rasterizedLayer.mask)
+        #expect(try #require(imageEditorRGBABytes(rasterizedMask, width: 4, height: 4)) == ordinaryMaskPixels)
+        let rasterizedProject = try baked.projectData()
+        baked.undo()
+        let undoneRasterization = try #require(baked.document.layers.first { $0.id == sourceID })
+        #expect(undoneRasterization.postFilterCutoutMask != nil)
+        #expect(!undoneRasterization.smartFilters.isEmpty)
+        baked.redo()
+        #expect(try #require(imageEditorRGBABytes(baked.document.compositedImage, width: 24, height: 20)) == afterRasterization)
+        let reopenedRasterization = try fixture()
+        try reopenedRasterization.loadProjectData(rasterizedProject)
+        #expect(try #require(imageEditorRGBABytes(reopenedRasterization.document.compositedImage, width: 24, height: 20)) == afterRasterization)
+
+        model.selectLayer(sourceID)
         model.scaleSelectedLayer(by: 1.5)
         let resized = try #require(model.document.layers.first { $0.id == sourceID })
         #expect(resized.postFilterCutoutMask?.size == CGSize(width: 18, height: 18))
-        model.document.selectedLayerID = sourceID
-        model.document.selectedLayerIDs = [sourceID]
+
+        let resizedProject = try model.projectData()
         #expect(model.rotateSelectedLayer(degrees: 90))
         let rotated = try #require(model.document.layers.first { $0.id == sourceID })
         #expect(rotated.postFilterCutoutMask?.size == rotated.image.size)
+        let rotatedProject = try model.projectData()
+        let rotatedPixels = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+
+        model.undo()
+        #expect(try model.projectData() == resizedProject)
+        model.redo()
+        #expect(try model.projectData() == rotatedProject)
+        let reopened = try fixture()
+        try reopened.loadProjectData(rotatedProject)
+        #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == rotatedPixels)
     }
 
     @Test func failedCutLeavesClipboardDocumentAndHistoryUntouched() throws {
