@@ -427,7 +427,10 @@ extension ImageEditorViewModel {
                 quality: normalized.quality
             )
         case .webp:
-            return scaled.bitmapData(typeIdentifier: UTType.webP.identifier, quality: normalized.quality)
+            return scaled.normalizedImportedBitmapImage().lossyBitmapData(
+                typeIdentifier: UTType.webP.identifier,
+                quality: normalized.quality
+            )
         case .pdf:
             return image.pdfData()
         case .svg:
@@ -911,7 +914,7 @@ extension ImageEditorViewModel {
                 .jpegData(quality: normalizedQuality)
         case .webp:
             guard NSImage.canWriteImage(typeIdentifier: UTType.webP.identifier) else { return nil }
-            return document.compositedImage.bitmapData(
+            return document.compositedImage.normalizedImportedBitmapImage().lossyBitmapData(
                 typeIdentifier: UTType.webP.identifier,
                 quality: normalizedQuality
             )
@@ -2078,6 +2081,20 @@ private extension NSImage {
     }
 
     func jpegData(scale: Double = 1, quality: Double) -> Data? {
+        lossyBitmapData(
+            typeIdentifier: UTType.jpeg.identifier,
+            scale: scale,
+            quality: quality,
+            flattenTransparency: true
+        )
+    }
+
+    func lossyBitmapData(
+        typeIdentifier: String,
+        scale: Double = 1,
+        quality: Double,
+        flattenTransparency: Bool = false
+    ) -> Data? {
         let outputSize = size.scaled(by: scale)
         let width = Int(outputSize.width.rounded())
         let height = Int(outputSize.height.rounded())
@@ -2097,15 +2114,17 @@ private extension NSImage {
 
         let rect = CGRect(x: 0, y: 0, width: width, height: height)
         context.interpolationQuality = .high
-        context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
-        context.fill(rect)
+        if flattenTransparency {
+            context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
+            context.fill(rect)
+        }
         context.draw(source, in: rect)
         guard let sRGBImage = context.makeImage() else { return nil }
 
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(
             output,
-            UTType.jpeg.identifier as CFString,
+            typeIdentifier as CFString,
             1,
             nil
         ) else { return nil }

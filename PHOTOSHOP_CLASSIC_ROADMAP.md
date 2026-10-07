@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1746 将普通 WebP 与 Layer Comp WebP 改为共享显式 sRGB 的有损位图编码；P3 输入输出 profile、颜色、透明度及导出事务回归通过。它只关闭现有正式格式的导出色彩缺口，不代表外部应用显示或完整色彩管理已验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)。
 - rc1745 将普通 JPEG 和 Layer Comp JPEG 导出统一为 sRGB CGContext 合成、ImageIO JPEG 编码；P3 JPEG 解码 sRGB profile 与 PNG 参考像素一致，半透明区域白底合成、0.5× 缩放及 Layer Comp 导出通过。外部软件打开和其它 profile 仍未实测，下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)。
 - rc1744 将 sRGB ICC 资源（PSD Image Resource 1039）写入 PSD，并在图层与复合图像输出时都固定为 sRGB 样本；Display P3→PSD→重读图层与原始复合平面 RGBA（含半透明像素）严格匹配参考，完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示、其它 profile 与其它格式仍待验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)。
 - rc1743 继续贯通色彩工作流到最终导出：PNG 合成图显式归一化为 sRGB 后编码；P3 源 PNG→编辑文档→Quick Export→PNG 重读 RGBA 与参考值一致，专项 1/1、Quick Export 套件 5/5 通过。JPEG/WebP/PDF/PSD 导出仍需另行验证，完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)。

@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1746 - 2026-10-08
+
+### Fixed
+- 普通 WebP 与 Layer Comp WebP 导出现在先将像素显式转换至 sRGB，再由 ImageIO 编码；WebP 透明通道继续保留，不套用 JPEG 的白底扁平化。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1746`/1746；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- Display P3 源像素的普通导出与 Layer Comp WebP 专项验证解码 profile、颜色、半透明 Alpha 和导出不改变编辑历史；编码器不可用时按现有产品保护跳过。定向 WebP 导出、JPEG 导出、版本/CLI/概览及发布合同结果见[验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)。外部应用显示、完整门槛和安装未执行，下一门槛仍为 rc1760。
+
 ## 2.12.0-rc1745 - 2026-10-08
 
 ### Fixed
