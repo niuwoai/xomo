@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1744
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1745
 
-rc1744 为 PSD 导出写入 sRGB ICC Image Resource 1039，并把图层与复合图像通道显式归一化到 sRGB；Display P3→PSD→图层及复合图像像素专项（含半透明样本）和完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示及其它 profile/导出格式仍待验证，不宣称完整色彩管理。rc1743 补齐广色域图层的 PNG 交付链：合成结果显式转换到 sRGB 后编码，P3→Quick Export PNG→重读像素专项 1/1、Quick Export 套件 5/5 通过。rc1742 修复普通广色域栅格导入归一化；rc1741 解决 P3 PSD 图层项目往返；rc1740 支持匹配模式 RGB/灰阶 PSD ICC 转换。未运行四十版本全量门槛、真实界面冒烟或覆盖安装；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1744 验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)、[rc1743 验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)、[rc1742 验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)、[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1745 将普通 JPEG 与 Layer Comp JPEG 导出统一改为 sRGB CGContext 合成和 ImageIO JPEG 编码；P3→JPEG profile/像素对照、缩放、半透明白底与 Layer Comp 专项通过。外部软件显示、PDF/WebP 与其它 profile 仍待验证。rc1744 为 PSD 导出写入 sRGB ICC Image Resource 1039，并把图层与复合图像通道显式归一化到 sRGB；Display P3→PSD→图层及复合图像像素专项（含半透明样本）和完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示及其它 profile/导出格式仍待验证，不宣称完整色彩管理。rc1743 补齐广色域图层的 PNG 交付链：合成结果显式转换到 sRGB 后编码，P3→Quick Export PNG→重读像素专项 1/1、Quick Export 套件 5/5 通过。rc1742 修复普通广色域栅格导入归一化；rc1741 解决 P3 PSD 图层项目往返；rc1740 支持匹配模式 RGB/灰阶 PSD ICC 转换。未运行四十版本全量门槛、真实界面冒烟或覆盖安装；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1745 验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)、[rc1744 验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)、[rc1743 验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)、[rc1742 验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)、[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 

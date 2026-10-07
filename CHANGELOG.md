@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1745 - 2026-10-08
+
+### Fixed
+- JPEG 导出现在先将图像和透明度合成明确转换到 sRGB，再由 ImageIO 写入带 sRGB profile 的 JPEG；普通导出和 Layer Comp 导出统一使用该路径。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1745`/1745；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- Display P3 JPEG 专项 1/1：解码为 sRGB profile，颜色与 Quick Export PNG 参考在 JPEG 容差内一致，半透明样本按白底合成，缩放为 8×8；Layer Comp JPEG 同样包含 sRGB profile。原有格式设置导出与 0.5× 40×30 尺寸回归 1/1、版本合同 10/30 断言、CLI 合同 7/24 断言、概览合同 3/26 断言及发布合同通过。外部软件显示与四十版本门槛未执行，下一完整门槛仍为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)。
+
 ## 2.12.0-rc1744 - 2026-10-08
 
 ### Fixed

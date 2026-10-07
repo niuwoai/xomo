@@ -422,7 +422,10 @@ extension ImageEditorViewModel {
         case .png:
             return scaled.normalizedImportedBitmapImage().qingtuPNGData()
         case .jpeg:
-            return scaled.flattened(on: .white).bitmapData(type: .jpeg, quality: normalized.quality)
+            return image.normalizedImportedBitmapImage().jpegData(
+                scale: normalized.scale,
+                quality: normalized.quality
+            )
         case .webp:
             return scaled.bitmapData(typeIdentifier: UTType.webP.identifier, quality: normalized.quality)
         case .pdf:
@@ -904,8 +907,8 @@ extension ImageEditorViewModel {
             return document.compositedImage.qingtuPNGData()
         case .jpeg:
             return document.compositedImage
-                .flattened(on: .white)
-                .bitmapData(type: .jpeg, quality: normalizedQuality)
+                .normalizedImportedBitmapImage()
+                .jpegData(quality: normalizedQuality)
         case .webp:
             guard NSImage.canWriteImage(typeIdentifier: UTType.webP.identifier) else { return nil }
             return document.compositedImage.bitmapData(
@@ -2074,16 +2077,45 @@ private extension NSImage {
         return output as Data
     }
 
-    func bitmapData(type: NSBitmapImageRep.FileType, quality: Double) -> Data? {
-        guard let tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffRepresentation)
-        else {
-            return nil
-        }
-        return bitmap.representation(
-            using: type,
-            properties: [.compressionFactor: min(1, max(0.1, quality))]
+    func jpegData(scale: Double = 1, quality: Double) -> Data? {
+        let outputSize = size.scaled(by: scale)
+        let width = Int(outputSize.width.rounded())
+        let height = Int(outputSize.height.rounded())
+        guard width > 0, height > 0,
+              let source = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                  data: nil,
+                  width: width,
+                  height: height,
+                  bitsPerComponent: 8,
+                  bytesPerRow: 0,
+                  space: colorSpace,
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { return nil }
+
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+        context.interpolationQuality = .high
+        context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
+        context.fill(rect)
+        context.draw(source, in: rect)
+        guard let sRGBImage = context.makeImage() else { return nil }
+
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            output,
+            UTType.jpeg.identifier as CFString,
+            1,
+            nil
+        ) else { return nil }
+        CGImageDestinationAddImage(
+            destination,
+            sRGBImage,
+            [kCGImageDestinationLossyCompressionQuality: min(1, max(0.1, quality))] as CFDictionary
         )
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return output as Data
     }
 
     func bitmapData(typeIdentifier: String, quality: Double) -> Data? {
