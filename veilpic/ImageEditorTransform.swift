@@ -1216,6 +1216,9 @@ extension ImageEditorViewModel {
         trimmedLayer.mask = trimmedLayer.mask?
             .cropped(to: alphaBounds)?
             .normalizedBitmapImage()
+        trimmedLayer.postFilterCutoutMask = trimmedLayer.postFilterCutoutMask?
+            .cropped(to: alphaBounds)?
+            .normalizedBitmapImage()
         if let vectorMask = trimmedLayer.vectorMask {
             trimmedLayer.vectorMask = vectorMask.offsetPath(
                 by: CGSize(width: -alphaBounds.minX, height: -alphaBounds.minY)
@@ -1396,6 +1399,7 @@ extension ImageEditorViewModel {
                 if originalLayer.isMaskLinked {
                     rotatedLayer.mask = originalLayer.mask?.rotated(degrees: degrees)
                 }
+                rotatedLayer.postFilterCutoutMask = originalLayer.postFilterCutoutMask?.rotated(degrees: degrees)
             }
             rotatedLayer.frame = CGRect(
                 x: rotatedCenter.x - rotatedLayer.image.size.width / 2,
@@ -1546,6 +1550,7 @@ extension ImageEditorViewModel {
             if originalLayer.isMaskLinked {
                 flippedLayer.mask = originalLayer.mask?.flipped(horizontal: horizontal)
             }
+            flippedLayer.postFilterCutoutMask = originalLayer.postFilterCutoutMask?.flipped(horizontal: horizontal)
 
             if horizontal {
                 flippedLayer.frame = CGRect(

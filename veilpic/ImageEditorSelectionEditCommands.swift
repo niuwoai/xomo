@@ -1525,9 +1525,7 @@ extension ImageEditorViewModel {
         pushUndo()
         if let cutoutMask {
             backing = originalLayer
-            backing.mask = cutoutMask
-            backing.isMaskEnabled = true
-            backing.isMaskLinked = true
+            backing.postFilterCutoutMask = cutoutMask
         } else if let clearedImage {
             backing.image = clearedImage.normalizedBitmapImage()
         }
@@ -1565,13 +1563,10 @@ extension ImageEditorViewModel {
         for selection: ImageEditorSelection,
         layer: ImageEditorLayer
     ) -> NSImage? {
-        guard layer.maskDensity == 1,
-              layer.maskFeather == 0,
-              layer.mask == nil || (layer.isMaskEnabled && layer.isMaskLinked),
-              let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
-                width: max(layer.image.size.width, layer.mask?.size.width ?? 0),
-                height: max(layer.image.size.height, layer.mask?.size.height ?? 0)
-              ))
+        guard let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+            width: max(layer.image.size.width, layer.mask?.size.width ?? 0),
+            height: max(layer.image.size.height, layer.mask?.size.height ?? 0)
+        ))
         else { return nil }
 
         let width = Int(outputSize.width)
@@ -1585,17 +1580,10 @@ extension ImageEditorViewModel {
               let selectedAlpha = selectedImage.alphaMask(width: width, height: height)?.alpha
         else { return nil }
 
-        let currentAlpha: [UInt8]
-        if let existingMask = layer.mask {
-            guard let alpha = existingMask.alphaMask(width: width, height: height)?.alpha else { return nil }
-            currentAlpha = alpha
-        } else {
-            currentAlpha = [UInt8](repeating: .max, count: width * height)
-        }
-        guard currentAlpha.count == selectedAlpha.count else { return nil }
+        guard selectedAlpha.count == width * height else { return nil }
 
-        let cutoutAlpha = zip(currentAlpha, selectedAlpha).map { current, selected in
-            UInt8((Double(current) * Double(UInt8.max - selected) / Double(UInt8.max)).rounded())
+        let cutoutAlpha = selectedAlpha.map { selected in
+            UInt8(UInt8.max - selected)
         }
         return NSImage.alphaMaskImage(width: width, height: height, alpha: cutoutAlpha)
     }

@@ -25,6 +25,7 @@ struct ImageEditorProjectSaveMetadata: Equatable {
         for index in metadata.layers.indices {
             metadata.layers[index].imageData = nil
             metadata.layers[index].maskData = nil
+            metadata.layers[index].postFilterCutoutMaskData = nil
             metadata.layers[index].xomoFigmaImageFillSourceImageData = nil
         }
         if var sources = metadata.smartObjectSources {

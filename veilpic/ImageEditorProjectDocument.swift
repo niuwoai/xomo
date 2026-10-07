@@ -49,7 +49,7 @@ struct ImageEditorProjectDocument: Codable {
     /// so existing documents remain safe to open after the product rename.
     static let fileExtension = "xomoproject"
     static let legacyFileExtension = "qpicproject"
-    static let formatVersion = 10
+    static let formatVersion = 11
 
     var formatVersion: Int
     var appVersion: String
@@ -291,6 +291,7 @@ struct ImageEditorProjectLayer: Codable {
     var maskDensity: Double
     var maskFeather: Double
     var maskFeatherSamplingScale: Double?
+    var postFilterCutoutMaskData: Data?
     var vectorMask: ImageEditorProjectShapeContent?
     var isVectorMaskEnabled: Bool
     var isVectorMaskInverted: Bool?
@@ -356,6 +357,12 @@ struct ImageEditorProjectLayer: Codable {
             }
             return data
         }
+        let encodedPostFilterCutoutMask = try layer.postFilterCutoutMask.map { mask in
+            guard let data = rasterEncoder(mask) else {
+                throw ImageEditorProjectDocumentError.imageEncodingFailed(layer.name)
+            }
+            return data
+        }
 
         id = layer.id
         name = layer.name
@@ -366,6 +373,7 @@ struct ImageEditorProjectLayer: Codable {
         maskDensity = layer.maskDensity
         maskFeather = layer.maskFeather
         maskFeatherSamplingScale = layer.maskFeatherSamplingScale
+        postFilterCutoutMaskData = encodedPostFilterCutoutMask
         vectorMask = layer.vectorMask.map(ImageEditorProjectShapeContent.init(content:))
         isVectorMaskEnabled = layer.isVectorMaskEnabled
         isVectorMaskInverted = layer.isVectorMaskInverted
@@ -436,6 +444,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.maskDensity = maskDensity
         layer.maskFeather = maskFeather
         layer.maskFeatherSamplingScale = maskFeatherSamplingScale
+        layer.postFilterCutoutMask = try restoredPostFilterCutoutMask()
         layer.vectorMask = vectorMask?.content
         layer.isVectorMaskEnabled = isVectorMaskEnabled
         layer.isVectorMaskInverted = isVectorMaskInverted ?? false
@@ -492,6 +501,14 @@ struct ImageEditorProjectLayer: Codable {
     private func restoredMask() throws -> NSImage? {
         guard let maskData else { return nil }
         guard let mask = ImageEditorProjectRasterData.decodedImage(maskData) else {
+            throw ImageEditorProjectDocumentError.imageDecodingFailed(name)
+        }
+        return mask
+    }
+
+    private func restoredPostFilterCutoutMask() throws -> NSImage? {
+        guard let postFilterCutoutMaskData else { return nil }
+        guard let mask = ImageEditorProjectRasterData.decodedImage(postFilterCutoutMaskData) else {
             throw ImageEditorProjectDocumentError.imageDecodingFailed(name)
         }
         return mask

@@ -234,14 +234,18 @@ struct ImageEditorSelectionCutSamplingTests {
     }
 
     @Test(arguments: FilteredCutMaskVariation.allCases)
-    func cuttingFilteredLayerWithUnsupportedRasterMaskFailsAtomically(
+    func cuttingFilteredLayerWithComplexRasterMaskPreservesCompositeAndRoundTrips(
         variation: FilteredCutMaskVariation
     ) throws {
         let model = try fixture()
         model.document.layers[0].mask = try #require(NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
             NSColor.white.setFill()
-            if variation == .reducedDensity { NSColor.black.setFill() }
             rect.fill()
+            if variation == .reducedDensity { NSColor.black.setFill() }
+            if variation == .feathered {
+                NSColor.black.setFill()
+                CGRect(x: 2, y: 0, width: 2, height: 4).fill()
+            }
         })
         switch variation {
         case .reducedDensity:
@@ -266,14 +270,141 @@ struct ImageEditorSelectionCutSamplingTests {
         let originalProject = try model.projectData()
         let originalUndoCount = model.undoStack.count
         let originalLayerCount = model.document.layers.count
+        let sourceID = try #require(model.document.selectedLayerID)
 
         model.cutSelectionToNewLayer()
 
+        #expect(model.undoStack.count == originalUndoCount + 1)
+        #expect(model.document.layers.count == originalLayerCount + 1)
+        #expect(model.document.layers.first { $0.id == sourceID }?.maskDensity == (variation == .reducedDensity ? 0.5 : 1))
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == originalComposite)
+        let source = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(source.postFilterCutoutMask != nil)
+        #expect(source.isMaskLinked == (variation != .unlinked))
+        model.undo()
         #expect(try model.projectData() == originalProject)
-        #expect(model.undoStack.count == originalUndoCount)
-        #expect(model.document.layers.count == originalLayerCount)
-        #expect(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20) == originalComposite)
-        #expect(model.statusText == L10n.text("imageEditor.status.operationFailed"))
+        model.redo()
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == originalComposite)
+        let reopened = try fixture()
+        try reopened.loadProjectData(model.projectData())
+        let restored = try #require(reopened.document.layers.first { $0.id == sourceID })
+        #expect(restored.postFilterCutoutMask != nil)
+        #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == originalComposite)
+    }
+
+    @Test func filteredCutoutMaskSurvivesLayerCompAndPSDExport() throws {
+        let model = try fixture()
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 1,
+                                   settings: .init(gaussianBlurRadius: 2))
+        ]
+        let sourceID = try #require(model.document.selectedLayerID)
+        let originalComposite = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+        model.cutSelectionToNewLayer()
+        model.addLayerComp(named: "Cutout")
+        let compID = try #require(model.document.selectedLayerCompID)
+        let sourceIndex = try #require(model.document.layers.firstIndex { $0.id == sourceID })
+        let savedCutout = try #require(model.document.layers[sourceIndex].postFilterCutoutMask)
+        model.document.layers[sourceIndex].postFilterCutoutMask = nil
+        model.document.layerComps.append(ImageEditorLayerComp.capture(name: "Other", document: model.document))
+        model.document.selectedLayerCompID = model.document.layerComps.last?.id
+        #expect(model.applyLayerComp(compID))
+        let restoredCutout = try #require(model.document.layers[sourceIndex].postFilterCutoutMask)
+        #expect(imageEditorRGBABytes(restoredCutout, width: Int(savedCutout.size.width), height: Int(savedCutout.size.height))
+            == imageEditorRGBABytes(savedCutout, width: Int(savedCutout.size.width), height: Int(savedCutout.size.height)))
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == originalComposite)
+
+        let sourceComposite = try #require(imageEditorRGBABytes(
+            model.document.compositedImage(includingOnly: [sourceID]), width: 24, height: 20
+        ))
+        let data = try ImageEditorPSDCodec.encode(document: model.document)
+        let decoded = try ImageEditorPSDCodec.decode(data, sourceName: "cutout.psd")
+        let decodedComposite = try #require(imageEditorRGBABytes(decoded.compositedImage, width: 24, height: 20))
+        let originalAlpha = stride(from: 3, to: originalComposite.count, by: 4).map { originalComposite[$0] }
+        let decodedAlpha = stride(from: 3, to: decodedComposite.count, by: 4).map { decodedComposite[$0] }
+        #expect(decodedAlpha == originalAlpha)
+        let decodedSourceID = try #require(decoded.layers.first { $0.name == "Cut source" }?.id)
+        let decodedSource = try #require(imageEditorRGBABytes(
+            decoded.compositedImage(includingOnly: [decodedSourceID]), width: 24, height: 20
+        ))
+        #expect(Array(stride(from: 3, to: decodedSource.count, by: 4).map { decodedSource[$0] })
+            == Array(stride(from: 3, to: sourceComposite.count, by: 4).map { sourceComposite[$0] }))
+    }
+
+    @Test func postFilterCutoutContributesToAdjustmentAndClippingMasks() throws {
+        let model = try fixture()
+        let sourceID = try #require(model.document.selectedLayerID)
+        model.document.layers[0].postFilterCutoutMask = NSImage.rendered(size: CGSize(width: 4, height: 4)) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor.white.setFill()
+            CGRect(x: 2, y: 0, width: 2, height: 4).fill()
+        }
+        let adjustmentMask = try #require(model.document.localEffectMask(forLayerAt: 0))
+        #expect(imageEditorRGBABytes(adjustmentMask, width: 4, height: 4)?.contains(0) == true)
+        #expect(imageEditorRGBABytes(adjustmentMask, width: 4, height: 4)?.contains(255) == true)
+
+        var clipping = ImageEditorLayer.blank(name: "Clip", size: CGSize(width: 4, height: 4))
+        clipping.isClippingMask = true
+        clipping.frame = model.document.layers[0].frame
+        model.document.layers.append(clipping)
+        let clipMask = try #require(model.document.clippingBaseCanvasMask(forLayerAt: 1))
+        #expect(imageEditorRGBABytes(clipMask, width: 24, height: 20)?.contains(0) == true)
+        #expect(imageEditorRGBABytes(clipMask, width: 24, height: 20)?.contains(255) == true)
+        #expect(model.document.layers.first { $0.id == sourceID }?.postFilterCutoutMask != nil)
+    }
+
+    @Test func legacyProjectWithoutPostFilterCutoutKeyRestoresNil() throws {
+        let model = try fixture()
+        var projectObject = try #require(JSONSerialization.jsonObject(with: model.projectData()) as? [String: Any])
+        projectObject["formatVersion"] = ImageEditorProjectDocument.formatVersion - 1
+        var layers = try #require(projectObject["layers"] as? [[String: Any]])
+        for index in layers.indices {
+            layers[index].removeValue(forKey: "postFilterCutoutMaskData")
+        }
+        projectObject["layers"] = layers
+        let legacyData = try JSONSerialization.data(withJSONObject: projectObject)
+
+        let reopened = try fixture()
+        try reopened.loadProjectData(legacyData)
+        #expect(reopened.document.layers.allSatisfy { $0.postFilterCutoutMask == nil })
+    }
+
+    @Test func rasterizingFilteredCutoutLayerBakesPostFilterCutout() throws {
+        let model = try fixture()
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 1,
+                                   settings: .init(gaussianBlurRadius: 2))
+        ]
+        let sourceID = try #require(model.document.selectedLayerID)
+        model.cutSelectionToNewLayer()
+        model.selectLayer(sourceID)
+        let before = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+        model.rasterizeSelectedLayers(.layer)
+        let rasterized = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(rasterized.postFilterCutoutMask == nil)
+        #expect(rasterized.smartFilters.isEmpty)
+        #expect(try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20)) == before)
+    }
+
+    @Test func filteredCutoutMaskFollowsLayerResizeAndRotation() throws {
+        let model = try fixture()
+        model.document.layers[0].smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 1,
+                                   settings: .init(gaussianBlurRadius: 2))
+        ]
+        let sourceID = try #require(model.document.selectedLayerID)
+        model.cutSelectionToNewLayer()
+        model.document.selectedLayerID = sourceID
+        model.document.selectedLayerIDs = [sourceID]
+        model.scaleSelectedLayer(by: 1.5)
+        let resized = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(resized.postFilterCutoutMask?.size == CGSize(width: 18, height: 18))
+        model.document.selectedLayerID = sourceID
+        model.document.selectedLayerIDs = [sourceID]
+        #expect(model.rotateSelectedLayer(degrees: 90))
+        let rotated = try #require(model.document.layers.first { $0.id == sourceID })
+        #expect(rotated.postFilterCutoutMask?.size == rotated.image.size)
     }
 
     @Test func failedCutLeavesClipboardDocumentAndHistoryUntouched() throws {

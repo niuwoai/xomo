@@ -48,14 +48,16 @@ extension ImageEditorLayer {
     /// source pixels nor the editable layer kind/project data are mutated.
     func highResolutionMaskRenderingLayer() -> (layer: ImageEditorLayer, scale: CGFloat)? {
         guard !isGroup, image.size.width > 0, image.size.height > 0,
-              (isMaskEnabled && mask != nil) || (isVectorMaskEnabled && vectorMask != nil) else { return nil }
+              (isMaskEnabled && mask != nil) || (isVectorMaskEnabled && vectorMask != nil)
+                || postFilterCutoutMask != nil else { return nil }
         let bounds = frame.standardized
         let rasterSize = isMaskEnabled ? (mask?.size ?? .zero) : .zero
+        let cutoutSize = postFilterCutoutMask?.size ?? .zero
         // Only stored raster detail needs promotion; enlarging the frame alone
         // cannot recover bitmap samples. Vector masks remain resolution-independent.
         let vectorSize = isVectorMaskEnabled && vectorMask != nil ? bounds.size : .zero
-        let requiredSize = CGSize(width: max(image.size.width, vectorSize.width, rasterSize.width),
-                                  height: max(image.size.height, vectorSize.height, rasterSize.height))
+        let requiredSize = CGSize(width: max(image.size.width, vectorSize.width, rasterSize.width, cutoutSize.width),
+                                  height: max(image.size.height, vectorSize.height, rasterSize.height, cutoutSize.height))
         let requiredScale = max(requiredSize.width / image.size.width, requiredSize.height / image.size.height)
         // Right-angle rotation/reload can leave a ratio like 1.0000000000000002.
         // Do not double the render grid for floating-point roundoff alone.
@@ -84,8 +86,11 @@ extension ImageEditorLayer {
         vectorSource.isMaskLinked = false
         rendering.mask = nil
         guard rendering.compensateUnlinkedLocalMasks(from: vectorSource) else { return nil }
+        // Keep raster-mask feather/density operations on their authored grid;
+        // the render copy composites that mask onto the promoted pixels.
         rendering.mask = mask
         rendering.maskFeatherSamplingScale = maskFeatherSamplingScale
+        rendering.postFilterCutoutMask = postFilterCutoutMask?.resized(to: outputSize)
         rendering.style = style.scaled(by: scale)
         // The copy already meets the requested sampling size, so scale > 1 above
         // prevents recursion without using the user's link state as a sentinel.

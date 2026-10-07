@@ -1049,6 +1049,7 @@ enum ImageEditorPSDCodec {
         var layerWithoutMasks = layer
         layerWithoutMasks.mask = nil
         layerWithoutMasks.vectorMask = nil
+        layerWithoutMasks.postFilterCutoutMask = nil
         let rendered = layerWithoutMasks.renderedCompositingImage(
             globalLightAngle: document.globalLightAngle
         )
@@ -1068,7 +1069,7 @@ enum ImageEditorPSDCodec {
         ]
         let vectorMask = exportVectorMask(layer: layer)
         let vectorStroke = exportVectorStroke(layer: layer)
-        let mask = layer.mask != nil || vectorMask == nil
+        let mask = layer.mask != nil || vectorMask == nil || layer.postFilterCutoutMask != nil
             ? exportMask(layer: layer, frame: frame)
             : nil
         if let mask { channels.append(PSDExportChannel(identifier: -2, data: mask.alpha)) }
@@ -1464,7 +1465,18 @@ enum ImageEditorPSDCodec {
     private static func exportMask(layer: ImageEditorLayer, frame: CGRect) -> PSDExportMask? {
         var maskSourceLayer = layer
         let isEnabled: Bool
-        if layer.mask != nil {
+        if let postFilterCutoutMask = layer.postFilterCutoutMask {
+            let baseLayerMask = layer.effectiveMask ?? NSImage.opaqueMask(size: layer.image.size)
+            guard let combinedMask = baseLayerMask.compositedWithAlphaMask(postFilterCutoutMask) else { return nil }
+            maskSourceLayer.mask = combinedMask
+            maskSourceLayer.maskDensity = 1
+            maskSourceLayer.maskFeather = 0
+            maskSourceLayer.maskFeatherSamplingScale = nil
+            maskSourceLayer.isMaskEnabled = true
+            maskSourceLayer.vectorMask = nil
+            maskSourceLayer.isVectorMaskEnabled = false
+            isEnabled = true
+        } else if layer.mask != nil {
             maskSourceLayer.vectorMask = nil
             maskSourceLayer.isMaskEnabled = true
             isEnabled = layer.isMaskEnabled
