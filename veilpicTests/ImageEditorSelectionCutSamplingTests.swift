@@ -269,6 +269,46 @@ struct ImageEditorSelectionCutSamplingTests {
         #expect(firstCutProject != firstRedoProject)
     }
 
+    @Test func featheredLassoClipboardCutKeepsFilterOutputOutsideSelection() throws {
+        let model = try fixture()
+        let filter = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 1,
+            settings: .init(gaussianBlurRadius: 2)
+        )
+        model.document.layers[0].smartFilters = [filter]
+        model.feather = 1
+        model.document.selection = try #require(ImageEditorSelection.polygon([
+            CGPoint(x: 6, y: 6),
+            CGPoint(x: 18, y: 6),
+            CGPoint(x: 12, y: 18)
+        ]))
+        let sourceID = try #require(model.document.selectedLayerID)
+        let beforeProject = try model.projectData()
+        let before = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+        let pasteboard = isolatedPasteboard()
+        defer { pasteboard.clearContents() }
+
+        #expect(model.cutSelectionToClipboard(to: pasteboard))
+
+        let after = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 24, height: 20))
+        let alphaAt = { (pixels: [UInt8], x: Int, y: Int) in pixels[(y * 24 + x) * 4 + 3] }
+        #expect(alphaAt(after, 3, 3) == alphaAt(before, 3, 3))
+        #expect(alphaAt(after, 12, 11) <= 4)
+        #expect(alphaAt(after, 12, 6) > 0)
+        #expect(alphaAt(after, 12, 6) < alphaAt(before, 12, 6))
+        #expect(model.document.layers.first { $0.id == sourceID }?.smartFilters == [filter])
+
+        let cutProject = try model.projectData()
+        model.undo()
+        #expect(try model.projectData() == beforeProject)
+        model.redo()
+        #expect(try model.projectData() == cutProject)
+        let reopened = try fixture()
+        try reopened.loadProjectData(cutProject)
+        #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == after)
+    }
+
     @Test(arguments: [false, true])
     func cuttingSelectionFromFilteredLayerPreservesCompositePixels(hasRasterMask: Bool) throws {
         let model = try fixture()
