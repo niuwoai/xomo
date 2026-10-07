@@ -213,6 +213,8 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
     var maskFeatherSamplingScale: Double?
     var hasMaskSnapshot: Bool
     var maskData: Data?
+    var hasPostFilterCutoutMaskSnapshot: Bool
+    var postFilterCutoutMaskData: Data?
     var isVectorMaskEnabled: Bool
     var isVectorMaskInverted: Bool
     var style: ImageEditorProjectLayerStyle
@@ -250,6 +252,8 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         case maskFeatherSamplingScale
         case hasMaskSnapshot
         case maskData
+        case hasPostFilterCutoutMaskSnapshot
+        case postFilterCutoutMaskData
         case isVectorMaskEnabled
         case isVectorMaskInverted
         case style
@@ -288,6 +292,8 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         maskFeatherSamplingScale: Double? = nil,
         hasMaskSnapshot: Bool = false,
         maskData: Data? = nil,
+        hasPostFilterCutoutMaskSnapshot: Bool = false,
+        postFilterCutoutMaskData: Data? = nil,
         isVectorMaskEnabled: Bool,
         isVectorMaskInverted: Bool = false,
         style: ImageEditorProjectLayerStyle,
@@ -324,6 +330,8 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         self.maskFeatherSamplingScale = maskFeatherSamplingScale
         self.hasMaskSnapshot = hasMaskSnapshot
         self.maskData = maskData
+        self.hasPostFilterCutoutMaskSnapshot = hasPostFilterCutoutMaskSnapshot
+        self.postFilterCutoutMaskData = postFilterCutoutMaskData
         self.isVectorMaskEnabled = isVectorMaskEnabled
         self.isVectorMaskInverted = isVectorMaskInverted
         self.style = style
@@ -363,6 +371,8 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         maskFeatherSamplingScale = try container.decodeIfPresent(Double.self, forKey: .maskFeatherSamplingScale)
         hasMaskSnapshot = try container.decodeIfPresent(Bool.self, forKey: .hasMaskSnapshot) ?? false
         maskData = try container.decodeIfPresent(Data.self, forKey: .maskData)
+        hasPostFilterCutoutMaskSnapshot = try container.decodeIfPresent(Bool.self, forKey: .hasPostFilterCutoutMaskSnapshot) ?? false
+        postFilterCutoutMaskData = try container.decodeIfPresent(Data.self, forKey: .postFilterCutoutMaskData)
         isVectorMaskEnabled = try container.decodeIfPresent(Bool.self, forKey: .isVectorMaskEnabled) ?? true
         isVectorMaskInverted = try container.decodeIfPresent(Bool.self, forKey: .isVectorMaskInverted) ?? false
         style = try container.decodeIfPresent(ImageEditorProjectLayerStyle.self, forKey: .style)
@@ -500,6 +510,8 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
                     maskFeatherSamplingScale: layer.maskFeatherSamplingScale,
                     hasMaskSnapshot: true,
                     maskData: layer.mask?.qingtuPNGData(),
+                    hasPostFilterCutoutMaskSnapshot: true,
+                    postFilterCutoutMaskData: layer.postFilterCutoutMask?.qingtuPNGData(),
                     isVectorMaskEnabled: layer.isVectorMaskEnabled,
                     isVectorMaskInverted: layer.isVectorMaskInverted,
                     style: ImageEditorProjectLayerStyle(style: layer.style),
@@ -1510,7 +1522,7 @@ struct ImageEditorDocument {
                 kind: adjustment.kind,
                 amount: adjustment.amount,
                 settings: layer.adjustmentSettings,
-                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask),
+                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveCompositingFilterMask, groupMask: groupMask),
                 opacity: layer.opacity * groupOpacity
             ) ?? canvas
         }
@@ -1519,7 +1531,7 @@ struct ImageEditorDocument {
                 kind: filter.kind,
                 intensity: filter.intensity,
                 settings: layer.filterSettings,
-                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask),
+                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveCompositingFilterMask, groupMask: groupMask),
                 opacity: layer.opacity * groupOpacity
             ) ?? canvas
         }
@@ -1720,7 +1732,7 @@ struct ImageEditorDocument {
 
     func localEffectMask(forLayerAt index: Int) -> NSImage? {
         guard layers.indices.contains(index) else { return nil }
-        let layerMask = layers[index].effectiveMask
+        let layerMask = layers[index].effectiveCompositingMask
         guard let clippingMask = clippingBaseCanvasMask(forLayerAt: index) else { return layerMask }
         return combinedCanvasMask(layerMask, clippingMask)
     }

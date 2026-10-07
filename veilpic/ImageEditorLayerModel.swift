@@ -16,6 +16,9 @@ struct ImageEditorLayer: Identifiable {
     var maskFeather: Double = 0
     /// Additional bitmap samples per original feather unit; nil is legacy 1x.
     var maskFeatherSamplingScale: Double?
+    /// A local alpha cut applied after live filters and ordinary masks.
+    /// Unlike the editable raster mask, this cutout always follows layer pixels.
+    var postFilterCutoutMask: NSImage?
     var vectorMask: ImageEditorShapeContent?
     var isVectorMaskEnabled = true
     var isVectorMaskInverted = false
@@ -486,6 +489,30 @@ struct ImageEditorLayer: Identifiable {
         }
     }
 
+    /// Mask used by compositing-only paths such as adjustment/filter layers and
+    /// clipping bases. Keep the ordinary editable mask separate from the
+    /// post-filter cutout in the layer model, but combine them at this boundary.
+    var effectiveCompositingMask: NSImage? {
+        guard let postFilterCutoutMask else { return effectiveMask }
+        let baseMask = effectiveMask ?? NSImage.opaqueMask(size: image.size)
+        return baseMask.compositedWithAlphaMask(postFilterCutoutMask)
+    }
+
+    var effectiveCompositingFilterMask: NSImage? {
+        guard let postFilterCutoutMask else { return effectiveMask }
+        let baseMask = effectiveMask ?? NSImage.opaqueMask(size: image.size)
+        guard let combined = baseMask.compositedWithAlphaMask(postFilterCutoutMask) else { return nil }
+        var resolved = self
+        resolved.mask = combined
+        resolved.maskDensity = 1
+        resolved.maskFeather = 0
+        resolved.maskFeatherSamplingScale = nil
+        resolved.vectorMask = nil
+        resolved.isMaskEnabled = true
+        resolved.isVectorMaskEnabled = false
+        return resolved.effectiveMask
+    }
+
     private func vectorMaskImage() -> NSImage? {
         vectorMask?.renderedVectorMask(
             size: image.size,
@@ -562,21 +589,27 @@ struct ImageEditorLayer: Identifiable {
             return result
         }
         let sourceImage = contentImage
-        guard let mask = effectiveMask else { return sourceImage }
-        return NSImage.rendered(size: sourceImage.size) { _ in
-            sourceImage.draw(
-                in: CGRect(origin: .zero, size: sourceImage.size),
-                from: CGRect(origin: .zero, size: sourceImage.size),
-                operation: .copy,
-                fraction: 1
-            )
-            mask.draw(
-                in: CGRect(origin: .zero, size: sourceImage.size),
-                from: CGRect(origin: .zero, size: mask.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        } ?? sourceImage
+        let baseImage: NSImage
+        if let mask = effectiveMask {
+            baseImage = NSImage.rendered(size: sourceImage.size) { _ in
+                sourceImage.draw(
+                    in: CGRect(origin: .zero, size: sourceImage.size),
+                    from: CGRect(origin: .zero, size: sourceImage.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+                mask.draw(
+                    in: CGRect(origin: .zero, size: sourceImage.size),
+                    from: CGRect(origin: .zero, size: mask.size),
+                    operation: .destinationIn,
+                    fraction: 1
+                )
+            } ?? sourceImage
+        } else {
+            baseImage = sourceImage
+        }
+        guard let postFilterCutoutMask else { return baseImage }
+        return baseImage.applyingAlphaMask(postFilterCutoutMask) ?? baseImage
     }
 
     var hasLayerEffects: Bool {

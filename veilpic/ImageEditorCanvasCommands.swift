@@ -517,6 +517,7 @@ private extension ImageEditorLayer {
         let targetLayerSize = frame.size.scaled(scaleX: scaleX, scaleY: scaleY)
         layer.image = image.resized(to: targetLayerSize) ?? NSImage.transparent(size: targetLayerSize)
         layer.mask = mask?.resized(to: targetLayerSize)
+        layer.postFilterCutoutMask = postFilterCutoutMask?.resized(to: targetLayerSize)
         layer.vectorMask = vectorMask?.scaled(scaleX: scaleX, scaleY: scaleY)
         layer.style = style.scaled(by: (scaleX + scaleY) / 2)
 

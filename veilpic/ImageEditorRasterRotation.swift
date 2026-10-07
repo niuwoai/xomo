@@ -41,6 +41,11 @@ extension ImageEditorLayer {
         } else if !rotated.compensateUnlinkedLocalMasks(from: self) {
             return nil
         }
+        if let cutoutMask = postFilterCutoutMask {
+            guard let source = cutoutMask.rotationSource(size: sourceSize),
+                  let rotatedMask = source.rotated(degrees: -angle) else { return nil }
+            rotated.postFilterCutoutMask = rotatedMask
+        }
         return rotated
     }
 }

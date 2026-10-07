@@ -391,6 +391,10 @@ enum ImageEditorLayerCompApplication {
                     document.layers[index].mask = nil
                 }
             }
+            if state.hasPostFilterCutoutMaskSnapshot {
+                document.layers[index].postFilterCutoutMask = state.postFilterCutoutMaskData
+                    .flatMap(ImageEditorProjectRasterData.decodedImage)
+            }
             document.layers[index].isVectorMaskEnabled = state.isVectorMaskEnabled
             document.layers[index].isVectorMaskInverted = state.isVectorMaskInverted
             if comp.capturesAppearance {
@@ -508,6 +512,7 @@ enum ImageEditorLayerCompApplication {
               scalarMatches(layer.maskFeather, max(0, min(80, state.maskFeather))),
               scalarMatches(ImageEditorMaskSampling.featherScale(layer.maskFeatherSamplingScale), ImageEditorMaskSampling.featherScale(state.maskFeatherSamplingScale)),
               maskMatches(layer.mask, state: state),
+              postFilterCutoutMaskMatches(layer.postFilterCutoutMask, state: state),
               layer.isVectorMaskEnabled == state.isVectorMaskEnabled,
               layer.isVectorMaskInverted == state.isVectorMaskInverted
         else { return false }
@@ -554,6 +559,15 @@ enum ImageEditorLayerCompApplication {
         guard state.hasMaskSnapshot else { return true }
         guard let stateData = state.maskData else { return mask == nil }
         return mask?.qingtuPNGData() == stateData
+    }
+
+    private static func postFilterCutoutMaskMatches(
+        _ mask: NSImage?,
+        state: ImageEditorLayerCompLayerState
+    ) -> Bool {
+        guard state.hasPostFilterCutoutMaskSnapshot else { return true }
+        guard let data = state.postFilterCutoutMaskData else { return mask == nil }
+        return mask?.qingtuPNGData() == data
     }
 
     private static func scalarMatches(_ lhs: Double, _ rhs: Double) -> Bool {

@@ -24,6 +24,15 @@ extension ImageEditorViewModel {
                 guard let original = sources[layer.id],
                       resized.compensateUnlinkedLocalMasks(from: original) else { return nil }
             }
+            if let original = sources[layer.id],
+               let cutout = original.postFilterCutoutMask,
+               !layer.isGroup {
+                guard let resizedCutout = cutout.resized(to: CGSize(
+                    width: max(1, cutout.size.width * frame.width / max(original.frame.width, 1)),
+                    height: max(1, cutout.size.height * frame.height / max(original.frame.height, 1))
+                )) else { return nil }
+                resized.postFilterCutoutMask = resizedCutout
+            }
             changes[layer.id] = resized
         }
         return changes

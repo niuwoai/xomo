@@ -165,12 +165,17 @@ extension ImageEditorViewModel {
         case .layer:
             if source.isSmartObject {
                 output = rasterizedSmartObject(source)
-            } else if source.isText || source.isShape || isGeneratedFillLayer(source) || source.hasSmartFilters {
-                output.image = source.contentImage.normalizedBitmapImage()
+            } else if source.isText || source.isShape || isGeneratedFillLayer(source) || source.hasSmartFilters
+                        || source.postFilterCutoutMask != nil {
+                let content = source.contentImage.applyingAlphaMask(
+                    source.postFilterCutoutMask ?? .opaqueMask(size: source.image.size)
+                ) ?? source.contentImage
+                output.image = content.normalizedBitmapImage()
                 output.kind = .pixel
                 output.smartFilters = []
             }
             rasterizeVectorMaskContent(in: &output)
+            output.postFilterCutoutMask = nil
         case .vectorMask:
             rasterizeVectorMaskContent(in: &output)
         }
@@ -212,13 +217,17 @@ extension ImageEditorViewModel {
             height: max(1, frame.height.rounded())
         )
         let originalSize = source.image.size
-        output.image = (source.contentImage.resized(to: targetSize) ?? source.contentImage).normalizedBitmapImage()
+        let content = source.contentImage.applyingAlphaMask(
+            source.postFilterCutoutMask ?? .opaqueMask(size: source.image.size)
+        ) ?? source.contentImage
+        output.image = (content.resized(to: targetSize) ?? content).normalizedBitmapImage()
         output.mask = source.mask?.resized(to: targetSize)?.normalizedBitmapImage()
         output.vectorMask = source.vectorMask.map {
             scaledVectorMask($0, from: originalSize, to: targetSize)
         }
         output.kind = .pixel
         output.smartFilters = []
+        output.postFilterCutoutMask = nil
         return output
     }
 
@@ -236,6 +245,7 @@ extension ImageEditorViewModel {
         output.isMaskLinked = true
         output.maskDensity = 1
         output.maskFeather = 0
+        output.postFilterCutoutMask = nil
         output.isVectorMaskEnabled = true
         output.isVectorMaskInverted = false
         output.style = ImageEditorLayerStyle()

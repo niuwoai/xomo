@@ -1384,10 +1384,18 @@ extension ImageEditorViewModel {
         if shouldBakeMask {
             guard let mask else { return nil }
             let sourceImage = layer.contentImage
-            guard let bakedImage = sourceImage.applyingAlphaMask(mask) else { return nil }
+            let combinedMask: NSImage
+            if let cutout = layer.postFilterCutoutMask {
+                guard let combined = mask.compositedWithAlphaMask(cutout) else { return nil }
+                combinedMask = combined
+            } else {
+                combinedMask = mask
+            }
+            guard let bakedImage = sourceImage.applyingAlphaMask(combinedMask) else { return nil }
             layer.image = bakedImage.normalizedBitmapImage()
             layer.kind = .pixel
             layer.smartFilters = []
+            layer.postFilterCutoutMask = nil
             layer.xomoFigmaImageFill = nil
             layer.xomoFigmaImageFillSourceImage = nil
         }

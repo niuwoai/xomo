@@ -11708,6 +11708,7 @@ final class ImageEditorViewModel: ObservableObject {
         merged.isVisible = lower.isVisible || adjustmentLayer.isVisible
         merged.isLocked = false
         merged.mask = nil
+        merged.postFilterCutoutMask = nil
         merged.style = ImageEditorLayerStyle()
         merged.smartFilters = []
         merged.kind = .pixel
@@ -11747,6 +11748,7 @@ final class ImageEditorViewModel: ObservableObject {
         merged.isVisible = lower.isVisible || filterLayer.isVisible
         merged.isLocked = false
         merged.mask = nil
+        merged.postFilterCutoutMask = nil
         merged.style = ImageEditorLayerStyle()
         merged.smartFilters = []
         merged.kind = .pixel
@@ -11777,6 +11779,7 @@ final class ImageEditorViewModel: ObservableObject {
         merged.isVisible = lower.isVisible || upper.isVisible
         merged.isLocked = false
         merged.mask = nil
+        merged.postFilterCutoutMask = nil
         merged.style = ImageEditorLayerStyle()
         merged.smartFilters = []
         merged.kind = .pixel
