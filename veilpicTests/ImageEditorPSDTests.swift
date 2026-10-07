@@ -505,6 +505,76 @@ struct ImageEditorPSDTests {
         #expect(report.issues.isEmpty)
     }
 
+    @Test func embeddedDisplayP3ProfileIsConvertedToSRGB() throws {
+        let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let profileData = try #require(sourceSpace.copyICCData() as Data?)
+        let data = try psdFixtureData("zip-composite.psd")
+        let profiledPSD = psdAddingICCProfile(profileData, to: data)
+        let document = try ImageEditorPSDCodec.decode(profiledPSD, sourceName: "display-p3.psd")
+        let layer = try #require(document.layers.first)
+        let actual = psdRGBA(layer.image, width: 4, height: 4, colorSpace: .sRGB)
+        let expectedSourceColor = try #require(
+            CGColor(colorSpace: sourceSpace, components: [200 / 255, 120 / 255, 40 / 255, 1])
+        )
+        let destinationSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        let expectedColor = try #require(expectedSourceColor.converted(
+            to: destinationSpace,
+            intent: .relativeColorimetric,
+            options: nil
+        ))
+        let expected = expectedColor.components ?? []
+
+        #expect(actual.count == 64)
+        #expect(expected.count >= 3)
+        if actual.count == 64, expected.count >= 3 {
+            for pixel in 0..<16 {
+                let offset = pixel * 4
+                #expect(abs(Int(actual[offset]) - Int((expected[0] * 255).rounded())) <= 1)
+                #expect(abs(Int(actual[offset + 1]) - Int((expected[1] * 255).rounded())) <= 1)
+                #expect(abs(Int(actual[offset + 2]) - Int((expected[2] * 255).rounded())) <= 1)
+                #expect(actual[offset + 3] == 255)
+            }
+        }
+        #expect(try ImageEditorPSDCodec.compatibilityReport(profiledPSD).issues.isEmpty)
+    }
+
+    @Test func embeddedGrayProfileConvertsGraySamplesToRGB() throws {
+        let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.genericGrayGamma2_2))
+        let profileData = try #require(sourceSpace.copyICCData() as Data?)
+        let data = try psdFixtureData("grayscale-layer.psd")
+        let profiledPSD = psdAddingICCProfile(profileData, to: data)
+        let document = try ImageEditorPSDCodec.decode(profiledPSD, sourceName: "gray-profile.psd")
+        let layer = try #require(document.layers.first)
+        let actual = psdRGBA(layer.image, width: 4, height: 4, colorSpace: .sRGB)
+        let destinationSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+
+        #expect(actual.count == 64)
+        if actual.count == 64 {
+            for pixel in 0..<16 {
+                let offset = pixel * 4
+                let gray = CGFloat(24 + pixel * 12) / 255
+                let alpha = CGFloat([255, 192, 128, 64][pixel % 4]) / 255
+                let sourceColor = try #require(CGColor(
+                    colorSpace: sourceSpace,
+                    components: [gray, alpha]
+                ))
+                let expectedColor = try #require(sourceColor.converted(
+                    to: destinationSpace,
+                    intent: .relativeColorimetric,
+                    options: nil
+                ))
+                let expected = try #require(expectedColor.components)
+                #expect(abs(Int(actual[offset]) - Int((expected[0] * 255).rounded())) <= 1)
+                #expect(abs(Int(actual[offset + 1]) - Int((expected[1] * 255).rounded())) <= 1)
+                #expect(abs(Int(actual[offset + 2]) - Int((expected[2] * 255).rounded())) <= 1)
+                #expect(abs(Int(actual[offset]) - Int(actual[offset + 1])) <= 1)
+                #expect(abs(Int(actual[offset + 1]) - Int(actual[offset + 2])) <= 1)
+                #expect(actual[offset + 3] == UInt8([255, 192, 128, 64][pixel % 4]))
+            }
+        }
+        #expect(try ImageEditorPSDCodec.compatibilityReport(profiledPSD).issues.isEmpty)
+    }
+
     @Test func externalGrayscaleLayerFixturePreservesGrayPixelsAndTransparency() throws {
         let data = try psdFixtureData("grayscale-layer.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "grayscale-layer.psd")
@@ -2297,6 +2367,39 @@ private func psdFixtureData(_ name: String) throws -> Data {
     return try Data(contentsOf: directory.appendingPathComponent(name))
 }
 
+private func psdAddingICCProfile(_ profile: Data, to source: Data) -> Data {
+    func readUInt32(_ data: Data, at offset: Int) -> Int {
+        data[offset..<(offset + 4)].reduce(0) { ($0 << 8) | Int($1) }
+    }
+    func appendUInt32(_ value: Int, to data: inout Data) {
+        data.append(UInt8((value >> 24) & 0xff))
+        data.append(UInt8((value >> 16) & 0xff))
+        data.append(UInt8((value >> 8) & 0xff))
+        data.append(UInt8(value & 0xff))
+    }
+
+    let colorModeLength = readUInt32(source, at: 26)
+    let resourceLengthOffset = 30 + colorModeLength
+    let previousResourceLength = readUInt32(source, at: resourceLengthOffset)
+    let resourceStart = resourceLengthOffset + 4
+    var resource = Data("8BIM".utf8)
+    resource.append(contentsOf: [0x04, 0x0f])
+    resource.append(contentsOf: [0x00, 0x00])
+    appendUInt32(profile.count, to: &resource)
+    resource.append(profile)
+    if !profile.count.isMultiple(of: 2) { resource.append(0) }
+
+    var output = source
+    output.replaceSubrange(
+        resourceStart..<(resourceStart + previousResourceLength),
+        with: source.subdata(in: resourceStart..<(resourceStart + previousResourceLength)) + resource
+    )
+    var length = Data()
+    appendUInt32(previousResourceLength + resource.count, to: &length)
+    output.replaceSubrange(resourceLengthOffset..<(resourceLengthOffset + 4), with: length)
+    return output
+}
+
 private func psdMaskAlpha(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
     guard let representation = NSBitmapImageRep(data: image.tiffRepresentation ?? Data()) else { return [] }
     return (0..<height).flatMap { row in
@@ -2307,7 +2410,12 @@ private func psdMaskAlpha(_ image: NSImage, width: Int, height: Int) -> [UInt8] 
     }
 }
 
-private func psdRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
+private func psdRGBA(
+    _ image: NSImage,
+    width: Int,
+    height: Int,
+    colorSpace: NSColorSpace = .deviceRGB
+) -> [UInt8] {
     guard let representation = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
           representation.pixelsWide >= width,
           representation.pixelsHigh >= height
@@ -2315,7 +2423,7 @@ private func psdRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
     return (0..<height).flatMap { row in
         (0..<width).flatMap { column in
             let imageY = height - row - 1
-            guard let color = representation.colorAt(x: column, y: imageY)?.usingColorSpace(.deviceRGB) else {
+            guard let color = representation.colorAt(x: column, y: imageY)?.usingColorSpace(colorSpace) else {
                 return [UInt8](repeating: 0, count: 4)
             }
             return [color.redComponent, color.greenComponent, color.blueComponent, color.alphaComponent]

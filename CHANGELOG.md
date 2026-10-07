@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1740 - 2026-10-08
+
+### Fixed
+- PSD 导入现在读取 1039 ICC 资源；对匹配文档模式的 RGB/灰阶 profile 转换图层样本到设备 RGB 数值并保留 alpha；有效 profile 不再错误报告为忽略，非法或不匹配 profile 继续提示降级。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1740`/1740；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- Display P3 与灰阶 ICC→sRGB 数值及 alpha 用例通过；完整 PSD 专项 65/65 通过。尚未证明 Xomo 项目 PNG 往返、PSD/PNG 导出和显示器渲染的 ICC 等价，见[验证记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)；下一门槛仍为 rc1760。
+
 ## 2.12.0-rc1739 - 2026-10-08
 
 ### Fixed

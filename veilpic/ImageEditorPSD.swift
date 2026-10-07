@@ -463,8 +463,14 @@ enum ImageEditorPSDCodec {
 
         try reader.skipLengthPrefixed32()
         let imageResources = try reader.lengthPrefixedData32()
-        if try imageResourcesContainICCProfile(imageResources) {
-            addIssue(.colorProfileIgnored)
+        if let profileData = try imageResourceICCProfile(imageResources) {
+            let profile = CGColorSpace(iccData: profileData as CFData)
+            let colorModeMatchesProfile = colorMode == 1
+                ? profile?.model == .monochrome
+                : colorMode == 3 && profile?.model == .rgb
+            if !colorModeMatchesProfile {
+                addIssue(.colorProfileIgnored)
+            }
         }
 
         let layerAndMaskLength = Int(try reader.uint32())
@@ -604,19 +610,19 @@ enum ImageEditorPSDCodec {
         )
     }
 
-    nonisolated private static func imageResourcesContainICCProfile(_ data: Data) throws -> Bool {
+    nonisolated private static func imageResourceICCProfile(_ data: Data) throws -> Data? {
         var reader = PSDReader(data: data)
         while reader.offset + 12 <= data.count {
             let signature = try reader.ascii(count: 4)
-            guard signature == "8BIM" else { return false }
+            guard signature == "8BIM" else { throw ImageEditorPSDCodecError.invalidFile }
             let identifier = try reader.uint16()
             _ = try reader.pascalString(alignment: 2)
             let length = Int(try reader.uint32())
-            try reader.skip(length)
+            let payload = try reader.data(count: length)
             if length % 2 != 0 { try reader.skip(1) }
-            if identifier == 1039 { return true }
+            if identifier == 1039 { return payload }
         }
-        return false
+        return nil
     }
 
     nonisolated private static func parse(_ data: Data) throws -> PSDParsedDocument {
@@ -638,6 +644,14 @@ enum ImageEditorPSDCodec {
         }
         try reader.skipLengthPrefixed32()
         let imageResources = try reader.lengthPrefixedData32()
+        let iccProfileData = try imageResourceICCProfile(imageResources)
+        let candidateColorSpace = iccProfileData.flatMap { CGColorSpace(iccData: $0 as CFData) }
+        let colorSpace = candidateColorSpace.flatMap { profile in
+            let matchesColorMode = colorMode == 1
+                ? profile.model == .monochrome
+                : colorMode == 3 && profile.model == .rgb
+            return matchesColorMode ? profile : nil
+        }
         let alphaChannelNames = parseAlphaChannelNames(imageResources)
         let alphaChannelDisplayInfo = parseAlphaChannelDisplayInfo(imageResources)
         let savedPaths = parseSavedPaths(
@@ -684,6 +698,7 @@ enum ImageEditorPSDCodec {
                 height: height,
                 layers: decodedLayers,
                 composite: nil,
+                colorSpace: colorSpace,
                 savedPaths: savedPaths,
                 alphaChannels: compositeData.alphaChannels
             )
@@ -693,6 +708,7 @@ enum ImageEditorPSDCodec {
             height: height,
             layers: [],
             composite: compositeData.channels,
+            colorSpace: colorSpace,
             savedPaths: savedPaths,
             alphaChannels: compositeData.alphaChannels
         )
@@ -913,7 +929,8 @@ enum ImageEditorPSDCodec {
                 if var layer = makeLayer(
                     record: item.record,
                     channels: item.channels,
-                    canvasHeight: parsed.height
+                    canvasHeight: parsed.height,
+                    colorSpace: parsed.colorSpace
                 ) {
                     layer.groupID = groupStack.last
                     decodedLayers.append(layer)
@@ -949,7 +966,8 @@ enum ImageEditorPSDCodec {
                 if var layer = makeLayer(
                     record: item.record,
                     channels: item.channels,
-                    canvasHeight: parsed.height
+                    canvasHeight: parsed.height,
+                    colorSpace: parsed.colorSpace
                 ) {
                     layer.groupID = groupStack.last
                     decodedLayers.append(layer)
@@ -980,7 +998,7 @@ enum ImageEditorPSDCodec {
         }
 
         guard let composite = parsed.composite,
-              let image = imageFromChannels(composite, width: parsed.width, height: parsed.height)
+              let image = imageFromChannels(composite, width: parsed.width, height: parsed.height, colorSpace: parsed.colorSpace)
         else {
             throw ImageEditorPSDCodecError.invalidFile
         }
@@ -2425,7 +2443,8 @@ enum ImageEditorPSDCodec {
     private static func makeLayer(
         record: PSDLayerRecord,
         channels: PSDChannels,
-        canvasHeight: Int
+        canvasHeight: Int,
+        colorSpace: CGColorSpace?
     ) -> ImageEditorLayer? {
         let width = record.right - record.left
         let height = record.bottom - record.top
@@ -2573,7 +2592,7 @@ enum ImageEditorPSDCodec {
             applyVectorMask(record: record, size: CGSize(width: width, height: height), to: &layer)
             return layer
         }
-        guard let image = imageFromChannels(channels, width: width, height: height) else { return nil }
+        guard let image = imageFromChannels(channels, width: width, height: height, colorSpace: colorSpace) else { return nil }
         var layer: ImageEditorLayer
         if record.isSmartObject {
             // Photoshop's embedded source payload is intentionally not decoded
@@ -2954,25 +2973,75 @@ enum ImageEditorPSDCodec {
         return alpha
     }
 
-    private static func imageFromChannels(_ channels: PSDChannels, width: Int, height: Int) -> NSImage? {
-        guard channels.red.count >= width * height,
+    private static func imageFromChannels(
+        _ channels: PSDChannels,
+        width: Int,
+        height: Int,
+        colorSpace: CGColorSpace?
+    ) -> NSImage? {
+        guard width > 0, height > 0,
+              channels.red.count >= width * height,
               channels.green.count >= width * height,
               channels.blue.count >= width * height,
-              channels.alpha.count >= width * height,
-              let bitmap = NSBitmapImageRep(
-                bitmapDataPlanes: nil,
-                pixelsWide: width,
-                pixelsHigh: height,
-                bitsPerSample: 8,
-                samplesPerPixel: 4,
-                hasAlpha: true,
-                isPlanar: false,
-                colorSpaceName: .deviceRGB,
-                bitmapFormat: .alphaNonpremultiplied,
-                bytesPerRow: width * 4,
-                bitsPerPixel: 32
-              ), let pixels = bitmap.bitmapData
+              channels.alpha.count >= width * height
         else { return nil }
+
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bitmapFormat: .alphaNonpremultiplied,
+            bytesPerRow: width * 4,
+            bitsPerPixel: 32
+        ), let pixels = bitmap.bitmapData else { return nil }
+
+        if let colorSpace {
+            for row in 0..<height {
+                let imageY = height - row - 1
+                for x in 0..<width {
+                    let source = row * width + x
+                    let destination = (imageY * width + x) * 4
+                    let colorComponents: [CGFloat]
+                    switch colorSpace.model {
+                    case .monochrome:
+                        colorComponents = [
+                            CGFloat(channels.red[source]) / 255,
+                            CGFloat(channels.alpha[source]) / 255
+                        ]
+                    case .rgb:
+                        colorComponents = [
+                            CGFloat(channels.red[source]) / 255,
+                            CGFloat(channels.green[source]) / 255,
+                            CGFloat(channels.blue[source]) / 255,
+                            CGFloat(channels.alpha[source]) / 255
+                        ]
+                    default:
+                        return nil
+                    }
+                    guard let sourceColor = CGColor(
+                        colorSpace: colorSpace,
+                        components: colorComponents
+                    ), let convertedColor = sourceColor.converted(
+                        to: CGColorSpaceCreateDeviceRGB(),
+                        intent: .relativeColorimetric,
+                        options: nil
+                    ), let components = convertedColor.components, components.count >= 3 else { return nil }
+                    pixels[destination] = UInt8((components[0] * 255).rounded())
+                    pixels[destination + 1] = UInt8((components[1] * 255).rounded())
+                    pixels[destination + 2] = UInt8((components[2] * 255).rounded())
+                    pixels[destination + 3] = channels.alpha[source]
+                }
+            }
+            let image = NSImage(size: CGSize(width: width, height: height))
+            image.addRepresentation(bitmap)
+            return image
+        }
+
         for row in 0..<height {
             let imageY = height - row - 1
             for x in 0..<width {
@@ -2984,6 +3053,7 @@ enum ImageEditorPSDCodec {
                 pixels[destination + 3] = channels.alpha[source]
             }
         }
+
         let image = NSImage(size: CGSize(width: width, height: height))
         image.addRepresentation(bitmap)
         return image
@@ -3125,8 +3195,10 @@ nonisolated private struct PSDParsedDocument: @unchecked Sendable {
     let height: Int
     let layers: [PSDParsedLayer]
     let composite: PSDChannels?
+    let colorSpace: CGColorSpace?
     let savedPaths: [ImageEditorSavedPath]
     let alphaChannels: [ImageEditorAlphaChannel]
+
 }
 
 nonisolated private struct PSDParsedLayer {

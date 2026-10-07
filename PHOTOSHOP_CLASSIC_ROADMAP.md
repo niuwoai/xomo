@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1740 为 PSD 导入增加匹配模式的 RGB/灰阶 ICC 转换；Display P3 与灰阶 ICC→sRGB 数值和 alpha 用例通过，完整 PSD 套件 65/65 通过。项目 PNG 往返和导出色彩一致性仍未通过/未验证，不宣称完整色彩管理。待提交并合入本地 `main`；不运行全量门槛、UI 冒烟或安装，下一门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。
 - rc1739 将灰度 PSD 选择 alpha 与真正 spot alpha（含 spot display info）贯通外部导入、Xomo 项目恢复和 PSD 再导出；重读后通道名称、类型、spot 参数及 alpha mask 一致。PSD 专项 63/63 通过；本版本待提交并合入本地 `main`，不运行全量门槛、真实 UI 冒烟或安装，下一门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。
 - rc1738 已合入本地 `main`（`592522d0`），补齐灰度无透明度图层及多 alpha plane 的外部 fixture 和直接 PSD 像素往返，PSD 套件 63/63 通过；不代表项目 PNG 与 PSD 之间的 ICC 视觉等价已验证。详见[验证记录](docs/reviews/2026-10-08-rc1738-grayscale-psd-roundtrip.md)。
 - rc1737 已集成到本地 `main`（`432dba2b`），当前远端跟踪分支和 `/Applications` 版本仍需按后续发布/门槛授权另行核验；当前安装版已知为 rc1729，下一四十版本门槛为 rc1760。
