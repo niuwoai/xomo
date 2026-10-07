@@ -31,6 +31,8 @@ nonisolated enum ImageEditorPSDCodecError: LocalizedError, Sendable {
 }
 
 enum ImageEditorPSDCodec {
+    private static let iccProfileImageResourceID: UInt16 = 1039
+
     static var contentType: UTType {
         UTType(filenameExtension: "psd") ?? .data
     }
@@ -82,7 +84,8 @@ enum ImageEditorPSDCodec {
         output.appendUInt32(UInt32(layerAndMask.count))
         output.append(layerAndMask)
 
-        guard let composite = rgbaChannels(image: document.compositedImage, width: width, height: height) else {
+        let compositedImage = document.compositedImage.normalizedImportedBitmapImage()
+        guard let composite = rgbaChannels(image: compositedImage, width: width, height: height) else {
             throw ImageEditorPSDCodecError.imageEncodingFailed
         }
         var compositePlanes = [composite.red, composite.green, composite.blue, composite.alpha]
@@ -304,6 +307,15 @@ enum ImageEditorPSDCodec {
             document.savedPaths,
             canvasSize: document.canvasSize
         )
+        if let sRGB = CGColorSpace(name: CGColorSpace.sRGB),
+           let profile = sRGB.copyICCData() as Data? {
+            output.appendASCII("8BIM")
+            output.appendUInt16(iccProfileImageResourceID)
+            output.appendPascalString("", alignment: 2)
+            output.appendUInt32(UInt32(profile.count))
+            output.append(profile)
+            if profile.count % 2 != 0 { output.append(0) }
+        }
         let alphaChannels = Array(document.alphaChannels.prefix(52))
         guard !alphaChannels.isEmpty else { return output }
 
@@ -620,7 +632,7 @@ enum ImageEditorPSDCodec {
             let length = Int(try reader.uint32())
             let payload = try reader.data(count: length)
             if length % 2 != 0 { try reader.skip(1) }
-            if identifier == 1039 { return payload }
+            if identifier == iccProfileImageResourceID { return payload }
         }
         return nil
     }
@@ -2915,7 +2927,73 @@ enum ImageEditorPSDCodec {
         return channels
     }
 
+    private static func rawSRGBChannels(
+        image: NSImage,
+        width: Int,
+        height: Int
+    ) -> PSDChannels? {
+        guard width > 0, height > 0,
+              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              cgImage.width == width,
+              cgImage.height == height,
+              cgImage.colorSpace?.name == CGColorSpace.sRGB,
+              cgImage.bitsPerComponent == 8,
+              cgImage.bitsPerPixel == 32,
+              cgImage.bitmapInfo.intersection(.byteOrderMask) == .byteOrderDefault,
+              cgImage.alphaInfo == .last || cgImage.alphaInfo == .premultipliedLast,
+              let providerData = cgImage.dataProvider?.data
+        else { return nil }
+        return rawSRGBChannels(
+            cgImage: cgImage,
+            providerData: providerData,
+            width: width,
+            height: height
+        )
+    }
+
+    private static func rawSRGBChannels(
+        cgImage: CGImage,
+        providerData: CFData,
+        width: Int,
+        height: Int
+    ) -> PSDChannels? {
+        guard let pixels = CFDataGetBytePtr(providerData),
+              cgImage.bytesPerRow >= width * 4
+        else { return nil }
+
+        let premultiplied = cgImage.alphaInfo == .premultipliedLast
+        var channels = PSDChannels.empty(pixelCount: width * height)
+        for row in 0..<height {
+            let imageY = height - row - 1
+            for x in 0..<width {
+                let source = imageY * cgImage.bytesPerRow + x * 4
+                let destination = row * width + x
+                let alpha = Int(pixels[source + 3])
+                channels.red[destination] = straightAlphaComponent(
+                    pixels[source], alpha: alpha, premultiplied: premultiplied
+                )
+                channels.green[destination] = straightAlphaComponent(
+                    pixels[source + 1], alpha: alpha, premultiplied: premultiplied
+                )
+                channels.blue[destination] = straightAlphaComponent(
+                    pixels[source + 2], alpha: alpha, premultiplied: premultiplied
+                )
+                channels.alpha[destination] = UInt8(alpha)
+            }
+        }
+        return channels
+    }
+
+    private static func straightAlphaComponent(_ component: UInt8, alpha: Int, premultiplied: Bool) -> UInt8 {
+        guard premultiplied else { return component }
+        guard alpha > 0 else { return 0 }
+        return UInt8(min(255, (Int(component) * 255 + alpha / 2) / alpha))
+    }
+
     private static func rgbaChannels(image: NSImage, width: Int, height: Int) -> PSDChannels? {
+        if let rawChannels = rawSRGBChannels(image: image, width: width, height: height) {
+            return rawChannels
+        }
         if let rawChannels = rawDeviceRGBChannels(image: image, width: width, height: height) {
             return rawChannels
         }
@@ -2930,7 +3008,7 @@ enum ImageEditorPSDCodec {
             let imageY = height - row - 1
             for x in 0..<width {
                 let color = (representation.colorAt(x: x, y: imageY) ?? .clear)
-                    .usingColorSpace(.deviceRGB) ?? .clear
+                    .usingColorSpace(.sRGB) ?? .clear
                 let index = row * width + x
                 channels.red[index] = UInt8((color.redComponent * 255).rounded().clamped(to: 0...255))
                 channels.green[index] = UInt8((color.greenComponent * 255).rounded().clamped(to: 0...255))

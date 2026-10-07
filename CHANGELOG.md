@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1744 - 2026-10-08
+
+### Fixed
+- PSD 导出现在写入 sRGB ICC（Image Resource 1039），并显式把图层与复合图像编码为 sRGB，避免外部查看器按 profile 显示时发生颜色偏移。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1744`/1744；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- Display P3→PSD→重读图层及复合图像 RGBA 专项（含半透明像素）通过；完整 PSD 套件 66/66、版本合同 10/30 断言、CLI 合同 7/24 断言、概览合同 3/26 断言通过，发布合同通过。外部 Photoshop 实际打开、四十版本门槛、界面冒烟及覆盖安装未执行；下一完整门槛仍为 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)。
+
 ## 2.12.0-rc1743 - 2026-10-08
 
 ### Fixed

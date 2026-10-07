@@ -555,6 +555,55 @@ struct ImageEditorPSDTests {
         }
     }
 
+    @Test func displayP3RasterPSDExportEmbedsSRGBAndPreservesPixels() throws {
+        let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let sourceBytes: [UInt8] = [
+            200, 120, 40, 255,
+            200, 120, 40, 128
+        ]
+        let provider = try #require(CGDataProvider(data: Data(sourceBytes) as CFData))
+        let source = try #require(CGImage(
+            width: 2,
+            height: 1,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: 8,
+            space: sourceSpace,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ))
+        let document = XomoExternalImageDocumentFactory.make(
+            sourceName: "p3-raster.png",
+            image: NSImage(cgImage: source, size: CGSize(width: 2, height: 1))
+        )
+        let expectedImage = try #require(document.layers.last?.image)
+        let premultipliedExpected = psdRGBA(expectedImage, width: 2, height: 1, colorSpace: .sRGB)
+        let expected = stride(from: 0, to: premultipliedExpected.count, by: 4).flatMap { offset in
+            let alpha = Int(premultipliedExpected[offset + 3])
+            func straight(_ component: UInt8) -> UInt8 {
+                guard alpha > 0 else { return 0 }
+                return UInt8(min(255, (Int(component) * 255 + alpha / 2) / alpha))
+            }
+            return [
+                straight(premultipliedExpected[offset]),
+                straight(premultipliedExpected[offset + 1]),
+                straight(premultipliedExpected[offset + 2]),
+                UInt8(alpha)
+            ]
+        }
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        #expect(exported.range(of: Data("8BIM\u{04}\u{0F}".utf8)) != nil)
+        #expect(try ImageEditorPSDCodec.compatibilityReport(exported).issues.isEmpty)
+        #expect(psdCompositeRGBA(exported, width: 2, height: 1) == expected)
+        let reopened = try ImageEditorPSDCodec.decode(exported, sourceName: "p3-raster.psd")
+        let reopenedImage = try #require(reopened.layers.last?.image)
+        #expect(psdRGBA(reopenedImage, width: 2, height: 1, colorSpace: .sRGB) == expected)
+    }
+
     @Test func embeddedGrayProfileConvertsGraySamplesToRGB() throws {
         let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.genericGrayGamma2_2))
         let profileData = try #require(sourceSpace.copyICCData() as Data?)
@@ -2463,6 +2512,38 @@ private func psdRGBA(
             return [color.redComponent, color.greenComponent, color.blueComponent, color.alphaComponent]
                 .map { UInt8(($0 * 255).rounded()) }
         }
+    }
+}
+
+private func psdCompositeRGBA(_ data: Data, width: Int, height: Int) -> [UInt8]? {
+    guard width > 0, height > 0 else { return nil }
+    var offset = 26
+
+    func readUInt32(at offset: Int) -> Int? {
+        guard offset >= 0, offset + 4 <= data.count else { return nil }
+        return (Int(data[offset]) << 24)
+            | (Int(data[offset + 1]) << 16)
+            | (Int(data[offset + 2]) << 8)
+            | Int(data[offset + 3])
+    }
+
+    guard let colorModeLength = readUInt32(at: offset) else { return nil }
+    offset += 4 + colorModeLength
+    guard let resourcesLength = readUInt32(at: offset) else { return nil }
+    offset += 4 + resourcesLength
+    guard let layerAndMaskLength = readUInt32(at: offset) else { return nil }
+    offset += 4 + layerAndMaskLength
+    guard offset + 2 <= data.count,
+          data[offset] == 0, data[offset + 1] == 0 else { return nil }
+    offset += 2
+
+    let pixelCount = width * height
+    guard offset + pixelCount * 4 <= data.count else { return nil }
+    return (0..<pixelCount).flatMap { index in
+        [data[offset + index],
+         data[offset + pixelCount + index],
+         data[offset + pixelCount * 2 + index],
+         data[offset + pixelCount * 3 + index]]
     }
 }
 
