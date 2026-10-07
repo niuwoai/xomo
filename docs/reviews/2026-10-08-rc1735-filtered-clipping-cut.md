@@ -12,5 +12,5 @@
 ## 集成
 
 - 基线为本地 `main` 的 rc1734；`origin/main` 仍为 rc1731。
-- 功能分支：`codex/filtered-clipping-cut-rc1735`。待提交并合入本地 `main`；本轮不推送或创建 tag。
+- 功能分支：`codex/filtered-clipping-cut-rc1735`，提交 `315219ff` 已合入本地 `main`；`origin/main` 仍为 rc1731，本轮不推送或创建 tag。
 - 不涉及图层样式合成策略；部分选区剪切时样式如何分配仍待用户确认。
