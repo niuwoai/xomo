@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1741 - 2026-10-08
+
+### Fixed
+- 修复含 ICC 的 PSD 图层保存到 Xomo 项目 PNG、再恢复时的颜色数值漂移：profile 转换现在产出明确标记为 sRGB 的 CGImage，项目 PNG 编码沿用原有路径，并以 P3 PSD→项目 JSON→恢复像素回归验证。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1741`/1741；本版不是四十版本完整门槛，不覆盖安装。
+
+### Verification
+- P3 项目保存恢复颜色专项 1/1 通过；提交后完整 PSD 套件补验 65/65 通过，详见[验证记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)。项目 PNG 色彩管理仍需覆盖更多 profile、flattened export 与外部 PNG 解码，不据单一 fixture 声称全链路色彩管理。下一门槛仍为 rc1760。
+
 ## 2.12.0-rc1740 - 2026-10-08
 
 ### Fixed

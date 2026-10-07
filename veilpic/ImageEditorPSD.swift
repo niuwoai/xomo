@@ -2986,21 +2986,9 @@ enum ImageEditorPSDCodec {
               channels.alpha.count >= width * height
         else { return nil }
 
-        guard let bitmap = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: width,
-            pixelsHigh: height,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bitmapFormat: .alphaNonpremultiplied,
-            bytesPerRow: width * 4,
-            bitsPerPixel: 32
-        ), let pixels = bitmap.bitmapData else { return nil }
-
         if let colorSpace {
+            guard let destinationColorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+            var sourcePixels = [UInt8](repeating: 0, count: width * height * 4)
             for row in 0..<height {
                 let imageY = height - row - 1
                 for x in 0..<width {
@@ -3027,20 +3015,47 @@ enum ImageEditorPSDCodec {
                         colorSpace: colorSpace,
                         components: colorComponents
                     ), let convertedColor = sourceColor.converted(
-                        to: CGColorSpaceCreateDeviceRGB(),
+                        to: destinationColorSpace,
                         intent: .relativeColorimetric,
                         options: nil
                     ), let components = convertedColor.components, components.count >= 3 else { return nil }
-                    pixels[destination] = UInt8((components[0] * 255).rounded())
-                    pixels[destination + 1] = UInt8((components[1] * 255).rounded())
-                    pixels[destination + 2] = UInt8((components[2] * 255).rounded())
-                    pixels[destination + 3] = channels.alpha[source]
+                    sourcePixels[destination] = UInt8((components[0] * 255).rounded())
+                    sourcePixels[destination + 1] = UInt8((components[1] * 255).rounded())
+                    sourcePixels[destination + 2] = UInt8((components[2] * 255).rounded())
+                    sourcePixels[destination + 3] = channels.alpha[source]
                 }
             }
-            let image = NSImage(size: CGSize(width: width, height: height))
-            image.addRepresentation(bitmap)
-            return image
+
+            guard let provider = CGDataProvider(data: Data(sourcePixels) as CFData),
+                  let cgImage = CGImage(
+                    width: width,
+                    height: height,
+                    bitsPerComponent: 8,
+                    bitsPerPixel: 32,
+                    bytesPerRow: width * 4,
+                    space: destinationColorSpace,
+                    bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                    provider: provider,
+                    decode: nil,
+                    shouldInterpolate: false,
+                    intent: .defaultIntent
+                  ) else { return nil }
+            return NSImage(cgImage: cgImage, size: CGSize(width: width, height: height))
         }
+
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bitmapFormat: .alphaNonpremultiplied,
+            bytesPerRow: width * 4,
+            bitsPerPixel: 32
+        ), let pixels = bitmap.bitmapData else { return nil }
 
         for row in 0..<height {
             let imageY = height - row - 1

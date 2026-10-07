@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreFoundation
 import Testing
 @testable import musepic
 
@@ -536,6 +537,22 @@ struct ImageEditorPSDTests {
             }
         }
         #expect(try ImageEditorPSDCodec.compatibilityReport(profiledPSD).issues.isEmpty)
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let projectData = try project.encodedProjectData()
+        let reopenedProject = try JSONDecoder().decode(
+            ImageEditorProjectDocument.self,
+            from: projectData
+        )
+        let reopenedDocument = try reopenedProject.restoredDocument()
+        let reopenedLayer = try #require(reopenedDocument.layers.first)
+        let reopenedPixels = psdRGBA(reopenedLayer.image, width: 4, height: 4, colorSpace: .sRGB)
+        #expect(reopenedPixels.count == actual.count)
+        if reopenedPixels.count == actual.count {
+            for index in actual.indices {
+                #expect(abs(Int(reopenedPixels[index]) - Int(actual[index])) <= 1)
+            }
+        }
     }
 
     @Test func embeddedGrayProfileConvertsGraySamplesToRGB() throws {
@@ -2416,6 +2433,23 @@ private func psdRGBA(
     height: Int,
     colorSpace: NSColorSpace = .deviceRGB
 ) -> [UInt8] {
+    if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+       let profile = cgImage.colorSpace,
+       profile.name == CGColorSpace.sRGB,
+       let providerData = cgImage.dataProvider?.data,
+       let bytes = CFDataGetBytePtr(providerData) {
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        guard bytesPerPixel == 4, cgImage.bitsPerComponent == 8,
+              cgImage.width >= width, cgImage.height >= height,
+              cgImage.bytesPerRow >= width * bytesPerPixel else { return [] }
+        return (0..<height).flatMap { row in
+            (0..<width).flatMap { column in
+                let imageY = height - row - 1
+                let offset = imageY * cgImage.bytesPerRow + column * bytesPerPixel
+                return Array(UnsafeBufferPointer(start: bytes.advanced(by: offset), count: 4))
+            }
+        }
+    }
     guard let representation = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
           representation.pixelsWide >= width,
           representation.pixelsHigh >= height
@@ -2433,6 +2467,23 @@ private func psdRGBA(
 }
 
 private func psdRawRGBA(_ image: NSImage, width: Int, height: Int) -> [UInt8] {
+    if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+       let profile = cgImage.colorSpace,
+       profile.name == CGColorSpace.sRGB,
+       let providerData = cgImage.dataProvider?.data,
+       let bytes = CFDataGetBytePtr(providerData) {
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        guard bytesPerPixel == 4, cgImage.bitsPerComponent == 8,
+              cgImage.width == width, cgImage.height == height,
+              cgImage.bytesPerRow >= width * bytesPerPixel else { return [] }
+        return (0..<height).flatMap { row in
+            (0..<width).flatMap { column in
+                let imageY = height - row - 1
+                let offset = imageY * cgImage.bytesPerRow + column * bytesPerPixel
+                return Array(UnsafeBufferPointer(start: bytes.advanced(by: offset), count: 4))
+            }
+        }
+    }
     guard let bitmap = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
           bitmap.pixelsWide == width,
           bitmap.pixelsHigh == height,

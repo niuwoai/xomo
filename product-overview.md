@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1740
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1741
 
-rc1740 为 PSD 导入增加模式匹配的 RGB/灰阶 ICC 样本转换，Display P3 和灰阶颜色均按 CoreGraphics 参考转换到 sRGB 核对，并保留 alpha；PSD 专项 65/65 通过。项目 PNG 保存/恢复及导出仍未证实 ICC 色彩一致，已在[验证记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)列为下一里程碑，不视为完整色彩管理。未运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布；当前安装版仍为 rc1729，下一门槛为 rc1760。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1741 针对 P3 PSD 导入图层在项目 PNG 保存/恢复时的颜色漂移，将 ICC 转换输出明确标记为 sRGB；PNG 编码仍沿用原路径，并用 PSD→项目 JSON→恢复像素的逐通道回归验证，专项 1/1 及完整 PSD 套件 65/65 通过。rc1740 增加 RGB/灰阶 PSD ICC 导入转换。其他 PNG 输入、扁平导出与多种 profile 仍待验证，不宣称完整色彩管理。未运行四十版本全量门槛、真实界面冒烟或覆盖安装，也未公开发布；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 
