@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1747 - 2026-10-08
+
+### Added
+- 新增 Display P3 PNG 的贯通编辑验收：真实 PNG 打开、像素选区移动、Undo/Redo、项目保存重开及 PNG 导出逐像素校验；验证这条路径色彩、alpha 与编辑事务一致。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1747`/1747；本版为跨模块用户工作流验收，不触发四十版本完整门槛。
+
+### Verification
+- P3 像素编辑端到端测试和选区移动/导出邻接套件结果见[验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。四十版本全量构建、真实 GUI 冒烟与安装仍留在 rc1760。
+
 ## 2.12.0-rc1746 - 2026-10-08
 
 ### Fixed

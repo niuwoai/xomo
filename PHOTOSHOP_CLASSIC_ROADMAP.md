@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1747 把 Display P3 PNG 打开、选区像素移动、Undo/Redo、项目保存重开和 PNG 导出串成一条逐像素验收；目标是验证真实用户任务而非继续按格式逐项补孤立用例。定向结果及已发现问题记于[验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。四十版本完整门槛仍为 rc1760。
 - rc1746 将普通 WebP 与 Layer Comp WebP 改为共享显式 sRGB 的有损位图编码；P3 输入输出 profile、颜色、透明度及导出事务回归通过。它只关闭现有正式格式的导出色彩缺口，不代表外部应用显示或完整色彩管理已验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)。
 - rc1745 将普通 JPEG 和 Layer Comp JPEG 导出统一为 sRGB CGContext 合成、ImageIO JPEG 编码；P3 JPEG 解码 sRGB profile 与 PNG 参考像素一致，半透明区域白底合成、0.5× 缩放及 Layer Comp 导出通过。外部软件打开和其它 profile 仍未实测，下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)。
 - rc1744 将 sRGB ICC 资源（PSD Image Resource 1039）写入 PSD，并在图层与复合图像输出时都固定为 sRGB 样本；Display P3→PSD→重读图层与原始复合平面 RGBA（含半透明像素）严格匹配参考，完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示、其它 profile 与其它格式仍待验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)。
