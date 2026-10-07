@@ -1,0 +1,49 @@
+{
+  "baseline_main": "1204ab9b539665183af434029c92a615b0b6cfaf",
+  "scope": "Real unchanged rc1727 production model, simulated existing Binding callbacks; not physical UI ordering",
+  "steps": [
+    {
+      "command": [
+        "xcrun",
+        "swiftc",
+        "-parse-as-library",
+        "-emit-library",
+        "-target",
+        "arm64-apple-macos14.0",
+        "-I",
+        "/Users/rocky/Sites/veilpic/.codex/ReleaseDerivedData/Build/Products/Release",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Users/rocky/Sites/veilpic/.codex/ReleaseDerivedData/Build/Products/Release",
+        "-F",
+        "/Users/rocky/Sites/veilpic/.codex/ReleaseDerivedData/Build/Products/Release/Xomo.app/Contents/Frameworks",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-module-cache-path",
+        "/private/tmp/xomo-rc1728-stale-value-red.xFtpfn/ModuleCache",
+        "-Xlinker",
+        "-rpath",
+        "-Xlinker",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "/private/tmp/xomo-rc1728-stale-value-red.xFtpfn/StaleValueBaseline.swift",
+        "/private/tmp/xomo-rc1727-direct-model.SCCj7o/production.dylib",
+        "-o",
+        "/private/tmp/xomo-rc1728-stale-value-red.xFtpfn/baseline.dylib"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "/private/tmp/xomo-rc1727-direct-model.SCCj7o/ModelProbe.app/Contents/MacOS/model-runner",
+        "/private/tmp/xomo-rc1727-direct-model.SCCj7o/production.dylib",
+        "/private/tmp/xomo-rc1728-stale-value-red.xFtpfn/baseline.dylib",
+        "StaleValueBaseline",
+        "/private/tmp/xomo-rc1728-stale-value-red.xFtpfn/events.jsonl"
+      ],
+      "exit": 1
+    }
+  ],
+  "events_sha256": "78f0fd797c3216f273a212e224a66282cb51d53ca8b885d73f12f9e999326659",
+  "production_sha256": "0a32d178c9ec88d99f51f87c0881926d52f42cad43696728439202892ad9360e"
+}

@@ -26,6 +26,7 @@ fileprivate enum ImageEditorLayerOpacityEditKind {
 
 @MainActor
 final class ImageEditorLayerPropertyTransactionState {
+    var activeGesture: ImageEditorLayerPropertyGesture?
     fileprivate var activeLayerMaskPropertyEdit: ImageEditorLayerMaskPropertyEditKind?
     fileprivate var activeLayerMaskPropertyTargetIDs = Set<UUID>()
     fileprivate var activeLayerMaskPropertyRedoStack: [ImageEditorDocument] = []
@@ -171,12 +172,14 @@ extension ImageEditorViewModel {
     }
 
     func finishActiveLayerPropertyEditForNewCommand() {
+        layerPropertyTransactionState.activeGesture = nil
         finishActiveLayerOpacityPropertyChange()
         finishActiveLayerBlendIfChange()
         finishActiveLayerMaskPropertyChange()
     }
 
     func resetLayerPropertyEditTransactions() {
+        layerPropertyTransactionState.activeGesture = nil
         layerPropertyTransactionState.activeLayerOpacityEdit = nil
         layerPropertyTransactionState.activeLayerOpacityTargetIDs = []
         layerPropertyTransactionState.activeLayerOpacityRedoStack = []
@@ -231,6 +234,7 @@ extension ImageEditorViewModel {
     }
 
     private func beginSelectedLayerBlendIfChange(_ kind: ImageEditorLayerBlendIfEditKind) {
+        layerPropertyTransactionState.activeGesture = nil
         if layerPropertyTransactionState.activeLayerBlendIfEdit == kind { return }
         finishActiveLayerBlendIfChange()
 
@@ -246,6 +250,7 @@ extension ImageEditorViewModel {
 
     private func finishActiveLayerBlendIfChange() {
         guard let kind = layerPropertyTransactionState.activeLayerBlendIfEdit else { return }
+        layerPropertyTransactionState.activeGesture = nil
         let targetIDs = layerPropertyTransactionState.activeLayerBlendIfTargetIDs
         let snapshot = undoStack.last
         let didChange = snapshot.map {
@@ -301,6 +306,7 @@ extension ImageEditorViewModel {
     }
 
     private func beginSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {
+        layerPropertyTransactionState.activeGesture = nil
         if layerPropertyTransactionState.activeLayerOpacityEdit == kind { return }
         finishActiveLayerOpacityPropertyChange()
 
@@ -325,6 +331,7 @@ extension ImageEditorViewModel {
 
     private func finishActiveLayerOpacityPropertyChange() {
         guard let kind = layerPropertyTransactionState.activeLayerOpacityEdit else { return }
+        layerPropertyTransactionState.activeGesture = nil
         let targetIDs = layerPropertyTransactionState.activeLayerOpacityTargetIDs
         let snapshot = undoStack.last
         let didChange = snapshot.map {
@@ -394,6 +401,7 @@ extension ImageEditorViewModel {
     }
 
     private func beginSelectedLayerMaskPropertyChange(_ kind: ImageEditorLayerMaskPropertyEditKind) {
+        layerPropertyTransactionState.activeGesture = nil
         if layerPropertyTransactionState.activeLayerMaskPropertyEdit == kind { return }
         finishActiveLayerMaskPropertyChange()
 
@@ -414,6 +422,7 @@ extension ImageEditorViewModel {
 
     private func finishActiveLayerMaskPropertyChange() {
         guard let kind = layerPropertyTransactionState.activeLayerMaskPropertyEdit else { return }
+        layerPropertyTransactionState.activeGesture = nil
         let targetIDs = layerPropertyTransactionState.activeLayerMaskPropertyTargetIDs
         let snapshot = undoStack.last
         let didChange = snapshot.map {
