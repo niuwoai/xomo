@@ -19,6 +19,14 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1729 - 2026-10-07
+
+### Fixed
+- 修复 rc1728 全量 Release 回归中暴露的过期 Layer Panel 源码合同：不再要求已删除的 `previewedLayerMask == nil` 局部变量，改为检查内容缩略图与栅格蒙版缩略图的选中描边分别跟随主图层和蒙版编辑目标，并核对视图接线。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步 rc1729/1729。rc1728 首轮完整门槛唯一失败是上述过期测试断言；rc1729 双架构 Release `build-for-testing` 成功，修复套件 20/20 通过，完整门槛重跑 229 套件／3648 方法／4724 次运行全部通过，失败／跳过／漏测均为 0。正常 Developer ID Universal archive/export、候选及 `/Applications/Xomo.app` 启动版本核验通过；安装签名有效，原 rc1680 可恢复备份及清单 SHA 保持不变。同一 rc1720 四十版本门槛关闭，下一门槛为 rc1760。
+
 ## 2.12.0-rc1728 - 2026-10-04
 
 ### Fixed
