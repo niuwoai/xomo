@@ -8960,29 +8960,27 @@ final class ImageEditorViewModel: ObservableObject {
             isAligned: isHealingBrushAligned,
             alignedOffset: healingBrushAlignedCanvasOffset
         )
-        guard let samplingInput = sampledBrushInput(
+        guard let samplingInputs = sampledBrushInputs(
             for: layer,
-            canvasOffset: offsetResolution.canvasOffset,
+            canvasOffsets: [offsetResolution.canvasOffset, .zero],
             sampleSource: healingBrushSampleSource,
             ignoringAdjustmentLayers: healingBrushIgnoresAdjustmentLayers
-        ),
-        let targetContext = sampledBrushInput(
-            for: layer,
-            canvasOffset: .zero,
-            sampleSource: healingBrushSampleSource,
-            ignoringAdjustmentLayers: healingBrushIgnoresAdjustmentLayers
-        ),
+        ), samplingInputs.count == 2 else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
         let output = layer.image.normalizedBitmapImage().withHealingBrush(
             samples: rasterLocalSamples(samples, layer: layer),
-            sourceOffset: samplingInput.localOffset,
-            sourceImage: samplingInput.image,
-            targetContextImage: targetContext.image,
+            sourceOffset: samplingInputs[0].localOffset,
+            sourceImage: samplingInputs[0].image,
+            targetContextImage: samplingInputs[1].image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
             pressureControlsSize: retouchPressureControlsSize,
             pressureSensitivity: retouchPressureSensitivity / 100
-        ) else {
+        )
+        guard let output else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }

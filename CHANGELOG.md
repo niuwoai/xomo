@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1774 - 2026-10-08
+
+### Changed
+- Healing Brush 的源偏移和目标上下文改为批量采样：合成来源每笔划只合成一次画布；当前图层的两个采样偏移共享归一化图像，Healing 像素路径复用对应 RGBA 解码结果。
+
+### Verification
+- `ImageEditorHealingBrushTests` 20/20、`ImageEditorCloneStampSamplingTests` 34/34、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）、概览归档合同 3/3（30 断言）通过；未运行完整 Release XCTest，下一完整编译与冒烟门槛为 rc1800。
+
 ## 2.12.0-rc1773 - 2026-10-08
 
 ### Changed

@@ -67,16 +67,22 @@ extension NSImage {
             height: pixelHeight,
             bytesPerRow: bytesPerRow
         ),
-        let sourcePixels = sourceImage.healingRGBAPixels(
-            width: pixelWidth,
-            height: pixelHeight,
-            bytesPerRow: bytesPerRow
-        ),
         let targetContextPixels = targetContextImage.healingRGBAPixels(
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
         ) else { return nil }
+        let sourcePixels: [UInt8]
+        if sourceImage === targetContextImage {
+            sourcePixels = targetContextPixels
+        } else {
+            guard let sampledSourcePixels = sourceImage.healingRGBAPixels(
+                width: pixelWidth,
+                height: pixelHeight,
+                bytesPerRow: bytesPerRow
+            ) else { return nil }
+            sourcePixels = sampledSourcePixels
+        }
 
         let effectiveDiameter = retouchMaximumDiameter(
             samples: samples,

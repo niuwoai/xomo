@@ -481,16 +481,34 @@ extension ImageEditorViewModel {
         sampleSource: ImageEditorCloneSampleSource,
         ignoringAdjustmentLayers: Bool = false
     ) -> ImageEditorSampledBrushInput? {
+        sampledBrushInputs(
+            for: layer,
+            canvasOffsets: [canvasOffset],
+            sampleSource: sampleSource,
+            ignoringAdjustmentLayers: ignoringAdjustmentLayers
+        )?.first
+    }
+
+    func sampledBrushInputs(
+        for layer: ImageEditorLayer,
+        canvasOffsets: [CGSize],
+        sampleSource: ImageEditorCloneSampleSource,
+        ignoringAdjustmentLayers: Bool = false
+    ) -> [ImageEditorSampledBrushInput]? {
+        guard !canvasOffsets.isEmpty else { return [] }
+
         switch sampleSource {
         case .currentLayer:
-            let localOffset = CGSize(
-                width: canvasOffset.width / max(layer.frame.width, 1) * layer.image.size.width,
-                height: canvasOffset.height / max(layer.frame.height, 1) * layer.image.size.height
-            )
-            return ImageEditorSampledBrushInput(
-                image: layer.image.normalizedBitmapImage(),
-                localOffset: localOffset
-            )
+            let image = layer.image.normalizedBitmapImage()
+            return canvasOffsets.map { canvasOffset in
+                ImageEditorSampledBrushInput(
+                    image: image,
+                    localOffset: CGSize(
+                        width: canvasOffset.width / max(layer.frame.width, 1) * layer.image.size.width,
+                        height: canvasOffset.height / max(layer.frame.height, 1) * layer.image.size.height
+                    )
+                )
+            }
         case .currentAndBelow, .allVisible:
             let colorSamplerSource: ImageEditorColorSamplerSource =
                 sampleSource == .currentAndBelow
@@ -503,22 +521,29 @@ extension ImageEditorViewModel {
             let sourceCanvas = document.compositedImage(
                 includingOnly: includedIDs
             )
-            let sourceRect = layer.frame.offsetBy(
-                dx: canvasOffset.width,
-                dy: canvasOffset.height
-            )
-            guard let localImage = NSImage.rendered(size: layer.image.size, actions: { rect in
-                sourceCanvas.draw(
-                    in: rect,
-                    from: sourceRect,
-                    operation: .copy,
-                    fraction: 1
+            var inputs: [ImageEditorSampledBrushInput] = []
+            inputs.reserveCapacity(canvasOffsets.count)
+            for canvasOffset in canvasOffsets {
+                let sourceRect = layer.frame.offsetBy(
+                    dx: canvasOffset.width,
+                    dy: canvasOffset.height
                 )
-            }) else { return nil }
-            return ImageEditorSampledBrushInput(
-                image: localImage.normalizedBitmapImage(),
-                localOffset: .zero
-            )
+                guard let localImage = NSImage.rendered(size: layer.image.size, actions: { rect in
+                    sourceCanvas.draw(
+                        in: rect,
+                        from: sourceRect,
+                        operation: .copy,
+                        fraction: 1
+                    )
+                }) else { return nil }
+                inputs.append(
+                    ImageEditorSampledBrushInput(
+                        image: localImage.normalizedBitmapImage(),
+                        localOffset: .zero
+                    )
+                )
+            }
+            return inputs
         }
     }
 }

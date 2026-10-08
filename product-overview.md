@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1773
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1774
+
+rc1774 让 Healing Brush 在一个笔划中批量构造源采样与目标上下文：current-and-below/all-visible 共享一次整画布合成，当前图层的两个偏移共享同一归一化图像，相同图像对象只解码一份 RGBA；偏移关系与像素语义通过 `ImageEditorHealingBrushTests` 20/20、`ImageEditorCloneStampSamplingTests` 34/34 回归验证。发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过；未运行完整 Release XCTest，下一完整编译/冒烟门槛 rc1800，不扩张 Figma。
 
 rc1773 修正 Spot Healing 对同一张已采样图重复解码的问题：源候选评分和目标颜色参考合并使用一个取样像素缓存，移除每笔划重复展开的一份全尺寸 RGBA 数组；采样设置与像素结果保持不变。Healing/Spot Healing 套件 18/18、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）、概览归档合同 3/3（30 断言）通过。本版未运行完整 Release XCTest，下一完整门槛 rc1800，不扩张 Figma。
 

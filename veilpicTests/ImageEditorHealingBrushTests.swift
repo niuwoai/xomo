@@ -504,6 +504,46 @@ struct ImageEditorHealingBrushTests {
         #expect(ignoredStrokePixel.alphaComponent > 0.95)
     }
 
+    @Test func healingBatchSamplingReusesCurrentLayerImageForDifferentOffsets() throws {
+        let viewModel = layeredHealingViewModel()
+        let layer = try #require(viewModel.document.selectedLayer)
+        let offsets = [CGSize(width: 4, height: -3), .zero]
+
+        let inputs = try #require(viewModel.sampledBrushInputs(
+            for: layer,
+            canvasOffsets: offsets,
+            sampleSource: .currentLayer
+        ))
+
+        #expect(inputs.count == offsets.count)
+        #expect(inputs[0].image === inputs[1].image)
+        #expect(inputs[0].localOffset == CGSize(width: 4, height: -3))
+        #expect(inputs[1].localOffset == .zero)
+    }
+
+    @Test func healingBatchCompositeSamplingKeepsEachCanvasOffset() throws {
+        let viewModel = layeredHealingViewModel()
+        let layer = try #require(viewModel.document.selectedLayer)
+
+        let inputs = try #require(viewModel.sampledBrushInputs(
+            for: layer,
+            canvasOffsets: [.zero, CGSize(width: 5, height: 0)],
+            sampleSource: .currentAndBelow
+        ))
+        let zeroOffsetPixel = try #require(
+            inputs[0].image.color(at: CGPoint(x: 17, y: 15))?.usingColorSpace(.deviceRGB)
+        )
+        let shiftedPixel = try #require(
+            inputs[1].image.color(at: CGPoint(x: 12, y: 15))?.usingColorSpace(.deviceRGB)
+        )
+
+        #expect(inputs.count == 2)
+        #expect(zeroOffsetPixel.redComponent > zeroOffsetPixel.blueComponent)
+        #expect(shiftedPixel.redComponent > shiftedPixel.blueComponent)
+        #expect(abs(zeroOffsetPixel.redComponent - shiftedPixel.redComponent) < 0.03)
+        #expect(abs(zeroOffsetPixel.alphaComponent - shiftedPixel.alphaComponent) < 0.03)
+    }
+
     private func blemishImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
             NSColor(deviceRed: 0.45, green: 0.45, blue: 0.45, alpha: 1).setFill()
