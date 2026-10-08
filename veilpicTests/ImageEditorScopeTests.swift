@@ -3648,6 +3648,25 @@ struct ImageEditorScopeTests {
         #expect(propertiesSource.contains(".focusable(false)"))
     }
 
+    @Test func levelsControlsExposeAccessiblePreciseNumericInputs() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let levelsStart = try #require(source.range(of: "private var levelsControls"))
+        let levelsEnd = try #require(source[levelsStart.upperBound...].range(of: "private var curvesControls"))
+        let levelsSource = source[levelsStart.lowerBound..<levelsEnd.lowerBound]
+
+        #expect(levelsSource.contains("image-editor-levels-black-point-input"))
+        #expect(levelsSource.contains("image-editor-levels-gamma-input"))
+        #expect(levelsSource.contains("image-editor-levels-white-point-input"))
+        #expect(source.contains("TextField(\"\", value: inputValue, formatter: formatter)"))
+        #expect(source.contains("value.wrappedValue * displayScale"))
+        #expect(source.contains("value.wrappedValue = $0 / displayScale"))
+        #expect(source.contains("formatter.minimumFractionDigits = maximumFractionDigits"))
+        #expect(source.contains("formatter.maximumFractionDigits = maximumFractionDigits"))
+    }
+
     @Test func escapeDiscardsPendingSmartFilterControlsAfterObjectCancellation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
