@@ -19,6 +19,15 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1769 - 2026-10-08
+
+### Fixed
+- Auto Color 改用与 Auto Levels 一致的 0.5% 截尾通道直方图估算颜色均值；单个孤立彩色边缘样本不再拉偏整图校色，同时保留所有非透明像素等权的既有语义。
+
+### Verification
+- 20×10 中性照片的 alpha=1 红色边缘回归与半透明参考一致性回归通过；`ImageEditorAdjustmentTests` 35/35、发布合同 10/10（30 断言）、产品概览归档合同 3/3（30 断言）、CLI Release 合同 7/7（24 断言）通过。
+- 本版不是四十版本完整门槛；下一门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1768 - 2026-10-08
 
 ### Changed

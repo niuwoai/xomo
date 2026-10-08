@@ -256,8 +256,8 @@ extension NSImage {
         context.interpolationQuality = .none
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        var totals = [Double](repeating: 0, count: 3)
-        var visiblePixelCount = 0.0
+        var histograms = Array(repeating: [Int](repeating: 0, count: 256), count: 3)
+        var visiblePixelCount = 0
 
         for y in 0..<height {
             for x in 0..<width {
@@ -265,17 +265,21 @@ extension NSImage {
                 guard pixels[offset + 3] > 0 else { continue }
                 visiblePixelCount += 1
                 for channel in 0..<3 {
-                    totals[channel] += Double(Self.unpremultipliedChannel(
+                    let straight = Self.unpremultipliedChannel(
                         pixels[offset + channel],
                         alpha: pixels[offset + 3]
-                    )) / 255
+                    )
+                    histograms[channel][Int(straight)] += 1
                 }
             }
         }
 
         guard visiblePixelCount > 0 else { return self }
 
-        let averages = totals.map { $0 / visiblePixelCount }
+        let averages = histograms.compactMap {
+            Self.clippedHistogramMean($0, sampleCount: visiblePixelCount)
+        }
+        guard averages.count == 3 else { return self }
         let targetAverage = max(0.001, (averages[0] + averages[1] + averages[2]) / 3)
         let scales = averages.map { average in
             guard average > 0.001 else { return 1.0 }
@@ -1456,5 +1460,18 @@ extension NSImage {
         }
 
         return (lower, upper)
+    }
+
+    private static func clippedHistogramMean(_ histogram: [Int], sampleCount: Int) -> Double? {
+        guard histogram.count == 256, sampleCount > 0 else { return nil }
+        let (lower, upper) = clippedHistogramRange(histogram, sampleCount: sampleCount)
+        var total = 0
+        var includedSamples = 0
+        for value in lower...upper {
+            total += value * histogram[value]
+            includedSamples += histogram[value]
+        }
+        guard includedSamples > 0 else { return nil }
+        return Double(total) / Double(includedSamples * 255)
     }
 }
