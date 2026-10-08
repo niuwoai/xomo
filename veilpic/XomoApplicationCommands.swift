@@ -372,6 +372,8 @@ struct XomoImageCommandActions {
     let canAutoContrast: Bool
     let autoColor: () -> Void
     let canAutoColor: Bool
+    let equalize: () -> Void
+    let canEqualize: Bool
     let cropCenter: () -> Void
     let cropToSelection: () -> Void
     let canCropToSelection: Bool
@@ -466,6 +468,10 @@ struct XomoImageMenuItems: View {
         }
         .keyboardShortcut("b", modifiers: [.command, .shift])
         .disabled(actions?.canAutoColor != true)
+        Button(L10n.text("imageEditor.action.equalize")) {
+            actions?.equalize()
+        }
+        .disabled(actions?.canEqualize != true)
         Divider()
         Button(L10n.text("imageEditor.action.cropCenter")) {
             actions?.cropCenter()

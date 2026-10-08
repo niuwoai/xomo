@@ -656,6 +656,7 @@
 "imageEditor.action.autoLevels" = "自動レベル補正";
 "imageEditor.action.autoContrast" = "自動コントラスト";
 "imageEditor.action.autoColor" = "自動カラー補正";
+"imageEditor.action.equalize" = "階調の均等化";
 "imageEditor.action.desaturate" = "彩度を下げる";
 "imageEditor.action.cropCenter" = "中央を切り抜き";
 "imageEditor.action.cropSelection" = "選択範囲で切り抜き";
@@ -2208,6 +2209,8 @@
 "imageEditor.history.autoLevelsSelected" = "選択レイヤーを自動レベル補正";
 "imageEditor.history.autoContrastSelected" = "選択レイヤーを自動コントラスト";
 "imageEditor.history.autoColorSelected" = "選択レイヤーを自動カラー補正";
+"imageEditor.history.equalize" = "階調の均等化";
+"imageEditor.history.equalizeSelected" = "選択レイヤーの階調を均等化";
 "imageEditor.history.desaturate" = "彩度を下げる";
 "imageEditor.history.desaturateSelected" = "選択レイヤーの彩度を下げる";
 "imageEditor.history.invert" = "反転";
@@ -2439,6 +2442,8 @@
 "imageEditor.status.autoLevelsSelected" = "%d個のレイヤーのレベルを自動補正しました";
 "imageEditor.status.autoContrastSelected" = "%d個のレイヤーのコントラストを自動補正しました";
 "imageEditor.status.autoColorSelected" = "%d個のレイヤーのカラーを自動補正しました";
+"imageEditor.status.equalize" = "現在のレイヤーの階調を均等化しました";
+"imageEditor.status.equalizeSelected" = "%d個のレイヤーの階調を均等化しました";
 "imageEditor.status.desaturate" = "現在のレイヤーの彩度を下げました";
 "imageEditor.status.desaturateSelected" = "%d個のレイヤーの彩度を下げました";
 "imageEditor.status.invert" = "現在のレイヤーを反転しました";

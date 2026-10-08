@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1778
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1779
 
-rc1778 为组件库/工具光标交接新增原生 XCUITest：实际悬停画布、组件库元件，点击插入，再返回画布；读取当前系统光标验证画笔语义指针与默认箭头转换。`ImageEditorCanvasCursorTests` 130/130 通过；XCUITest runner 两次都在连接测试体前挂起，因此真实桌面光标行为仍待确认。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
+rc1779 在 Image 菜单增加“色调均衡”，依据所选栅格层可见亮度 CDF 做破坏性色调映射；选区限制输出范围，透明度保持，沿用单步 Undo/Redo 与像素锁语义。算法与事务测试结果见本版本记录；下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
 
 rc1777 修复 Healing Brush 与 Spot Healing 在半透明边缘附近的颜色参考偏差：参考色按 alpha 覆盖率加权，低 alpha 离群色不再与不透明像素等权。`ImageEditorHealingBrushTests` 27/27，新增 alpha=1/255 红色离群像素回归及现有 Source/Spot、Diffusion、采样与单笔 Undo/Redo 场景通过。下次完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。
 

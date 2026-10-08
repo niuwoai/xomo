@@ -656,6 +656,7 @@
 "imageEditor.action.autoLevels" = "自动色阶";
 "imageEditor.action.autoContrast" = "自动对比度";
 "imageEditor.action.autoColor" = "自动颜色";
+"imageEditor.action.equalize" = "色调均衡";
 "imageEditor.action.desaturate" = "去色";
 "imageEditor.action.cropCenter" = "中心裁剪";
 "imageEditor.action.cropSelection" = "裁剪到选区";
@@ -2208,6 +2209,8 @@
 "imageEditor.history.autoLevelsSelected" = "自动校正所选图层色阶";
 "imageEditor.history.autoContrastSelected" = "自动校正所选图层对比度";
 "imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
+"imageEditor.history.equalize" = "色调均衡";
+"imageEditor.history.equalizeSelected" = "均衡所选图层色调";
 "imageEditor.history.desaturate" = "去色";
 "imageEditor.history.desaturateSelected" = "去色所选图层";
 "imageEditor.history.invert" = "反相";
@@ -2439,6 +2442,8 @@
 "imageEditor.status.autoLevelsSelected" = "已自动校正 %d 个图层的色阶";
 "imageEditor.status.autoContrastSelected" = "已自动校正 %d 个图层的对比度";
 "imageEditor.status.autoColorSelected" = "已自动校正 %d 个图层的颜色";
+"imageEditor.status.equalize" = "已均衡当前图层色调";
+"imageEditor.status.equalizeSelected" = "已均衡 %d 个图层的色调";
 "imageEditor.status.desaturate" = "已将当前图层去色";
 "imageEditor.status.desaturateSelected" = "已将 %d 个图层去色";
 "imageEditor.status.invert" = "已将当前图层反相";

@@ -3421,6 +3421,10 @@ final class ImageEditorViewModel: ObservableObject {
         canAutoLevelsSelectedLayer
     }
 
+    var canEqualizeSelectedLayer: Bool {
+        canAutoLevelsSelectedLayer
+    }
+
     var canDesaturateSelectedLayer: Bool {
         canAutoLevelsSelectedLayer
     }
@@ -9572,6 +9576,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     func autoColorSelectedLayer() {
         applyAutoCorrection({ $0.autoColored() }, history: "imageEditor.history.autoColor", selectedHistory: "imageEditor.history.autoColorSelected", status: "imageEditor.status.autoColor", selectedStatus: "imageEditor.status.autoColorSelected")
+    }
+
+    func equalizeSelectedLayer() {
+        applyAutoCorrection({ $0.histogramEqualized() }, history: "imageEditor.history.equalize", selectedHistory: "imageEditor.history.equalizeSelected", status: "imageEditor.status.equalize", selectedStatus: "imageEditor.status.equalizeSelected")
     }
 
     func desaturateSelectedLayer() {
