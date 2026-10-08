@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-09）
 
+- rc1783 补齐自定义曲线点的自动化编辑入口：`xomo.adjustment.configure` 可通过 RGB/红/绿/蓝字段写入输入/输出点，工具 schema 明确点格式与 16 点上限；复用同一锚点间距校验、非破坏调整层和单步历史事务。`XomoAutomationTests` 309/309、发布契约 10/30、CLI 契约 7/24 通过，包含非法点拒绝且不增加历史项。下一完整 Release/桌面门槛为 rc1800，不扩张 Figma。
 - rc1782 让 Curves 支持自定义点：点击曲线插入，沿 X/Y 两轴拖动塑形，双击或辅助功能移除；RGB、红、绿、蓝控制点独立持久化，图表与渲染使用相同曲线映射。旧项目缺少字段时保持默认恒等。`ImageEditorAdjustmentTests` 40/40、`ImageEditorScopeTests` 198/198、发布契约 10/30、CLI 契约 7/24、三语本地化键 4320/4320、diff 检查通过。下一完整 Release/桌面门槛为 rc1800，不扩张 Figma。
 - rc1779 增加 Photoshop 风格的 Image > Equalize 破坏性校正：在每个可编辑栅格层的可见像素上统计亮度 CDF，按选区裁切输出，保留像素 alpha 与统一 Undo/Redo 事务；局部亮度比例映射尽量保持色相。rc1779 专项算法、选区/透明度锁和 Undo/Redo 测试结果待本轮验证；下一完整门槛为 rc1800，不扩张 Figma。
 - rc1780 为 Curves 提供交互曲线图：RGB/红/绿/蓝通道可拖拽阴影、中间调和高光控制点，叠加当前直方图所选通道；绘图和像素处理共用单调三次插值，零调整严格保持原像素，现有数值滑杆及非破坏调整层持久化保留。`ImageEditorAdjustmentTests` 与 `ImageEditorScopeTests` 共 237/237、三语资源 46/46 通过，覆盖恒等/单调/锚点边界、调整层像素与项目往返、通道/可访问控件接线；发布契约 10/30、CLI Release 契约 7/24 通过。下一完整门槛为 rc1800，不扩张 Figma。

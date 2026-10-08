@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1783 - 2026-10-09
+
+### Added
+- `xomo.adjustment.configure` now accepts editable custom curve control points for RGB and each color channel, with schema discovery, fixed-anchor/spacing validation, and a single adjustment-layer history transaction.
+
+### Verification
+- `XomoAutomationTests` 309/309 passed, including the custom-point schema, all four channels, invalid fixed-anchor rejection, and a single history entry for a successful layer creation; invalid input adds no history.
+- Release contract: 10 tests / 30 assertions passed; CLI release contract: 7 tests / 24 assertions passed; `git diff --check` passed. The next full Release/desktop gate remains rc1800; Figma scope is unchanged.
+
 ## 2.12.0-rc1782 - 2026-10-09
 
 ### Added

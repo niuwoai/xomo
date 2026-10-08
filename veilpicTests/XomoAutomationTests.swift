@@ -6366,6 +6366,16 @@ struct XomoAutomationTests {
         #expect(adjustmentSettings["curvesRedMidtones"]?.objectValue?["type"] == .string("number"))
         #expect(adjustmentSettings["curvesGreenShadows"]?.objectValue?["type"] == .string("number"))
         #expect(adjustmentSettings["curvesBlueHighlights"]?.objectValue?["type"] == .string("number"))
+        for key in [
+            "curvesRGBControlPoints", "curvesRedControlPoints",
+            "curvesGreenControlPoints", "curvesBlueControlPoints"
+        ] {
+            #expect(adjustmentSettings[key]?.objectValue?["type"] == .string("array"))
+            #expect(adjustmentSettings[key]?.objectValue?["maxItems"] == .number(16))
+            #expect(adjustmentSettings[key]?.objectValue?["items"]?.objectValue?["required"] == .array([
+                .string("input"), .string("output")
+            ]))
+        }
 
         viewModel.selectedAdjustment = .levels
         viewModel.adjustmentValue = 0.20
@@ -6517,6 +6527,64 @@ struct XomoAutomationTests {
         ))
         #expect(!incompleteResponse.ok)
         #expect(viewModel.document.history.count == noOpHistoryCount)
+    }
+
+    @Test func registryConfiguresCustomCurvesThroughAdjustmentAutomation() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let historyCount = viewModel.document.history.count
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.adjustment.configure",
+            arguments: [
+                "adjustment": .string(ImageEditorAdjustment.curves.rawValue),
+                "action": .string("addLayer"),
+                "settings": .object([
+                    "curvesRGBControlPoints": .array([
+                        .object(["input": .number(0.31), "output": .number(0.72)])
+                    ]),
+                    "curvesRedControlPoints": .array([
+                        .object(["input": .number(0.36), "output": .number(0.68)])
+                    ]),
+                    "curvesGreenControlPoints": .array([
+                        .object(["input": .number(0.41), "output": .number(0.63)])
+                    ]),
+                    "curvesBlueControlPoints": .array([
+                        .object(["input": .number(0.46), "output": .number(0.58)])
+                    ])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        let layer = try #require(viewModel.document.selectedLayer)
+        #expect(layer.adjustment?.kind == .curves)
+        #expect(layer.adjustmentSettings.curvesRGBControlPoints.map(\.input) == [0.31])
+        #expect(layer.adjustmentSettings.curvesRGBControlPoints.map(\.output) == [0.72])
+        #expect(layer.adjustmentSettings.curvesRedControlPoints.map(\.input) == [0.36])
+        #expect(layer.adjustmentSettings.curvesGreenControlPoints.map(\.output) == [0.63])
+        #expect(layer.adjustmentSettings.curvesBlueControlPoints.map(\.output) == [0.58])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let invalidHistoryCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.adjustment.configure",
+            arguments: [
+                "adjustment": .string(ImageEditorAdjustment.curves.rawValue),
+                "action": .string("addLayer"),
+                "settings": .object([
+                    "curvesRGBControlPoints": .array([
+                        .object(["input": .number(0.50), "output": .number(0.80)])
+                    ])
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == invalidHistoryCount)
     }
 
     @Test func registryConfiguresGaussianBlurRadiusThroughTheSharedFilterPipeline() throws {

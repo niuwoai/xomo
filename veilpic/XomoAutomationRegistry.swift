@@ -6598,6 +6598,10 @@ final class XomoAutomationRegistry {
             case "curvesBlueShadows": viewModel.curvesBlueShadows = try numericSetting(value, key: key)
             case "curvesBlueMidtones": viewModel.curvesBlueMidtones = try numericSetting(value, key: key)
             case "curvesBlueHighlights": viewModel.curvesBlueHighlights = try numericSetting(value, key: key)
+            case "curvesRGBControlPoints": viewModel.curvesRGBControlPoints = try curveControlPoints(value, key: key)
+            case "curvesRedControlPoints": viewModel.curvesRedControlPoints = try curveControlPoints(value, key: key)
+            case "curvesGreenControlPoints": viewModel.curvesGreenControlPoints = try curveControlPoints(value, key: key)
+            case "curvesBlueControlPoints": viewModel.curvesBlueControlPoints = try curveControlPoints(value, key: key)
             case "hue": viewModel.hueSaturationHue = try numericSetting(value, key: key)
             case "saturation": viewModel.hueSaturationSaturation = try numericSetting(value, key: key)
             case "lightness": viewModel.hueSaturationLightness = try numericSetting(value, key: key)
@@ -6742,6 +6746,36 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument("Setting \(key) must be boolean")
         }
         return boolean
+    }
+
+    private func curveControlPoints(_ value: XomoJSONValue, key: String) throws -> [ImageEditorCurveControlPoint] {
+        guard let items = value.arrayValue,
+              items.count <= ImageEditorCurveControlPointRules.maximumCount else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Setting \(key) must be an array with at most \(ImageEditorCurveControlPointRules.maximumCount) points"
+            )
+        }
+        let points = try items.enumerated().map { index, item in
+            guard let object = item.objectValue,
+                  Set(object.keys) == Set(["input", "output"]),
+                  let inputValue = object["input"],
+                  let outputValue = object["output"] else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Setting \(key)[\(index)] must contain numeric input and output"
+                )
+            }
+            return ImageEditorCurveControlPoint(
+                input: try numericSetting(inputValue, key: "\(key)[\(index)].input"),
+                output: try numericSetting(outputValue, key: "\(key)[\(index)].output")
+            )
+        }
+        let normalized = ImageEditorCurveControlPointRules.normalized(points)
+        guard normalized.count == points.count else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Setting \(key) contains points that overlap fixed anchors or each other"
+            )
+        }
+        return normalized
     }
 
     private func setZoom(
@@ -8286,6 +8320,21 @@ private extension XomoAutomationRegistry {
         ])
     }
 
+    static let curvesControlPointsSchema: XomoJSONValue = .object([
+        "type": .string("array"),
+        "description": .string("Custom curve points in normalized input/output coordinates; at most 16 points"),
+        "items": .object([
+            "type": .string("object"),
+            "properties": .object([
+                "input": shapeUnitIntervalSchema(description: "Input tone"),
+                "output": shapeUnitIntervalSchema(description: "Output tone")
+            ]),
+            "required": .array([.string("input"), .string("output")]),
+            "additionalProperties": .bool(false)
+        ]),
+        "maxItems": .number(Double(ImageEditorCurveControlPointRules.maximumCount))
+    ])
+
     static func shapeNonnegativeNumberSchema(description: String) -> XomoJSONValue {
         .object([
             "type": .string("number"),
@@ -8451,6 +8500,10 @@ private extension XomoAutomationRegistry {
         "curvesBlueShadows": XomoAutomationSchema.number(description: "Blue channel curves shadows"),
         "curvesBlueMidtones": XomoAutomationSchema.number(description: "Blue channel curves midtones"),
         "curvesBlueHighlights": XomoAutomationSchema.number(description: "Blue channel curves highlights"),
+        "curvesRGBControlPoints": curvesControlPointsSchema,
+        "curvesRedControlPoints": curvesControlPointsSchema,
+        "curvesGreenControlPoints": curvesControlPointsSchema,
+        "curvesBlueControlPoints": curvesControlPointsSchema,
         "hue": XomoAutomationSchema.number(description: "Hue shift"),
         "saturation": XomoAutomationSchema.number(description: "Saturation"),
         "lightness": XomoAutomationSchema.number(description: "Lightness"),
