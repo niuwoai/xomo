@@ -34,7 +34,7 @@ Xomo 是面向 macOS 的经典图像编辑器，优先保证像素选区、绘�
 
 - 阶段 A 快速蒙版已完成；后续改动须维护常见选区来源、预览、画笔/橡皮编辑、退出及 Undo/Redo 工作流。
 - 像素选区移动已有软覆盖、羽化、缩放/越界图层、预览复用、Undo 边界和项目重载回归；窄内核测试不能替代真实素材完整任务。
-- rc1729 曾合入 `main` 并推送对应标签；rc1760 已完成本地四十版本门槛，`/Applications/Xomo.app` 当前为 rc1760/build1760。rc1761 已提交并合入本地 `main`，PNG 冷启动文件窗口已验证；该提交尚未推送到 GitHub，原生项目 Launch Services UI 冒烟仍待补。
+- rc1729 曾合入 `main` 并推送对应标签；rc1760 已完成本地四十版本门槛，`/Applications/Xomo.app` 当前为 rc1760/build1760。rc1761 已提交并合入本地 `main`，PNG 与 `.xomoproject` 均已通过 Launch Services 冷启动及可见窗口检查；原生项目自动化读回字段与源文件一致。该提交尚未推送到 GitHub；rc1761 未覆盖 `/Applications`，Release archive 与签名/公证也未验证。
 - 历史版本说明只描述当时状态，不能覆盖当前门槛或安装版状态。rc1728/rc1729 门槛证据见[全量门槛审查](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 rc1727 修正 LayerComp 测试拆分后的源码读取边界，保留四项旧键盘断言，增加五项调用接线检查与真实搜索框 Coordinator 的八场景单测；不修改生产交互逻辑。版本契约 10 项／30 断言、双架构测试编译／严格签名、九相关套件 373 方法／885 次运行和新增八个内部场景通过；真实 Universal CLI 与两项 Release CLI 测试通过，不代表原生全量或 GUI 验收。仍是同一 rc1720 完整门槛，迟到数值／同属性会话、真实光标、全量、正常候选与可恢复安装未完成，安装 rc1680，不扩张 Figma。见[验证记录](docs/reviews/2026-10-04-rc1727-layer-comp-search.md)。
