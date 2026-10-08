@@ -426,11 +426,12 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
         set {
+            let normalizedValue = max(0, min(0.98, newValue))
             switch levelsChannel {
-            case .rgb: levelsBlackPoint = newValue
-            case .red: levelsRedBlackPoint = newValue
-            case .green: levelsGreenBlackPoint = newValue
-            case .blue: levelsBlueBlackPoint = newValue
+            case .rgb: levelsBlackPoint = normalizedValue
+            case .red: levelsRedBlackPoint = normalizedValue
+            case .green: levelsGreenBlackPoint = normalizedValue
+            case .blue: levelsBlueBlackPoint = normalizedValue
             }
         }
     }
@@ -445,11 +446,12 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
         set {
+            let normalizedValue = max(0.1, min(4, newValue))
             switch levelsChannel {
-            case .rgb: levelsGamma = newValue
-            case .red: levelsRedGamma = newValue
-            case .green: levelsGreenGamma = newValue
-            case .blue: levelsBlueGamma = newValue
+            case .rgb: levelsGamma = normalizedValue
+            case .red: levelsRedGamma = normalizedValue
+            case .green: levelsGreenGamma = normalizedValue
+            case .blue: levelsBlueGamma = normalizedValue
             }
         }
     }
@@ -464,11 +466,12 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
         set {
+            let normalizedValue = max(0.02, min(1, newValue))
             switch levelsChannel {
-            case .rgb: levelsWhitePoint = newValue
-            case .red: levelsRedWhitePoint = newValue
-            case .green: levelsGreenWhitePoint = newValue
-            case .blue: levelsBlueWhitePoint = newValue
+            case .rgb: levelsWhitePoint = normalizedValue
+            case .red: levelsRedWhitePoint = normalizedValue
+            case .green: levelsGreenWhitePoint = normalizedValue
+            case .blue: levelsBlueWhitePoint = normalizedValue
             }
         }
     }

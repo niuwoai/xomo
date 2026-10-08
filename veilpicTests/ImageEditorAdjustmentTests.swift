@@ -13,6 +13,42 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func levelsNumericInputsClampToSupportedRangesWithoutCrossingChannels() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "levels-input-range.png",
+            image: NSImage(size: NSSize(width: 4, height: 4))
+        ) { _ in }
+
+        viewModel.levelsChannel = .red
+        viewModel.selectedLevelsBlackPoint = -1
+        viewModel.selectedLevelsGamma = 8
+        viewModel.selectedLevelsWhitePoint = 0
+        #expect(viewModel.levelsRedBlackPoint == 0)
+        #expect(viewModel.levelsRedGamma == 4)
+        #expect(viewModel.levelsRedWhitePoint == 0.02)
+
+        viewModel.levelsChannel = .green
+        viewModel.selectedLevelsBlackPoint = 0.37
+        viewModel.selectedLevelsGamma = 1.65
+        viewModel.selectedLevelsWhitePoint = 0.82
+        #expect(viewModel.levelsGreenBlackPoint == 0.37)
+        #expect(viewModel.levelsGreenGamma == 1.65)
+        #expect(viewModel.levelsGreenWhitePoint == 0.82)
+
+        viewModel.levelsChannel = .blue
+        viewModel.selectedLevelsBlackPoint = 2
+        viewModel.selectedLevelsGamma = 0
+        viewModel.selectedLevelsWhitePoint = 2
+        #expect(viewModel.levelsBlueBlackPoint == 0.98)
+        #expect(viewModel.levelsBlueGamma == 0.1)
+        #expect(viewModel.levelsBlueWhitePoint == 1)
+
+        viewModel.levelsChannel = .rgb
+        #expect(viewModel.levelsBlackPoint == 0)
+        #expect(viewModel.levelsGamma == 1)
+        #expect(viewModel.levelsWhitePoint == 1)
+    }
+
     @Test func levelsAdjustmentEditsRGBChannelsIndependentlyAndSurvivesUndoRedo() throws {
         let canvasSize = NSSize(width: 20, height: 20)
         let sourceImage = bitmapImage(

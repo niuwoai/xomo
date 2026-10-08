@@ -16167,6 +16167,9 @@ struct ImageEditorView: View {
                 ),
                 range: 0...0.98,
                 step: 0.01,
+                displayScale: 255,
+                formatter: levelsNumberFormatter(maximumFractionDigits: 0),
+                accessibilityIdentifier: "image-editor-levels-black-point-input",
                 displayText: "\(Int((blackPoint * 255).rounded()))"
             )
             levelsSlider(
@@ -16177,6 +16180,9 @@ struct ImageEditorView: View {
                 ),
                 range: 0.1...4,
                 step: 0.05,
+                displayScale: 1,
+                formatter: levelsNumberFormatter(maximumFractionDigits: 2),
+                accessibilityIdentifier: "image-editor-levels-gamma-input",
                 displayText: String(format: "%.2f", gamma)
             )
             levelsSlider(
@@ -16187,6 +16193,9 @@ struct ImageEditorView: View {
                 ),
                 range: 0.02...1,
                 step: 0.01,
+                displayScale: 255,
+                formatter: levelsNumberFormatter(maximumFractionDigits: 0),
+                accessibilityIdentifier: "image-editor-levels-white-point-input",
                 displayText: "\(Int((whitePoint * 255).rounded()))"
             )
         }
@@ -16914,9 +16923,40 @@ struct ImageEditorView: View {
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
+        displayScale: Double,
+        formatter: NumberFormatter,
+        accessibilityIdentifier: String,
         displayText: String
     ) -> some View {
-        adjustmentSlider(labelKey: labelKey, value: value, range: range, step: step, displayText: displayText)
+        let inputValue = Binding(
+            get: { value.wrappedValue * displayScale },
+            set: { value.wrappedValue = $0 / displayScale }
+        )
+        return VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(L10n.text(labelKey))
+                Spacer()
+                TextField("", value: inputValue, formatter: formatter)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 54)
+                    .accessibilityLabel(L10n.text(labelKey))
+                    .accessibilityIdentifier(accessibilityIdentifier)
+                    .accessibilityValue(displayText)
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Slider(value: value, in: range, step: step)
+        }
+    }
+
+    private func levelsNumberFormatter(maximumFractionDigits: Int) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = maximumFractionDigits
+        formatter.maximumFractionDigits = maximumFractionDigits
+        formatter.isLenient = false
+        return formatter
     }
 
     private func adjustmentSlider(
