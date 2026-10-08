@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-09）
 
+- rc1778 为已完成的组件库光标策略增加原生 XCUITest 往返：选画笔并悬停画布、进入组件库悬停/插入元件、回到画布，断言实际系统光标从画笔语义指针切到箭头再恢复；`ImageEditorCanvasCursorTests` 130/130 通过。原生 UI runner 两次均在建立测试连接前挂起，UI 测试体尚未执行，实际光标仍待运行时确认。rc1800 完整门槛仍要求 Release 全量构建与真实桌面冒烟，不扩张 Figma。
 - rc1777 修复 Healing Brush 与 Spot Healing 的参考色统计：CoreGraphics RGBA 为预乘 alpha，参考色按像素覆盖率加权，避免低 alpha 彩色边缘污染颜色校正；新增 alpha=1/255 红色离群样本回归。`ImageEditorHealingBrushTests` 27/27，完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。
 - rc1776 将 Healing Brush 与 Spot Healing 的 Diffusion 高斯模糊范围限制在笔触经 source offset 平移后的取样 ROI；Core Image 继续使用原 TIFF 输入和 Gaussian Blur 路径，只请求受影响区域，尺寸不匹配的非标准图像保留旧全帧回退。ROI 与全帧参考 RGB 最大差异不超过 1/255、alpha 逐像素一致；4K 小笔触不再分配整幅模糊结果缓冲。`ImageEditorHealingBrushTests` 26/26 通过，完整门槛仍为 rc1800，不扩张 Figma。rc1775 GitHub 与 OSS 已发布，但 appcast 仍需补 `app_id=xomo` 配置。
 
