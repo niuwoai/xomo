@@ -990,10 +990,14 @@ extension ImageEditorViewModel {
             offsetPathAnchor(anchor, by: offset)
         }
         let insertionIndex = selectedPathSubpathIndex + 1
+        var updatedShapeContent = shapeContent
+        var operations = shapeContent.resolvedPathComponentOperations
+        operations.insert(operations[selectedPathSubpathIndex], at: insertionIndex)
+        updatedShapeContent.pathComponentOperations = operations
 
         pushUndo()
         canvasSubpaths.insert(duplicatedAnchors, at: insertionIndex)
-        updatePathLayer(at: layerIndex, shapeContent: shapeContent, canvasSubpaths: canvasSubpaths)
+        updatePathLayer(at: layerIndex, shapeContent: updatedShapeContent, canvasSubpaths: canvasSubpaths)
         selectedPathSubpathIndex = insertionIndex
         selectedPathAnchorIndex = duplicatedAnchors.isEmpty ? nil : 0
         selectedPathControlRole = .anchor
@@ -1671,9 +1675,13 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        var updatedShapeContent = shapeContent
+        var operations = shapeContent.resolvedPathComponentOperations
+        operations.remove(at: deletedIndex)
+        updatedShapeContent.pathComponentOperations = operations
 
         pushUndo()
-        updatePathLayer(at: layerIndex, shapeContent: shapeContent, canvasSubpaths: canvasSubpaths)
+        updatePathLayer(at: layerIndex, shapeContent: updatedShapeContent, canvasSubpaths: canvasSubpaths)
         selectedPathSubpathIndex = min(deletedIndex, canvasSubpaths.count - 1)
         selectedPathAnchorIndex = canvasSubpaths[selectedPathSubpathIndex].isEmpty ? nil : 0
         selectedPathControlRole = .anchor

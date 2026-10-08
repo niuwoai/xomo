@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1750 - 2026-10-08
+
+### Fixed
+- 复制路径子路径时复制对应布尔运算，删除子路径时同步删除运算，避免几何索引变化后其它组件错误继承运算。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1750`/1750；rc1760 仍是四十版本完整构建门槛。
+
+### Verification
+- 子路径复制/删除后的运算顺序与 Undo/Redo 回归、版本和 CLI 合同记录见[验证记录](docs/reviews/2026-10-08-rc1750-path-operation-alignment.md)。
+
+---
+
 ## 2.12.0-rc1749 - 2026-10-08
 
 ### Added

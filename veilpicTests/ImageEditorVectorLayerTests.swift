@@ -1897,6 +1897,10 @@ struct ImageEditorVectorLayerTests {
         viewModel.document.selection = .raster(mask: mask, bounds: bounds)
         viewModel.createPathFromSelection()
 
+        let createdLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        var contentBeforeDelete = try #require(viewModel.document.layers[createdLayerIndex].shapeContent)
+        contentBeforeDelete.pathComponentOperations = [.combine, .subtract]
+        viewModel.document.layers[createdLayerIndex].kind = .shape(contentBeforeDelete)
         let pathLayer = try #require(viewModel.document.selectedLayer)
         let pathContent = try #require(pathLayer.shapeContent)
         let primaryBefore = try #require(pathContent.editablePathAnchors.first)
@@ -1921,6 +1925,7 @@ struct ImageEditorVectorLayerTests {
         )
 
         #expect(updatedContent.editablePathSubpaths.isEmpty)
+        #expect(updatedContent.pathComponentOperations == [.combine])
         #expect(viewModel.selectedPathSubpathIndex == 0)
         #expect(viewModel.selectedPathAnchorIndex == 0)
         #expect(!viewModel.canDeleteSelectedPathSubpath)
@@ -1928,6 +1933,11 @@ struct ImageEditorVectorLayerTests {
         #expect(Int(primaryAfterCanvas.y.rounded()) == Int(primaryBeforeCanvas.y.rounded()))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathSubpathDelete"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathDeleted"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.combine, .subtract])
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.combine])
     }
 
     @Test func imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy() async throws {
@@ -1950,6 +1960,10 @@ struct ImageEditorVectorLayerTests {
         viewModel.document.selection = .raster(mask: mask, bounds: bounds)
         viewModel.createPathFromSelection()
 
+        let createdLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        var contentBeforeDuplicate = try #require(viewModel.document.layers[createdLayerIndex].shapeContent)
+        contentBeforeDuplicate.pathComponentOperations = [.combine, .subtract]
+        viewModel.document.layers[createdLayerIndex].kind = .shape(contentBeforeDuplicate)
         let pathLayer = try #require(viewModel.document.selectedLayer)
         let pathContent = try #require(pathLayer.shapeContent)
         let primaryBefore = pathContent.editablePathAnchors.map { anchor in
@@ -1969,6 +1983,7 @@ struct ImageEditorVectorLayerTests {
         }
 
         #expect(duplicatedContent.editablePathSubpaths.count == 2)
+        #expect(duplicatedContent.pathComponentOperations == [.combine, .combine, .subtract])
         #expect(primaryAfter.count == primaryBefore.count)
         #expect(duplicatedSubpath.count == primaryBefore.count)
         let primaryBounds = primaryBefore.reduce(CGRect.null) { partial, point in
@@ -1990,6 +2005,11 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.selectedPathAnchorIndex == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathSubpathDuplicate"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathDuplicated"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.combine, .subtract])
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.combine, .combine, .subtract])
     }
 
     @Test func imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath() async throws {
