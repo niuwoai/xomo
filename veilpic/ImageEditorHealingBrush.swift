@@ -93,15 +93,23 @@ extension NSImage {
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
         )
+        let strokePoints = samples.map(\.point)
+        let maskBounds = ImageEditorHealingBrushKernel.strokeBounds(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: strokePoints,
+            diameter: effectiveDiameter
+        )
         let outputPixels = ImageEditorHealingBrushKernel.heal(
             targetPixels: targetPixels,
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
             maskAlpha: maskAlpha,
+            maskBounds: maskBounds,
             width: pixelWidth,
             height: pixelHeight,
             sourceOffset: sourceOffset,
-            destinationReference: ImageEditorHealingBrushKernel.strokeCenter(samples.map(\.point)),
+            destinationReference: ImageEditorHealingBrushKernel.strokeCenter(strokePoints),
             brushDiameter: effectiveDiameter,
             opacity: opacity
         )
@@ -195,6 +203,12 @@ extension NSImage {
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
             maskAlpha: maskAlpha,
+            maskBounds: ImageEditorHealingBrushKernel.strokeBounds(
+                width: pixelWidth,
+                height: pixelHeight,
+                points: points,
+                diameter: effectiveDiameter
+            ),
             width: pixelWidth,
             height: pixelHeight,
             sourceOffset: sourceOffset,
@@ -281,6 +295,50 @@ struct ImageEditorHealingBrushColor: Equatable {
 
 enum ImageEditorHealingBrushKernel {
     static let bytesPerPixel = 4
+    typealias MaskBounds = (minX: Int, maxX: Int, minY: Int, maxY: Int)
+    private typealias PointBounds = (minX: CGFloat, maxX: CGFloat, minY: CGFloat, maxY: CGFloat)
+
+    static func strokeBounds(
+        width: Int,
+        height: Int,
+        points: [CGPoint],
+        diameter: CGFloat
+    ) -> MaskBounds? {
+        guard width > 0,
+              height > 0,
+              diameter.isFinite,
+              let pointsBounds = pointBounds(points)
+        else { return nil }
+
+        let radius = max(0.5, diameter / 2)
+        let canvasMaxX = CGFloat(width - 1)
+        let canvasMaxY = CGFloat(height - 1)
+        let clippedMinX = max(0, floor(pointsBounds.minX - radius))
+        let clippedMaxX = min(canvasMaxX, ceil(pointsBounds.maxX + radius))
+        let clippedMinY = max(0, floor(pointsBounds.minY - radius))
+        let clippedMaxY = min(canvasMaxY, ceil(pointsBounds.maxY + radius))
+
+        guard clippedMinX <= clippedMaxX, clippedMinY <= clippedMaxY else { return nil }
+        return (
+            Int(clippedMinX),
+            Int(clippedMaxX),
+            Int(clippedMinY),
+            Int(clippedMaxY)
+        )
+    }
+
+    private static func pointBounds(_ points: [CGPoint]) -> PointBounds? {
+        guard let first = points.first, first.x.isFinite, first.y.isFinite else { return nil }
+        var bounds: PointBounds = (first.x, first.x, first.y, first.y)
+        for point in points.dropFirst() {
+            guard point.x.isFinite, point.y.isFinite else { return nil }
+            bounds.minX = min(bounds.minX, point.x)
+            bounds.maxX = max(bounds.maxX, point.x)
+            bounds.minY = min(bounds.minY, point.y)
+            bounds.maxY = max(bounds.maxY, point.y)
+        }
+        return bounds
+    }
 
     static func spotSourceOffset(
         pixels: [UInt8],
@@ -564,6 +622,7 @@ enum ImageEditorHealingBrushKernel {
         targetContextPixels: [UInt8],
         sourcePixels: [UInt8],
         maskAlpha: [UInt8],
+        maskBounds: MaskBounds?,
         width: Int,
         height: Int,
         sourceOffset: CGSize,
@@ -571,10 +630,21 @@ enum ImageEditorHealingBrushKernel {
         brushDiameter: CGFloat,
         opacity: CGFloat
     ) -> [UInt8] {
-        guard targetPixels.count == width * height * bytesPerPixel,
+        guard width > 0,
+              height > 0,
+              targetPixels.count == width * height * bytesPerPixel,
               targetContextPixels.count == targetPixels.count,
               sourcePixels.count == targetPixels.count,
               maskAlpha.count == width * height
+        else { return targetPixels }
+
+        guard let maskBounds,
+              maskBounds.minX >= 0,
+              maskBounds.minY >= 0,
+              maskBounds.maxX < width,
+              maskBounds.maxY < height,
+              maskBounds.minX <= maskBounds.maxX,
+              maskBounds.minY <= maskBounds.maxY
         else { return targetPixels }
 
         let sourceStart = CGPoint(
@@ -609,8 +679,8 @@ enum ImageEditorHealingBrushKernel {
         let offsetY = Int(sourceOffset.height.rounded())
         var output = targetPixels
 
-        for y in 0..<height {
-            for x in 0..<width {
+        for y in maskBounds.minY...maskBounds.maxY {
+            for x in maskBounds.minX...maskBounds.maxX {
                 let maskIndex = y * width + x
                 let strength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity
                 guard strength > 0 else { continue }
