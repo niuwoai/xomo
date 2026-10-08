@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1766
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1767
+
+rc1767 修正 Auto Levels、Auto Contrast 和 Auto Color 对 CGContext 预乘 alpha 的误用：统计时使用还原后的可见 RGB，写回时重新乘回原 alpha；同一颜色在不同透明度下现在与不透明参考一致。`ImageEditorAdjustmentTests` 33/33、发布合同 10/30、产品概览归档合同 3/30（30 断言）、CLI Release 合同 7/24 通过。下一完整门槛 rc1800，不扩张 Figma。
 
 rc1766 为 Curves 增加 RGB 及红、绿、蓝通道选择，每个通道可独立调整阴影、中间调和高光；RGB 曲线先应用，单色曲线后应用，正确还原并保留预乘 alpha。参数随调整图层及项目保存，并可由自动化读写。`ImageEditorAdjustmentTests` 32/32、`ImageEditorScopeTests` 198/198、旧项目缺字段解码 1/1、自动化设置 1/1、发布合同 10/30、产品概览归档 3/30、CLI Release 合同 7/24 通过。下一完整门槛 rc1800。
 

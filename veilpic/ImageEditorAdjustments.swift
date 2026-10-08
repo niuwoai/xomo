@@ -99,8 +99,12 @@ extension NSImage {
                 guard pixels[offset + 3] > 0 else { continue }
                 hasVisiblePixels = true
                 for channel in 0..<3 {
-                    minimum[channel] = min(minimum[channel], pixels[offset + channel])
-                    maximum[channel] = max(maximum[channel], pixels[offset + channel])
+                    let straight = Self.unpremultipliedChannel(
+                        pixels[offset + channel],
+                        alpha: pixels[offset + 3]
+                    )
+                    minimum[channel] = min(minimum[channel], straight)
+                    maximum[channel] = max(maximum[channel], straight)
                 }
             }
         }
@@ -115,8 +119,13 @@ extension NSImage {
                     let low = Int(minimum[channel])
                     let high = Int(maximum[channel])
                     guard high > low else { continue }
-                    let value = max(0, min(255, Int(pixels[offset + channel]) - low))
-                    pixels[offset + channel] = UInt8((Double(value) / Double(high - low) * 255).rounded())
+                    let straight = Self.unpremultipliedChannel(
+                        pixels[offset + channel],
+                        alpha: pixels[offset + 3]
+                    )
+                    let value = max(0, min(255, Int(straight) - low))
+                    let mapped = Double(value) / Double(high - low)
+                    pixels[offset + channel] = Self.premultipliedChannel(mapped, alpha: pixels[offset + 3])
                 }
             }
         }
@@ -171,9 +180,9 @@ extension NSImage {
                 guard pixels[offset + 3] > 0 else { continue }
                 hasVisiblePixels = true
                 let luminance = Self.luminosity(
-                    red: Double(pixels[offset]) / 255,
-                    green: Double(pixels[offset + 1]) / 255,
-                    blue: Double(pixels[offset + 2]) / 255
+                    red: Double(Self.unpremultipliedChannel(pixels[offset], alpha: pixels[offset + 3])) / 255,
+                    green: Double(Self.unpremultipliedChannel(pixels[offset + 1], alpha: pixels[offset + 3])) / 255,
+                    blue: Double(Self.unpremultipliedChannel(pixels[offset + 2], alpha: pixels[offset + 3])) / 255
                 )
                 minimum = min(minimum, luminance)
                 maximum = max(maximum, luminance)
@@ -188,8 +197,14 @@ extension NSImage {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 0 else { continue }
                 for channel in 0..<3 {
-                    let value = Double(pixels[offset + channel]) / 255
-                    pixels[offset + channel] = Self.byte((value - minimum) / range)
+                    let value = Double(Self.unpremultipliedChannel(
+                        pixels[offset + channel],
+                        alpha: pixels[offset + 3]
+                    )) / 255
+                    pixels[offset + channel] = Self.premultipliedChannel(
+                        (value - minimum) / range,
+                        alpha: pixels[offset + 3]
+                    )
                 }
             }
         }
@@ -243,7 +258,10 @@ extension NSImage {
                 guard pixels[offset + 3] > 0 else { continue }
                 visiblePixelCount += 1
                 for channel in 0..<3 {
-                    totals[channel] += Double(pixels[offset + channel]) / 255
+                    totals[channel] += Double(Self.unpremultipliedChannel(
+                        pixels[offset + channel],
+                        alpha: pixels[offset + 3]
+                    )) / 255
                 }
             }
         }
@@ -262,7 +280,14 @@ extension NSImage {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 0 else { continue }
                 for channel in 0..<3 {
-                    pixels[offset + channel] = Self.byte(Double(pixels[offset + channel]) / 255 * scales[channel])
+                    let straight = Double(Self.unpremultipliedChannel(
+                        pixels[offset + channel],
+                        alpha: pixels[offset + 3]
+                    )) / 255
+                    pixels[offset + channel] = Self.premultipliedChannel(
+                        straight * scales[channel],
+                        alpha: pixels[offset + 3]
+                    )
                 }
             }
         }
@@ -1388,5 +1413,14 @@ extension NSImage {
 
     private static func byte(_ value: Double) -> UInt8 {
         UInt8((max(0, min(1, value)) * 255).rounded())
+    }
+
+    private static func unpremultipliedChannel(_ value: UInt8, alpha: UInt8) -> UInt8 {
+        guard alpha > 0 else { return 0 }
+        return UInt8(max(0, min(255, Int((Double(value) * 255 / Double(alpha)).rounded()))))
+    }
+
+    private static func premultipliedChannel(_ value: Double, alpha: UInt8) -> UInt8 {
+        byte(value * Double(alpha) / 255)
     }
 }

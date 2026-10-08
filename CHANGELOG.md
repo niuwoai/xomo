@@ -19,6 +19,15 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1767 - 2026-10-08
+
+### Fixed
+- Auto Levels、Auto Contrast 与 Auto Color 现在基于反预乘后的可见 RGB 进行统计和校正，再按原 alpha 写回；半透明图层不再因透明度扭曲校正结果。
+
+### Verification
+- `ImageEditorAdjustmentTests` 33/33 通过；新增像素回归覆盖不同 alpha 下与不透明参考的 RGB 等价，并验证原 alpha 保持。发布合同 10/30、产品概览归档合同 3/30（30 断言）、CLI Release 合同 7/24 通过。
+- 本版不是四十版本完整门槛；下一门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1766 - 2026-10-08
 
 ### Added

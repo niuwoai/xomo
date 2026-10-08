@@ -13,6 +13,43 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func automaticCorrectionsUseStraightRGBAndPreservePremultipliedAlpha() throws {
+        let size = NSSize(width: 20, height: 10)
+        let dark = NSColor(calibratedRed: 0.20, green: 0.30, blue: 0.40, alpha: 0.25)
+        let light = NSColor(calibratedRed: 0.60, green: 0.70, blue: 0.80, alpha: 0.75)
+        let translucent = bitmapImage(
+            size: size,
+            background: dark,
+            fills: [(CGRect(x: 10, y: 0, width: 10, height: 10), light)]
+        )
+        let opaque = bitmapImage(
+            size: size,
+            background: NSColor(calibratedRed: 0.20, green: 0.30, blue: 0.40, alpha: 1),
+            fills: [(
+                CGRect(x: 10, y: 0, width: 10, height: 10),
+                NSColor(calibratedRed: 0.60, green: 0.70, blue: 0.80, alpha: 1)
+            )]
+        )
+        let corrections: [(String, (NSImage) -> NSImage?)] = [
+            ("Auto Levels", { $0.autoLeveled() }),
+            ("Auto Contrast", { $0.autoContrasted() }),
+            ("Auto Color", { $0.autoColored() })
+        ]
+
+        for (name, correction) in corrections {
+            let edited = try #require(correction(translucent), "\(name) should produce an image")
+            let reference = try #require(correction(opaque), "\(name) should produce an opaque reference")
+            for (point, expectedAlpha) in [(CGPoint(x: 5, y: 5), 0.25), (CGPoint(x: 15, y: 5), 0.75)] {
+                let actual = try #require(edited.color(at: point)?.usingColorSpace(.deviceRGB))
+                let expected = try #require(reference.color(at: point)?.usingColorSpace(.deviceRGB))
+                #expect(abs(actual.redComponent - expected.redComponent) < 0.025, "\(name) red at \(point)")
+                #expect(abs(actual.greenComponent - expected.greenComponent) < 0.025, "\(name) green at \(point)")
+                #expect(abs(actual.blueComponent - expected.blueComponent) < 0.025, "\(name) blue at \(point)")
+                #expect(abs(actual.alphaComponent - expectedAlpha) < 0.025, "\(name) alpha at \(point)")
+            }
+        }
+    }
+
     @Test func levelsNumericInputsClampToSupportedRangesWithoutCrossingChannels() {
         let viewModel = ImageEditorViewModel(
             sourceName: "levels-input-range.png",
