@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1776
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1777
+
+rc1777 修复 Healing Brush 与 Spot Healing 在半透明边缘附近的颜色参考偏差：参考色按 alpha 覆盖率加权，低 alpha 离群色不再与不透明像素等权。`ImageEditorHealingBrushTests` 27/27，新增 alpha=1/255 红色离群像素回归及现有 Source/Spot、Diffusion、采样与单笔 Undo/Redo 场景通过。下次完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。
 
 rc1776 将 Healing Brush 与 Spot Healing 的 Diffusion 模糊限定为笔触 source offset 映射后的采样 ROI，仍沿用既有 Core Image TIFF/Gaussian Blur 路径；非标准图像尺寸回退旧全帧流程。与全帧模糊参考逐像素比较，RGB 最大量化差异为 1/255、alpha 完全相同；`ImageEditorHealingBrushTests` 26/26 通过。下次完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。rc1775 的 GitHub/OSS 制品已发布，`app_id=xomo` 的 appcast 还未写入。
 

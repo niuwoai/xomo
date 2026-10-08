@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1777 - 2026-10-09
+
+### Fixed
+- Healing Brush 与 Spot Healing 的颜色参考按像素 alpha 覆盖率加权，避免透明边缘的低 alpha 离群颜色与不透明像素等权并导致整笔偏色。
+
+### Verification
+- `ImageEditorHealingBrushTests` 27/27：新增 alpha=1/255 低 alpha 离群色回归；Source/Spot、图层采样、Diffusion 与单笔 Undo/Redo 回归通过。
+- 发布契约 10/30、CLI Release 契约 7/24、产品概览归档契约 3/30 全部通过；应用、CLI、Xcode marketing/build 版本统一为 `2.12.0-rc1777`。
+- 本版未运行完整 Release XCTest 或桌面冒烟；下次完整门槛仍为 rc1800。
+
 ## 2.12.0-rc1776 - 2026-10-09
 
 ### Changed
