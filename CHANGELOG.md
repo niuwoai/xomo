@@ -19,6 +19,16 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1758 - 2026-10-08
+
+### Changed
+- 为 P3 图像导出 PDF 增加 sRGB 栅格读回的像素对照，验证可见颜色和导出无副作用。
+
+### Verification
+- 单测从实际 PDF 页面栅格化到 sRGB 后对照源 P3 颜色；结果见[验证记录](docs/reviews/2026-10-08-rc1758-p3-pdf-export.md)。
+
+---
+
 ## 2.12.0-rc1757 - 2026-10-08
 
 ### Changed

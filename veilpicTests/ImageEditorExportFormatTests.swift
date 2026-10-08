@@ -1,4 +1,5 @@
 import AppKit
+import CoreFoundation
 import Testing
 @testable import musepic
 
@@ -1988,6 +1989,81 @@ struct ImageEditorExportFormatTests {
         let renderedPDF = try #require(NSImage(data: pdf))
         #expect(renderedPDF.size == rasterImage.size)
         #expect(renderedPDF.nonTransparentPixelBounds() != nil)
+    }
+
+    @Test func displayP3PDFExportPreservesColorWhenRenderedToSRGB() throws {
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let sourcePixel: [UInt8] = [200, 120, 40, 255]
+        let provider = try #require(CGDataProvider(data: Data(sourcePixel) as CFData))
+        let sourceCGImage = try #require(CGImage(
+            width: 1,
+            height: 1,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: 4,
+            space: p3,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ))
+        let sourceImage = NSImage(cgImage: sourceCGImage, size: CGSize(width: 1, height: 1))
+        let viewModel = ImageEditorViewModel(sourceName: "p3-print.png", image: sourceImage) { _ in }
+        let historyBeforeExport = viewModel.document.history
+        let selectionBeforeExport = viewModel.document.selectedLayerIDs
+
+        let pdfData = try #require(viewModel.exportData(settings: ImageEditorExportSettings(
+            format: .pdf,
+            scope: .composited
+        )))
+        let pdfProvider = try #require(CGDataProvider(data: pdfData as CFData))
+        let pdf = try #require(CGPDFDocument(pdfProvider))
+        let page = try #require(pdf.page(at: 1))
+        let mediaBox = page.getBoxRect(.mediaBox)
+        let width = max(1, Int(mediaBox.width.rounded()))
+        let height = max(1, Int(mediaBox.height.rounded()))
+        let sRGB = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        var renderedPixels = Data(count: width * height * 4)
+        let didRender = renderedPixels.withUnsafeMutableBytes { buffer in
+            guard let context = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: sRGB,
+                bitmapInfo: CGBitmapInfo(
+                    rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
+                ).union(.byteOrder32Big).rawValue
+            ) else { return false }
+            context.interpolationQuality = .none
+            context.drawPDFPage(page)
+            return true
+        }
+
+        #expect(didRender)
+        #expect(width == 1)
+        #expect(height == 1)
+        let sourceColor = try #require(CGColor(
+            colorSpace: p3,
+            components: sourcePixel.prefix(3).map { CGFloat($0) / 255 } + [CGFloat(1)]
+        ))
+        let expectedColor = try #require(sourceColor.converted(
+            to: sRGB,
+            intent: .relativeColorimetric,
+            options: nil
+        ))
+        let expected = try #require(expectedColor.components).prefix(3).map {
+            UInt8(($0 * 255).rounded())
+        }
+        let actual = Array(renderedPixels.prefix(3))
+        for channel in 0..<3 {
+            #expect(abs(Int(actual[channel]) - Int(expected[channel])) <= 2)
+        }
+        #expect(renderedPixels[3] == 255)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.document.selectedLayerIDs == selectionBeforeExport)
     }
 
     @Test func exportNamingRulesSupportBatchScaleVariants() {

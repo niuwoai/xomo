@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1758 为普通 PDF 导出增加 Display P3→PDF→sRGB 页面栅格读回像素对照，并检查导出不改变 History/选择状态；完整门槛仍为 rc1760。
 - rc1757 让 Direct Selection 点击路径曲线段时选择对应子路径和最近锚点，组件属性面板可直接跟随点击目标；该点击不启动移动事务，锚点/控制柄拖动保持原行为。定向测试覆盖路径选择与布尔属性编辑；完整门槛仍为 rc1760。
 - rc1756 修复剪贴板图像与 Xomo 原位粘贴位置分开写入的事务缺口：selection copy/cut/merged copy 现在作为同一 pasteboard item 写入图像与坐标元数据，cut 在写入失败前不改文档。专项回归见[记录](docs/reviews/2026-10-08-rc1756-atomic-selection-clipboard.md)；全量门槛仍为 rc1760。
 - rc1755 统一画布显示与吸附偏好：这些开关不再污染图像内容 History/Undo，像素编辑 Undo/Redo 后保留用户当前显示选择；专项验证见[记录](docs/reviews/2026-10-08-rc1755-canvas-aids-undo.md)。完整构建、全量回归、真实冒烟及安装仍按 rc1760 门槛执行。

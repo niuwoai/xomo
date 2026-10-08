@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1757
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1758
+
+rc1758 为普通 PDF 导出补充 Display P3→PDF→sRGB 实际栅格像素对照，覆盖 PDF 内容颜色与导出不修改编辑历史/选择状态。验证见[rc1758 记录](docs/reviews/2026-10-08-rc1758-p3-pdf-export.md)。
 
 rc1757 让 Direct Selection 点击路径线段时切换到该子路径及最近锚点，使组件运算属性可直接针对点选的组件编辑；该选择不启动锚点移动或额外 Undo。验证见[rc1757 记录](docs/reviews/2026-10-08-rc1757-direct-select-path-segment.md)。
 
