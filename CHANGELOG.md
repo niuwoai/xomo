@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1772 - 2026-10-08
+
+### Changed
+- Healing Brush 与 Spot Healing 的普通鼠标笔划改为按笔划边界直接生成紧凑遮罩，避免分配整画布 alpha 缓冲；愈合像素核继续只读取该遮罩覆盖的区域。
+
+### Verification
+- `ImageEditorHealingBrushTests` 18/18、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）、概览归档合同 3/3（30 断言）通过；紧凑遮罩在 32×20 画布上与原全帧光栅逐像素一致，4096×4096 点按遮罩为 625 字节。未运行完整 Release XCTest；下一完整门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1771 - 2026-10-08
 
 ### Changed

@@ -12,7 +12,7 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHealingBrushTests {
-    @Test func healingKernelTouchesOnlyPixelsCoveredByItsMask() {
+    @Test func healingKernelTouchesOnlyPixelsCoveredByItsMask() throws {
         let width = 5
         let height = 5
         var targetPixels = [UInt8](repeating: 0, count: width * height * 4)
@@ -20,8 +20,19 @@ struct ImageEditorHealingBrushTests {
             targetPixels[pixelIndex * 4 + 3] = 255
         }
         let sourcePixels = [UInt8](repeating: 255, count: width * height * 4)
-        var maskAlpha = [UInt8](repeating: 0, count: width * height)
-        maskAlpha[2 * width + 2] = 255
+        let maskBounds = try #require(ImageEditorHealingBrushKernel.strokeBounds(
+            width: width,
+            height: height,
+            points: [CGPoint(x: 2, y: 2)],
+            diameter: 1
+        ))
+        let maskWidth = maskBounds.maxX - maskBounds.minX + 1
+        var maskPixels = [UInt8](repeating: 0, count: maskWidth * (maskBounds.maxY - maskBounds.minY + 1))
+        maskPixels[(2 - maskBounds.minY) * maskWidth + 2 - maskBounds.minX] = 255
+        let mask = try #require(ImageEditorHealingBrushKernel.StrokeMask(
+            bounds: maskBounds,
+            pixels: maskPixels
+        ))
         var expected = [UInt8](repeating: 0, count: width * height * 4)
         for pixelIndex in 0..<(width * height) {
             expected[pixelIndex * 4 + 3] = 255
@@ -35,13 +46,7 @@ struct ImageEditorHealingBrushTests {
             targetPixels: &targetPixels,
             targetContextPixels: sourcePixels,
             sourcePixels: sourcePixels,
-            maskAlpha: maskAlpha,
-            maskBounds: ImageEditorHealingBrushKernel.strokeBounds(
-                width: width,
-                height: height,
-                points: [CGPoint(x: 2, y: 2)],
-                diameter: 1
-            ),
+            mask: mask,
             width: width,
             height: height,
             sourceOffset: .zero,
@@ -53,7 +58,7 @@ struct ImageEditorHealingBrushTests {
         #expect(targetPixels == expected)
     }
 
-    @Test func healingKernelReturnsUnchangedPixelsForAStrokeOutsideCanvas() {
+    @Test func healingKernelLeavesPixelsUnchangedForAnEmptyMask() throws {
         let width = 5
         let height = 5
         var targetPixels = [UInt8](repeating: 0, count: width * height * 4)
@@ -64,20 +69,26 @@ struct ImageEditorHealingBrushTests {
             targetPixels[pixelOffset + 2] = 120
             targetPixels[pixelOffset + 3] = 255
         }
-        let bounds = ImageEditorHealingBrushKernel.strokeBounds(
+        let bounds = try #require(ImageEditorHealingBrushKernel.strokeBounds(
             width: width,
             height: height,
-            points: [CGPoint(x: -10, y: -10)],
-            diameter: 8
-        )
+            points: [CGPoint(x: 2, y: 2)],
+            diameter: 1
+        ))
         var untouched = targetPixels
         let contextPixels = Array(targetPixels)
+        let emptyMask = try #require(ImageEditorHealingBrushKernel.StrokeMask(
+            bounds: bounds,
+            pixels: [UInt8](
+                repeating: 0,
+                count: (bounds.maxX - bounds.minX + 1) * (bounds.maxY - bounds.minY + 1)
+            )
+        ))
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &untouched,
             targetContextPixels: contextPixels,
             sourcePixels: contextPixels,
-            maskAlpha: [UInt8](repeating: 0, count: width * height),
-            maskBounds: bounds,
+            mask: emptyMask,
             width: width,
             height: height,
             sourceOffset: .zero,
@@ -114,6 +125,67 @@ struct ImageEditorHealingBrushTests {
             #expect(x >= (bounds?.minX ?? 20) && x <= (bounds?.maxX ?? -1))
             #expect(y >= (bounds?.minY ?? 12) && y <= (bounds?.maxY ?? -1))
         }
+    }
+
+    @Test func compactStrokeMaskMatchesLegacyCanvasAlphaWithinItsBounds() throws {
+        let width = 32
+        let height = 20
+        let points = [CGPoint(x: -1, y: 4), CGPoint(x: 12, y: 8), CGPoint(x: 26, y: 13)]
+        let bounds = try #require(ImageEditorHealingBrushKernel.strokeBounds(
+            width: width,
+            height: height,
+            points: points,
+            diameter: 6
+        ))
+        let fullCanvasAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: width,
+            height: height,
+            points: points,
+            diameter: 6,
+            hardness: 0.35
+        )
+        let compactMask = try #require(ImageEditorHealingBrushKernel.strokeMask(
+            width: width,
+            height: height,
+            points: points,
+            diameter: 6,
+            hardness: 0.35,
+            bounds: bounds
+        ))
+
+        #expect(
+            compactMask.pixels.count
+                == (bounds.maxX - bounds.minX + 1) * (bounds.maxY - bounds.minY + 1)
+        )
+        #expect(compactMask.pixels.count < width * height)
+        for y in bounds.minY...bounds.maxY {
+            for x in bounds.minX...bounds.maxX {
+                #expect(compactMask.alpha(atX: x, y: y) == fullCanvasAlpha[y * width + x])
+            }
+        }
+    }
+
+    @Test func compactHealingMaskStorageScalesWithStrokeBounds() throws {
+        let width = 4_096
+        let height = 4_096
+        let points = [CGPoint(x: 2_048, y: 2_048)]
+        let bounds = try #require(ImageEditorHealingBrushKernel.strokeBounds(
+            width: width,
+            height: height,
+            points: points,
+            diameter: 24
+        ))
+        let mask = try #require(ImageEditorHealingBrushKernel.strokeMask(
+            width: width,
+            height: height,
+            points: points,
+            diameter: 24,
+            hardness: 0.5,
+            bounds: bounds
+        ))
+
+        #expect(mask.pixels.count == 625)
+        #expect(mask.pixels.count < width * height / 10_000)
     }
 
     @Test func healingBrushRequiresAnExplicitSource() {

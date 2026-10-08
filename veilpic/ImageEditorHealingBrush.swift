@@ -78,15 +78,6 @@ extension NSImage {
             bytesPerRow: bytesPerRow
         ) else { return nil }
 
-        let maskAlpha = retouchStrokeAlpha(
-            width: pixelWidth,
-            height: pixelHeight,
-            samples: samples,
-            diameter: width,
-            hardness: hardness,
-            pressureControlsSize: pressureControlsSize,
-            pressureSensitivity: pressureSensitivity
-        )
         let effectiveDiameter = retouchMaximumDiameter(
             samples: samples,
             diameter: width,
@@ -100,12 +91,21 @@ extension NSImage {
             points: strokePoints,
             diameter: effectiveDiameter
         )
+        guard let mask = retouchStrokeMask(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
+            diameter: width,
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity,
+            bounds: maskBounds
+        ) else { return nil }
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
-            maskAlpha: maskAlpha,
-            maskBounds: maskBounds,
+            mask: mask,
             width: pixelWidth,
             height: pixelHeight,
             sourceOffset: sourceOffset,
@@ -189,26 +189,27 @@ extension NSImage {
             destinationReference: destinationReference,
             brushDiameter: effectiveDiameter
         ) else { return nil }
-        let maskAlpha = retouchStrokeAlpha(
+        let maskBounds = ImageEditorHealingBrushKernel.strokeBounds(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: effectiveDiameter
+        )
+        guard let mask = retouchStrokeMask(
             width: pixelWidth,
             height: pixelHeight,
             samples: samples,
             diameter: width,
             hardness: hardness,
             pressureControlsSize: pressureControlsSize,
-            pressureSensitivity: pressureSensitivity
-        )
+            pressureSensitivity: pressureSensitivity,
+            bounds: maskBounds
+        ) else { return nil }
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
-            maskAlpha: maskAlpha,
-            maskBounds: ImageEditorHealingBrushKernel.strokeBounds(
-                width: pixelWidth,
-                height: pixelHeight,
-                points: points,
-                diameter: effectiveDiameter
-            ),
+            mask: mask,
             width: pixelWidth,
             height: pixelHeight,
             sourceOffset: sourceOffset,
@@ -222,6 +223,45 @@ extension NSImage {
             height: pixelHeight,
             bytesPerRow: bytesPerRow,
             size: size
+        )
+    }
+
+    private func retouchStrokeMask(
+        width: Int,
+        height: Int,
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat,
+        bounds: ImageEditorHealingBrushKernel.MaskBounds?
+    ) -> ImageEditorHealingBrushKernel.StrokeMask? {
+        guard let bounds else { return nil }
+        let hasPressureSamples = pressureControlsSize && samples.contains { $0.pressure != nil }
+        if hasPressureSamples {
+            let fullFrameAlpha = retouchStrokeAlpha(
+                width: width,
+                height: height,
+                samples: samples,
+                diameter: diameter,
+                hardness: hardness,
+                pressureControlsSize: pressureControlsSize,
+                pressureSensitivity: pressureSensitivity
+            )
+            return ImageEditorHealingBrushKernel.compactStrokeMask(
+                alpha: fullFrameAlpha,
+                width: width,
+                height: height,
+                bounds: bounds
+            )
+        }
+        return ImageEditorHealingBrushKernel.strokeMask(
+            width: width,
+            height: height,
+            points: samples.map(\.point),
+            diameter: diameter,
+            hardness: hardness,
+            bounds: bounds
         )
     }
 
@@ -297,6 +337,25 @@ enum ImageEditorHealingBrushKernel {
     static let bytesPerPixel = 4
     typealias MaskBounds = (minX: Int, maxX: Int, minY: Int, maxY: Int)
     private typealias PointBounds = (minX: CGFloat, maxX: CGFloat, minY: CGFloat, maxY: CGFloat)
+
+    struct StrokeMask {
+        let bounds: MaskBounds
+        let pixels: [UInt8]
+        let width: Int
+
+        init?(bounds: MaskBounds, pixels: [UInt8]) {
+            let width = bounds.maxX - bounds.minX + 1
+            let height = bounds.maxY - bounds.minY + 1
+            guard width > 0, height > 0, pixels.count == width * height else { return nil }
+            self.bounds = bounds
+            self.pixels = pixels
+            self.width = width
+        }
+
+        func alpha(atX x: Int, y: Int) -> UInt8 {
+            pixels[(y - bounds.minY) * width + x - bounds.minX]
+        }
+    }
 
     static func strokeBounds(
         width: Int,
@@ -556,6 +615,7 @@ enum ImageEditorHealingBrushKernel {
         let radius = max(0.5, diameter / 2)
         let innerRadius = radius * max(0, min(1, hardness))
         var alpha = [UInt8](repeating: 0, count: width * height)
+        let bounds: MaskBounds = (0, width - 1, 0, height - 1)
 
         if points.count == 1, let point = points.first {
             applyStrokeSegment(
@@ -565,7 +625,9 @@ enum ImageEditorHealingBrushKernel {
                 start: point,
                 end: point,
                 radius: radius,
-                innerRadius: innerRadius
+                innerRadius: innerRadius,
+                maskBounds: bounds,
+                maskWidth: width
             )
             return alpha
         }
@@ -578,10 +640,88 @@ enum ImageEditorHealingBrushKernel {
                 start: start,
                 end: end,
                 radius: radius,
-                innerRadius: innerRadius
+                innerRadius: innerRadius,
+                maskBounds: bounds,
+                maskWidth: width
             )
         }
         return alpha
+    }
+
+    static func strokeMask(
+        width: Int,
+        height: Int,
+        points: [CGPoint],
+        diameter: CGFloat,
+        hardness: CGFloat,
+        bounds: MaskBounds
+    ) -> StrokeMask? {
+        guard width > 0,
+              height > 0,
+              bounds.minX >= 0,
+              bounds.minY >= 0,
+              bounds.maxX < width,
+              bounds.maxY < height,
+              let expectedBounds = strokeBounds(
+                  width: width,
+                  height: height,
+                  points: points,
+                  diameter: diameter
+              ),
+              expectedBounds.minX == bounds.minX,
+              expectedBounds.maxX == bounds.maxX,
+              expectedBounds.minY == bounds.minY,
+              expectedBounds.maxY == bounds.maxY
+        else { return nil }
+
+        let maskWidth = bounds.maxX - bounds.minX + 1
+        let maskHeight = bounds.maxY - bounds.minY + 1
+        var alpha = [UInt8](repeating: 0, count: maskWidth * maskHeight)
+        let radius = max(0.5, diameter / 2)
+        let innerRadius = radius * max(0, min(1, hardness))
+        let segmentCount = max(1, points.count - 1)
+        for segmentIndex in 0..<segmentCount {
+            let start = points[segmentIndex]
+            let end = points.count == 1 ? start : points[segmentIndex + 1]
+            applyStrokeSegment(
+                to: &alpha,
+                width: width,
+                height: height,
+                start: start,
+                end: end,
+                radius: radius,
+                innerRadius: innerRadius,
+                maskBounds: bounds,
+                maskWidth: maskWidth
+            )
+        }
+        return StrokeMask(bounds: bounds, pixels: alpha)
+    }
+
+    static func compactStrokeMask(
+        alpha: [UInt8],
+        width: Int,
+        height: Int,
+        bounds: MaskBounds
+    ) -> StrokeMask? {
+        guard width > 0,
+              height > 0,
+              alpha.count == width * height,
+              bounds.minX >= 0,
+              bounds.minY >= 0,
+              bounds.maxX < width,
+              bounds.maxY < height,
+              bounds.minX <= bounds.maxX,
+              bounds.minY <= bounds.maxY
+        else { return nil }
+        let rowWidth = bounds.maxX - bounds.minX + 1
+        var pixels = [UInt8]()
+        pixels.reserveCapacity(rowWidth * (bounds.maxY - bounds.minY + 1))
+        for y in bounds.minY...bounds.maxY {
+            let rowStart = y * width + bounds.minX
+            pixels.append(contentsOf: alpha[rowStart..<(rowStart + rowWidth)])
+        }
+        return StrokeMask(bounds: bounds, pixels: pixels)
     }
 
     private static func applyStrokeSegment(
@@ -591,12 +731,14 @@ enum ImageEditorHealingBrushKernel {
         start: CGPoint,
         end: CGPoint,
         radius: CGFloat,
-        innerRadius: CGFloat
+        innerRadius: CGFloat,
+        maskBounds: MaskBounds,
+        maskWidth: Int
     ) {
-        let minX = max(0, Int(floor(min(start.x, end.x) - radius)))
-        let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius)))
-        let minY = max(0, Int(floor(min(start.y, end.y) - radius)))
-        let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius)))
+        let minX = max(maskBounds.minX, max(0, Int(floor(min(start.x, end.x) - radius))))
+        let maxX = min(maskBounds.maxX, min(width - 1, Int(ceil(max(start.x, end.x) + radius))))
+        let minY = max(maskBounds.minY, max(0, Int(floor(min(start.y, end.y) - radius))))
+        let maxY = min(maskBounds.maxY, min(height - 1, Int(ceil(max(start.y, end.y) + radius))))
         guard minX <= maxX, minY <= maxY else { return }
 
         for y in minY...maxY {
@@ -611,7 +753,7 @@ enum ImageEditorHealingBrushKernel {
                     innerRadius: innerRadius,
                     outerRadius: radius
                 )
-                let index = y * width + x
+                let index = (y - maskBounds.minY) * maskWidth + x - maskBounds.minX
                 alpha[index] = max(alpha[index], UInt8((coverage * 255).rounded()))
             }
         }
@@ -621,8 +763,7 @@ enum ImageEditorHealingBrushKernel {
         targetPixels: inout [UInt8],
         targetContextPixels: [UInt8],
         sourcePixels: [UInt8],
-        maskAlpha: [UInt8],
-        maskBounds: MaskBounds?,
+        mask: StrokeMask,
         width: Int,
         height: Int,
         sourceOffset: CGSize,
@@ -634,11 +775,11 @@ enum ImageEditorHealingBrushKernel {
               height > 0,
               targetPixels.count == width * height * bytesPerPixel,
               targetContextPixels.count == targetPixels.count,
-              sourcePixels.count == targetPixels.count,
-              maskAlpha.count == width * height
+              sourcePixels.count == targetPixels.count
         else { return }
 
-        guard let maskBounds,
+        let maskBounds = mask.bounds
+        guard
               maskBounds.minX >= 0,
               maskBounds.minY >= 0,
               maskBounds.maxX < width,
@@ -680,7 +821,7 @@ enum ImageEditorHealingBrushKernel {
         for y in maskBounds.minY...maskBounds.maxY {
             for x in maskBounds.minX...maskBounds.maxX {
                 let maskIndex = y * width + x
-                let strength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity
+                let strength = CGFloat(mask.alpha(atX: x, y: y)) / 255 * clampedOpacity
                 guard strength > 0 else { continue }
                 let sourceX = x + offsetX
                 let sourceY = y + offsetY
