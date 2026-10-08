@@ -118,6 +118,41 @@ final class veilpicUITests: XCTestCase {
         XCTAssertFalse(systemCursorMatches(NSCursor.arrow), "Returning to the canvas should restore the selected brush cursor")
     }
 
+    @MainActor
+    func testCurvesGraphControlPointCanBeDraggedInTheEditor() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let canvas = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-canvas")
+            .firstMatch
+        XCTAssertTrue(canvas.waitForExistence(timeout: 8))
+        app.typeKey("m", modifierFlags: .command)
+
+        let graph = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-curves-graph")
+            .firstMatch
+        let shadows = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-curves-anchor-shadows")
+            .firstMatch
+        let midtones = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-curves-anchor-midtones")
+            .firstMatch
+        let highlights = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-curves-anchor-highlights")
+            .firstMatch
+        XCTAssertTrue(graph.waitForExistence(timeout: 5))
+        XCTAssertTrue(shadows.exists)
+        XCTAssertTrue(midtones.exists)
+        XCTAssertTrue(highlights.exists)
+
+        let originalValue = midtones.value as? String
+        let start = midtones.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -24)))
+        XCTAssertNotEqual(midtones.value as? String, originalValue)
+    }
+
     private func systemCursorMatches(_ expected: NSCursor) -> Bool {
         guard let current = NSCursor.currentSystem else { return false }
         return current === expected

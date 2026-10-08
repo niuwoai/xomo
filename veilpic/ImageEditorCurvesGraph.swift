@@ -151,6 +151,7 @@ struct ImageEditorCurvesGraph: View {
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             .accessibilityElement(children: .contain)
             .accessibilityLabel(L10n.text("imageEditor.curves.graph"))
+            .accessibilityIdentifier("image-editor-curves-graph")
         }
         .frame(height: 122)
     }
