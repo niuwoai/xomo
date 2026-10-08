@@ -542,6 +542,41 @@ struct ImageEditorVectorLayerTests {
         #expect(normalized.resolvedPathComponentOperations == [.combine, .intersect, .continuePrevious])
     }
 
+    @Test func firstPathComponentCannotContinueAnUnavailablePreviousOperation() throws {
+        let image = testBitmapImage(size: NSSize(width: 32, height: 24), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 2, y: 2)),
+                ImageEditorPathAnchor(point: CGPoint(x: 24, y: 2)),
+                ImageEditorPathAnchor(point: CGPoint(x: 12, y: 20))
+            ],
+            pathComponentOperations: [.continuePrevious],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].kind = .shape(content)
+        let layerID = viewModel.document.layers[layerIndex].id
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.selectedPathComponentOperation == .exclude)
+        #expect(viewModel.canChangeSelectedPathComponentOperation)
+        #expect(!viewModel.canSetSelectedPathComponentOperation(.continuePrevious))
+        viewModel.setSelectedPathComponentOperation(.continuePrevious)
+        viewModel.setSelectedPathComponentOperation(.exclude)
+
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.shapeContent?.pathComponentOperations == [.continuePrevious])
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func pendingPenPathUndoRedoNeverCrossesIntoDocumentHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

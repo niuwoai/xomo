@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1752 - 2026-10-08
+
+### Fixed
+- 第一条路径组件没有可延续的前序组件；现在 UI 禁用 `Continue Previous`，ViewModel 也拒绝无效设置，并将历史无效值显示为 renderer 的有效排除语义。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1752`/1752；rc1760 仍是四十版本完整构建门槛。
+
+### Verification
+- 新增第一组件无效运算无副作用回归；向量套件与合同结果见[验证记录](docs/reviews/2026-10-08-rc1752-first-path-component-operation.md)。
+
+---
+
 ## 2.12.0-rc1751 - 2026-10-08
 
 ### Fixed

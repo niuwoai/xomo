@@ -14879,6 +14879,7 @@ struct ImageEditorView: View {
                                     .tag(ImageEditorPathComponentOperation.intersect)
                                 Text(L10n.text("imageEditor.pathComponentOperation.continuePrevious"))
                                     .tag(ImageEditorPathComponentOperation.continuePrevious)
+                                    .disabled(!viewModel.canSetSelectedPathComponentOperation(.continuePrevious))
                             }
                             .disabled(!viewModel.canChangeSelectedPathComponentOperation)
                         }

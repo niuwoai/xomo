@@ -891,7 +891,8 @@ extension ImageEditorViewModel {
               content.isPathClosed,
               content.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex)
         else { return nil }
-        return content.resolvedPathComponentOperations[selectedPathSubpathIndex]
+        let operation = content.resolvedPathComponentOperations[selectedPathSubpathIndex]
+        return selectedPathSubpathIndex == 0 && operation == .continuePrevious ? .exclude : operation
     }
 
     var canChangeSelectedPathComponentOperation: Bool {
@@ -902,14 +903,19 @@ extension ImageEditorViewModel {
         return true
     }
 
+    func canSetSelectedPathComponentOperation(_ operation: ImageEditorPathComponentOperation) -> Bool {
+        canChangeSelectedPathComponentOperation
+            && !(selectedPathSubpathIndex == 0 && operation == .continuePrevious)
+    }
+
     func setSelectedPathComponentOperation(_ operation: ImageEditorPathComponentOperation) {
         guard !cancelPathAnchorDragBeforeDiscreteCommand(),
-              canChangeSelectedPathComponentOperation,
+              canSetSelectedPathComponentOperation(operation),
               let layerIndex = document.selectedLayerIndex,
               var content = document.layers[layerIndex].shapeContent,
               content.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex)
         else { return }
-        let currentOperation = content.resolvedPathComponentOperations[selectedPathSubpathIndex]
+        guard let currentOperation = selectedPathComponentOperation else { return }
         guard currentOperation != operation else { return }
 
         var operations = content.resolvedPathComponentOperations
