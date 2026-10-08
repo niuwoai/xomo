@@ -1425,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "黒点";
 "imageEditor.levels.gamma" = "中間調";
 "imageEditor.levels.whitePoint" = "白点";
+"imageEditor.levels.output" = "出力レベル";
+"imageEditor.levels.outputBlackPoint" = "出力の黒";
+"imageEditor.levels.outputWhitePoint" = "出力の白";
+"imageEditor.properties.levelsLayerOutputValue" = "出力：%d–%d";
+"imageEditor.properties.levelsLayerChannelOutputValue" = "%1$@ チャンネル出力：%2$d–%3$d";
 "imageEditor.levels.channel" = "チャンネル";
 "imageEditor.levels.channel.rgb" = "RGB";
 "imageEditor.levels.channel.red" = "レッド";

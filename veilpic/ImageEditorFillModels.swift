@@ -953,15 +953,23 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var levelsBlackPoint: Double = 0
     var levelsGamma: Double = 1
     var levelsWhitePoint: Double = 1
+    var levelsOutputBlackPoint: Double = 0
+    var levelsOutputWhitePoint: Double = 1
     var levelsRedBlackPoint: Double = 0
     var levelsRedGamma: Double = 1
     var levelsRedWhitePoint: Double = 1
+    var levelsRedOutputBlackPoint: Double = 0
+    var levelsRedOutputWhitePoint: Double = 1
     var levelsGreenBlackPoint: Double = 0
     var levelsGreenGamma: Double = 1
     var levelsGreenWhitePoint: Double = 1
+    var levelsGreenOutputBlackPoint: Double = 0
+    var levelsGreenOutputWhitePoint: Double = 1
     var levelsBlueBlackPoint: Double = 0
     var levelsBlueGamma: Double = 1
     var levelsBlueWhitePoint: Double = 1
+    var levelsBlueOutputBlackPoint: Double = 0
+    var levelsBlueOutputWhitePoint: Double = 1
     var curvesShadows: Double = 0
     var curvesMidtones: Double = 0
     var curvesHighlights: Double = 0
@@ -1033,13 +1041,24 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     private static func normalizedLevels(
         blackPoint: Double,
         gamma: Double,
-        whitePoint: Double
-    ) -> (blackPoint: Double, gamma: Double, whitePoint: Double) {
+        whitePoint: Double,
+        outputBlackPoint: Double,
+        outputWhitePoint: Double
+    ) -> (
+        blackPoint: Double,
+        gamma: Double,
+        whitePoint: Double,
+        outputBlackPoint: Double,
+        outputWhitePoint: Double
+    ) {
         let black = max(0, min(0.98, blackPoint))
+        let outputBlack = Self.zeroOne(outputBlackPoint)
         return (
             blackPoint: black,
             gamma: max(0.1, min(4, gamma)),
-            whitePoint: max(black + 0.01, min(1, whitePoint))
+            whitePoint: max(black + 0.01, min(1, whitePoint)),
+            outputBlackPoint: outputBlack,
+            outputWhitePoint: max(outputBlack, Self.zeroOne(outputWhitePoint))
         )
     }
 
@@ -1047,36 +1066,52 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
         let rgb = Self.normalizedLevels(
             blackPoint: levelsBlackPoint,
             gamma: levelsGamma,
-            whitePoint: levelsWhitePoint
+            whitePoint: levelsWhitePoint,
+            outputBlackPoint: levelsOutputBlackPoint,
+            outputWhitePoint: levelsOutputWhitePoint
         )
         let red = Self.normalizedLevels(
             blackPoint: levelsRedBlackPoint,
             gamma: levelsRedGamma,
-            whitePoint: levelsRedWhitePoint
+            whitePoint: levelsRedWhitePoint,
+            outputBlackPoint: levelsRedOutputBlackPoint,
+            outputWhitePoint: levelsRedOutputWhitePoint
         )
         let green = Self.normalizedLevels(
             blackPoint: levelsGreenBlackPoint,
             gamma: levelsGreenGamma,
-            whitePoint: levelsGreenWhitePoint
+            whitePoint: levelsGreenWhitePoint,
+            outputBlackPoint: levelsGreenOutputBlackPoint,
+            outputWhitePoint: levelsGreenOutputWhitePoint
         )
         let blue = Self.normalizedLevels(
             blackPoint: levelsBlueBlackPoint,
             gamma: levelsBlueGamma,
-            whitePoint: levelsBlueWhitePoint
+            whitePoint: levelsBlueWhitePoint,
+            outputBlackPoint: levelsBlueOutputBlackPoint,
+            outputWhitePoint: levelsBlueOutputWhitePoint
         )
         return ImageEditorAdjustmentSettings(
             levelsBlackPoint: rgb.blackPoint,
             levelsGamma: rgb.gamma,
             levelsWhitePoint: rgb.whitePoint,
+            levelsOutputBlackPoint: rgb.outputBlackPoint,
+            levelsOutputWhitePoint: rgb.outputWhitePoint,
             levelsRedBlackPoint: red.blackPoint,
             levelsRedGamma: red.gamma,
             levelsRedWhitePoint: red.whitePoint,
+            levelsRedOutputBlackPoint: red.outputBlackPoint,
+            levelsRedOutputWhitePoint: red.outputWhitePoint,
             levelsGreenBlackPoint: green.blackPoint,
             levelsGreenGamma: green.gamma,
             levelsGreenWhitePoint: green.whitePoint,
+            levelsGreenOutputBlackPoint: green.outputBlackPoint,
+            levelsGreenOutputWhitePoint: green.outputWhitePoint,
             levelsBlueBlackPoint: blue.blackPoint,
             levelsBlueGamma: blue.gamma,
             levelsBlueWhitePoint: blue.whitePoint,
+            levelsBlueOutputBlackPoint: blue.outputBlackPoint,
+            levelsBlueOutputWhitePoint: blue.outputWhitePoint,
             curvesShadows: max(-1, min(1, curvesShadows)),
             curvesMidtones: max(-1, min(1, curvesMidtones)),
             curvesHighlights: max(-1, min(1, curvesHighlights)),
@@ -1169,15 +1204,23 @@ extension ImageEditorAdjustmentSettings {
         case levelsBlackPoint
         case levelsGamma
         case levelsWhitePoint
+        case levelsOutputBlackPoint
+        case levelsOutputWhitePoint
         case levelsRedBlackPoint
         case levelsRedGamma
         case levelsRedWhitePoint
+        case levelsRedOutputBlackPoint
+        case levelsRedOutputWhitePoint
         case levelsGreenBlackPoint
         case levelsGreenGamma
         case levelsGreenWhitePoint
+        case levelsGreenOutputBlackPoint
+        case levelsGreenOutputWhitePoint
         case levelsBlueBlackPoint
         case levelsBlueGamma
         case levelsBlueWhitePoint
+        case levelsBlueOutputBlackPoint
+        case levelsBlueOutputWhitePoint
         case curvesShadows
         case curvesMidtones
         case curvesHighlights
@@ -1252,15 +1295,23 @@ extension ImageEditorAdjustmentSettings {
         levelsBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsBlackPoint) ?? 0
         levelsGamma = try container.decodeIfPresent(Double.self, forKey: .levelsGamma) ?? 1
         levelsWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsWhitePoint) ?? 1
+        levelsOutputBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsOutputBlackPoint) ?? 0
+        levelsOutputWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsOutputWhitePoint) ?? 1
         levelsRedBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsRedBlackPoint) ?? 0
         levelsRedGamma = try container.decodeIfPresent(Double.self, forKey: .levelsRedGamma) ?? 1
         levelsRedWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsRedWhitePoint) ?? 1
+        levelsRedOutputBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsRedOutputBlackPoint) ?? 0
+        levelsRedOutputWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsRedOutputWhitePoint) ?? 1
         levelsGreenBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsGreenBlackPoint) ?? 0
         levelsGreenGamma = try container.decodeIfPresent(Double.self, forKey: .levelsGreenGamma) ?? 1
         levelsGreenWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsGreenWhitePoint) ?? 1
+        levelsGreenOutputBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsGreenOutputBlackPoint) ?? 0
+        levelsGreenOutputWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsGreenOutputWhitePoint) ?? 1
         levelsBlueBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsBlueBlackPoint) ?? 0
         levelsBlueGamma = try container.decodeIfPresent(Double.self, forKey: .levelsBlueGamma) ?? 1
         levelsBlueWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsBlueWhitePoint) ?? 1
+        levelsBlueOutputBlackPoint = try container.decodeIfPresent(Double.self, forKey: .levelsBlueOutputBlackPoint) ?? 0
+        levelsBlueOutputWhitePoint = try container.decodeIfPresent(Double.self, forKey: .levelsBlueOutputWhitePoint) ?? 1
         curvesShadows = try container.decodeIfPresent(Double.self, forKey: .curvesShadows) ?? 0
         curvesMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesMidtones) ?? 0
         curvesHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesHighlights) ?? 0
@@ -1335,15 +1386,23 @@ extension ImageEditorAdjustmentSettings {
         try container.encode(levelsBlackPoint, forKey: .levelsBlackPoint)
         try container.encode(levelsGamma, forKey: .levelsGamma)
         try container.encode(levelsWhitePoint, forKey: .levelsWhitePoint)
+        try container.encode(levelsOutputBlackPoint, forKey: .levelsOutputBlackPoint)
+        try container.encode(levelsOutputWhitePoint, forKey: .levelsOutputWhitePoint)
         try container.encode(levelsRedBlackPoint, forKey: .levelsRedBlackPoint)
         try container.encode(levelsRedGamma, forKey: .levelsRedGamma)
         try container.encode(levelsRedWhitePoint, forKey: .levelsRedWhitePoint)
+        try container.encode(levelsRedOutputBlackPoint, forKey: .levelsRedOutputBlackPoint)
+        try container.encode(levelsRedOutputWhitePoint, forKey: .levelsRedOutputWhitePoint)
         try container.encode(levelsGreenBlackPoint, forKey: .levelsGreenBlackPoint)
         try container.encode(levelsGreenGamma, forKey: .levelsGreenGamma)
         try container.encode(levelsGreenWhitePoint, forKey: .levelsGreenWhitePoint)
+        try container.encode(levelsGreenOutputBlackPoint, forKey: .levelsGreenOutputBlackPoint)
+        try container.encode(levelsGreenOutputWhitePoint, forKey: .levelsGreenOutputWhitePoint)
         try container.encode(levelsBlueBlackPoint, forKey: .levelsBlueBlackPoint)
         try container.encode(levelsBlueGamma, forKey: .levelsBlueGamma)
         try container.encode(levelsBlueWhitePoint, forKey: .levelsBlueWhitePoint)
+        try container.encode(levelsBlueOutputBlackPoint, forKey: .levelsBlueOutputBlackPoint)
+        try container.encode(levelsBlueOutputWhitePoint, forKey: .levelsBlueOutputWhitePoint)
         try container.encode(curvesShadows, forKey: .curvesShadows)
         try container.encode(curvesMidtones, forKey: .curvesMidtones)
         try container.encode(curvesHighlights, forKey: .curvesHighlights)

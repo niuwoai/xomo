@@ -90,36 +90,62 @@ extension ImageEditorViewModel {
                 String(format: "%.2f", settings.levelsGamma),
                 Int((settings.levelsWhitePoint * 255).rounded())
             )
+            let compositeOutputSummary = L10n.format(
+                "imageEditor.properties.levelsLayerOutputValue",
+                Int((settings.levelsOutputBlackPoint * 255).rounded()),
+                Int((settings.levelsOutputWhitePoint * 255).rounded())
+            )
             let channelSummaries = [
                 (
                     channel: ImageEditorLevelsChannel.red,
                     black: settings.levelsRedBlackPoint,
                     gamma: settings.levelsRedGamma,
-                    white: settings.levelsRedWhitePoint
+                    white: settings.levelsRedWhitePoint,
+                    outputBlack: settings.levelsRedOutputBlackPoint,
+                    outputWhite: settings.levelsRedOutputWhitePoint
                 ),
                 (
                     channel: ImageEditorLevelsChannel.green,
                     black: settings.levelsGreenBlackPoint,
                     gamma: settings.levelsGreenGamma,
-                    white: settings.levelsGreenWhitePoint
+                    white: settings.levelsGreenWhitePoint,
+                    outputBlack: settings.levelsGreenOutputBlackPoint,
+                    outputWhite: settings.levelsGreenOutputWhitePoint
                 ),
                 (
                     channel: ImageEditorLevelsChannel.blue,
                     black: settings.levelsBlueBlackPoint,
                     gamma: settings.levelsBlueGamma,
-                    white: settings.levelsBlueWhitePoint
+                    white: settings.levelsBlueWhitePoint,
+                    outputBlack: settings.levelsBlueOutputBlackPoint,
+                    outputWhite: settings.levelsBlueOutputWhitePoint
                 )
             ].compactMap { channel -> String? in
-                guard channel.black != 0 || channel.gamma != 1 || channel.white != 1 else { return nil }
-                return L10n.format(
-                    "imageEditor.properties.levelsLayerChannelValue",
-                    L10n.text(channel.channel.localizationKey),
-                    Int((channel.black * 255).rounded()),
-                    String(format: "%.2f", channel.gamma),
-                    Int((channel.white * 255).rounded())
-                )
+                let name = L10n.text(channel.channel.localizationKey)
+                var summaries: [String] = []
+                if channel.black != 0 || channel.gamma != 1 || channel.white != 1 {
+                    summaries.append(L10n.format(
+                        "imageEditor.properties.levelsLayerChannelValue",
+                        name,
+                        Int((channel.black * 255).rounded()),
+                        String(format: "%.2f", channel.gamma),
+                        Int((channel.white * 255).rounded())
+                    ))
+                }
+                if channel.outputBlack != 0 || channel.outputWhite != 1 {
+                    summaries.append(L10n.format(
+                        "imageEditor.properties.levelsLayerChannelOutputValue",
+                        name,
+                        Int((channel.outputBlack * 255).rounded()),
+                        Int((channel.outputWhite * 255).rounded())
+                    ))
+                }
+                return summaries.isEmpty ? nil : summaries.joined(separator: " · ")
             }
-            return ([compositeSummary] + channelSummaries).joined(separator: " · ")
+            let compositeSummaries = settings.levelsOutputBlackPoint != 0 || settings.levelsOutputWhitePoint != 1
+                ? [compositeSummary, compositeOutputSummary]
+                : [compositeSummary]
+            return (compositeSummaries + channelSummaries).joined(separator: " · ")
         case .curves:
             return L10n.format(
                 "imageEditor.properties.curvesLayerValue",
