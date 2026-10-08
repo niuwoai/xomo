@@ -36,7 +36,7 @@ struct ImageEditorProjectRevertTests {
         defer { try? FileManager.default.removeItem(at: projectURL) }
 
         let viewModel = makeViewModel(sourceName: "initial.png")
-        viewModel.openDocument(at: projectURL, recentDocumentRegistrar: { _ in })
+        #expect(viewModel.openProjectDocument(data: savedData, at: projectURL))
         viewModel.renameSelectedLayer(to: "Unsaved Rename")
         #expect(viewModel.document.selectedLayer?.name == "Unsaved Rename")
         #expect(!viewModel.undoStack.isEmpty)
@@ -61,7 +61,7 @@ struct ImageEditorProjectRevertTests {
         defer { try? FileManager.default.removeItem(at: projectURL) }
 
         let viewModel = makeViewModel(sourceName: "initial.png")
-        viewModel.openDocument(at: projectURL, recentDocumentRegistrar: { _ in })
+        #expect(viewModel.openProjectDocument(data: savedData, at: projectURL))
         viewModel.renameSelectedLayer(to: "Changed")
         viewModel.undo()
         let documentBefore = try viewModel.projectData()
@@ -92,7 +92,7 @@ struct ImageEditorProjectRevertTests {
         defer { try? FileManager.default.removeItem(at: projectURL) }
 
         let viewModel = makeViewModel(sourceName: "initial.png")
-        viewModel.openDocument(at: projectURL, recentDocumentRegistrar: { _ in })
+        #expect(viewModel.openProjectDocument(data: savedData, at: projectURL))
         viewModel.renameSelectedLayer(to: "Keep This Change")
         let documentBefore = try viewModel.projectData()
         let undoCountBefore = viewModel.undoStack.count

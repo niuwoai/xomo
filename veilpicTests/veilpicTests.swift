@@ -6183,6 +6183,9 @@ struct veilpicTests {
                 (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
             ]
         )
+        let originalMidtone = try #require(
+            image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB)
+        )
         let viewModel = editableRasterViewModel(image: image)
 
         viewModel.selectedAdjustment = .curves
@@ -6194,7 +6197,7 @@ struct veilpicTests {
         let liftedMidtone = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
         let compressedHighlight = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(liftedShadow.redComponent > 0.34)
-        #expect(liftedMidtone.redComponent > 0.55)
+        #expect(liftedMidtone.redComponent > originalMidtone.redComponent + 0.04)
         #expect(compressedHighlight.redComponent < 0.78)
 
         viewModel.undo()
