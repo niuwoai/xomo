@@ -455,9 +455,27 @@ struct ImageEditorShapeContent {
             content.pathAnchors = pathAnchors.map { $0.normalized(size: size) }
             content.pathPoints = content.pathAnchors.map(\.point)
         }
-        content.pathSubpaths = pathSubpaths.map { anchors in
-            anchors.map { $0.normalized(size: size) }
-        }.filter { $0.count >= 2 }
+        var normalizedPathSubpaths: [[ImageEditorPathAnchor]] = []
+        var normalizedPathOperations: [ImageEditorPathComponentOperation] = []
+        if !pathComponentOperations.isEmpty {
+            normalizedPathOperations.append(pathComponentOperations[0])
+        }
+        for (index, anchors) in pathSubpaths.enumerated() {
+            let normalizedAnchors = anchors.map { $0.normalized(size: size) }
+            guard normalizedAnchors.count >= 2 else { continue }
+            normalizedPathSubpaths.append(normalizedAnchors)
+            if !pathComponentOperations.isEmpty {
+                normalizedPathOperations.append(
+                    pathComponentOperations.indices.contains(index + 1)
+                        ? pathComponentOperations[index + 1]
+                        : .exclude
+                )
+            }
+        }
+        content.pathSubpaths = normalizedPathSubpaths
+        if !pathComponentOperations.isEmpty {
+            content.pathComponentOperations = normalizedPathOperations
+        }
         return content
     }
 

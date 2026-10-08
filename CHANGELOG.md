@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1751 - 2026-10-08
+
+### Fixed
+- 路径归一化丢弃退化子路径时同步保留其余轮廓对应的布尔运算，避免旧项目或外部文档中的退化路径改变后续形状结果。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1751`/1751；rc1760 仍是四十版本完整构建门槛。
+
+### Verification
+- `ImageEditorVectorLayerTests` 新增退化子路径过滤与运算映射回归；完整套件及版本合同结果见[验证记录](docs/reviews/2026-10-08-rc1751-path-normalization-operations.md)。
+
+---
+
 ## 2.12.0-rc1750 - 2026-10-08
 
 ### Fixed

@@ -511,6 +511,37 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.currentImage.color(at: CGPoint(x: 80, y: 50))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
     }
 
+    @Test func normalizedPathSubpathsKeepMatchingComponentOperations() throws {
+        let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
+            points.map { ImageEditorPathAnchor(point: $0) }
+        }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathAnchors: anchors([
+                CGPoint(x: 1, y: 1), CGPoint(x: 20, y: 1), CGPoint(x: 10, y: 20)
+            ]),
+            pathSubpaths: [
+                anchors([CGPoint(x: 2, y: 2)]),
+                anchors([CGPoint(x: 4, y: 4), CGPoint(x: 8, y: 4), CGPoint(x: 6, y: 8)]),
+                anchors([CGPoint(x: 12, y: 12)]),
+                anchors([CGPoint(x: 14, y: 14), CGPoint(x: 18, y: 14), CGPoint(x: 16, y: 18)])
+            ],
+            pathComponentOperations: [.combine, .subtract, .intersect, .exclude, .continuePrevious],
+            isPathClosed: true
+        )
+
+        let normalized = content.normalized(size: CGSize(width: 24, height: 24))
+
+        #expect(normalized.allEditablePathSubpaths.count == 3)
+        #expect(normalized.pathComponentOperations == [.combine, .intersect, .continuePrevious])
+        #expect(normalized.resolvedPathComponentOperations == [.combine, .intersect, .continuePrevious])
+    }
+
     @Test func pendingPenPathUndoRedoNeverCrossesIntoDocumentHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

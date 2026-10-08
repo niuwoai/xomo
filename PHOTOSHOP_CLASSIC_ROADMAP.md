@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1751 在 `ImageEditorShapeContent.normalized` 中过滤退化子路径时同步过滤相同路径槽位的组件布尔运算；针对外部/旧项目路径 JSON 增加索引映射测试。完整向量套件与合同结果见[验证记录](docs/reviews/2026-10-08-rc1751-path-normalization-operations.md)。仍需检查真实 UI 流程，完整门槛 rc1760。
 - rc1750 修复路径几何与组件运算索引脱节：复制子路径时复制其运算，删除时移除同索引运算；回归覆盖顺序、Undo/Redo。未执行真实 GUI Picker 冒烟，rc1760 门槛不变。详见[路径运算索引验证](docs/reviews/2026-10-08-rc1750-path-operation-alignment.md)。
 - rc1749 将已有路径组件布尔 renderer 与路径编辑界面接通：选中闭合子路径可选择排除/合并/减去/相交/延续上一组件；更改一项历史记录支持 Undo/Redo，目标像素与整个 `ImageEditorVectorLayerTests`（108 项）通过。尚未做真实 SwiftUI Picker GUI 冒烟；详细记录见[路径组件运算验证](docs/reviews/2026-10-08-rc1749-path-component-operations.md)。下一门槛仍为 rc1760。
 - rc1748 当前源码复跑完整 `ImageEditorCanvasCursorTests`：130/130 通过、0 失败、0 基础设施重试；覆盖组件库系统箭头、工具语义/修饰键、变换控制手柄、平移与模式切换刷新。代码级测试不等于真实鼠标 GUI 冒烟；该项仍留给 rc1760 完整门槛。详细范围见[光标审查记录](docs/reviews/2026-10-08-rc1748-cursor-current-audit.md)。
