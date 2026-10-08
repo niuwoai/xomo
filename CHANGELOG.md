@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1761 - 2026-10-08
+
+### Fixed
+- 修复 Finder 冷启动打开支持的图片或 Xomo 项目时，SwiftUI 未创建/激活编辑窗口的问题；原生项目文件事件现在进入现有项目替换确认、加载及最近项目记录流程。
+
+### Verification
+- `XomoExternalDocumentOpenTests` 隔离执行 27/27 通过；原生项目保存目标与替换保护测试通过；版本合同 10/30 断言、CLI Release 合同 7/24 断言、产品概览归档合同 3/26 断言通过。
+- Debug 候选经 Launch Services 冷启动打开 PNG 和 `.xomoproject` 后均出现可见窗口；原生项目再由应用自动化导出并读回，源名、1440×900 画布、2 层及格式版本 11 与打开前文件一致。
+- 本版不是四十版本完整门槛；下一完整门槛为 rc1800，不覆盖 `/Applications`。
+- 证据见[rc1761 文件冷启动修复记录](docs/reviews/2026-10-08-rc1761-cold-file-open.md)。
+
+---
+
 ## 2.12.0-rc1760 - 2026-10-08
 
 ### Verification

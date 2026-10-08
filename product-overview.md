@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1760
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1761
+
+rc1761 修复 macOS 冷启动文件事件的编辑窗口路由，并将原生 Xomo 项目打开接入现有替换确认、异步载入与最近项目记录流程。外部打开定向套件 27/27 通过；Debug 候选经 Launch Services 冷启动打开 PNG 与 `.xomoproject` 均显示可见窗口，原生项目自动化读回的源名、画布尺寸、层数和格式版本与文件一致。下一完整门槛 rc1800；详见[验证记录](docs/reviews/2026-10-08-rc1761-cold-file-open.md)。
 
 rc1760 四十版本门槛已完成：231 个测试套件、3,682 项全量隔离回归通过；Universal Release archive 与签名、Universal CLI、安装版启动/主画布/原生菜单均核验通过。`/Applications/Xomo.app` 为 rc1760/build1760，旧 rc1729 安装包保留为可恢复备份。冷启动 PNG 文件事件未取得可见文档窗口，因此 Finder 打开路径仍待专门验收；下一完整门槛 rc1800。详见[rc1760 门槛记录](docs/reviews/2026-10-08-rc1760-full-gate.md)。
 
@@ -20,7 +22,7 @@ rc1753 为复合路径增加组件顺序调整；几何和布尔运算一起移�
 
 rc1752 禁止第一条路径组件选择无效的“延续上一组件”，并将旧文档中该无效值显示为其真实渲染语义“排除”；见[验证记录](docs/reviews/2026-10-08-rc1752-first-path-component-operation.md)。rc1751 修复项目路径归一化时退化子路径被丢弃、布尔运算却未同步过滤的问题，避免外部/旧版路径 JSON 的后续组件误用其它运算；见[验证记录](docs/reviews/2026-10-08-rc1751-path-normalization-operations.md)。rc1750 修复闭合复合路径的子路径复制/删除后布尔运算数组错位：复制时继承该组件运算，删除时同步移除对应运算，撤销重做恢复几何与运算；见[验证记录](docs/reviews/2026-10-08-rc1750-path-operation-alignment.md)。rc1749 让闭合路径子路径可设置排除、合并、减去、相交或延续上一组件，视觉变化和路径数据更改共用一个 Undo/Redo 步骤；见[验证记录](docs/reviews/2026-10-08-rc1749-path-component-operations.md)。rc1748 修复像素选区移动预览中途切换工具或侧栏的事务边界：当前移动先提交为单步 Undo，视图清除旧拖动标记，切换后仍可继续编辑；见[验证记录](docs/reviews/2026-10-08-rc1748-pixel-move-mode-boundary.md)。
 
-rc1747 将 P3 PNG 打开、选区像素移动、Undo/Redo、项目重开及 PNG 导出串成一条逐像素用户任务验收；真实 P3 编码夹具的结果见[rc1747 验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。rc1746 将普通 WebP 与 Layer Comp WebP 导出接入共享的 sRGB 有损位图编码器；Display P3 输入的导出 profile、颜色与半透明 Alpha 专项验证通过，导出本身不改编辑历史。WebP/PDF 以外的软件显示仍未验证，不能据此宣称全链路色彩管理。rc1745 将普通 JPEG 与 Layer Comp JPEG 导出统一改为 sRGB CGContext 合成和 ImageIO JPEG 编码；P3→JPEG profile/像素对照、缩放、半透明白底与 Layer Comp 专项通过。rc1744 为 PSD 导出写入 sRGB ICC Image Resource 1039，并把图层与复合图像通道显式归一化到 sRGB；Display P3→PSD→图层及复合图像像素专项（含半透明样本）和完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示及其它 profile/导出格式仍待验证，不宣称完整色彩管理。rc1743 补齐广色域图层的 PNG 交付链：合成结果显式转换到 sRGB 后编码，P3→Quick Export PNG→重读像素专项 1/1、Quick Export 套件 5/5 通过。rc1742 修复普通广色域栅格导入归一化；rc1741 解决 P3 PSD 图层项目往返；rc1740 支持匹配模式 RGB/灰阶 PSD ICC 转换。未运行四十版本全量门槛、真实界面冒烟或覆盖安装；当前安装版仍为 rc1729，下一门槛为 rc1760。详见[rc1746 验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)、[rc1745 验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)、[rc1744 验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)、[rc1743 验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)、[rc1742 验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)、[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
+rc1747 将 P3 PNG 打开、选区像素移动、Undo/Redo、项目重开及 PNG 导出串成一条逐像素用户任务验收；真实 P3 编码夹具的结果见[rc1747 验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。rc1746 将普通 WebP 与 Layer Comp WebP 导出接入共享的 sRGB 有损位图编码器；Display P3 输入的导出 profile、颜色与半透明 Alpha 专项验证通过，导出本身不改编辑历史。WebP/PDF 以外的软件显示仍未验证，不能据此宣称全链路色彩管理。rc1745 将普通 JPEG 与 Layer Comp JPEG 导出统一改为 sRGB CGContext 合成和 ImageIO JPEG 编码；P3→JPEG profile/像素对照、缩放、半透明白底与 Layer Comp 专项通过。rc1744 为 PSD 导出写入 sRGB ICC Image Resource 1039，并把图层与复合图像通道显式归一化到 sRGB；Display P3→PSD→图层及复合图像像素专项（含半透明样本）和完整 PSD 套件 66/66 通过。外部 Photoshop 实际显示及其它 profile/导出格式仍待验证，不宣称完整色彩管理。rc1743 补齐广色域图层的 PNG 交付链：合成结果显式转换到 sRGB 后编码，P3→Quick Export PNG→重读像素专项 1/1、Quick Export 套件 5/5 通过。rc1742 修复普通广色域栅格导入归一化；rc1741 解决 P3 PSD 图层项目往返；rc1740 支持匹配模式 RGB/灰阶 PSD ICC 转换。以上是相应历史版本的验证状态；当前全量门槛、安装版和冷启动文件打开状态以本概览顶部及 rc1760/rc1761 记录为准。详见[rc1746 验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)、[rc1745 验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)、[rc1744 验证记录](docs/reviews/2026-10-08-rc1744-psd-export-srgb.md)、[rc1743 验证记录](docs/reviews/2026-10-08-rc1743-p3-png-export.md)、[rc1742 验证记录](docs/reviews/2026-10-08-rc1742-p3-raster-import.md)、[rc1741 项目色彩记录](docs/reviews/2026-10-08-rc1741-project-png-color.md)和[rc1740 PSD ICC 记录](docs/reviews/2026-10-08-rc1740-icc-psd-import.md)。上一版 rc1739 验证灰度 PSD 选择 alpha 与专色 alpha 通道往返，详见[验证记录](docs/reviews/2026-10-08-rc1739-grayscale-spot-channel-roundtrip.md)。完整门槛记录见[审查记录](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 ## 产品定位与重点
 
@@ -32,7 +34,7 @@ Xomo 是面向 macOS 的经典图像编辑器，优先保证像素选区、绘�
 
 - 阶段 A 快速蒙版已完成；后续改动须维护常见选区来源、预览、画笔/橡皮编辑、退出及 Undo/Redo 工作流。
 - 像素选区移动已有软覆盖、羽化、缩放/越界图层、预览复用、Undo 边界和项目重载回归；窄内核测试不能替代真实素材完整任务。
-- rc1729 已合入 `main`，Git 标签 `v2.12.0-rc1729` 已推送；rc1730 已合入本地 `main`，GitHub main/tag 状态须以远端复核为准；这不是公开应用发布。
+- rc1729 曾合入 `main` 并推送对应标签；rc1760 已完成本地四十版本门槛，`/Applications/Xomo.app` 当前为 rc1760/build1760。rc1761 已提交并合入本地 `main`，PNG 冷启动文件窗口已验证；该提交尚未推送到 GitHub，原生项目 Launch Services UI 冒烟仍待补。
 - 历史版本说明只描述当时状态，不能覆盖当前门槛或安装版状态。rc1728/rc1729 门槛证据见[全量门槛审查](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 rc1727 修正 LayerComp 测试拆分后的源码读取边界，保留四项旧键盘断言，增加五项调用接线检查与真实搜索框 Coordinator 的八场景单测；不修改生产交互逻辑。版本契约 10 项／30 断言、双架构测试编译／严格签名、九相关套件 373 方法／885 次运行和新增八个内部场景通过；真实 Universal CLI 与两项 Release CLI 测试通过，不代表原生全量或 GUI 验收。仍是同一 rc1720 完整门槛，迟到数值／同属性会话、真实光标、全量、正常候选与可恢复安装未完成，安装 rc1680，不扩张 Figma。见[验证记录](docs/reviews/2026-10-04-rc1727-layer-comp-search.md)。

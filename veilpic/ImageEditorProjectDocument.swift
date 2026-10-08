@@ -1571,17 +1571,31 @@ extension ImageEditorViewModel {
 
         do {
             let data = try Data(contentsOf: url)
-            try loadProjectData(data)
-            updateCurrentProjectURL(url)
-            appendHistory(L10n.text("imageEditor.history.projectOpen"))
-            statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+            guard openProjectDocument(data: data, at: url) else { return }
             recentDocumentRegistrar(url)
-            resetProjectSaveBaseline()
         } catch {
             statusText = L10n.format(
                 "imageEditor.status.projectOpenFailedWithReason",
                 error.localizedDescription
             )
+        }
+    }
+
+    @discardableResult
+    func openProjectDocument(data: Data, at url: URL) -> Bool {
+        do {
+            try loadProjectData(data)
+            updateCurrentProjectURL(url)
+            appendHistory(L10n.text("imageEditor.history.projectOpen"))
+            statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+            resetProjectSaveBaseline()
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.projectOpenFailedWithReason",
+                error.localizedDescription
+            )
+            return false
         }
     }
 

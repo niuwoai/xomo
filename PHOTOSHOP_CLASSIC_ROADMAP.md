@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1761 修复 rc1760 实机门槛中观察到的 Finder 冷启动文件事件无可见窗口问题：AppDelegate 收到文件后通过 SwiftUI `openWindow` 明确请求编辑窗口，协调器保留待处理 URL 直到工作区注册；原生 Xomo 项目共用替换确认、异步加载和最近文件流程。`XomoExternalDocumentOpenTests` 27/27 通过；Debug 候选对 PNG 与 `.xomoproject` 的 Launch Services 冷启动均显示可见窗口，项目自动化读回的源名、1440×900 画布、2 层及格式版本 11 与源文件一致。未覆盖 `/Applications`，下一完整门槛仍为 `rc1800`。
 - rc1760 四十版本门槛完成：rc1721–rc1759 累计源码的 build-for-testing 与隔离全量测试 231/231 套件、3682/3682 项通过；Universal Developer ID Release archive、CLI Universal Release、安装包启动/主画布/菜单冒烟通过。`/Applications/Xomo.app` 已核验为 rc1760/build1760，rc1729 原包可恢复备份有效。PNG 文件事件冷启动没有取得可见文档窗口，未把它计作图像打开通过；下一步需专门确认 Finder/文件打开路径。没有公证或公开发布。详见[rc1760 门槛记录](docs/reviews/2026-10-08-rc1760-full-gate.md)。下一完整门槛 `rc1800`，本轮不扩张 Figma。
 - rc1759 把 PDF 像素读回加入真实 P3 编辑闭环：外部导入、软选区像素移动、Undo/Redo、项目重开后，对照 PNG、PDF 与画布；PDF 页面读取校正底部原点行序，颜色通道容差为 1；导出不改内容 History 或选择。rc1760 门槛已完成。
 - rc1758 为普通 PDF 导出增加 Display P3→PDF→sRGB 页面栅格读回像素对照，并检查导出不改变 History/选择状态；完整门槛仍为 rc1760。

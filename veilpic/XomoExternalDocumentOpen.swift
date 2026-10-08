@@ -10,6 +10,7 @@ import Combine
 import Foundation
 
 nonisolated enum XomoExternalDocumentKind: Equatable {
+    case nativeProject
     case photoshop
     case image
     case editableSVG
@@ -29,9 +30,10 @@ nonisolated enum XomoExternalDocumentOpenError: LocalizedError {
 nonisolated enum XomoExternalDocumentOpenPolicy {
     static let immediateSplashFileSize = 12 * 1_024 * 1_024
     static let delayedSplashNanoseconds: UInt64 = 180_000_000
-
     static func kind(for url: URL) -> XomoExternalDocumentKind? {
         switch url.pathExtension.lowercased() {
+        case "xomoproject", "qpicproject", "json":
+            .nativeProject
         case "psd":
             .photoshop
         case "png", "jpg", "jpeg", "tif", "tiff", "heic", "webp":
@@ -212,7 +214,9 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     private let replacementRequester: ReplacementRequester
     private let recentDocumentRegistrar: RecentDocumentRegistrar
     private let openedDocumentWindowActivator: OpenedDocumentWindowActivator
+    private var editorWindowOpener: OpenedDocumentWindowActivator?
     private weak var viewModel: ImageEditorViewModel?
+    private var isOpeningEditorWindow = false
     private var pendingURL: URL?
     private var activeRequestID: UUID?
     private var activeFileName = ""
@@ -242,12 +246,31 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
 
     func register(_ viewModel: ImageEditorViewModel) {
         self.viewModel = viewModel
+        isOpeningEditorWindow = false
         startPendingOpenIfPossible()
     }
 
     func unregister(_ viewModel: ImageEditorViewModel) {
         guard self.viewModel === viewModel else { return }
         self.viewModel = nil
+    }
+
+    func bindEditorWindowOpener(_ opener: @escaping OpenedDocumentWindowActivator) {
+        editorWindowOpener = opener
+        if pendingURL != nil || figmaLinkImportRequest != nil {
+            ensureEditorWindow()
+        }
+    }
+
+    func ensureEditorWindow() {
+        guard viewModel == nil,
+              pendingURL != nil || figmaLinkImportRequest != nil,
+              !isOpeningEditorWindow,
+              let editorWindowOpener
+        else { return }
+
+        isOpeningEditorWindow = true
+        editorWindowOpener()
     }
 
     func fulfillEditorKeyboardFocusRequest(_ requestID: UUID) {
@@ -386,6 +409,18 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 try Data(contentsOf: url, options: .mappedIfSafe)
             }.value
             try Task.checkCancellation()
+
+            if documentKind == .nativeProject {
+                updateStage(.finishing, requestID: requestID)
+                await Task.yield()
+                guard activeRequestID == requestID else { return }
+                guard viewModel.openProjectDocument(data: data, at: url) else {
+                    finish(requestID: requestID)
+                    return
+                }
+                finishSuccessfulOpen(url: url, requestID: requestID)
+                return
+            }
 
             if documentKind == .image {
                 updateStage(.decodingImage, requestID: requestID)

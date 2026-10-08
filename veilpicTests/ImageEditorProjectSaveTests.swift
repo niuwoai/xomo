@@ -282,7 +282,9 @@ struct ImageEditorProjectSaveTests {
         defer { try? FileManager.default.removeItem(at: projectURL) }
 
         let viewModel = makeViewModel(sourceName: "initial.png")
-        viewModel.openDocument(at: projectURL, recentDocumentRegistrar: { _ in })
+        #expect(
+            viewModel.openProjectDocument(data: try Data(contentsOf: projectURL), at: projectURL)
+        )
         #expect(viewModel.currentProjectURL == projectURL.standardizedFileURL)
 
         viewModel.loadExternalImageDocument(
@@ -293,7 +295,9 @@ struct ImageEditorProjectSaveTests {
         )
         #expect(viewModel.currentProjectURL == nil)
 
-        viewModel.openDocument(at: projectURL, recentDocumentRegistrar: { _ in })
+        #expect(
+            viewModel.openProjectDocument(data: try Data(contentsOf: projectURL), at: projectURL)
+        )
         #expect(viewModel.currentProjectURL == projectURL.standardizedFileURL)
         viewModel.createCanvas(from: XomoCanvasDraft(preset: .phonePortrait))
         #expect(viewModel.currentProjectURL == nil)

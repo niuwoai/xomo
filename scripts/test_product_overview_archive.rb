@@ -37,7 +37,9 @@ class ProductOverviewArchiveTest < Minitest::Test
     assert_operator overview.lines.length, :<=, 3_000
     assert_includes overview, '## 核心工作流'
     assert_includes overview, '## 当前实现状态'
-    assert_includes overview, '当前安装版仍为 rc1729'
-    assert_includes overview, '下一门槛为 rc1760'
+    assert_includes overview, '当前为 rc1760/build1760'
+    assert_includes overview, '下一完整门槛 rc1800'
+    assert_includes overview, 'rc1761 已提交并合入本地 `main`'
+    assert_includes overview, '原生项目自动化读回'
   end
 end
