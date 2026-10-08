@@ -2,7 +2,7 @@
 
 > 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1770
 
-rc1770 修正最近文件、项目 Revert 与 Curves 的测试契约：Revert 单测直接载入已保存项目以聚焦同步事务，最近文件源码检查匹配四种成功打开分支，Curves 测试按原像素量化后的有效亮度增量验证。生产编辑和文档打开路径不变；回归验证待完成，发布仍以全套结果为准。下一完整门槛 rc1800，不扩张 Figma。
+rc1770 修正最近文件、项目 Revert 与 Curves 的测试契约：Revert 单测直接载入已保存项目以聚焦同步事务，最近文件源码检查匹配四种成功打开分支，Curves 测试按原像素量化后的有效亮度增量验证。生产编辑和文档打开路径不变；6 项定向回归与完整 Release XCTest 均通过，Universal DMG 已签名、公证并发布到 GitHub/OSS，some.im `xomo` appcast 已回读验证。下一完整门槛 rc1800，不扩张 Figma。
 
 rc1768 让 Auto Levels 按每个 RGB 通道、Auto Contrast 按亮度的直方图两端各裁剪 0.5% 样本，减少孤立坏点导致的整图对比度损失；小样本不裁剪，alpha 保持不变。`ImageEditorAdjustmentTests` 34/34、发布合同 10/30、产品概览归档合同 3/30、CLI Release 合同 7/24 通过。下一完整门槛 rc1800，不扩张 Figma。
 

@@ -6,7 +6,7 @@
 - 校准最近文件、项目 Revert 与 Curves 回归测试：等待/调用与实际文档打开路径一致，曲线断言容纳 8-bit 像素量化；不改变生产编辑行为。
 
 ### Verification
-- 修复全量 Release 测试中已复现的陈旧断言；待定向与全量测试确认后再发布。本版不是四十版本完整门槛，下一门槛 rc1800，不覆盖 `/Applications`。
+- 6 项定向回归用例全部通过；完整 Release XCTest 输出 `TEST SUCCEEDED`。Universal（arm64 + x86_64）构建、公证及 DMG staple 验证成功；本版不是四十版本完整门槛，下一门槛 rc1800，不覆盖 `/Applications`。
 
 历史版本完整保存在以下归档（由新到旧）；本文保留近期版本。
 
