@@ -526,6 +526,56 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var curvesShadows: Double = 0
     @Published var curvesMidtones: Double = 0
     @Published var curvesHighlights: Double = 0
+    @Published var curvesRedShadows: Double = 0
+    @Published var curvesRedMidtones: Double = 0
+    @Published var curvesRedHighlights: Double = 0
+    @Published var curvesGreenShadows: Double = 0
+    @Published var curvesGreenMidtones: Double = 0
+    @Published var curvesGreenHighlights: Double = 0
+    @Published var curvesBlueShadows: Double = 0
+    @Published var curvesBlueMidtones: Double = 0
+    @Published var curvesBlueHighlights: Double = 0
+    @Published var curvesChannel: ImageEditorLevelsChannel = .rgb
+
+    var selectedCurvesShadows: Double {
+        get { curveValue(rgb: curvesShadows, red: curvesRedShadows, green: curvesGreenShadows, blue: curvesBlueShadows) }
+        set { setCurveValue(newValue, rgb: \ImageEditorViewModel.curvesShadows, red: \ImageEditorViewModel.curvesRedShadows, green: \ImageEditorViewModel.curvesGreenShadows, blue: \ImageEditorViewModel.curvesBlueShadows) }
+    }
+
+    var selectedCurvesMidtones: Double {
+        get { curveValue(rgb: curvesMidtones, red: curvesRedMidtones, green: curvesGreenMidtones, blue: curvesBlueMidtones) }
+        set { setCurveValue(newValue, rgb: \ImageEditorViewModel.curvesMidtones, red: \ImageEditorViewModel.curvesRedMidtones, green: \ImageEditorViewModel.curvesGreenMidtones, blue: \ImageEditorViewModel.curvesBlueMidtones) }
+    }
+
+    var selectedCurvesHighlights: Double {
+        get { curveValue(rgb: curvesHighlights, red: curvesRedHighlights, green: curvesGreenHighlights, blue: curvesBlueHighlights) }
+        set { setCurveValue(newValue, rgb: \ImageEditorViewModel.curvesHighlights, red: \ImageEditorViewModel.curvesRedHighlights, green: \ImageEditorViewModel.curvesGreenHighlights, blue: \ImageEditorViewModel.curvesBlueHighlights) }
+    }
+
+    private func curveValue(rgb: Double, red: Double, green: Double, blue: Double) -> Double {
+        switch curvesChannel {
+        case .rgb: rgb
+        case .red: red
+        case .green: green
+        case .blue: blue
+        }
+    }
+
+    private func setCurveValue(
+        _ value: Double,
+        rgb: ReferenceWritableKeyPath<ImageEditorViewModel, Double>,
+        red: ReferenceWritableKeyPath<ImageEditorViewModel, Double>,
+        green: ReferenceWritableKeyPath<ImageEditorViewModel, Double>,
+        blue: ReferenceWritableKeyPath<ImageEditorViewModel, Double>
+    ) {
+        let boundedValue = max(-1, min(1, value))
+        switch curvesChannel {
+        case .rgb: self[keyPath: rgb] = boundedValue
+        case .red: self[keyPath: red] = boundedValue
+        case .green: self[keyPath: green] = boundedValue
+        case .blue: self[keyPath: blue] = boundedValue
+        }
+    }
     @Published var colorBalanceShadowsCyanRed: Double = 0
     @Published var colorBalanceShadowsMagentaGreen: Double = 0
     @Published var colorBalanceShadowsYellowBlue: Double = 0
@@ -10810,6 +10860,15 @@ final class ImageEditorViewModel: ObservableObject {
             curvesShadows: curvesShadows,
             curvesMidtones: curvesMidtones,
             curvesHighlights: curvesHighlights,
+            curvesRedShadows: curvesRedShadows,
+            curvesRedMidtones: curvesRedMidtones,
+            curvesRedHighlights: curvesRedHighlights,
+            curvesGreenShadows: curvesGreenShadows,
+            curvesGreenMidtones: curvesGreenMidtones,
+            curvesGreenHighlights: curvesGreenHighlights,
+            curvesBlueShadows: curvesBlueShadows,
+            curvesBlueMidtones: curvesBlueMidtones,
+            curvesBlueHighlights: curvesBlueHighlights,
             colorBalanceShadowsCyanRed: colorBalanceShadowsCyanRed,
             colorBalanceShadowsMagentaGreen: colorBalanceShadowsMagentaGreen,
             colorBalanceShadowsYellowBlue: colorBalanceShadowsYellowBlue,
@@ -10973,6 +11032,16 @@ final class ImageEditorViewModel: ObservableObject {
         curvesShadows = 0
         curvesMidtones = 0
         curvesHighlights = 0
+        curvesRedShadows = 0
+        curvesRedMidtones = 0
+        curvesRedHighlights = 0
+        curvesGreenShadows = 0
+        curvesGreenMidtones = 0
+        curvesGreenHighlights = 0
+        curvesBlueShadows = 0
+        curvesBlueMidtones = 0
+        curvesBlueHighlights = 0
+        curvesChannel = .rgb
         colorBalanceShadowsCyanRed = 0
         colorBalanceShadowsMagentaGreen = 0
         colorBalanceShadowsYellowBlue = 0
@@ -12277,6 +12346,15 @@ final class ImageEditorViewModel: ObservableObject {
         curvesShadows = settings.curvesShadows
         curvesMidtones = settings.curvesMidtones
         curvesHighlights = settings.curvesHighlights
+        curvesRedShadows = settings.curvesRedShadows
+        curvesRedMidtones = settings.curvesRedMidtones
+        curvesRedHighlights = settings.curvesRedHighlights
+        curvesGreenShadows = settings.curvesGreenShadows
+        curvesGreenMidtones = settings.curvesGreenMidtones
+        curvesGreenHighlights = settings.curvesGreenHighlights
+        curvesBlueShadows = settings.curvesBlueShadows
+        curvesBlueMidtones = settings.curvesBlueMidtones
+        curvesBlueHighlights = settings.curvesBlueHighlights
         colorBalanceShadowsCyanRed = settings.colorBalanceShadowsCyanRed
         colorBalanceShadowsMagentaGreen = settings.colorBalanceShadowsMagentaGreen
         colorBalanceShadowsYellowBlue = settings.colorBalanceShadowsYellowBlue

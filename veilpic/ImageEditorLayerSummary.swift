@@ -147,12 +147,29 @@ extension ImageEditorViewModel {
                 : [compositeSummary]
             return (compositeSummaries + channelSummaries).joined(separator: " · ")
         case .curves:
-            return L10n.format(
+            let composite = L10n.format(
                 "imageEditor.properties.curvesLayerValue",
                 Int((settings.curvesShadows * 100).rounded()),
                 Int((settings.curvesMidtones * 100).rounded()),
                 Int((settings.curvesHighlights * 100).rounded())
             )
+            let channels: [(ImageEditorLevelsChannel, Double, Double, Double)] = [
+                (.red, settings.curvesRedShadows, settings.curvesRedMidtones, settings.curvesRedHighlights),
+                (.green, settings.curvesGreenShadows, settings.curvesGreenMidtones, settings.curvesGreenHighlights),
+                (.blue, settings.curvesBlueShadows, settings.curvesBlueMidtones, settings.curvesBlueHighlights)
+            ]
+            let channelSummaries = channels.compactMap { entry -> String? in
+                let (channel, shadows, midtones, highlights) = entry
+                guard shadows != 0 || midtones != 0 || highlights != 0 else { return nil }
+                return L10n.format(
+                    "imageEditor.properties.curvesLayerChannelValue",
+                    L10n.text("imageEditor.curves.channel.\(channel.rawValue)"),
+                    Int((shadows * 100).rounded()),
+                    Int((midtones * 100).rounded()),
+                    Int((highlights * 100).rounded())
+                )
+            }
+            return ([composite] + channelSummaries).joined(separator: " · ")
         case .colorBalance:
             return L10n.text("imageEditor.properties.colorBalanceLayerValue")
         case .hueSaturation:

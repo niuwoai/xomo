@@ -152,6 +152,54 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.currentImage.qingtuPNGData() == adjustedPixels)
     }
 
+    @Test func curvesAdjustmentAppliesRGBThenPerChannelAndSurvivesProjectRoundTrip() throws {
+        let sourceImage = bitmapImage(
+            size: NSSize(width: 20, height: 20),
+            background: NSColor(calibratedRed: 0.60, green: 0.25, blue: 0.60, alpha: 0.45)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "curves-channels.png", image: sourceImage) { _ in }
+        viewModel.selectedAdjustment = .curves
+        viewModel.curvesChannel = .rgb
+        viewModel.selectedCurvesMidtones = 0.20
+        viewModel.curvesChannel = .red
+        viewModel.selectedCurvesMidtones = 0.60
+        viewModel.curvesChannel = .green
+        viewModel.selectedCurvesShadows = 0.25
+        viewModel.curvesChannel = .blue
+        viewModel.selectedCurvesHighlights = 0.40
+        viewModel.addAdjustmentLayer()
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        let adjustedColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(layer.adjustmentSettings.curvesRedMidtones == 0.60)
+        #expect(layer.adjustmentSettings.curvesMidtones == 0.20)
+        #expect(layer.adjustmentSettings.curvesGreenShadows == 0.25)
+        #expect(layer.adjustmentSettings.curvesBlueHighlights == 0.40)
+        #expect(abs(adjustedColor.redComponent - 0.732) < 0.03)
+        #expect(abs(adjustedColor.greenComponent - 0.3125) < 0.03)
+        #expect(abs(adjustedColor.blueComponent - 0.693) < 0.03)
+        #expect(abs(adjustedColor.alphaComponent - 0.45) < 0.025)
+        #expect(viewModel.selectedLayerGeometryText.contains(
+            L10n.format(
+                "imageEditor.properties.curvesLayerChannelValue",
+                L10n.text("imageEditor.curves.channel.red"),
+                0,
+                60,
+                0
+            )
+        ))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.adjustmentSettings.curvesMidtones == 0.20)
+        #expect(restoredLayer.adjustmentSettings.curvesRedMidtones == 0.60)
+        #expect(restoredLayer.adjustmentSettings.curvesGreenShadows == 0.25)
+        #expect(restoredLayer.adjustmentSettings.curvesBlueHighlights == 0.40)
+    }
+
     @Test func adjustmentLayerOpacityBlendsTheCompletedEffectWithoutChangingItsParameters() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = bitmapImage(

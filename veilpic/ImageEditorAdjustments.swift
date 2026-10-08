@@ -500,12 +500,36 @@ extension NSImage {
     }
 
     private func curved(settings: ImageEditorAdjustmentSettings) -> NSImage? {
-        let curve = Self.curveControlPoints(for: settings.normalized())
+        let settings = settings.normalized()
+        let rgbCurve = Self.curveControlPoints(
+            shadows: settings.curvesShadows,
+            midtones: settings.curvesMidtones,
+            highlights: settings.curvesHighlights
+        )
+        let redCurve = Self.curveControlPoints(
+            shadows: settings.curvesRedShadows,
+            midtones: settings.curvesRedMidtones,
+            highlights: settings.curvesRedHighlights
+        )
+        let greenCurve = Self.curveControlPoints(
+            shadows: settings.curvesGreenShadows,
+            midtones: settings.curvesGreenMidtones,
+            highlights: settings.curvesGreenHighlights
+        )
+        let blueCurve = Self.curveControlPoints(
+            shadows: settings.curvesBlueShadows,
+            midtones: settings.curvesBlueMidtones,
+            highlights: settings.curvesBlueHighlights
+        )
         return pixelMapped { red, green, blue, alpha in
-            (
-                Self.mapCurve(red, points: curve),
-                Self.mapCurve(green, points: curve),
-                Self.mapCurve(blue, points: curve),
+            guard alpha > 0 else { return (0, 0, 0, alpha) }
+            let sourceRed = max(0, min(1, red / alpha))
+            let sourceGreen = max(0, min(1, green / alpha))
+            let sourceBlue = max(0, min(1, blue / alpha))
+            return (
+                Self.mapCurve(Self.mapCurve(sourceRed, points: rgbCurve), points: redCurve) * alpha,
+                Self.mapCurve(Self.mapCurve(sourceGreen, points: rgbCurve), points: greenCurve) * alpha,
+                Self.mapCurve(Self.mapCurve(sourceBlue, points: rgbCurve), points: blueCurve) * alpha,
                 alpha
             )
         }
@@ -1137,12 +1161,16 @@ extension NSImage {
         return (max(0, min(1, value)) * denominator).rounded() / denominator
     }
 
-    private static func curveControlPoints(for settings: ImageEditorAdjustmentSettings) -> [(Double, Double)] {
+    private static func curveControlPoints(
+        shadows: Double,
+        midtones: Double,
+        highlights: Double
+    ) -> [(Double, Double)] {
         [
             (0, 0),
-            (0.25, max(0, min(1, 0.25 + settings.curvesShadows * 0.25))),
-            (0.5, max(0, min(1, 0.5 + settings.curvesMidtones * 0.35))),
-            (0.75, max(0, min(1, 0.75 + settings.curvesHighlights * 0.25))),
+            (0.25, max(0, min(1, 0.25 + shadows * 0.25))),
+            (0.5, max(0, min(1, 0.5 + midtones * 0.35))),
+            (0.75, max(0, min(1, 0.75 + highlights * 0.25))),
             (1, 1)
         ]
     }
