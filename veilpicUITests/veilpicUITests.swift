@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import AppKit
 
 final class veilpicUITests: XCTestCase {
 
@@ -80,6 +81,47 @@ final class veilpicUITests: XCTestCase {
         XCTAssertEqual(brush.value as? String, "selected")
         eraser.coordinate(withNormalizedOffset: CGVector(dx: 0.12, dy: 0.5)).click()
         XCTAssertEqual(eraser.value as? String, "selected")
+    }
+
+    @MainActor
+    func testComponentLibraryHoverAndSelectionRestoreSystemArrow() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let toolsTab = app.buttons["工具"]
+        let componentsTab = app.buttons["组件库"]
+        let brush = app.buttons.matching(identifier: "image-editor-tool-brush").firstMatch
+        let canvas = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-canvas")
+            .firstMatch
+        XCTAssertTrue(toolsTab.waitForExistence(timeout: 5))
+        XCTAssertTrue(brush.waitForExistence(timeout: 5))
+        XCTAssertTrue(canvas.waitForExistence(timeout: 5))
+
+        toolsTab.tap()
+        brush.click()
+        canvas.hover()
+        XCTAssertFalse(systemCursorMatches(NSCursor.arrow), "Brush hover should use its semantic brush cursor")
+
+        componentsTab.tap()
+        let component = app.buttons.matching(identifier: "xomo-component-library-item-button").firstMatch
+        XCTAssertTrue(component.waitForExistence(timeout: 5))
+        component.hover()
+        XCTAssertTrue(systemCursorMatches(NSCursor.arrow), "Component library hover should restore the system arrow")
+
+        component.click()
+        XCTAssertTrue(systemCursorMatches(NSCursor.arrow), "Selecting a library component should retain the system arrow")
+
+        toolsTab.tap()
+        canvas.hover()
+        XCTAssertFalse(systemCursorMatches(NSCursor.arrow), "Returning to the canvas should restore the selected brush cursor")
+    }
+
+    private func systemCursorMatches(_ expected: NSCursor) -> Bool {
+        guard let current = NSCursor.currentSystem else { return false }
+        return current === expected
+            || current.image.tiffRepresentation == expected.image.tiffRepresentation
     }
 
     @MainActor
