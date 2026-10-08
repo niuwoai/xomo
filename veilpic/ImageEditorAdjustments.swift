@@ -620,22 +620,22 @@ extension NSImage {
 
     private func curved(settings: ImageEditorAdjustmentSettings) -> NSImage? {
         let settings = settings.normalized()
-        let rgbCurve = Self.curveControlPoints(
+        let rgbCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesShadows,
             midtones: settings.curvesMidtones,
             highlights: settings.curvesHighlights
         )
-        let redCurve = Self.curveControlPoints(
+        let redCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesRedShadows,
             midtones: settings.curvesRedMidtones,
             highlights: settings.curvesRedHighlights
         )
-        let greenCurve = Self.curveControlPoints(
+        let greenCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesGreenShadows,
             midtones: settings.curvesGreenMidtones,
             highlights: settings.curvesGreenHighlights
         )
-        let blueCurve = Self.curveControlPoints(
+        let blueCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesBlueShadows,
             midtones: settings.curvesBlueMidtones,
             highlights: settings.curvesBlueHighlights
@@ -646,9 +646,9 @@ extension NSImage {
             let sourceGreen = max(0, min(1, green / alpha))
             let sourceBlue = max(0, min(1, blue / alpha))
             return (
-                Self.mapCurve(Self.mapCurve(sourceRed, points: rgbCurve), points: redCurve) * alpha,
-                Self.mapCurve(Self.mapCurve(sourceGreen, points: rgbCurve), points: greenCurve) * alpha,
-                Self.mapCurve(Self.mapCurve(sourceBlue, points: rgbCurve), points: blueCurve) * alpha,
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceRed, points: rgbCurve), points: redCurve) * alpha,
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceGreen, points: rgbCurve), points: greenCurve) * alpha,
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceBlue, points: rgbCurve), points: blueCurve) * alpha,
                 alpha
             )
         }
@@ -1286,34 +1286,6 @@ extension NSImage {
     private static func posterizeChannel(_ value: Double, denominator: Double) -> Double {
         guard denominator > 0 else { return value }
         return (max(0, min(1, value)) * denominator).rounded() / denominator
-    }
-
-    private static func curveControlPoints(
-        shadows: Double,
-        midtones: Double,
-        highlights: Double
-    ) -> [(Double, Double)] {
-        [
-            (0, 0),
-            (0.25, max(0, min(1, 0.25 + shadows * 0.25))),
-            (0.5, max(0, min(1, 0.5 + midtones * 0.35))),
-            (0.75, max(0, min(1, 0.75 + highlights * 0.25))),
-            (1, 1)
-        ]
-    }
-
-    private static func mapCurve(_ value: Double, points: [(Double, Double)]) -> Double {
-        let input = max(0, min(1, value))
-        for index in 0..<(points.count - 1) {
-            let start = points[index]
-            let end = points[index + 1]
-            guard input >= start.0 && input <= end.0 else { continue }
-            let span = max(0.001, end.0 - start.0)
-            let t = max(0, min(1, (input - start.0) / span))
-            let smooth = t * t * (3 - 2 * t)
-            return start.1 + (end.1 - start.1) * smooth
-        }
-        return input
     }
 
     private static func applyColorBalance(

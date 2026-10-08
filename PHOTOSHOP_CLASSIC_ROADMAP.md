@@ -3,6 +3,8 @@
 ## 当前状态（2026-10-09）
 
 - rc1779 增加 Photoshop 风格的 Image > Equalize 破坏性校正：在每个可编辑栅格层的可见像素上统计亮度 CDF，按选区裁切输出，保留像素 alpha 与统一 Undo/Redo 事务；局部亮度比例映射尽量保持色相。rc1779 专项算法、选区/透明度锁和 Undo/Redo 测试结果待本轮验证；下一完整门槛为 rc1800，不扩张 Figma。
+- rc1780 为 Curves 提供交互曲线图：RGB/红/绿/蓝通道可拖拽阴影、中间调和高光控制点，叠加当前直方图所选通道；绘图和像素处理共用单调三次插值，零调整严格保持原像素，现有数值滑杆及非破坏调整层持久化保留。`ImageEditorAdjustmentTests` 与 `ImageEditorScopeTests` 共 237/237、三语资源 46/46 通过，覆盖恒等/单调/锚点边界、调整层像素与项目往返、通道/可访问控件接线；发布契约 10/30、CLI Release 契约 7/24 通过。下一完整门槛为 rc1800，不扩张 Figma。
+- rc1779 验证补录：`ImageEditorAdjustmentTests` 38/38 通过，覆盖亮度分布、预乘 Alpha、纯色 no-op 和选区 Undo/Redo；发布契约 10/30、CLI Release 契约 7/24 通过。
 - rc1778 为已完成的组件库光标策略增加原生 XCUITest 往返：选画笔并悬停画布、进入组件库悬停/插入元件、回到画布，断言实际系统光标从画笔语义指针切到箭头再恢复；`ImageEditorCanvasCursorTests` 130/130 通过。原生 UI runner 两次均在建立测试连接前挂起，UI 测试体尚未执行，实际光标仍待运行时确认。rc1800 完整门槛仍要求 Release 全量构建与真实桌面冒烟，不扩张 Figma。
 - rc1777 修复 Healing Brush 与 Spot Healing 的参考色统计：CoreGraphics RGBA 为预乘 alpha，参考色按像素覆盖率加权，避免低 alpha 彩色边缘污染颜色校正；新增 alpha=1/255 红色离群样本回归。`ImageEditorHealingBrushTests` 27/27，完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。
 - rc1776 将 Healing Brush 与 Spot Healing 的 Diffusion 高斯模糊范围限制在笔触经 source offset 平移后的取样 ROI；Core Image 继续使用原 TIFF 输入和 Gaussian Blur 路径，只请求受影响区域，尺寸不匹配的非标准图像保留旧全帧回退。ROI 与全帧参考 RGB 最大差异不超过 1/255、alpha 逐像素一致；4K 小笔触不再分配整幅模糊结果缓冲。`ImageEditorHealingBrushTests` 26/26 通过，完整门槛仍为 rc1800，不扩张 Figma。rc1775 GitHub 与 OSS 已发布，但 appcast 仍需补 `app_id=xomo` 配置。
