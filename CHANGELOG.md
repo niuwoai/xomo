@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1782 - 2026-10-09
+
+### Added
+- Curves graph now supports Photoshop-style custom control points: click the curve to add, drag in both axes to reshape, and double-click or use the accessibility action to remove; points persist independently for RGB and each color channel.
+
+### Verification
+- Release contract: 10 tests / 30 assertions passed; CLI release contract: 7 tests / 24 assertions passed; all 4,320 localization keys match across English, Simplified Chinese, and Japanese; `git diff --check` passed.
+- `ImageEditorAdjustmentTests` 40/40 and `ImageEditorScopeTests` 198/198 passed (238 total); these cover custom-point constraints, old-project decoding, rendered channel output, project round-trip, and UI binding source wiring. Next full Release/desktop gate remains rc1800; Figma scope is unchanged.
+
 ## 2.12.0-rc1781 - 2026-10-09
 
 ### Added

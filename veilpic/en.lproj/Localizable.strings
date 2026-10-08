@@ -4310,5 +4310,11 @@
 "imageEditor.curves.channel.red" = "Red";
 "imageEditor.curves.channel.green" = "Green";
 "imageEditor.curves.channel.blue" = "Blue";
-"imageEditor.curves.graph" = "Curves graph. Drag a control point vertically to adjust tonal output.";
+"imageEditor.curves.graph" = "Curves graph";
+"imageEditor.curves.graphHint" = "Click near the curve to add a point. Drag custom points horizontally and vertically; double-click a custom point to remove it.";
+"imageEditor.curves.customPoint" = "Custom curve point";
+"imageEditor.curves.customPointValue" = "Input %d%%, output %d%%";
+"imageEditor.curves.customPointHint" = "Drag to move this point. Double-click or use Remove curve point to delete it.";
+"imageEditor.curves.removePoint" = "Remove curve point";
 "imageEditor.properties.curvesLayerChannelValue" = "%@: shadows %d%%, midtones %d%%, highlights %d%%";
+"imageEditor.properties.curvesLayerControlPoints" = "%@: %d custom points";

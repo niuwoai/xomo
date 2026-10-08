@@ -4310,5 +4310,11 @@
 "imageEditor.curves.channel.red" = "レッド";
 "imageEditor.curves.channel.green" = "グリーン";
 "imageEditor.curves.channel.blue" = "ブルー";
-"imageEditor.curves.graph" = "カーブグラフ。コントロールポイントを上下にドラッグして階調出力を調整します。";
+"imageEditor.curves.graph" = "カーブグラフ";
+"imageEditor.curves.graphHint" = "カーブの近くをクリックしてポイントを追加します。カスタムポイントは横と縦にドラッグでき、ダブルクリックで削除できます。";
+"imageEditor.curves.customPoint" = "カスタムカーブポイント";
+"imageEditor.curves.customPointValue" = "入力 %d%%、出力 %d%%";
+"imageEditor.curves.customPointHint" = "ドラッグして移動します。ダブルクリックまたは「カーブポイントを削除」操作で削除します。";
+"imageEditor.curves.removePoint" = "カーブポイントを削除";
 "imageEditor.properties.curvesLayerChannelValue" = "%@: シャドウ %d%%、中間調 %d%%、ハイライト %d%%";
+"imageEditor.properties.curvesLayerControlPoints" = "%@: カスタムポイント %d 個";

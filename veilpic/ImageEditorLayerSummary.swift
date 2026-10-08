@@ -147,29 +147,54 @@ extension ImageEditorViewModel {
                 : [compositeSummary]
             return (compositeSummaries + channelSummaries).joined(separator: " · ")
         case .curves:
-            let composite = L10n.format(
+            let compositeValue = L10n.format(
                 "imageEditor.properties.curvesLayerValue",
                 Int((settings.curvesShadows * 100).rounded()),
                 Int((settings.curvesMidtones * 100).rounded()),
                 Int((settings.curvesHighlights * 100).rounded())
             )
-            let channels: [(ImageEditorLevelsChannel, Double, Double, Double)] = [
-                (.red, settings.curvesRedShadows, settings.curvesRedMidtones, settings.curvesRedHighlights),
-                (.green, settings.curvesGreenShadows, settings.curvesGreenMidtones, settings.curvesGreenHighlights),
-                (.blue, settings.curvesBlueShadows, settings.curvesBlueMidtones, settings.curvesBlueHighlights)
+            let compositeControlPoints = settings.curvesRGBControlPoints.isEmpty ? nil : L10n.format(
+                "imageEditor.properties.curvesLayerControlPoints",
+                L10n.text("imageEditor.curves.channel.rgb"),
+                settings.curvesRGBControlPoints.count
+            )
+            let channels: [(
+                ImageEditorLevelsChannel,
+                Double,
+                Double,
+                Double,
+                [ImageEditorCurveControlPoint]
+            )] = [
+                (.red, settings.curvesRedShadows, settings.curvesRedMidtones, settings.curvesRedHighlights,
+                 settings.curvesRedControlPoints),
+                (.green, settings.curvesGreenShadows, settings.curvesGreenMidtones, settings.curvesGreenHighlights,
+                 settings.curvesGreenControlPoints),
+                (.blue, settings.curvesBlueShadows, settings.curvesBlueMidtones, settings.curvesBlueHighlights,
+                 settings.curvesBlueControlPoints)
             ]
             let channelSummaries = channels.compactMap { entry -> String? in
-                let (channel, shadows, midtones, highlights) = entry
-                guard shadows != 0 || midtones != 0 || highlights != 0 else { return nil }
-                return L10n.format(
-                    "imageEditor.properties.curvesLayerChannelValue",
-                    L10n.text("imageEditor.curves.channel.\(channel.rawValue)"),
-                    Int((shadows * 100).rounded()),
-                    Int((midtones * 100).rounded()),
-                    Int((highlights * 100).rounded())
+                let (channel, shadows, midtones, highlights, points) = entry
+                let channelName = L10n.text("imageEditor.curves.channel.\(channel.rawValue)")
+                let legacySummary: String? = shadows != 0 || midtones != 0 || highlights != 0
+                    ? L10n.format(
+                        "imageEditor.properties.curvesLayerChannelValue",
+                        channelName,
+                        Int((shadows * 100).rounded()),
+                        Int((midtones * 100).rounded()),
+                        Int((highlights * 100).rounded())
+                    )
+                    : nil
+                let pointSummary: String? = points.isEmpty ? nil : L10n.format(
+                    "imageEditor.properties.curvesLayerControlPoints",
+                    channelName,
+                    points.count
                 )
+                let summary = [legacySummary, pointSummary].compactMap { $0 }.joined(separator: " · ")
+                return summary.isEmpty ? nil : summary
             }
-            return ([composite] + channelSummaries).joined(separator: " · ")
+            return ([compositeValue, compositeControlPoints] + channelSummaries)
+                .compactMap { $0 }
+                .joined(separator: " · ")
         case .colorBalance:
             return L10n.text("imageEditor.properties.colorBalanceLayerValue")
         case .hueSaturation:

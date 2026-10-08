@@ -43,8 +43,13 @@ enum ImageEditorCurvesMapping {
         min(1, max(-1, (min(1, max(0, output)) - anchor.input) / anchor.gain))
     }
 
-    static func points(shadows: Double, midtones: Double, highlights: Double) -> [(Double, Double)] {
-        [
+    static func points(
+        shadows: Double,
+        midtones: Double,
+        highlights: Double,
+        customPoints: [ImageEditorCurveControlPoint] = []
+    ) -> [(Double, Double)] {
+        let legacyPoints: [(Double, Double)] = [
             (0, 0),
             (ImageEditorCurvesAnchor.shadows.input, output(
                 for: .shadows, shadows: shadows, midtones: midtones, highlights: highlights
@@ -57,6 +62,68 @@ enum ImageEditorCurvesMapping {
             )),
             (1, 1)
         ]
+        let editablePoints = ImageEditorCurveControlPointRules.normalized(customPoints)
+            .map { ($0.input, $0.output) }
+        return (legacyPoints + editablePoints).sorted { $0.0 < $1.0 }
+    }
+
+    static func addingControlPoint(
+        input: Double,
+        output: Double,
+        to points: [ImageEditorCurveControlPoint]
+    ) -> [ImageEditorCurveControlPoint]? {
+        let normalized = ImageEditorCurveControlPointRules.normalized(points)
+        guard normalized.count < ImageEditorCurveControlPointRules.maximumCount,
+              input.isFinite, output.isFinite else { return nil }
+        let candidate = ImageEditorCurveControlPoint(
+            input: min(ImageEditorCurveControlPointRules.maximumInput,
+                       max(ImageEditorCurveControlPointRules.minimumInput, input)),
+            output: min(1, max(0, output))
+        )
+        let combined = ImageEditorCurveControlPointRules.normalized(normalized + [candidate])
+        guard combined.contains(where: { $0.id == candidate.id }) else { return nil }
+        return combined
+    }
+
+    static func movingControlPoint(
+        id: UUID,
+        input: Double,
+        output: Double,
+        in points: [ImageEditorCurveControlPoint]
+    ) -> [ImageEditorCurveControlPoint] {
+        let normalized = ImageEditorCurveControlPointRules.normalized(points)
+        guard input.isFinite, output.isFinite,
+              let movingIndex = normalized.firstIndex(where: { $0.id == id }) else { return normalized }
+        let movingPoint = normalized[movingIndex]
+        let otherPoints = normalized.filter { $0.id != id }
+        let boundaries = ImageEditorCurveControlPointRules.reservedInputs
+            + otherPoints.map(\.input)
+        let lowerBoundary = boundaries.filter { $0 < movingPoint.input }.max()
+            ?? ImageEditorCurveControlPointRules.minimumInput
+        let upperBoundary = boundaries.filter { $0 > movingPoint.input }.min()
+            ?? ImageEditorCurveControlPointRules.maximumInput
+        let minimumInput = max(
+            ImageEditorCurveControlPointRules.minimumInput,
+            lowerBoundary + ImageEditorCurveControlPointRules.minimumSpacing
+        )
+        let maximumInput = min(
+            ImageEditorCurveControlPointRules.maximumInput,
+            upperBoundary - ImageEditorCurveControlPointRules.minimumSpacing
+        )
+        var movedPoints = normalized
+        movedPoints[movingIndex] = ImageEditorCurveControlPoint(
+            id: id,
+            input: min(maximumInput, max(minimumInput, input)),
+            output: min(1, max(0, output))
+        )
+        return movedPoints.sorted { $0.input < $1.input }
+    }
+
+    static func removingControlPoint(
+        id: UUID,
+        from points: [ImageEditorCurveControlPoint]
+    ) -> [ImageEditorCurveControlPoint] {
+        ImageEditorCurveControlPointRules.normalized(points).filter { $0.id != id }
     }
 
     static func map(_ value: Double, points: [(Double, Double)]) -> Double {
@@ -110,8 +177,10 @@ struct ImageEditorCurvesGraph: View {
     @Binding var shadows: Double
     @Binding var midtones: Double
     @Binding var highlights: Double
+    @Binding var customPoints: [ImageEditorCurveControlPoint]
 
     @State private var dragOrigin: (anchor: ImageEditorCurvesAnchor, value: Double)?
+    @State private var customDragOrigin: (id: UUID, input: Double, output: Double)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -122,6 +191,8 @@ struct ImageEditorCurvesGraph: View {
                     drawHistogram(in: &context, plot: plot)
                     drawCurve(in: &context, plot: plot)
                 }
+                .contentShape(Rectangle())
+                .gesture(addPointGesture(in: plot))
 
                 ForEach(ImageEditorCurvesAnchor.allCases) { anchor in
                     let output = output(for: anchor)
@@ -146,11 +217,53 @@ struct ImageEditorCurvesGraph: View {
                         }
                         .accessibilityIdentifier("image-editor-curves-anchor-\(anchor.rawValue)")
                 }
+
+                ForEach(customPoints) { controlPoint in
+                    Circle()
+                        .fill(Color(nsColor: ImageEditorTheme.panel))
+                        .overlay(Circle().stroke(curveColor, lineWidth: 2))
+                        .frame(width: 13, height: 13)
+                        .frame(width: 24, height: 24)
+                        .position(point(for: controlPoint, in: plot))
+                        .contentShape(Circle())
+                        .gesture(customPointDragGesture(for: controlPoint, plot: plot))
+                        .onTapGesture(count: 2) {
+                            customPoints = ImageEditorCurvesMapping.removingControlPoint(
+                                id: controlPoint.id,
+                                from: customPoints
+                            )
+                        }
+                        .accessibilityElement()
+                        .accessibilityLabel(L10n.text("imageEditor.curves.customPoint"))
+                        .accessibilityValue(L10n.format(
+                            "imageEditor.curves.customPointValue",
+                            Int((controlPoint.input * 100).rounded()),
+                            Int((controlPoint.output * 100).rounded())
+                        ))
+                        .accessibilityHint(L10n.text("imageEditor.curves.customPointHint"))
+                        .accessibilityAdjustableAction { direction in
+                            let step = direction == .increment ? 0.05 : -0.05
+                            customPoints = ImageEditorCurvesMapping.movingControlPoint(
+                                id: controlPoint.id,
+                                input: controlPoint.input,
+                                output: controlPoint.output + step,
+                                in: customPoints
+                            )
+                        }
+                        .accessibilityAction(named: Text(L10n.text("imageEditor.curves.removePoint"))) {
+                            customPoints = ImageEditorCurvesMapping.removingControlPoint(
+                                id: controlPoint.id,
+                                from: customPoints
+                            )
+                        }
+                        .accessibilityIdentifier("image-editor-curves-custom-point-\(controlPoint.id.uuidString)")
+                }
             }
             .background(Color.black.opacity(0.18))
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             .accessibilityElement(children: .contain)
             .accessibilityLabel(L10n.text("imageEditor.curves.graph"))
+            .accessibilityHint(L10n.text("imageEditor.curves.graphHint"))
             .accessibilityIdentifier("image-editor-curves-graph")
         }
         .frame(height: 122)
@@ -196,7 +309,12 @@ struct ImageEditorCurvesGraph: View {
     }
 
     private func drawCurve(in context: inout GraphicsContext, plot: CGRect) {
-        let points = ImageEditorCurvesMapping.points(shadows: shadows, midtones: midtones, highlights: highlights)
+        let points = ImageEditorCurvesMapping.points(
+            shadows: shadows,
+            midtones: midtones,
+            highlights: highlights,
+            customPoints: customPoints
+        )
         var path = Path()
         for step in 0...96 {
             let input = Double(step) / 96
@@ -209,6 +327,65 @@ struct ImageEditorCurvesGraph: View {
             }
         }
         context.stroke(path, with: .color(curveColor), lineWidth: 2)
+    }
+
+    private func addPointGesture(in plot: CGRect) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onEnded { drag in
+                guard abs(drag.translation.width) + abs(drag.translation.height) < 6 else { return }
+                guard !isOverControlPoint(at: drag.startLocation, in: plot) else { return }
+                addControlPoint(at: drag.startLocation, in: plot)
+            }
+    }
+
+    private func isOverControlPoint(at location: CGPoint, in plot: CGRect) -> Bool {
+        let customHandles = customPoints.map { point(for: $0, in: plot) }
+        let fixedHandles = ImageEditorCurvesAnchor.allCases.map { anchor in
+            point(for: anchor, output: output(for: anchor), in: plot)
+        }
+        return (customHandles + fixedHandles).contains {
+            hypot($0.x - location.x, $0.y - location.y) <= 14
+        }
+    }
+
+    private func addControlPoint(at location: CGPoint, in plot: CGRect) {
+        guard plot.contains(location) else { return }
+        let input = Double((location.x - plot.minX) / plot.width)
+        let curvePoints = ImageEditorCurvesMapping.points(
+            shadows: shadows,
+            midtones: midtones,
+            highlights: highlights,
+            customPoints: customPoints
+        )
+        let output = ImageEditorCurvesMapping.map(input, points: curvePoints)
+        let curveY = plot.maxY - plot.height * output
+        guard abs(location.y - curveY) <= 14,
+              let updated = ImageEditorCurvesMapping.addingControlPoint(
+                input: input,
+                output: output,
+                to: customPoints
+              ) else { return }
+        customPoints = updated
+    }
+
+    private func customPointDragGesture(
+        for controlPoint: ImageEditorCurveControlPoint,
+        plot: CGRect
+    ) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { drag in
+                if customDragOrigin?.id != controlPoint.id {
+                    customDragOrigin = (controlPoint.id, controlPoint.input, controlPoint.output)
+                }
+                guard let origin = customDragOrigin, origin.id == controlPoint.id else { return }
+                customPoints = ImageEditorCurvesMapping.movingControlPoint(
+                    id: controlPoint.id,
+                    input: origin.input + Double(drag.translation.width / max(1, plot.width)),
+                    output: origin.output - Double(drag.translation.height / max(1, plot.height)),
+                    in: customPoints
+                )
+            }
+            .onEnded { _ in customDragOrigin = nil }
     }
 
     private func dragGesture(for anchor: ImageEditorCurvesAnchor, plotHeight: CGFloat) -> some Gesture {
@@ -232,6 +409,13 @@ struct ImageEditorCurvesGraph: View {
 
     private func point(for anchor: ImageEditorCurvesAnchor, output: Double, in plot: CGRect) -> CGPoint {
         CGPoint(x: plot.minX + plot.width * anchor.input, y: plot.maxY - plot.height * output)
+    }
+
+    private func point(for controlPoint: ImageEditorCurveControlPoint, in plot: CGRect) -> CGPoint {
+        CGPoint(
+            x: plot.minX + plot.width * controlPoint.input,
+            y: plot.maxY - plot.height * controlPoint.output
+        )
     }
 
     private func output(for anchor: ImageEditorCurvesAnchor) -> Double {

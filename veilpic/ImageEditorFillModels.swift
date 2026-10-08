@@ -949,6 +949,46 @@ enum ImageEditorLevelsChannel: String, CaseIterable {
     }
 }
 
+struct ImageEditorCurveControlPoint: Identifiable, Equatable, Codable {
+    var id: UUID
+    var input: Double
+    var output: Double
+
+    init(id: UUID = UUID(), input: Double, output: Double) {
+        self.id = id
+        self.input = input
+        self.output = output
+    }
+}
+
+enum ImageEditorCurveControlPointRules {
+    static let minimumInput = 0.02
+    static let maximumInput = 0.98
+    static let minimumSpacing = 0.02
+    static let maximumCount = 16
+    static let reservedInputs = [0.25, 0.5, 0.75]
+
+    static func normalized(_ points: [ImageEditorCurveControlPoint]) -> [ImageEditorCurveControlPoint] {
+        var accepted: [ImageEditorCurveControlPoint] = []
+        for point in points
+            .filter({ $0.input.isFinite && $0.output.isFinite })
+            .sorted(by: { $0.input < $1.input }) {
+            guard accepted.count < maximumCount else { break }
+            let input = min(maximumInput, max(minimumInput, point.input))
+            let output = min(1, max(0, point.output))
+            let conflictsWithLegacyAnchor = reservedInputs.contains {
+                abs($0 - input) < minimumSpacing
+            }
+            let conflictsWithCustomPoint = accepted.contains {
+                abs($0.input - input) < minimumSpacing
+            }
+            guard !conflictsWithLegacyAnchor, !conflictsWithCustomPoint else { continue }
+            accepted.append(ImageEditorCurveControlPoint(id: point.id, input: input, output: output))
+        }
+        return accepted
+    }
+}
+
 struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var levelsBlackPoint: Double = 0
     var levelsGamma: Double = 1
@@ -982,6 +1022,10 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var curvesBlueShadows: Double = 0
     var curvesBlueMidtones: Double = 0
     var curvesBlueHighlights: Double = 0
+    var curvesRGBControlPoints: [ImageEditorCurveControlPoint] = []
+    var curvesRedControlPoints: [ImageEditorCurveControlPoint] = []
+    var curvesGreenControlPoints: [ImageEditorCurveControlPoint] = []
+    var curvesBlueControlPoints: [ImageEditorCurveControlPoint] = []
     var colorBalanceShadowsCyanRed: Double = 0
     var colorBalanceShadowsMagentaGreen: Double = 0
     var colorBalanceShadowsYellowBlue: Double = 0
@@ -1133,6 +1177,10 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
             curvesBlueShadows: Self.unit(curvesBlueShadows),
             curvesBlueMidtones: Self.unit(curvesBlueMidtones),
             curvesBlueHighlights: Self.unit(curvesBlueHighlights),
+            curvesRGBControlPoints: ImageEditorCurveControlPointRules.normalized(curvesRGBControlPoints),
+            curvesRedControlPoints: ImageEditorCurveControlPointRules.normalized(curvesRedControlPoints),
+            curvesGreenControlPoints: ImageEditorCurveControlPointRules.normalized(curvesGreenControlPoints),
+            curvesBlueControlPoints: ImageEditorCurveControlPointRules.normalized(curvesBlueControlPoints),
             colorBalanceShadowsCyanRed: Self.unit(colorBalanceShadowsCyanRed),
             colorBalanceShadowsMagentaGreen: Self.unit(colorBalanceShadowsMagentaGreen),
             colorBalanceShadowsYellowBlue: Self.unit(colorBalanceShadowsYellowBlue),
@@ -1251,6 +1299,10 @@ extension ImageEditorAdjustmentSettings {
         case curvesBlueShadows
         case curvesBlueMidtones
         case curvesBlueHighlights
+        case curvesRGBControlPoints
+        case curvesRedControlPoints
+        case curvesGreenControlPoints
+        case curvesBlueControlPoints
         case colorBalanceShadowsCyanRed
         case colorBalanceShadowsMagentaGreen
         case colorBalanceShadowsYellowBlue
@@ -1351,6 +1403,10 @@ extension ImageEditorAdjustmentSettings {
         curvesBlueShadows = try container.decodeIfPresent(Double.self, forKey: .curvesBlueShadows) ?? 0
         curvesBlueMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesBlueMidtones) ?? 0
         curvesBlueHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesBlueHighlights) ?? 0
+        curvesRGBControlPoints = try container.decodeIfPresent([ImageEditorCurveControlPoint].self, forKey: .curvesRGBControlPoints) ?? []
+        curvesRedControlPoints = try container.decodeIfPresent([ImageEditorCurveControlPoint].self, forKey: .curvesRedControlPoints) ?? []
+        curvesGreenControlPoints = try container.decodeIfPresent([ImageEditorCurveControlPoint].self, forKey: .curvesGreenControlPoints) ?? []
+        curvesBlueControlPoints = try container.decodeIfPresent([ImageEditorCurveControlPoint].self, forKey: .curvesBlueControlPoints) ?? []
         colorBalanceShadowsCyanRed = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsCyanRed) ?? 0
         colorBalanceShadowsMagentaGreen = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsMagentaGreen) ?? 0
         colorBalanceShadowsYellowBlue = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsYellowBlue) ?? 0
@@ -1451,6 +1507,10 @@ extension ImageEditorAdjustmentSettings {
         try container.encode(curvesBlueShadows, forKey: .curvesBlueShadows)
         try container.encode(curvesBlueMidtones, forKey: .curvesBlueMidtones)
         try container.encode(curvesBlueHighlights, forKey: .curvesBlueHighlights)
+        try container.encode(curvesRGBControlPoints, forKey: .curvesRGBControlPoints)
+        try container.encode(curvesRedControlPoints, forKey: .curvesRedControlPoints)
+        try container.encode(curvesGreenControlPoints, forKey: .curvesGreenControlPoints)
+        try container.encode(curvesBlueControlPoints, forKey: .curvesBlueControlPoints)
         try container.encode(colorBalanceShadowsCyanRed, forKey: .colorBalanceShadowsCyanRed)
         try container.encode(colorBalanceShadowsMagentaGreen, forKey: .colorBalanceShadowsMagentaGreen)
         try container.encode(colorBalanceShadowsYellowBlue, forKey: .colorBalanceShadowsYellowBlue)

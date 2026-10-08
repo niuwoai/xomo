@@ -41,6 +41,93 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func curvesCustomPointsClampToTheCurveDomainAndCannotCrossFixedAnchors() throws {
+        let inserted = try #require(ImageEditorCurvesMapping.addingControlPoint(
+            input: 0.40,
+            output: 0.72,
+            to: []
+        ))
+        #expect(inserted.count == 1)
+        let curve = ImageEditorCurvesMapping.points(
+            shadows: 0,
+            midtones: 0,
+            highlights: 0,
+            customPoints: inserted
+        )
+        #expect(abs(ImageEditorCurvesMapping.map(0.40, points: curve) - 0.72) < 0.000001)
+
+        let moved = ImageEditorCurvesMapping.movingControlPoint(
+            id: inserted[0].id,
+            input: 0.90,
+            output: 1.5,
+            in: inserted
+        )
+        #expect(moved[0].input <= 0.5 - ImageEditorCurveControlPointRules.minimumSpacing + 0.000001)
+        #expect(moved[0].output == 1)
+
+        let atFixedAnchor = ImageEditorCurvesMapping.addingControlPoint(
+            input: ImageEditorCurvesAnchor.midtones.input,
+            output: 0.8,
+            to: inserted
+        )
+        #expect(atFixedAnchor == nil)
+        #expect(ImageEditorCurvesMapping.removingControlPoint(id: inserted[0].id, from: moved).isEmpty)
+    }
+
+    @Test func olderAdjustmentSettingsDecodeWithoutCustomCurvePoints() throws {
+        let data = Data("{}".utf8)
+        let settings = try JSONDecoder().decode(ImageEditorAdjustmentSettings.self, from: data)
+
+        #expect(settings.curvesRGBControlPoints.isEmpty)
+        #expect(settings.curvesRedControlPoints.isEmpty)
+        #expect(settings.curvesGreenControlPoints.isEmpty)
+        #expect(settings.curvesBlueControlPoints.isEmpty)
+        #expect(ImageEditorCurvesMapping.map(
+            0.4,
+            points: ImageEditorCurvesMapping.points(
+                shadows: settings.curvesShadows,
+                midtones: settings.curvesMidtones,
+                highlights: settings.curvesHighlights,
+                customPoints: settings.curvesRGBControlPoints
+            )
+        ) == 0.4)
+    }
+
+    @Test func customCurvesPointChangesRenderedChannelAndSurvivesProjectRoundTrip() throws {
+        let sourceValue = 0.33
+        let sourceImage = bitmapImage(
+            size: NSSize(width: 12, height: 12),
+            background: NSColor(calibratedRed: sourceValue, green: 0.2, blue: 0.4, alpha: 1)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "curves-custom-point.png", image: sourceImage) { _ in }
+        let controlPoint = ImageEditorCurveControlPoint(input: sourceValue, output: 0.78)
+        viewModel.selectedAdjustment = .curves
+        viewModel.curvesChannel = .red
+        viewModel.selectedCurvesControlPoints = [controlPoint]
+        viewModel.addAdjustmentLayer()
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        #expect(layer.adjustmentSettings.curvesRedControlPoints == [controlPoint])
+        let adjustedColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 6, y: 6))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(adjustedColor.redComponent - controlPoint.output) < 0.035)
+        #expect(abs(adjustedColor.alphaComponent - 1) < 0.01)
+        #expect(viewModel.selectedLayerGeometryText.contains(
+            L10n.format(
+                "imageEditor.properties.curvesLayerControlPoints",
+                L10n.text("imageEditor.curves.channel.red"),
+                1
+            )
+        ))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.adjustmentSettings.curvesRedControlPoints == [controlPoint])
+        #expect(restoredLayer.adjustmentSettings.curvesRGBControlPoints.isEmpty)
+    }
+
     @Test func histogramEqualizationRedistributesVisibleLuminanceAndPreservesAlpha() throws {
         let source = bitmapImage(
             size: NSSize(width: 4, height: 1),

@@ -4310,5 +4310,11 @@
 "imageEditor.curves.channel.red" = "红色";
 "imageEditor.curves.channel.green" = "绿色";
 "imageEditor.curves.channel.blue" = "蓝色";
-"imageEditor.curves.graph" = "曲线图。上下拖动控制点以调整色调输出。";
+"imageEditor.curves.graph" = "曲线图";
+"imageEditor.curves.graphHint" = "在曲线附近点按可添加控制点。可水平和垂直拖动自定义点；双击自定义点可删除。";
+"imageEditor.curves.customPoint" = "自定义曲线控制点";
+"imageEditor.curves.customPointValue" = "输入 %d%%，输出 %d%%";
+"imageEditor.curves.customPointHint" = "拖动以移动此点；双击或使用“删除曲线点”操作删除。";
+"imageEditor.curves.removePoint" = "删除曲线点";
 "imageEditor.properties.curvesLayerChannelValue" = "%@：阴影 %d%%、中间调 %d%%、高光 %d%%";
+"imageEditor.properties.curvesLayerControlPoints" = "%@：%d 个自定义点";

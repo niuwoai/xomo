@@ -623,22 +623,26 @@ extension NSImage {
         let rgbCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesShadows,
             midtones: settings.curvesMidtones,
-            highlights: settings.curvesHighlights
+            highlights: settings.curvesHighlights,
+            customPoints: settings.curvesRGBControlPoints
         )
         let redCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesRedShadows,
             midtones: settings.curvesRedMidtones,
-            highlights: settings.curvesRedHighlights
+            highlights: settings.curvesRedHighlights,
+            customPoints: settings.curvesRedControlPoints
         )
         let greenCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesGreenShadows,
             midtones: settings.curvesGreenMidtones,
-            highlights: settings.curvesGreenHighlights
+            highlights: settings.curvesGreenHighlights,
+            customPoints: settings.curvesGreenControlPoints
         )
         let blueCurve = ImageEditorCurvesMapping.points(
             shadows: settings.curvesBlueShadows,
             midtones: settings.curvesBlueMidtones,
-            highlights: settings.curvesBlueHighlights
+            highlights: settings.curvesBlueHighlights,
+            customPoints: settings.curvesBlueControlPoints
         )
         return pixelMapped { red, green, blue, alpha in
             guard alpha > 0 else { return (0, 0, 0, alpha) }

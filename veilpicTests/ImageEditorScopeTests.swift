@@ -3686,6 +3686,7 @@ struct ImageEditorScopeTests {
         #expect(curvesSource.contains("viewModel.selectedCurvesShadows"))
         #expect(curvesSource.contains("viewModel.selectedCurvesMidtones"))
         #expect(curvesSource.contains("viewModel.selectedCurvesHighlights"))
+        #expect(curvesSource.contains("customPoints: $viewModel.selectedCurvesControlPoints"))
         #expect(curvesSource.contains("viewModel.selectedCurvesShadows * 100"))
         #expect(curvesSource.contains("viewModel.selectedCurvesMidtones * 100"))
         #expect(curvesSource.contains("viewModel.selectedCurvesHighlights * 100"))

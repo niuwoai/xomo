@@ -536,6 +536,10 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var curvesBlueShadows: Double = 0
     @Published var curvesBlueMidtones: Double = 0
     @Published var curvesBlueHighlights: Double = 0
+    @Published var curvesRGBControlPoints: [ImageEditorCurveControlPoint] = []
+    @Published var curvesRedControlPoints: [ImageEditorCurveControlPoint] = []
+    @Published var curvesGreenControlPoints: [ImageEditorCurveControlPoint] = []
+    @Published var curvesBlueControlPoints: [ImageEditorCurveControlPoint] = []
     @Published var curvesChannel: ImageEditorLevelsChannel = .rgb
 
     var selectedCurvesShadows: Double {
@@ -551,6 +555,26 @@ final class ImageEditorViewModel: ObservableObject {
     var selectedCurvesHighlights: Double {
         get { curveValue(rgb: curvesHighlights, red: curvesRedHighlights, green: curvesGreenHighlights, blue: curvesBlueHighlights) }
         set { setCurveValue(newValue, rgb: \ImageEditorViewModel.curvesHighlights, red: \ImageEditorViewModel.curvesRedHighlights, green: \ImageEditorViewModel.curvesGreenHighlights, blue: \ImageEditorViewModel.curvesBlueHighlights) }
+    }
+
+    var selectedCurvesControlPoints: [ImageEditorCurveControlPoint] {
+        get {
+            switch curvesChannel {
+            case .rgb: curvesRGBControlPoints
+            case .red: curvesRedControlPoints
+            case .green: curvesGreenControlPoints
+            case .blue: curvesBlueControlPoints
+            }
+        }
+        set {
+            let points = ImageEditorCurveControlPointRules.normalized(newValue)
+            switch curvesChannel {
+            case .rgb: curvesRGBControlPoints = points
+            case .red: curvesRedControlPoints = points
+            case .green: curvesGreenControlPoints = points
+            case .blue: curvesBlueControlPoints = points
+            }
+        }
     }
 
     private func curveValue(rgb: Double, red: Double, green: Double, blue: Double) -> Double {
@@ -10877,6 +10901,10 @@ final class ImageEditorViewModel: ObservableObject {
             curvesBlueShadows: curvesBlueShadows,
             curvesBlueMidtones: curvesBlueMidtones,
             curvesBlueHighlights: curvesBlueHighlights,
+            curvesRGBControlPoints: curvesRGBControlPoints,
+            curvesRedControlPoints: curvesRedControlPoints,
+            curvesGreenControlPoints: curvesGreenControlPoints,
+            curvesBlueControlPoints: curvesBlueControlPoints,
             colorBalanceShadowsCyanRed: colorBalanceShadowsCyanRed,
             colorBalanceShadowsMagentaGreen: colorBalanceShadowsMagentaGreen,
             colorBalanceShadowsYellowBlue: colorBalanceShadowsYellowBlue,
@@ -11049,6 +11077,10 @@ final class ImageEditorViewModel: ObservableObject {
         curvesBlueShadows = 0
         curvesBlueMidtones = 0
         curvesBlueHighlights = 0
+        curvesRGBControlPoints = []
+        curvesRedControlPoints = []
+        curvesGreenControlPoints = []
+        curvesBlueControlPoints = []
         curvesChannel = .rgb
         colorBalanceShadowsCyanRed = 0
         colorBalanceShadowsMagentaGreen = 0
@@ -12363,6 +12395,10 @@ final class ImageEditorViewModel: ObservableObject {
         curvesBlueShadows = settings.curvesBlueShadows
         curvesBlueMidtones = settings.curvesBlueMidtones
         curvesBlueHighlights = settings.curvesBlueHighlights
+        curvesRGBControlPoints = settings.curvesRGBControlPoints
+        curvesRedControlPoints = settings.curvesRedControlPoints
+        curvesGreenControlPoints = settings.curvesGreenControlPoints
+        curvesBlueControlPoints = settings.curvesBlueControlPoints
         colorBalanceShadowsCyanRed = settings.colorBalanceShadowsCyanRed
         colorBalanceShadowsMagentaGreen = settings.colorBalanceShadowsMagentaGreen
         colorBalanceShadowsYellowBlue = settings.colorBalanceShadowsYellowBlue

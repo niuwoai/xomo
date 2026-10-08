@@ -16269,7 +16269,8 @@ struct ImageEditorView: View {
                 channel: viewModel.curvesChannel,
                 shadows: $viewModel.selectedCurvesShadows,
                 midtones: $viewModel.selectedCurvesMidtones,
-                highlights: $viewModel.selectedCurvesHighlights
+                highlights: $viewModel.selectedCurvesHighlights,
+                customPoints: $viewModel.selectedCurvesControlPoints
             )
             adjustmentSlider(
                 labelKey: "imageEditor.curves.shadows",
