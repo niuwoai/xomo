@@ -13,14 +13,13 @@
 
 ## 安装版启动与签名观察
 
-- `open -a /Applications/Xomo.app` 返回 Launch Services `kLSNoExecutableErr`；包内 `CFBundleExecutable` 为 `Xomo`，对应 `Contents/MacOS/Xomo` 文件实际存在且为 arm64/x86_64 通用二进制。
-- 直接执行该二进制退出码 134，未得到光标观察结果。
+- 初次 `open -a /Applications/Xomo.app` 返回 Launch Services `kLSNoExecutableErr`；包内 `CFBundleExecutable` 为 `Xomo`，对应 `Contents/MacOS/Xomo` 文件实际存在且为 arm64/x86_64 通用二进制。紧接着直接执行该二进制退出码 134。
 - 安装包与 rc1760 archive 的逐项文件清单和 SHA-256 完全一致；因此没有证据表明安装包在拷贝后发生内容漂移。
-- 当前 `codesign --verify --deep --strict` 对安装包、archive 及 rc1729 可恢复副本均报告签名无效；对系统 `/usr/bin/osascript` 的验证返回 `CSSMERR_TP_NOT_TRUSTED`。这是当前主机签名信任链/验证环境异常的证据，但尚不能据此认定其为启动失败的唯一原因，也不能推翻 rc1760 当时记录的验签结果。
-- AppleScript `System Events` 只读进程查询返回错误 `-10827`，未建立可用的桌面鼠标自动化通道。
+- 同一检查轮中，`codesign --verify --deep --strict` 对安装包、archive、rc1729 可恢复副本及系统 `/usr/bin/osascript` 均曾报告信任/签名错误。稍后复查时 `/usr/bin/osascript`、`/Applications/Xomo.app` 与 Gatekeeper 均恢复为有效；再次 `open -a` 成功，AppleScript 读到进程 `Xomo` 和窗口“未命名画布”，并正常退出。故初次启动/验签失败是已恢复的主机瞬态，不能据此判定应用包损坏。
+- 可访问性 API 可读取 Xomo 窗口标题和矩形，但查询嵌套元素返回 `-10827`；普通及授权级 `screencapture -C` 均返回 `could not create image from display`。没有获得包含实际鼠标指针的桌面图像，未建立可用的指针观察通道。
 
 ## 结论与后续
 
 - 未观察到组件库悬停/选中时的真实光标，未验证工具切换、画布进出时的指针恢复；光标运行时验收仍未通过。
-- 当前结果是安装启动/主机信任环境风险，不是已确认的光标算法回归。没有改写或覆盖 `/Applications`，也没有修改产品源码。
-- rc1800 门槛继续要求实际桌面光标冒烟；执行前需先让安装版可正常启动，并区分主机代码签名信任故障与 Xomo 自身启动故障。不得将本记录当作完整门槛通过证据。
+- 当前安装启动与签名已恢复，但显示捕获/辅助功能通道仍不可用。没有改写或覆盖 `/Applications`，也没有修改产品源码。
+- rc1800 门槛继续要求实际桌面光标冒烟；执行前需取得可用的屏幕/指针观察通道。不得将本记录当作完整门槛通过证据。
