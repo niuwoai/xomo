@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1771 - 2026-10-08
+
+### Changed
+- Healing Brush 与 Spot Healing 共用的像素核原位更新目标 RGBA 缓冲，消除每次笔划为输出额外复制的一整帧像素；笔触内混合公式及画布外无操作语义不变。
+
+### Verification
+- `ImageEditorHealingBrushTests` 16/16、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）通过。未运行完整 Release XCTest；下一完整门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1770 - 2026-10-08
 
 ### Fixed

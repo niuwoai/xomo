@@ -2,6 +2,8 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1771 让 Healing/Spot Healing 核对目标 RGBA 帧原位混合，避免每次笔划为输出复制一整帧；画布外 no-op 与逐像素结果保持不变。`ImageEditorHealingBrushTests` 16/16、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）通过；本版未运行完整 Release XCTest。下一完整门槛 rc1800，不扩张 Figma。
+
 - rc1770 校准最近文件、项目 Revert 与 Curves 的过时/量化敏感测试；这些是测试契约修正，不改变生产图像编辑或异步打开路径。6 项定向回归与完整 Release XCTest 通过，Universal DMG 已签名、公证，GitHub、OSS 和 some.im `xomo` appcast 均已发布并回读核验。下一完整门槛 rc1800，不扩张 Figma。
 
 - rc1769 统一 Auto Color 与 Auto Levels 的稳健统计：按 RGB 通道使用相同 0.5% 直方图截尾估算颜色均值，孤立彩边不会拉偏整图校色，同时所有可见像素仍等权，保证不同 alpha 的同色照片与不透明参考行为一致。20×10 中性图含单个 alpha=1 红像素时三种校正结果与无彩边参考比较；`ImageEditorAdjustmentTests` 35/35、发布合同 10/10（30 断言）、产品概览归档合同 3/3（30 断言）、CLI Release 合同 7/7（24 断言）通过。下一完整门槛 rc1800，不扩张 Figma。

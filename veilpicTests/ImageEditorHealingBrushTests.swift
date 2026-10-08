@@ -22,9 +22,17 @@ struct ImageEditorHealingBrushTests {
         let sourcePixels = [UInt8](repeating: 255, count: width * height * 4)
         var maskAlpha = [UInt8](repeating: 0, count: width * height)
         maskAlpha[2 * width + 2] = 255
+        var expected = [UInt8](repeating: 0, count: width * height * 4)
+        for pixelIndex in 0..<(width * height) {
+            expected[pixelIndex * 4 + 3] = 255
+        }
+        let touchedPixel = (2 * width + 2) * ImageEditorHealingBrushKernel.bytesPerPixel
+        expected[touchedPixel] = 255
+        expected[touchedPixel + 1] = 255
+        expected[touchedPixel + 2] = 255
 
-        let output = ImageEditorHealingBrushKernel.heal(
-            targetPixels: targetPixels,
+        ImageEditorHealingBrushKernel.heal(
+            targetPixels: &targetPixels,
             targetContextPixels: sourcePixels,
             sourcePixels: sourcePixels,
             maskAlpha: maskAlpha,
@@ -42,12 +50,7 @@ struct ImageEditorHealingBrushTests {
             opacity: 1
         )
 
-        var expected = targetPixels
-        let touchedPixel = (2 * width + 2) * ImageEditorHealingBrushKernel.bytesPerPixel
-        expected[touchedPixel] = 255
-        expected[touchedPixel + 1] = 255
-        expected[touchedPixel + 2] = 255
-        #expect(output == expected)
+        #expect(targetPixels == expected)
     }
 
     @Test func healingKernelReturnsUnchangedPixelsForAStrokeOutsideCanvas() {
@@ -67,10 +70,12 @@ struct ImageEditorHealingBrushTests {
             points: [CGPoint(x: -10, y: -10)],
             diameter: 8
         )
-        let untouched = ImageEditorHealingBrushKernel.heal(
-            targetPixels: targetPixels,
-            targetContextPixels: targetPixels,
-            sourcePixels: targetPixels,
+        var untouched = targetPixels
+        let contextPixels = Array(targetPixels)
+        ImageEditorHealingBrushKernel.heal(
+            targetPixels: &untouched,
+            targetContextPixels: contextPixels,
+            sourcePixels: contextPixels,
             maskAlpha: [UInt8](repeating: 0, count: width * height),
             maskBounds: bounds,
             width: width,

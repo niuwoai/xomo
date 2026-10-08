@@ -62,7 +62,7 @@ extension NSImage {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
-        guard let targetPixels = healingRGBAPixels(
+        guard var targetPixels = healingRGBAPixels(
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
@@ -100,8 +100,8 @@ extension NSImage {
             points: strokePoints,
             diameter: effectiveDiameter
         )
-        let outputPixels = ImageEditorHealingBrushKernel.heal(
-            targetPixels: targetPixels,
+        ImageEditorHealingBrushKernel.heal(
+            targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
             maskAlpha: maskAlpha,
@@ -114,7 +114,7 @@ extension NSImage {
             opacity: opacity
         )
         return NSImage.healingImage(
-            pixels: outputPixels,
+            pixels: targetPixels,
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow,
@@ -156,7 +156,7 @@ extension NSImage {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
-        guard let targetPixels = healingRGBAPixels(
+        guard var targetPixels = healingRGBAPixels(
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
@@ -198,8 +198,8 @@ extension NSImage {
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
         )
-        let outputPixels = ImageEditorHealingBrushKernel.heal(
-            targetPixels: targetPixels,
+        ImageEditorHealingBrushKernel.heal(
+            targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
             sourcePixels: sourcePixels,
             maskAlpha: maskAlpha,
@@ -217,7 +217,7 @@ extension NSImage {
             opacity: opacity
         )
         return NSImage.healingImage(
-            pixels: outputPixels,
+            pixels: targetPixels,
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow,
@@ -618,7 +618,7 @@ enum ImageEditorHealingBrushKernel {
     }
 
     static func heal(
-        targetPixels: [UInt8],
+        targetPixels: inout [UInt8],
         targetContextPixels: [UInt8],
         sourcePixels: [UInt8],
         maskAlpha: [UInt8],
@@ -629,14 +629,14 @@ enum ImageEditorHealingBrushKernel {
         destinationReference: CGPoint,
         brushDiameter: CGFloat,
         opacity: CGFloat
-    ) -> [UInt8] {
+    ) {
         guard width > 0,
               height > 0,
               targetPixels.count == width * height * bytesPerPixel,
               targetContextPixels.count == targetPixels.count,
               sourcePixels.count == targetPixels.count,
               maskAlpha.count == width * height
-        else { return targetPixels }
+        else { return }
 
         guard let maskBounds,
               maskBounds.minX >= 0,
@@ -645,7 +645,7 @@ enum ImageEditorHealingBrushKernel {
               maskBounds.maxY < height,
               maskBounds.minX <= maskBounds.maxX,
               maskBounds.minY <= maskBounds.maxY
-        else { return targetPixels }
+        else { return }
 
         let sourceStart = CGPoint(
             x: destinationReference.x + sourceOffset.width,
@@ -677,8 +677,6 @@ enum ImageEditorHealingBrushKernel {
         let clampedOpacity = max(0, min(1, opacity))
         let offsetX = Int(sourceOffset.width.rounded())
         let offsetY = Int(sourceOffset.height.rounded())
-        var output = targetPixels
-
         for y in maskBounds.minY...maskBounds.maxY {
             for x in maskBounds.minX...maskBounds.maxX {
                 let maskIndex = y * width + x
@@ -710,12 +708,11 @@ enum ImageEditorHealingBrushKernel {
                     let targetPremultiplied = CGFloat(targetPixels[targetOffset + channel]) / 255
                     let outputPremultiplied = adjustedSource * effectiveSourceAlpha
                         + targetPremultiplied * remainingTarget
-                    output[targetOffset + channel] = byte(outputPremultiplied)
+                    targetPixels[targetOffset + channel] = byte(outputPremultiplied)
                 }
-                output[targetOffset + 3] = byte(outputAlpha)
+                targetPixels[targetOffset + 3] = byte(outputAlpha)
             }
         }
-        return output
     }
 
     static func strokeCenter(_ points: [CGPoint]) -> CGPoint {

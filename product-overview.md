@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1770
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1771
+
+rc1771 让 Healing Brush 与 Spot Healing 在笔划输出时复用目标 RGBA 缓冲原位写入，省去每次操作额外复制整幅输出位图（4096² 画布约 64 MiB）；混合公式、范围和最终像素保持一致。Healing 套件 16/16、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）通过；本版未运行完整 Release XCTest，下一完整门槛 rc1800，不扩张 Figma。
 
 rc1770 修正最近文件、项目 Revert 与 Curves 的测试契约：Revert 单测直接载入已保存项目以聚焦同步事务，最近文件源码检查匹配四种成功打开分支，Curves 测试按原像素量化后的有效亮度增量验证。生产编辑和文档打开路径不变；6 项定向回归与完整 Release XCTest 均通过，Universal DMG 已签名、公证并发布到 GitHub/OSS，some.im `xomo` appcast 已回读验证。下一完整门槛 rc1800，不扩张 Figma。
 
