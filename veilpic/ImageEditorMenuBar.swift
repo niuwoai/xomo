@@ -329,6 +329,8 @@ extension ImageEditorView {
             canAutoContrast: viewModel.canAutoContrastSelectedLayer,
             autoColor: { performPixelCorrectionCommand(.autoColor) },
             canAutoColor: viewModel.canAutoColorSelectedLayer,
+            equalize: { viewModel.equalizeSelectedLayer() },
+            canEqualize: viewModel.canEqualizeSelectedLayer,
             cropCenter: { viewModel.cropCenter() },
             cropToSelection: { viewModel.cropToSelection() },
             canCropToSelection: viewModel.canCropToSelection,
@@ -1602,6 +1604,10 @@ extension ImageEditorView {
             viewModel.autoColorSelectedLayer()
         }
         .disabled(!viewModel.canAutoColorSelectedLayer)
+        Button(L10n.text("imageEditor.action.equalize")) {
+            viewModel.equalizeSelectedLayer()
+        }
+        .disabled(!viewModel.canEqualizeSelectedLayer)
         Divider()
         Button(L10n.text("imageEditor.action.applyAdjustment")) {
             viewModel.applyAdjustment()

@@ -322,6 +322,89 @@ extension NSImage {
         return NSImage(cgImage: output, size: size)
     }
 
+    func histogramEqualized() -> NSImage? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var histogram = [Int](repeating: 0, count: 256)
+        var visiblePixelCount = 0
+        for pixel in stride(from: 0, to: pixels.count, by: bytesPerPixel) {
+            let alpha = pixels[pixel + 3]
+            guard alpha > 0 else { continue }
+            let luminance = Self.luminanceByte(
+                red: Self.unpremultipliedChannel(pixels[pixel], alpha: alpha),
+                green: Self.unpremultipliedChannel(pixels[pixel + 1], alpha: alpha),
+                blue: Self.unpremultipliedChannel(pixels[pixel + 2], alpha: alpha)
+            )
+            histogram[Int(luminance)] += 1
+            visiblePixelCount += 1
+        }
+
+        guard visiblePixelCount > 0,
+              let cdfMinimum = histogram.first(where: { $0 > 0 })
+        else { return self }
+
+        let denominator = visiblePixelCount - cdfMinimum
+        guard denominator > 0 else { return self }
+
+        var cumulative = 0
+        var equalizedLuminance = [UInt8](repeating: 0, count: 256)
+        for value in histogram.indices {
+            cumulative += histogram[value]
+            let normalized = Double(max(0, cumulative - cdfMinimum)) / Double(denominator)
+            equalizedLuminance[value] = Self.byte(normalized)
+        }
+
+        for pixel in stride(from: 0, to: pixels.count, by: bytesPerPixel) {
+            let alpha = pixels[pixel + 3]
+            guard alpha > 0 else { continue }
+            let red = Self.unpremultipliedChannel(pixels[pixel], alpha: alpha)
+            let green = Self.unpremultipliedChannel(pixels[pixel + 1], alpha: alpha)
+            let blue = Self.unpremultipliedChannel(pixels[pixel + 2], alpha: alpha)
+            let sourceLuminance = Self.luminanceByte(red: red, green: green, blue: blue)
+            let targetLuminance = Double(equalizedLuminance[Int(sourceLuminance)]) / 255
+            let scale = targetLuminance / max(Double(sourceLuminance) / 255, 1.0 / 255)
+            pixels[pixel] = Self.premultipliedChannel(Double(red) / 255 * scale, alpha: alpha)
+            pixels[pixel + 1] = Self.premultipliedChannel(Double(green) / 255 * scale, alpha: alpha)
+            pixels[pixel + 2] = Self.premultipliedChannel(Double(blue) / 255 * scale, alpha: alpha)
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
+    }
+
     func preservingAlpha(from source: NSImage) -> NSImage? {
         let targetSize = source.size
         guard targetSize.width > 0, targetSize.height > 0 else { return nil }
@@ -1084,6 +1167,14 @@ extension NSImage {
 
     private static func luminosity(red: Double, green: Double, blue: Double) -> Double {
         red * 0.2126 + green * 0.7152 + blue * 0.0722
+    }
+
+    private static func luminanceByte(red: UInt8, green: UInt8, blue: UInt8) -> UInt8 {
+        byte(luminosity(
+            red: Double(red) / 255,
+            green: Double(green) / 255,
+            blue: Double(blue) / 255
+        ))
     }
 
     private static func cmyk(red: Double, green: Double, blue: Double) -> (cyan: Double, magenta: Double, yellow: Double, black: Double) {

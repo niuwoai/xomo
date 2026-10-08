@@ -13,6 +13,70 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func histogramEqualizationRedistributesVisibleLuminanceAndPreservesAlpha() throws {
+        let source = bitmapImage(
+            size: NSSize(width: 4, height: 1),
+            background: NSColor(calibratedWhite: 0.25, alpha: 0.25),
+            fills: [
+                (CGRect(x: 2, y: 0, width: 1, height: 1), NSColor(calibratedWhite: 0.50, alpha: 0.50)),
+                (CGRect(x: 3, y: 0, width: 1, height: 1), NSColor(calibratedWhite: 0.75, alpha: 1))
+            ]
+        )
+
+        let equalized = try #require(source.histogramEqualized())
+        let dark = try #require(equalized.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        let middle = try #require(equalized.color(at: CGPoint(x: 2, y: 0))?.usingColorSpace(.deviceRGB))
+        let light = try #require(equalized.color(at: CGPoint(x: 3, y: 0))?.usingColorSpace(.deviceRGB))
+
+        #expect(dark.redComponent < 0.03)
+        #expect(abs(middle.redComponent - 0.5) < 0.04)
+        #expect(light.redComponent > 0.97)
+        #expect(abs(dark.alphaComponent - 0.25) < 0.03)
+        #expect(abs(middle.alphaComponent - 0.50) < 0.03)
+        #expect(abs(light.alphaComponent - 1) < 0.01)
+    }
+
+    @Test func histogramEqualizationIsNoOpForUniformVisibleTones() throws {
+        let source = bitmapImage(
+            size: NSSize(width: 8, height: 4),
+            background: NSColor(calibratedRed: 0.35, green: 0.22, blue: 0.12, alpha: 0.6)
+        )
+
+        let equalized = try #require(source.histogramEqualized())
+        #expect(equalized.qingtuPNGData() == source.qingtuPNGData())
+    }
+
+    @Test func histogramEqualizationRespectsSelectionAndUsesOneUndoRedoStep() throws {
+        let image = bitmapImage(
+            size: NSSize(width: 4, height: 1),
+            background: NSColor(calibratedWhite: 0.25, alpha: 1),
+            fills: [
+                (CGRect(x: 2, y: 0, width: 1, height: 1), NSColor(calibratedWhite: 0.50, alpha: 1)),
+                (CGRect(x: 3, y: 0, width: 1, height: 1), NSColor(calibratedWhite: 0.75, alpha: 1))
+            ]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 0, width: 2, height: 1))
+        let before = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        #expect(viewModel.canEqualizeSelectedLayer)
+        viewModel.equalizeSelectedLayer()
+
+        let after = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        #expect(after != before)
+        let untouched = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(untouched.redComponent - 0.25) < 0.02)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.equalize"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == before)
+
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == after)
+    }
+
     @Test func automaticCorrectionsUseStraightRGBAndPreservePremultipliedAlpha() throws {
         let size = NSSize(width: 20, height: 10)
         let dark = NSColor(calibratedRed: 0.20, green: 0.30, blue: 0.40, alpha: 0.25)
@@ -1972,6 +2036,23 @@ struct ImageEditorAdjustmentTests {
         let image = NSImage(size: size)
         image.addRepresentation(representation)
         return image
+    }
+
+    private func editableRasterViewModel(image: NSImage) -> ImageEditorViewModel {
+        let normalized = image.normalizedBitmapImage()
+        var document = ImageEditorDocument(sourceName: "equalize.png", image: normalized)
+        if let index = document.selectedLayerIndex {
+            document.layers[index].image = normalized
+            document.layers[index].frame = CGRect(origin: .zero, size: normalized.size)
+            document.layers[index].isLocked = false
+            document.layers[index].locksPixels = false
+            document.layers[index].locksPosition = false
+            document.layers[index].locksTransparentPixels = false
+        }
+        for index in document.layers.indices where document.layers[index].id != document.selectedLayerID {
+            document.layers[index].isVisible = false
+        }
+        return ImageEditorViewModel(document: document, initialCompositeImage: normalized) { _ in }
     }
 
     @Test func zeroAmountAdjustmentPreservesHistoryAndPixels() throws {
