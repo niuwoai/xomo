@@ -19,6 +19,15 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1768 - 2026-10-08
+
+### Changed
+- Auto Levels 与 Auto Contrast 按可见样本的每端 0.5% 直方图裁剪值计算色调范围，降低少量孤立坏点对整图对比度的影响；小样本不裁剪，校正仍保留原 alpha。
+
+### Verification
+- 自动色调离群点回归及 `ImageEditorAdjustmentTests` 34/34、发布合同 10/10（30 断言）、产品概览归档合同 3/3（30 断言）、CLI Release 合同 7/7（24 断言）通过。
+- 本版不是四十版本完整门槛；下一门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1767 - 2026-10-08
 
 ### Fixed

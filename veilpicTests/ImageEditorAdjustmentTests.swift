@@ -50,6 +50,31 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func automaticToneCorrectionsIgnoreIsolatedHistogramOutliers() throws {
+        let size = NSSize(width: 100, height: 100)
+        let image = bitmapImage(
+            size: size,
+            background: NSColor(calibratedWhite: 0.40, alpha: 1),
+            fills: [
+                (CGRect(x: 50, y: 0, width: 50, height: 100), NSColor(calibratedWhite: 0.60, alpha: 1)),
+                (CGRect(x: 0, y: 0, width: 1, height: 1), NSColor.black),
+                (CGRect(x: 99, y: 99, width: 1, height: 1), NSColor.white)
+            ]
+        )
+        let corrections: [(String, (NSImage) -> NSImage?)] = [
+            ("Auto Levels", { $0.autoLeveled() }),
+            ("Auto Contrast", { $0.autoContrasted() })
+        ]
+
+        for (name, correction) in corrections {
+            let adjusted = try #require(correction(image), "\(name) should produce an image")
+            let dark = try #require(adjusted.color(at: CGPoint(x: 25, y: 50))?.usingColorSpace(.deviceRGB))
+            let light = try #require(adjusted.color(at: CGPoint(x: 75, y: 50))?.usingColorSpace(.deviceRGB))
+            #expect(dark.redComponent < 0.04, "\(name) should stretch the common dark tone")
+            #expect(light.redComponent > 0.95, "\(name) should stretch the common light tone")
+        }
+    }
+
     @Test func levelsNumericInputsClampToSupportedRangesWithoutCrossingChannels() {
         let viewModel = ImageEditorViewModel(
             sourceName: "levels-input-range.png",
