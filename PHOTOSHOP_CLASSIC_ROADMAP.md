@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1748 当前源码复跑完整 `ImageEditorCanvasCursorTests`：130/130 通过、0 失败、0 基础设施重试；覆盖组件库系统箭头、工具语义/修饰键、变换控制手柄、平移与模式切换刷新。代码级测试不等于真实鼠标 GUI 冒烟；该项仍留给 rc1760 完整门槛。详细范围见[光标审查记录](docs/reviews/2026-10-08-rc1748-cursor-current-audit.md)。
 - rc1748 修复选区像素拖动预览中的模式切换事务：切换工具或侧栏前提交单步 Undo，画布同步清理旧手势状态，避免后续工具输入被旧拖动标记拦截。回归覆盖切换后 Undo/Redo 及再次移动，见[验证记录](docs/reviews/2026-10-08-rc1748-pixel-move-mode-boundary.md)。四十版本完整门槛仍为 rc1760。
 - rc1747 把 Display P3 PNG 打开、选区像素移动、Undo/Redo、项目保存重开和 PNG 导出串成一条逐像素验收；目标是验证真实用户任务而非继续按格式逐项补孤立用例。定向结果及已发现问题记于[验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。四十版本完整门槛仍为 rc1760。
 - rc1746 将普通 WebP 与 Layer Comp WebP 改为共享显式 sRGB 的有损位图编码；P3 输入输出 profile、颜色、透明度及导出事务回归通过。它只关闭现有正式格式的导出色彩缺口，不代表外部应用显示或完整色彩管理已验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)。
