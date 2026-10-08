@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreImage
 import Foundation
 
 enum ImageEditorHealingBrushMode: String, CaseIterable, Identifiable {
@@ -86,15 +87,6 @@ extension NSImage {
             ) else { return nil }
             sourcePixels = sampledSourcePixels
         }
-        guard let healingSourcePixels = diffusedHealingPixels(
-            image: sourceImage,
-            originalPixels: sourcePixels,
-            width: pixelWidth,
-            height: pixelHeight,
-            bytesPerRow: bytesPerRow,
-            diffusion: diffusion
-        ) else { return nil }
-
         let effectiveDiameter = retouchMaximumDiameter(
             samples: samples,
             diameter: width,
@@ -118,10 +110,25 @@ extension NSImage {
             pressureSensitivity: pressureSensitivity,
             bounds: maskBounds
         ) else { return nil }
+        let sourceBounds = ImageEditorHealingBrushKernel.diffusionSourceBounds(
+            destinationBounds: maskBounds,
+            sourceOffset: sourceOffset,
+            width: pixelWidth,
+            height: pixelHeight
+        )
+        guard let healingSource = diffusedHealingPixels(
+            image: sourceImage,
+            originalPixels: sourcePixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            diffusion: diffusion,
+            sampleBounds: sourceBounds
+        ) else { return nil }
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
-            sourcePixels: healingSourcePixels,
+            sourcePixels: sourcePixels,
+            diffusedSource: healingSource,
             sourceReferencePixels: sourcePixels,
             mask: mask,
             width: pixelWidth,
@@ -184,14 +191,6 @@ extension NSImage {
             height: pixelHeight,
             bytesPerRow: bytesPerRow
         ) else { return nil }
-        guard let healingSourcePixels = diffusedHealingPixels(
-            image: sourceImage,
-            originalPixels: sourcePixels,
-            width: pixelWidth,
-            height: pixelHeight,
-            bytesPerRow: bytesPerRow,
-            diffusion: diffusion
-        ) else { return nil }
         let points = samples.map(\.point)
         let destinationReference = ImageEditorHealingBrushKernel.strokeCenter(points)
         let effectiveDiameter = retouchMaximumDiameter(
@@ -214,6 +213,21 @@ extension NSImage {
             points: points,
             diameter: effectiveDiameter
         )
+        guard let maskBounds else { return nil }
+        let sourceBounds = ImageEditorHealingBrushKernel.diffusionSourceBounds(
+            destinationBounds: maskBounds,
+            sourceOffset: sourceOffset,
+            width: pixelWidth,
+            height: pixelHeight
+        )
+        guard let healingSource = diffusedHealingPixels(
+            image: sourceImage,
+            originalPixels: sourcePixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            diffusion: diffusion,
+            sampleBounds: sourceBounds
+        ) else { return nil }
         guard let mask = retouchStrokeMask(
             width: pixelWidth,
             height: pixelHeight,
@@ -227,7 +241,8 @@ extension NSImage {
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: sourcePixels,
-            sourcePixels: healingSourcePixels,
+            sourcePixels: sourcePixels,
+            diffusedSource: healingSource,
             sourceReferencePixels: sourcePixels,
             mask: mask,
             width: pixelWidth,
@@ -303,7 +318,7 @@ extension NSImage {
         return max(1, diameter * maximumScale)
     }
 
-    fileprivate func healingRGBAPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {
+    func healingRGBAPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
               let context = CGContext(
@@ -321,22 +336,123 @@ extension NSImage {
         return pixels
     }
 
-    private func diffusedHealingPixels(
+    func diffusedHealingPixels(
         image: NSImage,
         originalPixels: [UInt8],
         width: Int,
         height: Int,
-        bytesPerRow: Int,
-        diffusion: Int
-    ) -> [UInt8]? {
+        diffusion: Int,
+        sampleBounds: ImageEditorHealingBrushKernel.MaskBounds?
+    ) -> ImageEditorHealingBrushKernel.DiffusedSource? {
         let radius = ImageEditorHealingBrushKernel.diffusionRadius(for: diffusion)
-        guard radius > 0 else { return originalPixels }
-        guard let diffusedImage = image.blurred(radius: radius) else { return nil }
-        return diffusedImage.healingRGBAPixels(
-            width: width,
-            height: height,
-            bytesPerRow: bytesPerRow
+        guard radius > 0 else {
+            return ImageEditorHealingBrushKernel.DiffusedSource(
+                bounds: (0, width - 1, 0, height - 1),
+                pixels: originalPixels
+            )
+        }
+        guard let sampleBounds else {
+            return ImageEditorHealingBrushKernel.DiffusedSource(
+                bounds: (0, width - 1, 0, height - 1),
+                pixels: originalPixels
+            )
+        }
+        guard let region = healingDiffusionRegion(
+            image: image,
+            radius: radius,
+            bounds: sampleBounds,
+            canvasWidth: width,
+            canvasHeight: height
+        ) else { return nil }
+        return region
+    }
+
+    func healingDiffusionRegion(
+        image: NSImage,
+        radius: CGFloat,
+        bounds: ImageEditorHealingBrushKernel.MaskBounds,
+        canvasWidth: Int,
+        canvasHeight: Int
+    ) -> ImageEditorHealingBrushKernel.DiffusedSource? {
+        guard radius > 0,
+              canvasWidth > 0,
+              canvasHeight > 0,
+              bounds.minX >= 0,
+              bounds.minY >= 0,
+              bounds.maxX < canvasWidth,
+              bounds.maxY < canvasHeight,
+              let ciImage = image.ciImageForEditing()
+        else { return nil }
+
+        let extent = ciImage.extent.integral
+        guard Int(extent.width) == canvasWidth, Int(extent.height) == canvasHeight else {
+            return fullFrameHealingDiffusionRegion(
+                image: image,
+                radius: radius,
+                bounds: bounds,
+                width: canvasWidth,
+                height: canvasHeight
+            )
+        }
+        let regionWidth = bounds.maxX - bounds.minX + 1
+        let regionHeight = bounds.maxY - bounds.minY + 1
+        let requestedRegion = CGRect(
+            x: extent.minX + CGFloat(bounds.minX),
+            y: extent.minY + CGFloat(canvasHeight - bounds.maxY - 1),
+            width: CGFloat(regionWidth),
+            height: CGFloat(regionHeight)
         )
+        let filter = CIFilter.gaussianBlur()
+        filter.inputImage = ciImage.clampedToExtent()
+        filter.radius = Float(radius)
+        guard let output = filter.outputImage?.cropped(to: requestedRegion),
+              let blurredRegion = CIContext(options: nil).createCGImage(output, from: requestedRegion)
+        else { return nil }
+
+        let bytesPerRow = regionWidth * ImageEditorHealingBrushKernel.bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * regionHeight)
+        guard let context = CGContext(
+            data: &pixels,
+            width: regionWidth,
+            height: regionHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        context.interpolationQuality = .none
+        context.draw(blurredRegion, in: CGRect(x: 0, y: 0, width: regionWidth, height: regionHeight))
+        return ImageEditorHealingBrushKernel.DiffusedSource(bounds: bounds, pixels: pixels)
+    }
+
+    private func fullFrameHealingDiffusionRegion(
+        image: NSImage,
+        radius: CGFloat,
+        bounds: ImageEditorHealingBrushKernel.MaskBounds,
+        width: Int,
+        height: Int
+    ) -> ImageEditorHealingBrushKernel.DiffusedSource? {
+        let bytesPerPixel = ImageEditorHealingBrushKernel.bytesPerPixel
+        guard let blurred = image.blurred(radius: radius),
+              let fullPixels = blurred.healingRGBAPixels(
+                  width: width,
+                  height: height,
+                  bytesPerRow: width * bytesPerPixel
+              )
+        else { return nil }
+
+        let regionWidth = bounds.maxX - bounds.minX + 1
+        let regionHeight = bounds.maxY - bounds.minY + 1
+        var pixels = [UInt8](repeating: 0, count: regionWidth * regionHeight * bytesPerPixel)
+        for y in 0..<regionHeight {
+            let sourceStart = ((bounds.minY + y) * width + bounds.minX) * bytesPerPixel
+            let destinationStart = y * regionWidth * bytesPerPixel
+            pixels.replaceSubrange(
+                destinationStart..<(destinationStart + regionWidth * bytesPerPixel),
+                with: fullPixels[sourceStart..<(sourceStart + regionWidth * bytesPerPixel)]
+            )
+        }
+        return ImageEditorHealingBrushKernel.DiffusedSource(bounds: bounds, pixels: pixels)
     }
 
     private static func healingImage(
@@ -395,6 +511,32 @@ enum ImageEditorHealingBrushKernel {
         }
     }
 
+    struct DiffusedSource {
+        let bounds: MaskBounds
+        let pixels: [UInt8]
+
+        var bytesPerPixel: Int { ImageEditorHealingBrushKernel.bytesPerPixel }
+
+        func pixelOffset(x: Int, y: Int) -> Int? {
+            guard x >= bounds.minX, x <= bounds.maxX,
+                  y >= bounds.minY, y <= bounds.maxY
+            else { return nil }
+            let localWidth = bounds.maxX - bounds.minX + 1
+            return ((y - bounds.minY) * localWidth + x - bounds.minX) * bytesPerPixel
+        }
+
+        func isValid(width: Int, height: Int) -> Bool {
+            guard width > 0, height > 0,
+                  bounds.minX >= 0, bounds.minY >= 0,
+                  bounds.maxX < width, bounds.maxY < height,
+                  bounds.minX <= bounds.maxX, bounds.minY <= bounds.maxY
+            else { return false }
+            let regionWidth = bounds.maxX - bounds.minX + 1
+            let regionHeight = bounds.maxY - bounds.minY + 1
+            return pixels.count == regionWidth * regionHeight * bytesPerPixel
+        }
+    }
+
     static func strokeBounds(
         width: Int,
         height: Int,
@@ -422,6 +564,29 @@ enum ImageEditorHealingBrushKernel {
             Int(clippedMinY),
             Int(clippedMaxY)
         )
+    }
+
+    static func diffusionSourceBounds(
+        destinationBounds: MaskBounds?,
+        sourceOffset: CGSize,
+        width: Int,
+        height: Int
+    ) -> MaskBounds? {
+        guard width > 0,
+              height > 0,
+              let destinationBounds,
+              sourceOffset.width.isFinite,
+              sourceOffset.height.isFinite
+        else { return nil }
+
+        let offsetX = sourceOffset.width.rounded()
+        let offsetY = sourceOffset.height.rounded()
+        let minX = max(0, CGFloat(destinationBounds.minX) + offsetX)
+        let maxX = min(CGFloat(width - 1), CGFloat(destinationBounds.maxX) + offsetX)
+        let minY = max(0, CGFloat(destinationBounds.minY) + offsetY)
+        let maxY = min(CGFloat(height - 1), CGFloat(destinationBounds.maxY) + offsetY)
+        guard minX <= maxX, minY <= maxY else { return nil }
+        return (Int(minX), Int(maxX), Int(minY), Int(maxY))
     }
 
     private static func pointBounds(_ points: [CGPoint]) -> PointBounds? {
@@ -799,6 +964,7 @@ enum ImageEditorHealingBrushKernel {
         targetPixels: inout [UInt8],
         targetContextPixels: [UInt8],
         sourcePixels: [UInt8],
+        diffusedSource: DiffusedSource? = nil,
         sourceReferencePixels: [UInt8]? = nil,
         mask: StrokeMask,
         width: Int,
@@ -812,7 +978,8 @@ enum ImageEditorHealingBrushKernel {
               height > 0,
               targetPixels.count == width * height * bytesPerPixel,
               targetContextPixels.count == targetPixels.count,
-              sourcePixels.count == targetPixels.count
+              sourcePixels.count == targetPixels.count,
+              diffusedSource?.isValid(width: width, height: height) ?? true
         else { return }
 
         let maskBounds = mask.bounds
@@ -865,8 +1032,11 @@ enum ImageEditorHealingBrushKernel {
                 guard sourceX >= 0, sourceY >= 0, sourceX < width, sourceY < height else { continue }
 
                 let targetOffset = maskIndex * bytesPerPixel
-                let sourcePixelOffset = (sourceY * width + sourceX) * bytesPerPixel
-                let sourceAlpha = CGFloat(sourcePixels[sourcePixelOffset + 3]) / 255
+                let rawSourcePixelOffset = (sourceY * width + sourceX) * bytesPerPixel
+                let diffusedPixelOffset = diffusedSource?.pixelOffset(x: sourceX, y: sourceY)
+                let sampledPixels = diffusedPixelOffset == nil ? sourcePixels : diffusedSource!.pixels
+                let sourcePixelOffset = diffusedPixelOffset ?? rawSourcePixelOffset
+                let sourceAlpha = CGFloat(sampledPixels[sourcePixelOffset + 3]) / 255
                 guard sourceAlpha > 0 else { continue }
                 let effectiveSourceAlpha = sourceAlpha * strength
                 let targetAlpha = CGFloat(targetPixels[targetOffset + 3]) / 255
@@ -874,7 +1044,7 @@ enum ImageEditorHealingBrushKernel {
                 let outputAlpha = effectiveSourceAlpha + targetAlpha * remainingTarget
 
                 for channel in 0..<3 {
-                    let sourcePremultiplied = CGFloat(sourcePixels[sourcePixelOffset + channel]) / 255
+                    let sourcePremultiplied = CGFloat(sampledPixels[sourcePixelOffset + channel]) / 255
                     let sourceStraight = sourcePremultiplied / max(sourceAlpha, 0.0001)
                     let delta: CGFloat
                     switch channel {

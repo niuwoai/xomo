@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1775
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1776
+
+rc1776 将 Healing Brush 与 Spot Healing 的 Diffusion 模糊限定为笔触 source offset 映射后的采样 ROI，仍沿用既有 Core Image TIFF/Gaussian Blur 路径；非标准图像尺寸回退旧全帧流程。与全帧模糊参考逐像素比较，RGB 最大量化差异为 1/255、alpha 完全相同；`ImageEditorHealingBrushTests` 26/26 通过。下次完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。rc1775 的 GitHub/OSS 制品已发布，`app_id=xomo` 的 appcast 还未写入。
 
 rc1775 为 Healing Brush 的 Source/Spot 模式增加 1–7 Diffusion：1 保持最清晰的取样纹理，值越高越平滑；原始未模糊源仍用于颜色匹配与 Spot 候选评分。选项栏与自动化共用参数。Healing/Spot Healing 像素与事务套件 24/24、自动化 Healing 3 项、选项栏接线 1 项、本地化 46/46、发布合同 10/30、CLI 合同 7/24、概览归档 3/30 通过；未运行完整 Release XCTest/桌面冒烟。下一完整编译门槛 rc1800，不扩张 Figma。
 
