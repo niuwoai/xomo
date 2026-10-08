@@ -11817,7 +11817,8 @@ struct XomoAutomationTests {
                 "y": .number(34),
                 "aligned": .bool(false),
                 "sampleSource": .string("currentAndBelow"),
-                "ignoresAdjustmentLayers": .bool(true)
+                "ignoresAdjustmentLayers": .bool(true),
+                "diffusion": .number(6)
             ]
         ))
 
@@ -11826,6 +11827,7 @@ struct XomoAutomationTests {
         #expect(!viewModel.isHealingBrushAligned)
         #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
         #expect(viewModel.healingBrushIgnoresAdjustmentLayers)
+        #expect(viewModel.healingBrushDiffusion == 6)
     }
 
     @Test func registryConfiguresSpotHealingModeWithoutASourcePoint() {
@@ -11840,6 +11842,7 @@ struct XomoAutomationTests {
                 "action": .string("healing"),
                 "healingMode": .string("spot"),
                 "sampleSource": .string("allVisible"),
+                "diffusion": .number(3),
                 "size": .number(10),
                 "points": .array([
                     .object(["x": .number(32), "y": .number(32)])
@@ -11851,6 +11854,30 @@ struct XomoAutomationTests {
         #expect(viewModel.healingBrushMode == .spot)
         #expect(viewModel.healingSourcePoint == nil)
         #expect(viewModel.healingBrushSampleSource == .allVisible)
+        #expect(viewModel.healingBrushDiffusion == 3)
+    }
+
+    @Test func registryRejectsInvalidHealingDiffusionBeforeChangingOptions() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setHealingSource"),
+                "x": .number(21),
+                "y": .number(34),
+                "healingMode": .string("spot"),
+                "diffusion": .number(8)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.healingSourcePoint == nil)
+        #expect(viewModel.healingBrushMode == .source)
+        #expect(viewModel.healingBrushDiffusion == 1)
     }
 
 

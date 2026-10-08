@@ -346,6 +346,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published var healingBrushSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published var healingBrushIgnoresAdjustmentLayers = false
+    @Published var healingBrushDiffusion = 1
     @Published private(set) var isSettingHealingSource = false
     @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
     @Published var reselectableSelection: ImageEditorSelection?
@@ -8931,7 +8932,8 @@ final class ImageEditorViewModel: ObservableObject {
                 opacity: opacity,
                 hardness: hardness,
                 pressureControlsSize: retouchPressureControlsSize,
-                pressureSensitivity: retouchPressureSensitivity / 100
+                pressureSensitivity: retouchPressureSensitivity / 100,
+                diffusion: healingBrushDiffusion
             ) else {
                 statusText = L10n.text("imageEditor.status.operationFailed")
                 return
@@ -8978,7 +8980,8 @@ final class ImageEditorViewModel: ObservableObject {
             opacity: opacity,
             hardness: hardness,
             pressureControlsSize: retouchPressureControlsSize,
-            pressureSensitivity: retouchPressureSensitivity / 100
+            pressureSensitivity: retouchPressureSensitivity / 100,
+            diffusion: healingBrushDiffusion
         )
         guard let output else {
             statusText = L10n.text("imageEditor.status.operationFailed")

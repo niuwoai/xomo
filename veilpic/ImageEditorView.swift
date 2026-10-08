@@ -1794,6 +1794,18 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.healingMode"))
                 .accessibilityIdentifier("image-editor-healing-mode")
 
+                Stepper(value: $viewModel.healingBrushDiffusion, in: 1...7) {
+                    Text(L10n.format(
+                        "imageEditor.option.healingDiffusionValue",
+                        viewModel.healingBrushDiffusion
+                    ))
+                    .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+                }
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.healingDiffusion.help"))
+                .accessibilityIdentifier("image-editor-healing-diffusion")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isHealingBrushAligned,
                     sampleSource: $viewModel.healingBrushSampleSource,

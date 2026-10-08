@@ -6249,6 +6249,20 @@ final class XomoAutomationRegistry {
             }
         }
         if action == "setHealingSource" || action == "healing" {
+            let resolvedHealingDiffusion: Int?
+            if let rawDiffusion = arguments["diffusion"]?.doubleValue {
+                guard rawDiffusion.isFinite,
+                      rawDiffusion.rounded() == rawDiffusion,
+                      (1.0...7.0).contains(rawDiffusion)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Healing diffusion must be an integer from 1 through 7"
+                    )
+                }
+                resolvedHealingDiffusion = Int(rawDiffusion)
+            } else {
+                resolvedHealingDiffusion = nil
+            }
             if let rawMode = arguments["healingMode"]?.stringValue {
                 guard let mode = ImageEditorHealingBrushMode(rawValue: rawMode) else {
                     throw XomoAutomationCallError.invalidArgument(
@@ -6272,6 +6286,9 @@ final class XomoAutomationRegistry {
                 arguments["ignoresAdjustmentLayers"]?.boolValue {
                 viewModel.healingBrushIgnoresAdjustmentLayers =
                     ignoresAdjustmentLayers
+            }
+            if let resolvedHealingDiffusion {
+                viewModel.healingBrushDiffusion = resolvedHealingDiffusion
             }
         }
         if action == "sponge", let rawMode = arguments["spongeMode"]?.stringValue {
@@ -7927,7 +7944,7 @@ private extension XomoAutomationRegistry {
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "transparent": XomoAutomationSchema.boolean(description: "Transfer sampled texture while preserving patch target color and alpha"),
-            "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
+            "diffusion": XomoAutomationSchema.integer(description: "Patch or Healing brush texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "patternRepeatMode": XomoAutomationSchema.string(description: "Patch pattern repeat mode", values: ImageEditorPatternRepeatMode.allCases.map(\.rawValue)),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),

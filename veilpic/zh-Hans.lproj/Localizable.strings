@@ -3848,6 +3848,8 @@
 "imageEditor.action.cloneSourceResetTransform" = "重置来源变换";
 "imageEditor.action.cloneSourceClear" = "清除仿制源";
 "imageEditor.option.healingMode" = "修复模式";
+"imageEditor.option.healingDiffusionValue" = "扩散 %d";
+"imageEditor.option.healingDiffusion.help" = "1 保留取样细节；数值越高，混合到修复区域前会越平滑取样纹理。";
 "imageEditor.healingMode.source" = "取样";
 "imageEditor.healingMode.spot" = "污点";
 "imageEditor.option.spongeMode" = "海绵模式";

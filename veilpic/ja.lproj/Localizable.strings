@@ -3848,6 +3848,8 @@
 "imageEditor.action.cloneSourceResetTransform" = "ソース変形をリセット";
 "imageEditor.action.cloneSourceClear" = "クローンソースを消去";
 "imageEditor.option.healingMode" = "修復モード";
+"imageEditor.option.healingDiffusionValue" = "拡散 %d";
+"imageEditor.option.healingDiffusion.help" = "1 はサンプルの細部を保持し、値を上げると修復領域へなじませる前にサンプルのテクスチャを滑らかにします。";
 "imageEditor.healingMode.source" = "サンプル";
 "imageEditor.healingMode.spot" = "スポット";
 "imageEditor.option.spongeMode" = "スポンジモード";

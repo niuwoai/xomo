@@ -5934,6 +5934,11 @@ struct ImageEditorScopeTests {
         #expect(healingSource.contains("ForEach(ImageEditorHealingBrushMode.allCases)"))
         #expect(healingSource.contains(".focusable(false)"))
         #expect(healingSource.contains("image-editor-healing-mode"))
+        #expect(healingSource.contains("$viewModel.healingBrushDiffusion"))
+        #expect(healingSource.contains("image-editor-healing-diffusion"))
+        #expect(healingSource.contains("imageEditor.option.healingDiffusion.help"))
+        #expect(healingSource.contains("$viewModel.healingBrushDiffusion"))
+        #expect(healingSource.contains("image-editor-healing-diffusion"))
         #expect(healingSource.contains(
             "showsExplicitSourceControls: viewModel.healingBrushMode == .source"
         ))

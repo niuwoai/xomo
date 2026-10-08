@@ -12,6 +12,92 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHealingBrushTests {
+    @Test func sourceHealingDiffusionPreservesDetailAtOneAndSmoothsAtSeven() throws {
+        let width = 31
+        let height = 31
+        let targetPixels = rgbaPixels(width: width, height: height) { _, _ in (100, 100, 100, 255) }
+        let sourcePixels = rgbaPixels(width: width, height: height) { x, y in
+            let value: UInt8 = (x + y).isMultiple(of: 2) ? 255 : 0
+            return (value, value, value, 255)
+        }
+        let target = try #require(pixelImage(targetPixels, width: width, height: height))
+        let source = try #require(pixelImage(sourcePixels, width: width, height: height))
+        let point = CGPoint(x: 15, y: 15)
+
+        let sharp = try #require(target.withHealingBrush(
+            points: [point],
+            sourceOffset: .zero,
+            sourceImage: source,
+            targetContextImage: target,
+            width: 4,
+            opacity: 1,
+            hardness: 1,
+            diffusion: 1
+        ))
+        let smooth = try #require(target.withHealingBrush(
+            points: [point],
+            sourceOffset: .zero,
+            sourceImage: source,
+            targetContextImage: target,
+            width: 4,
+            opacity: 1,
+            hardness: 1,
+            diffusion: 7
+        ))
+
+        let sharpCenter = try #require(pixel(sharp, x: 15, y: 15))
+        let smoothCenter = try #require(pixel(smooth, x: 15, y: 15))
+        let untouched = try #require(pixel(smooth, x: 0, y: 0))
+        #expect(sharpCenter[0] > 200)
+        #expect(Int(smoothCenter[0]) < Int(sharpCenter[0]) - 40)
+        #expect(Int(smoothCenter[0]) > 100)
+        #expect(untouched == [100, 100, 100, 255])
+        #expect(smoothCenter[3] == 255)
+    }
+
+    @Test func spotHealingDiffusionSmoothsTheChosenSourceTexture() throws {
+        let width = 31
+        let height = 31
+        let pixels = rgbaPixels(width: width, height: height) { x, y in
+            let value: UInt8 = (x + y).isMultiple(of: 2) ? 255 : 0
+            return (value, value, value, 255)
+        }
+        let image = try #require(pixelImage(pixels, width: width, height: height))
+        let point = CGPoint(x: 15, y: 15)
+
+        let sharp = try #require(image.withSpotHealingBrush(
+            points: [point],
+            sourceImage: image,
+            width: 4,
+            opacity: 1,
+            hardness: 1,
+            diffusion: 1
+        ))
+        let smooth = try #require(image.withSpotHealingBrush(
+            points: [point],
+            sourceImage: image,
+            width: 4,
+            opacity: 1,
+            hardness: 1,
+            diffusion: 7
+        ))
+
+        let sharpCenter = try #require(pixel(sharp, x: 15, y: 15))
+        let smoothCenter = try #require(pixel(smooth, x: 15, y: 15))
+        #expect(abs(Int(sharpCenter[0]) - Int(smoothCenter[0])) > 40)
+        #expect(Int(smoothCenter[0]) < Int(sharpCenter[0]))
+        #expect(Int(smoothCenter[0]) > 100)
+        #expect(smoothCenter[3] == 255)
+    }
+
+    @Test func healingDiffusionMapsTheSupportedRangeToPatchRadius() {
+        #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 1) == 0)
+        #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 4) == 1.5)
+        #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 7) == 3)
+        #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 0) == 0)
+        #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 8) == 3)
+    }
+
     @Test func healingKernelTouchesOnlyPixelsCoveredByItsMask() throws {
         let width = 5
         let height = 5
@@ -242,6 +328,36 @@ struct ImageEditorHealingBrushTests {
         #expect(healed.redComponent < 0.55)
         #expect(abs(healed.redComponent - healed.greenComponent) < 0.18)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+    }
+
+    @Test func diffusedHealingStrokeRemainsOneUndoRedoTransaction() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let original = blemishImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: original) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            original,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.brushSize = 12
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.healingBrushDiffusion = 7
+        viewModel.setHealingSource(at: CGPoint(x: 16, y: 25))
+        let historyCountBeforeStroke = viewModel.document.history.count
+
+        viewModel.healingBrush(points: [CGPoint(x: 40, y: 25)])
+
+        let healedCenter = try healingColor(in: viewModel, at: CGPoint(x: 40, y: 25))
+        #expect(viewModel.document.history.count == historyCountBeforeStroke + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+
+        viewModel.undo()
+        let undoneCenter = try healingColor(in: viewModel, at: CGPoint(x: 40, y: 25))
+        #expect(abs(undoneCenter.redComponent - 1) < abs(healedCenter.redComponent - 1))
+
+        viewModel.redo()
+        let redoneCenter = try healingColor(in: viewModel, at: CGPoint(x: 40, y: 25))
+        #expect(abs(redoneCenter.redComponent - healedCenter.redComponent) < 0.01)
     }
 
     @Test func spotHealingRepairsASingleClickWithoutAnExplicitSource() throws {
@@ -631,5 +747,52 @@ struct ImageEditorHealingBrushTests {
         viewModel.isHealingBrushAligned = false
         viewModel.setHealingSource(at: CGPoint(x: 12, y: 15))
         viewModel.healingBrush(points: [CGPoint(x: 60, y: 15), CGPoint(x: 66, y: 15)])
+    }
+
+    private func rgbaPixels(
+        width: Int,
+        height: Int,
+        colorAt: (Int, Int) -> (UInt8, UInt8, UInt8, UInt8)
+    ) -> [UInt8] {
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = (y * width + x) * 4
+                let color = colorAt(x, y)
+                pixels[offset] = color.0
+                pixels[offset + 1] = color.1
+                pixels[offset + 2] = color.2
+                pixels[offset + 3] = color.3
+            }
+        }
+        return pixels
+    }
+
+    private func pixelImage(_ pixels: [UInt8], width: Int, height: Int) -> NSImage? {
+        let data = Data(pixels) as CFData
+        guard let provider = CGDataProvider(data: data),
+              let cgImage = CGImage(
+                  width: width,
+                  height: height,
+                  bitsPerComponent: 8,
+                  bitsPerPixel: 32,
+                  bytesPerRow: width * 4,
+                  space: CGColorSpaceCreateDeviceRGB(),
+                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                  provider: provider,
+                  decode: nil,
+                  shouldInterpolate: false,
+                  intent: .defaultIntent
+              ) else { return nil }
+        return NSImage(cgImage: cgImage, size: NSSize(width: width, height: height))
+    }
+
+    private func pixel(_ image: NSImage, x: Int, y: Int) -> [UInt8]? {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let color = NSBitmapImageRep(cgImage: cgImage).colorAt(x: x, y: y)?
+                  .usingColorSpace(.deviceRGB)
+        else { return nil }
+        return [color.redComponent, color.greenComponent, color.blueComponent, color.alphaComponent]
+            .map { UInt8(($0 * 255).rounded()) }
     }
 }
