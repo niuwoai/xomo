@@ -16144,27 +16144,50 @@ struct ImageEditorView: View {
     }
 
     private var levelsControls: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let blackPoint = viewModel.selectedLevelsBlackPoint
+        let gamma = viewModel.selectedLevelsGamma
+        let whitePoint = viewModel.selectedLevelsWhitePoint
+        return VStack(alignment: .leading, spacing: 6) {
+            Picker(
+                L10n.text("imageEditor.levels.channel"),
+                selection: $viewModel.levelsChannel
+            ) {
+                ForEach(ImageEditorLevelsChannel.allCases, id: \.self) { channel in
+                    Text(L10n.text(channel.localizationKey)).tag(channel)
+                }
+            }
+            .pickerStyle(.segmented)
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-levels-channel")
             levelsSlider(
                 labelKey: "imageEditor.levels.blackPoint",
-                value: $viewModel.levelsBlackPoint,
+                value: Binding(
+                    get: { viewModel.selectedLevelsBlackPoint },
+                    set: { viewModel.selectedLevelsBlackPoint = $0 }
+                ),
                 range: 0...0.98,
                 step: 0.01,
-                displayText: "\(Int((viewModel.levelsBlackPoint * 255).rounded()))"
+                displayText: "\(Int((blackPoint * 255).rounded()))"
             )
             levelsSlider(
                 labelKey: "imageEditor.levels.gamma",
-                value: $viewModel.levelsGamma,
+                value: Binding(
+                    get: { viewModel.selectedLevelsGamma },
+                    set: { viewModel.selectedLevelsGamma = $0 }
+                ),
                 range: 0.1...4,
                 step: 0.05,
-                displayText: String(format: "%.2f", viewModel.levelsGamma)
+                displayText: String(format: "%.2f", gamma)
             )
             levelsSlider(
                 labelKey: "imageEditor.levels.whitePoint",
-                value: $viewModel.levelsWhitePoint,
+                value: Binding(
+                    get: { viewModel.selectedLevelsWhitePoint },
+                    set: { viewModel.selectedLevelsWhitePoint = $0 }
+                ),
                 range: 0.02...1,
                 step: 0.01,
-                displayText: "\(Int((viewModel.levelsWhitePoint * 255).rounded()))"
+                displayText: "\(Int((whitePoint * 255).rounded()))"
             )
         }
     }

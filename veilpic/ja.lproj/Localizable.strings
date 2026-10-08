@@ -1384,6 +1384,7 @@
 "imageEditor.properties.groupLayer" = "レイヤーグループ";
 "imageEditor.properties.adjustmentLayerValue" = "%@ 調整：%d%%";
 "imageEditor.properties.levelsLayerValue" = "レベル補正：黒 %d・γ %@・白 %d";
+"imageEditor.properties.levelsLayerChannelValue" = "%1$@ チャンネル：黒 %2$d・γ %3$@・白 %4$d";
 "imageEditor.properties.curvesLayerValue" = "トーンカーブ：シャドウ %d%%・中間調 %d%%・ハイライト %d%%";
 "imageEditor.properties.colorBalanceLayerValue" = "カラーバランス：シャドウ / 中間調 / ハイライト";
 "imageEditor.properties.hueSaturationLayerValue" = "色相・彩度：色相 %d°・彩度 %d%%・明度 %d%%";
@@ -1424,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "黒点";
 "imageEditor.levels.gamma" = "中間調";
 "imageEditor.levels.whitePoint" = "白点";
+"imageEditor.levels.channel" = "チャンネル";
+"imageEditor.levels.channel.rgb" = "RGB";
+"imageEditor.levels.channel.red" = "レッド";
+"imageEditor.levels.channel.green" = "グリーン";
+"imageEditor.levels.channel.blue" = "ブルー";
 "imageEditor.curves.shadows" = "シャドウ";
 "imageEditor.curves.midtones" = "中間調";
 "imageEditor.curves.highlights" = "ハイライト";

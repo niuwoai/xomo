@@ -13,6 +13,66 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func levelsAdjustmentEditsRGBChannelsIndependentlyAndSurvivesUndoRedo() throws {
+        let canvasSize = NSSize(width: 20, height: 20)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.60, green: 0.25, blue: 0.60, alpha: 0.45)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "levels-channels.png", image: sourceImage) { _ in }
+        viewModel.selectedAdjustment = .levels
+
+        viewModel.levelsChannel = .red
+        viewModel.selectedLevelsBlackPoint = 0.20
+        viewModel.levelsChannel = .green
+        viewModel.selectedLevelsGamma = 2
+        viewModel.levelsChannel = .blue
+        viewModel.selectedLevelsWhitePoint = 0.80
+        viewModel.addAdjustmentLayer()
+
+        let adjustmentLayer = try #require(viewModel.document.selectedLayer)
+        let adjustedColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(adjustmentLayer.adjustmentSettings.levelsRedBlackPoint == 0.20)
+        #expect(adjustmentLayer.adjustmentSettings.levelsGreenGamma == 2)
+        #expect(adjustmentLayer.adjustmentSettings.levelsBlueWhitePoint == 0.80)
+        #expect(abs(adjustedColor.redComponent - 0.50) < 0.025)
+        #expect(abs(adjustedColor.greenComponent - 0.50) < 0.025)
+        #expect(abs(adjustedColor.blueComponent - 0.75) < 0.025)
+        #expect(abs(adjustedColor.alphaComponent - 0.45) < 0.025)
+        #expect(
+            viewModel.selectedLayerGeometryText.contains(
+                L10n.format(
+                    "imageEditor.properties.levelsLayerChannelValue",
+                    L10n.text("imageEditor.levels.channel.red"),
+                    51,
+                    "1.00",
+                    255
+                )
+            )
+        )
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == adjustmentLayer.id })
+        #expect(restoredLayer.adjustmentSettings.levelsRedBlackPoint == 0.20)
+        #expect(restoredLayer.adjustmentSettings.levelsGreenGamma == 2)
+        #expect(restoredLayer.adjustmentSettings.levelsBlueWhitePoint == 0.80)
+
+        let adjustedPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.undo()
+        let restoredBaseColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(restoredBaseColor.redComponent - 0.60) < 0.025)
+        #expect(abs(restoredBaseColor.greenComponent - 0.25) < 0.025)
+        #expect(abs(restoredBaseColor.blueComponent - 0.60) < 0.025)
+
+        viewModel.redo()
+        #expect(viewModel.currentImage.qingtuPNGData() == adjustedPixels)
+    }
+
     @Test func adjustmentLayerOpacityBlendsTheCompletedEffectWithoutChangingItsParameters() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = bitmapImage(
