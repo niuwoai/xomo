@@ -1,10 +1,10 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-08-02 ｜ 对应版本：v2.12.0-rc633
+> 最后更新：2026-10-08 ｜ 当前应用基线：v2.12.0-rc1762（PSD 编解码相关能力最近更新至 rc1744）
 
 ## 1. 结论
 
-象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource、额外 Alpha/Spot 通道以及结构完整的原生矢量蒙版也支持在导入时进入可编辑模型。
+象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取；支持 8-bit RGB 与灰度 PSD，灰度 plane 会映射到相同值的 RGB 分量，alpha 与额外 Alpha/Spot 通道保持独立。有效且与模式匹配的 RGB/灰度 ICC profile 会在导入时转换颜色样本；无效或模式不匹配的 profile 会在兼容性报告中提示忽略。rc1741–rc1744 继续补上 Display P3 经项目往返及 PNG、PSD 导出的 sRGB 像素链验证，但这不等于所有格式或显示器的完整色彩管理。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource、额外 Alpha/Spot 通道以及结构完整的原生矢量蒙版也支持在导入时进入可编辑模型。
 
 rc195 为 PSD 导出增加 ZIP Prediction（逐行左邻差分 + zlib）自动选择：对平滑渐变等横向相关数据先做可逆预测，再与 Raw、PackBits RLE、ZIP 比较实际大小；预测压缩失败或无收益时安全回退。rc194 为 PSD 导出增加 ZIP（zlib）自动选择：在 Raw 与 PackBits RLE 之外，对整体数据更小的通道采用 ZIP；压缩失败或无收益时仍回退到 Raw/RLE。rc193 为 PSD 导出增加 PackBits RLE：逐行编码图层通道和复合图像通道，只有在压缩后确实更小且行长度可写入 PSD 的情况下才采用 RLE，否则回退 Raw。rc174 补齐连续剪贴蒙版链的 PSD 导出、重新导入与项目保存重开回归，基底关系、透明度和选择状态都有测试证据。rc169 修复了 `vmsk`/`vsms` 子路径长度记录的保留字节偏移，矢量蒙版和路径资源的单/多子路径导入、导出与项目往返测试通过。rc170 修复 EngineData UTF-16 字体名终止符解析，基础文字层字体名可稳定往返；rc171 修复 ZIP 通道 zlib 头处理，外部 ZIP 合成与 ZIP 组蒙版进入可读模型；rc172 改用 Core Graphics 无插值逐像素读取栅格蒙版 alpha，复杂蒙版 alpha 精确往返。
 
@@ -22,7 +22,8 @@ rc240 完成 20 个版本质量门禁：PSD 专项 25/25，外部纯色与线性
 |---|---|---|
 | PSD 文件版本 | 支持 | 支持 PSD v1；不支持 PSB v2。 |
 | 位深 | 支持 8-bit | 16-bit、32-bit 会在兼容性报告中标记为不支持，并拒绝原生分层解析。 |
-| 颜色模式 | 支持 RGB | Bitmap、灰度、索引色、CMYK、Multichannel、Duotone、Lab 暂不支持。 |
+| 颜色模式 | 支持 RGB、灰度 | 8-bit 灰度导入为相同 RGB 分量；Bitmap、索引色、CMYK、Multichannel、Duotone、Lab 暂不支持。 |
+| ICC profile 导入 | 部分支持 | 仅处理与 RGB/灰度模式匹配且可解析的 profile；颜色转换到设备 RGB，alpha 不变。损坏或模式不匹配时会报告忽略。项目文件/所有格式的端到端 profile 保真尚未完成。 |
 | 文档通道 | RGB / RGBA + 额外 Alpha / Spot | 文件头允许 3–56 个通道；RGB 和第一个透明通道用于成像，其余通道读取为带名称的 Xomo Alpha 或 Spot 通道。 |
 | 通道压缩 | 支持 | Raw、RLE、ZIP、8-bit ZIP Prediction。 |
 | 像素图层 | 支持 | 保留名称、顺序、位置、可见性、图层不透明度和透明像素。 |
@@ -146,9 +147,9 @@ rc199 的外部 `unsupported-features.psd` 自动化检查 1/1 通过，确认�
 下一阶段不建议同时追求所有 Photoshop 私有结构。按用户价值和实现风险排序：
 
 1. 可编辑文字层：继续扩展段落框溢出语义、逐字符混排和文字变换；当前基础 TySh/EngineData 已可交换，复杂文字仍使用像素回退。
-2. 可编辑矢量形状与矢量蒙版：继续扩展复杂 vmsk、矢量形状和文字/路径交换；当前开放、反相/断链路径仍安全栅格化。
+2. 可编辑矢量形状与矢量蒙版：继续扩展复杂 vmsk、原生 `vscg`/`vogk` 描述符、布尔运算和文字/路径交换；当前开放、反相/断链路径仍安全栅格化。
 3. 智能对象的源定位与元数据保留：当前已完成安全的原生智能对象栅格回退，下一步再考虑重新定位原始内容和嵌套编辑。
-4. 常用调整层：优先 Levels、Curves、Hue/Saturation，并为无法映射的参数继续保留明确报告。
-5. 颜色管理、16-bit 和 PSB：这些会牵动渲染、内存与项目模型，应作为独立工程阶段处理。
+4. PSD 专有调整层与图层效果：继续把可对应的参数映射为原生可编辑对象，无法映射的内容必须保留明确的兼容性报告。
+5. 16/32-bit、CMYK/Lab 与 PSB：这些会牵动渲染、内存、色彩管理和项目模型，应作为独立工程阶段处理；当前不支持，不应以灰度 8-bit 或 ICC 导入能力推断已支持。
 
 格式实现依据：[Adobe Photoshop File Formats Specification](https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/)。

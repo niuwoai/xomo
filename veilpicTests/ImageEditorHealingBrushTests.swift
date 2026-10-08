@@ -12,6 +12,105 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHealingBrushTests {
+    @Test func healingKernelTouchesOnlyPixelsCoveredByItsMask() {
+        let width = 5
+        let height = 5
+        var targetPixels = [UInt8](repeating: 0, count: width * height * 4)
+        for pixelIndex in 0..<(width * height) {
+            targetPixels[pixelIndex * 4 + 3] = 255
+        }
+        let sourcePixels = [UInt8](repeating: 255, count: width * height * 4)
+        var maskAlpha = [UInt8](repeating: 0, count: width * height)
+        maskAlpha[2 * width + 2] = 255
+
+        let output = ImageEditorHealingBrushKernel.heal(
+            targetPixels: targetPixels,
+            targetContextPixels: sourcePixels,
+            sourcePixels: sourcePixels,
+            maskAlpha: maskAlpha,
+            maskBounds: ImageEditorHealingBrushKernel.strokeBounds(
+                width: width,
+                height: height,
+                points: [CGPoint(x: 2, y: 2)],
+                diameter: 1
+            ),
+            width: width,
+            height: height,
+            sourceOffset: .zero,
+            destinationReference: CGPoint(x: 2, y: 2),
+            brushDiameter: 1,
+            opacity: 1
+        )
+
+        var expected = targetPixels
+        let touchedPixel = (2 * width + 2) * ImageEditorHealingBrushKernel.bytesPerPixel
+        expected[touchedPixel] = 255
+        expected[touchedPixel + 1] = 255
+        expected[touchedPixel + 2] = 255
+        #expect(output == expected)
+    }
+
+    @Test func healingKernelReturnsUnchangedPixelsForAStrokeOutsideCanvas() {
+        let width = 5
+        let height = 5
+        var targetPixels = [UInt8](repeating: 0, count: width * height * 4)
+        for pixelIndex in 0..<(width * height) {
+            let pixelOffset = pixelIndex * 4
+            targetPixels[pixelOffset] = 40
+            targetPixels[pixelOffset + 1] = 80
+            targetPixels[pixelOffset + 2] = 120
+            targetPixels[pixelOffset + 3] = 255
+        }
+        let bounds = ImageEditorHealingBrushKernel.strokeBounds(
+            width: width,
+            height: height,
+            points: [CGPoint(x: -10, y: -10)],
+            diameter: 8
+        )
+        let untouched = ImageEditorHealingBrushKernel.heal(
+            targetPixels: targetPixels,
+            targetContextPixels: targetPixels,
+            sourcePixels: targetPixels,
+            maskAlpha: [UInt8](repeating: 0, count: width * height),
+            maskBounds: bounds,
+            width: width,
+            height: height,
+            sourceOffset: .zero,
+            destinationReference: CGPoint(x: 2, y: 2),
+            brushDiameter: 8,
+            opacity: 1
+        )
+
+        #expect(untouched == targetPixels)
+    }
+
+    @Test func healingStrokeBoundsCoverTheStrokeAndClipToCanvas() {
+        let bounds = ImageEditorHealingBrushKernel.strokeBounds(
+            width: 20,
+            height: 12,
+            points: [CGPoint(x: 1, y: 4), CGPoint(x: 9, y: 6)],
+            diameter: 4
+        )
+        let mask = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: 20,
+            height: 12,
+            points: [CGPoint(x: 1, y: 4), CGPoint(x: 9, y: 6)],
+            diameter: 4,
+            hardness: 0.5
+        )
+
+        #expect(bounds?.minX == 0)
+        #expect(bounds?.maxX == 11)
+        #expect(bounds?.minY == 2)
+        #expect(bounds?.maxY == 8)
+        for (index, alpha) in mask.enumerated() where alpha > 0 {
+            let x = index % 20
+            let y = index / 20
+            #expect(x >= (bounds?.minX ?? 20) && x <= (bounds?.maxX ?? -1))
+            #expect(y >= (bounds?.minY ?? 12) && y <= (bounds?.maxY ?? -1))
+        }
+    }
+
     @Test func healingBrushRequiresAnExplicitSource() {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: blemishImage(size: canvasSize)) { _ in }

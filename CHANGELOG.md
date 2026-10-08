@@ -19,6 +19,17 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1762 - 2026-10-08
+
+### Performance
+- 修复画笔和 Spot Healing 仍逐像素遍历完整画布的问题；混合现在限制在笔触几何范围内，完全落在画布外的笔触直接保留原像素。
+
+### Verification
+- `ImageEditorHealingBrushTests` 隔离执行 16/16 通过；发布版本合同 10 项/30 断言、CLI Release 合同 7 项/24 断言通过。
+- 本版不是四十版本完整门槛；下一门槛仍为 rc1800，不覆盖 `/Applications`。
+
+---
+
 ## 2.12.0-rc1761 - 2026-10-08
 
 ### Fixed
