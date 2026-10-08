@@ -1425,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "黑场";
 "imageEditor.levels.gamma" = "中间调";
 "imageEditor.levels.whitePoint" = "白场";
+"imageEditor.levels.output" = "输出色阶";
+"imageEditor.levels.outputBlackPoint" = "输出黑场";
+"imageEditor.levels.outputWhitePoint" = "输出白场";
+"imageEditor.properties.levelsLayerOutputValue" = "输出：%d–%d";
+"imageEditor.properties.levelsLayerChannelOutputValue" = "%1$@通道输出：%2$d–%3$d";
 "imageEditor.levels.channel" = "通道";
 "imageEditor.levels.channel.rgb" = "RGB";
 "imageEditor.levels.channel.red" = "红";

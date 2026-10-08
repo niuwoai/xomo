@@ -449,38 +449,50 @@ extension NSImage {
                 sourceRed,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
-                white: settings.levelsWhitePoint
+                white: settings.levelsWhitePoint,
+                outputBlack: settings.levelsOutputBlackPoint,
+                outputWhite: settings.levelsOutputWhitePoint
             )
             let rgbGreen = Self.mapLevelIfNeeded(
                 sourceGreen,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
-                white: settings.levelsWhitePoint
+                white: settings.levelsWhitePoint,
+                outputBlack: settings.levelsOutputBlackPoint,
+                outputWhite: settings.levelsOutputWhitePoint
             )
             let rgbBlue = Self.mapLevelIfNeeded(
                 sourceBlue,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
-                white: settings.levelsWhitePoint
+                white: settings.levelsWhitePoint,
+                outputBlack: settings.levelsOutputBlackPoint,
+                outputWhite: settings.levelsOutputWhitePoint
             )
             return (
                 Self.mapLevelIfNeeded(
                     rgbRed,
                     black: settings.levelsRedBlackPoint,
                     gamma: settings.levelsRedGamma,
-                    white: settings.levelsRedWhitePoint
+                    white: settings.levelsRedWhitePoint,
+                    outputBlack: settings.levelsRedOutputBlackPoint,
+                    outputWhite: settings.levelsRedOutputWhitePoint
                 ) * alpha,
                 Self.mapLevelIfNeeded(
                     rgbGreen,
                     black: settings.levelsGreenBlackPoint,
                     gamma: settings.levelsGreenGamma,
-                    white: settings.levelsGreenWhitePoint
+                    white: settings.levelsGreenWhitePoint,
+                    outputBlack: settings.levelsGreenOutputBlackPoint,
+                    outputWhite: settings.levelsGreenOutputWhitePoint
                 ) * alpha,
                 Self.mapLevelIfNeeded(
                     rgbBlue,
                     black: settings.levelsBlueBlackPoint,
                     gamma: settings.levelsBlueGamma,
-                    white: settings.levelsBlueWhitePoint
+                    white: settings.levelsBlueWhitePoint,
+                    outputBlack: settings.levelsBlueOutputBlackPoint,
+                    outputWhite: settings.levelsBlueOutputWhitePoint
                 ) * alpha,
                 alpha
             )
@@ -759,11 +771,19 @@ extension NSImage {
         _ value: Double,
         black: Double,
         gamma: Double,
-        white: Double
+        white: Double,
+        outputBlack: Double,
+        outputWhite: Double
     ) -> Double {
-        guard black != 0 || gamma != 1 || white != 1 else { return value }
-        let range = max(0.01, white - black)
-        return mapLevel(value, black: black, range: range, inverseGamma: 1 / gamma)
+        guard black != 0 || gamma != 1 || white != 1 || outputBlack != 0 || outputWhite != 1 else {
+            return value
+        }
+        let inputMapped = if black != 0 || gamma != 1 || white != 1 {
+            mapLevel(value, black: black, range: max(0.01, white - black), inverseGamma: 1 / gamma)
+        } else {
+            value
+        }
+        return outputBlack + inputMapped * (outputWhite - outputBlack)
     }
 
     private static func mapExposure(_ value: Double, scale: Double, offset: Double, inverseGamma: Double) -> Double {

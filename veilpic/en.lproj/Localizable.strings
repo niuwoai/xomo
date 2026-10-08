@@ -1425,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "Black point";
 "imageEditor.levels.gamma" = "Midtones";
 "imageEditor.levels.whitePoint" = "White point";
+"imageEditor.levels.output" = "Output Levels";
+"imageEditor.levels.outputBlackPoint" = "Output black";
+"imageEditor.levels.outputWhitePoint" = "Output white";
+"imageEditor.properties.levelsLayerOutputValue" = "Output: %d–%d";
+"imageEditor.properties.levelsLayerChannelOutputValue" = "%1$@ channel output: %2$d–%3$d";
 "imageEditor.levels.channel" = "Channel";
 "imageEditor.levels.channel.rgb" = "RGB";
 "imageEditor.levels.channel.red" = "Red";

@@ -16147,6 +16147,8 @@ struct ImageEditorView: View {
         let blackPoint = viewModel.selectedLevelsBlackPoint
         let gamma = viewModel.selectedLevelsGamma
         let whitePoint = viewModel.selectedLevelsWhitePoint
+        let outputBlackPoint = viewModel.selectedLevelsOutputBlackPoint
+        let outputWhitePoint = viewModel.selectedLevelsOutputWhitePoint
         return VStack(alignment: .leading, spacing: 6) {
             Picker(
                 L10n.text("imageEditor.levels.channel"),
@@ -16197,6 +16199,36 @@ struct ImageEditorView: View {
                 formatter: levelsNumberFormatter(maximumFractionDigits: 0),
                 accessibilityIdentifier: "image-editor-levels-white-point-input",
                 displayText: "\(Int((whitePoint * 255).rounded()))"
+            )
+            Text(L10n.text("imageEditor.levels.output"))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .padding(.top, 3)
+            levelsSlider(
+                labelKey: "imageEditor.levels.outputBlackPoint",
+                value: Binding(
+                    get: { viewModel.selectedLevelsOutputBlackPoint },
+                    set: { viewModel.selectedLevelsOutputBlackPoint = $0 }
+                ),
+                range: 0...1,
+                step: 0.01,
+                displayScale: 255,
+                formatter: levelsNumberFormatter(maximumFractionDigits: 0),
+                accessibilityIdentifier: "image-editor-levels-output-black-point-input",
+                displayText: "\(Int((outputBlackPoint * 255).rounded()))"
+            )
+            levelsSlider(
+                labelKey: "imageEditor.levels.outputWhitePoint",
+                value: Binding(
+                    get: { viewModel.selectedLevelsOutputWhitePoint },
+                    set: { viewModel.selectedLevelsOutputWhitePoint = $0 }
+                ),
+                range: 0...1,
+                step: 0.01,
+                displayScale: 255,
+                formatter: levelsNumberFormatter(maximumFractionDigits: 0),
+                accessibilityIdentifier: "image-editor-levels-output-white-point-input",
+                displayText: "\(Int((outputWhitePoint * 255).rounded()))"
             )
         }
     }

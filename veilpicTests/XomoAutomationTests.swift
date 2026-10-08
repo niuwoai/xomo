@@ -6359,15 +6359,27 @@ struct XomoAutomationTests {
         #expect(adjustmentSettings["levelsRedBlackPoint"]?.objectValue?["type"] == .string("number"))
         #expect(adjustmentSettings["levelsGreenGamma"]?.objectValue?["type"] == .string("number"))
         #expect(adjustmentSettings["levelsBlueWhitePoint"]?.objectValue?["type"] == .string("number"))
+        #expect(adjustmentSettings["levelsOutputBlackPoint"]?.objectValue?["type"] == .string("number"))
+        #expect(adjustmentSettings["levelsRedOutputWhitePoint"]?.objectValue?["type"] == .string("number"))
+        #expect(adjustmentSettings["levelsGreenOutputBlackPoint"]?.objectValue?["type"] == .string("number"))
+        #expect(adjustmentSettings["levelsBlueOutputWhitePoint"]?.objectValue?["type"] == .string("number"))
 
         viewModel.selectedAdjustment = .levels
         viewModel.adjustmentValue = 0.20
         viewModel.levelsBlackPoint = 0.15
         viewModel.levelsGamma = 1.75
         viewModel.levelsWhitePoint = 0.90
+        viewModel.levelsOutputBlackPoint = 0.05
+        viewModel.levelsOutputWhitePoint = 0.95
         viewModel.levelsRedBlackPoint = 0.10
+        viewModel.levelsRedOutputBlackPoint = 0.15
+        viewModel.levelsRedOutputWhitePoint = 0.85
         viewModel.levelsGreenGamma = 1.25
+        viewModel.levelsGreenOutputBlackPoint = 0.20
+        viewModel.levelsGreenOutputWhitePoint = 0.80
         viewModel.levelsBlueWhitePoint = 0.85
+        viewModel.levelsBlueOutputBlackPoint = 0.25
+        viewModel.levelsBlueOutputWhitePoint = 0.75
         viewModel.addAdjustmentLayer()
         let levelsID = try #require(viewModel.document.selectedLayerID)
 
@@ -6400,9 +6412,17 @@ struct XomoAutomationTests {
         #expect(levelSettings?["levelsBlackPoint"] == .number(0.15))
         #expect(levelSettings?["levelsGamma"] == .number(1.75))
         #expect(levelSettings?["levelsWhitePoint"] == .number(0.90))
+        #expect(levelSettings?["levelsOutputBlackPoint"] == .number(0.05))
+        #expect(levelSettings?["levelsOutputWhitePoint"] == .number(0.95))
         #expect(levelSettings?["levelsRedBlackPoint"] == .number(0.10))
+        #expect(levelSettings?["levelsRedOutputBlackPoint"] == .number(0.15))
+        #expect(levelSettings?["levelsRedOutputWhitePoint"] == .number(0.85))
         #expect(levelSettings?["levelsGreenGamma"] == .number(1.25))
+        #expect(levelSettings?["levelsGreenOutputBlackPoint"] == .number(0.20))
+        #expect(levelSettings?["levelsGreenOutputWhitePoint"] == .number(0.80))
         #expect(levelSettings?["levelsBlueWhitePoint"] == .number(0.85))
+        #expect(levelSettings?["levelsBlueOutputBlackPoint"] == .number(0.25))
+        #expect(levelSettings?["levelsBlueOutputWhitePoint"] == .number(0.75))
 
         let brightnessResult = layers.compactMap(\.objectValue).first {
             $0["id"] == .string(brightnessID.uuidString)
@@ -6418,8 +6438,12 @@ struct XomoAutomationTests {
         replacementSettings["levelsBlackPoint"] = .number(0.25)
         replacementSettings["levelsGamma"] = .number(2.25)
         replacementSettings["levelsRedBlackPoint"] = .number(0.30)
+        replacementSettings["levelsRedOutputBlackPoint"] = .number(0.35)
+        replacementSettings["levelsRedOutputWhitePoint"] = .number(0.65)
         replacementSettings["levelsGreenGamma"] = .number(1.75)
         replacementSettings["levelsBlueWhitePoint"] = .number(0.95)
+        replacementSettings["levelsBlueOutputBlackPoint"] = .number(0.40)
+        replacementSettings["levelsBlueOutputWhitePoint"] = .number(0.90)
         let setResponse = registry.execute(request(
             operation: "call",
             name: "xomo.layer.adjustment_settings",
@@ -6441,8 +6465,12 @@ struct XomoAutomationTests {
         #expect(updatedLevels.adjustmentSettings.levelsBlackPoint == 0.25)
         #expect(updatedLevels.adjustmentSettings.levelsGamma == 2.25)
         #expect(updatedLevels.adjustmentSettings.levelsRedBlackPoint == 0.30)
+        #expect(updatedLevels.adjustmentSettings.levelsRedOutputBlackPoint == 0.35)
+        #expect(updatedLevels.adjustmentSettings.levelsRedOutputWhitePoint == 0.65)
         #expect(updatedLevels.adjustmentSettings.levelsGreenGamma == 1.75)
         #expect(updatedLevels.adjustmentSettings.levelsBlueWhitePoint == 0.95)
+        #expect(updatedLevels.adjustmentSettings.levelsBlueOutputBlackPoint == 0.40)
+        #expect(updatedLevels.adjustmentSettings.levelsBlueOutputWhitePoint == 0.90)
         let lockedBrightness = try #require(
             viewModel.document.layers.first { $0.id == brightnessID }
         )

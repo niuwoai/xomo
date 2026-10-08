@@ -405,15 +405,23 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var levelsBlackPoint: Double = 0
     @Published var levelsGamma: Double = 1
     @Published var levelsWhitePoint: Double = 1
+    @Published var levelsOutputBlackPoint: Double = 0
+    @Published var levelsOutputWhitePoint: Double = 1
     @Published var levelsRedBlackPoint: Double = 0
     @Published var levelsRedGamma: Double = 1
     @Published var levelsRedWhitePoint: Double = 1
+    @Published var levelsRedOutputBlackPoint: Double = 0
+    @Published var levelsRedOutputWhitePoint: Double = 1
     @Published var levelsGreenBlackPoint: Double = 0
     @Published var levelsGreenGamma: Double = 1
     @Published var levelsGreenWhitePoint: Double = 1
+    @Published var levelsGreenOutputBlackPoint: Double = 0
+    @Published var levelsGreenOutputWhitePoint: Double = 1
     @Published var levelsBlueBlackPoint: Double = 0
     @Published var levelsBlueGamma: Double = 1
     @Published var levelsBlueWhitePoint: Double = 1
+    @Published var levelsBlueOutputBlackPoint: Double = 0
+    @Published var levelsBlueOutputWhitePoint: Double = 1
     @Published var levelsChannel: ImageEditorLevelsChannel = .rgb
 
     var selectedLevelsBlackPoint: Double {
@@ -472,6 +480,46 @@ final class ImageEditorViewModel: ObservableObject {
             case .red: levelsRedWhitePoint = normalizedValue
             case .green: levelsGreenWhitePoint = normalizedValue
             case .blue: levelsBlueWhitePoint = normalizedValue
+            }
+        }
+    }
+
+    var selectedLevelsOutputBlackPoint: Double {
+        get {
+            switch levelsChannel {
+            case .rgb: levelsOutputBlackPoint
+            case .red: levelsRedOutputBlackPoint
+            case .green: levelsGreenOutputBlackPoint
+            case .blue: levelsBlueOutputBlackPoint
+            }
+        }
+        set {
+            let boundedValue = max(0, min(1, newValue))
+            switch levelsChannel {
+            case .rgb: levelsOutputBlackPoint = min(boundedValue, levelsOutputWhitePoint)
+            case .red: levelsRedOutputBlackPoint = min(boundedValue, levelsRedOutputWhitePoint)
+            case .green: levelsGreenOutputBlackPoint = min(boundedValue, levelsGreenOutputWhitePoint)
+            case .blue: levelsBlueOutputBlackPoint = min(boundedValue, levelsBlueOutputWhitePoint)
+            }
+        }
+    }
+
+    var selectedLevelsOutputWhitePoint: Double {
+        get {
+            switch levelsChannel {
+            case .rgb: levelsOutputWhitePoint
+            case .red: levelsRedOutputWhitePoint
+            case .green: levelsGreenOutputWhitePoint
+            case .blue: levelsBlueOutputWhitePoint
+            }
+        }
+        set {
+            let boundedValue = max(0, min(1, newValue))
+            switch levelsChannel {
+            case .rgb: levelsOutputWhitePoint = max(levelsOutputBlackPoint, boundedValue)
+            case .red: levelsRedOutputWhitePoint = max(levelsRedOutputBlackPoint, boundedValue)
+            case .green: levelsGreenOutputWhitePoint = max(levelsGreenOutputBlackPoint, boundedValue)
+            case .blue: levelsBlueOutputWhitePoint = max(levelsBlueOutputBlackPoint, boundedValue)
             }
         }
     }
@@ -10742,15 +10790,23 @@ final class ImageEditorViewModel: ObservableObject {
             levelsBlackPoint: levelsBlackPoint,
             levelsGamma: levelsGamma,
             levelsWhitePoint: levelsWhitePoint,
+            levelsOutputBlackPoint: levelsOutputBlackPoint,
+            levelsOutputWhitePoint: levelsOutputWhitePoint,
             levelsRedBlackPoint: levelsRedBlackPoint,
             levelsRedGamma: levelsRedGamma,
             levelsRedWhitePoint: levelsRedWhitePoint,
+            levelsRedOutputBlackPoint: levelsRedOutputBlackPoint,
+            levelsRedOutputWhitePoint: levelsRedOutputWhitePoint,
             levelsGreenBlackPoint: levelsGreenBlackPoint,
             levelsGreenGamma: levelsGreenGamma,
             levelsGreenWhitePoint: levelsGreenWhitePoint,
+            levelsGreenOutputBlackPoint: levelsGreenOutputBlackPoint,
+            levelsGreenOutputWhitePoint: levelsGreenOutputWhitePoint,
             levelsBlueBlackPoint: levelsBlueBlackPoint,
             levelsBlueGamma: levelsBlueGamma,
             levelsBlueWhitePoint: levelsBlueWhitePoint,
+            levelsBlueOutputBlackPoint: levelsBlueOutputBlackPoint,
+            levelsBlueOutputWhitePoint: levelsBlueOutputWhitePoint,
             curvesShadows: curvesShadows,
             curvesMidtones: curvesMidtones,
             curvesHighlights: curvesHighlights,
@@ -10897,15 +10953,23 @@ final class ImageEditorViewModel: ObservableObject {
         levelsBlackPoint = 0
         levelsGamma = 1
         levelsWhitePoint = 1
+        levelsOutputBlackPoint = 0
+        levelsOutputWhitePoint = 1
         levelsRedBlackPoint = 0
         levelsRedGamma = 1
         levelsRedWhitePoint = 1
+        levelsRedOutputBlackPoint = 0
+        levelsRedOutputWhitePoint = 1
         levelsGreenBlackPoint = 0
         levelsGreenGamma = 1
         levelsGreenWhitePoint = 1
+        levelsGreenOutputBlackPoint = 0
+        levelsGreenOutputWhitePoint = 1
         levelsBlueBlackPoint = 0
         levelsBlueGamma = 1
         levelsBlueWhitePoint = 1
+        levelsBlueOutputBlackPoint = 0
+        levelsBlueOutputWhitePoint = 1
         curvesShadows = 0
         curvesMidtones = 0
         curvesHighlights = 0
@@ -12193,15 +12257,23 @@ final class ImageEditorViewModel: ObservableObject {
         levelsBlackPoint = settings.levelsBlackPoint
         levelsGamma = settings.levelsGamma
         levelsWhitePoint = settings.levelsWhitePoint
+        levelsOutputBlackPoint = settings.levelsOutputBlackPoint
+        levelsOutputWhitePoint = settings.levelsOutputWhitePoint
         levelsRedBlackPoint = settings.levelsRedBlackPoint
         levelsRedGamma = settings.levelsRedGamma
         levelsRedWhitePoint = settings.levelsRedWhitePoint
+        levelsRedOutputBlackPoint = settings.levelsRedOutputBlackPoint
+        levelsRedOutputWhitePoint = settings.levelsRedOutputWhitePoint
         levelsGreenBlackPoint = settings.levelsGreenBlackPoint
         levelsGreenGamma = settings.levelsGreenGamma
         levelsGreenWhitePoint = settings.levelsGreenWhitePoint
+        levelsGreenOutputBlackPoint = settings.levelsGreenOutputBlackPoint
+        levelsGreenOutputWhitePoint = settings.levelsGreenOutputWhitePoint
         levelsBlueBlackPoint = settings.levelsBlueBlackPoint
         levelsBlueGamma = settings.levelsBlueGamma
         levelsBlueWhitePoint = settings.levelsBlueWhitePoint
+        levelsBlueOutputBlackPoint = settings.levelsBlueOutputBlackPoint
+        levelsBlueOutputWhitePoint = settings.levelsBlueOutputWhitePoint
         curvesShadows = settings.curvesShadows
         curvesMidtones = settings.curvesMidtones
         curvesHighlights = settings.curvesHighlights

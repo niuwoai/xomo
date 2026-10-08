@@ -23,30 +23,44 @@ struct ImageEditorAdjustmentTests {
         viewModel.selectedLevelsBlackPoint = -1
         viewModel.selectedLevelsGamma = 8
         viewModel.selectedLevelsWhitePoint = 0
+        viewModel.selectedLevelsOutputBlackPoint = 2
+        viewModel.selectedLevelsOutputWhitePoint = -1
         #expect(viewModel.levelsRedBlackPoint == 0)
         #expect(viewModel.levelsRedGamma == 4)
         #expect(viewModel.levelsRedWhitePoint == 0.02)
+        #expect(viewModel.levelsRedOutputBlackPoint == 1)
+        #expect(viewModel.levelsRedOutputWhitePoint == 1)
 
         viewModel.levelsChannel = .green
         viewModel.selectedLevelsBlackPoint = 0.37
         viewModel.selectedLevelsGamma = 1.65
         viewModel.selectedLevelsWhitePoint = 0.82
+        viewModel.selectedLevelsOutputBlackPoint = 0.37
+        viewModel.selectedLevelsOutputWhitePoint = 0.82
         #expect(viewModel.levelsGreenBlackPoint == 0.37)
         #expect(viewModel.levelsGreenGamma == 1.65)
         #expect(viewModel.levelsGreenWhitePoint == 0.82)
+        #expect(viewModel.levelsGreenOutputBlackPoint == 0.37)
+        #expect(viewModel.levelsGreenOutputWhitePoint == 0.82)
 
         viewModel.levelsChannel = .blue
         viewModel.selectedLevelsBlackPoint = 2
         viewModel.selectedLevelsGamma = 0
         viewModel.selectedLevelsWhitePoint = 2
+        viewModel.selectedLevelsOutputBlackPoint = 2
+        viewModel.selectedLevelsOutputWhitePoint = -1
         #expect(viewModel.levelsBlueBlackPoint == 0.98)
         #expect(viewModel.levelsBlueGamma == 0.1)
         #expect(viewModel.levelsBlueWhitePoint == 1)
+        #expect(viewModel.levelsBlueOutputBlackPoint == 1)
+        #expect(viewModel.levelsBlueOutputWhitePoint == 1)
 
         viewModel.levelsChannel = .rgb
         #expect(viewModel.levelsBlackPoint == 0)
         #expect(viewModel.levelsGamma == 1)
         #expect(viewModel.levelsWhitePoint == 1)
+        #expect(viewModel.levelsOutputBlackPoint == 0)
+        #expect(viewModel.levelsOutputWhitePoint == 1)
     }
 
     @Test func levelsAdjustmentEditsRGBChannelsIndependentlyAndSurvivesUndoRedo() throws {
@@ -57,13 +71,21 @@ struct ImageEditorAdjustmentTests {
         )
         let viewModel = ImageEditorViewModel(sourceName: "levels-channels.png", image: sourceImage) { _ in }
         viewModel.selectedAdjustment = .levels
+        viewModel.levelsOutputBlackPoint = 0.05
+        viewModel.levelsOutputWhitePoint = 0.95
 
         viewModel.levelsChannel = .red
         viewModel.selectedLevelsBlackPoint = 0.20
+        viewModel.selectedLevelsOutputBlackPoint = 0.20
+        viewModel.selectedLevelsOutputWhitePoint = 0.70
         viewModel.levelsChannel = .green
         viewModel.selectedLevelsGamma = 2
+        viewModel.selectedLevelsOutputBlackPoint = 0.10
+        viewModel.selectedLevelsOutputWhitePoint = 0.70
         viewModel.levelsChannel = .blue
         viewModel.selectedLevelsWhitePoint = 0.80
+        viewModel.selectedLevelsOutputBlackPoint = 0.05
+        viewModel.selectedLevelsOutputWhitePoint = 0.95
         viewModel.addAdjustmentLayer()
 
         let adjustmentLayer = try #require(viewModel.document.selectedLayer)
@@ -73,10 +95,18 @@ struct ImageEditorAdjustmentTests {
         #expect(adjustmentLayer.adjustmentSettings.levelsRedBlackPoint == 0.20)
         #expect(adjustmentLayer.adjustmentSettings.levelsGreenGamma == 2)
         #expect(adjustmentLayer.adjustmentSettings.levelsBlueWhitePoint == 0.80)
-        #expect(abs(adjustedColor.redComponent - 0.50) < 0.025)
-        #expect(abs(adjustedColor.greenComponent - 0.50) < 0.025)
-        #expect(abs(adjustedColor.blueComponent - 0.75) < 0.025)
+        #expect(adjustmentLayer.adjustmentSettings.levelsRedOutputBlackPoint == 0.20)
+        #expect(adjustmentLayer.adjustmentSettings.levelsGreenOutputWhitePoint == 0.70)
+        #expect(adjustmentLayer.adjustmentSettings.levelsBlueOutputWhitePoint == 0.95)
+        #expect(abs(adjustedColor.redComponent - 0.444) < 0.025)
+        #expect(abs(adjustedColor.greenComponent - 0.415) < 0.025)
+        #expect(abs(adjustedColor.blueComponent - 0.714) < 0.025)
         #expect(abs(adjustedColor.alphaComponent - 0.45) < 0.025)
+        #expect(
+            viewModel.selectedLayerGeometryText.contains(
+                L10n.format("imageEditor.properties.levelsLayerOutputValue", 13, 242)
+            )
+        )
         #expect(
             viewModel.selectedLayerGeometryText.contains(
                 L10n.format(
@@ -88,6 +118,14 @@ struct ImageEditorAdjustmentTests {
                 )
             )
         )
+        #expect(viewModel.selectedLayerGeometryText.contains(
+            L10n.format(
+                "imageEditor.properties.levelsLayerChannelOutputValue",
+                L10n.text("imageEditor.levels.channel.red"),
+                51,
+                179
+            )
+        ))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restoredDocument = try project.restoredDocument()
@@ -95,6 +133,11 @@ struct ImageEditorAdjustmentTests {
         #expect(restoredLayer.adjustmentSettings.levelsRedBlackPoint == 0.20)
         #expect(restoredLayer.adjustmentSettings.levelsGreenGamma == 2)
         #expect(restoredLayer.adjustmentSettings.levelsBlueWhitePoint == 0.80)
+        #expect(restoredLayer.adjustmentSettings.levelsRedOutputBlackPoint == 0.20)
+        #expect(restoredLayer.adjustmentSettings.levelsGreenOutputWhitePoint == 0.70)
+        #expect(restoredLayer.adjustmentSettings.levelsBlueOutputWhitePoint == 0.95)
+        #expect(restoredLayer.adjustmentSettings.levelsOutputBlackPoint == 0.05)
+        #expect(restoredLayer.adjustmentSettings.levelsOutputWhitePoint == 0.95)
 
         let adjustedPixels = try #require(viewModel.currentImage.qingtuPNGData())
         viewModel.undo()

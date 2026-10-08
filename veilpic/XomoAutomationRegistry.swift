@@ -6552,15 +6552,23 @@ final class XomoAutomationRegistry {
             case "levelsBlackPoint": viewModel.levelsBlackPoint = try numericSetting(value, key: key)
             case "levelsGamma": viewModel.levelsGamma = try numericSetting(value, key: key)
             case "levelsWhitePoint": viewModel.levelsWhitePoint = try numericSetting(value, key: key)
+            case "levelsOutputBlackPoint": viewModel.levelsOutputBlackPoint = try numericSetting(value, key: key)
+            case "levelsOutputWhitePoint": viewModel.levelsOutputWhitePoint = try numericSetting(value, key: key)
             case "levelsRedBlackPoint": viewModel.levelsRedBlackPoint = try numericSetting(value, key: key)
             case "levelsRedGamma": viewModel.levelsRedGamma = try numericSetting(value, key: key)
             case "levelsRedWhitePoint": viewModel.levelsRedWhitePoint = try numericSetting(value, key: key)
+            case "levelsRedOutputBlackPoint": viewModel.levelsRedOutputBlackPoint = try numericSetting(value, key: key)
+            case "levelsRedOutputWhitePoint": viewModel.levelsRedOutputWhitePoint = try numericSetting(value, key: key)
             case "levelsGreenBlackPoint": viewModel.levelsGreenBlackPoint = try numericSetting(value, key: key)
             case "levelsGreenGamma": viewModel.levelsGreenGamma = try numericSetting(value, key: key)
             case "levelsGreenWhitePoint": viewModel.levelsGreenWhitePoint = try numericSetting(value, key: key)
+            case "levelsGreenOutputBlackPoint": viewModel.levelsGreenOutputBlackPoint = try numericSetting(value, key: key)
+            case "levelsGreenOutputWhitePoint": viewModel.levelsGreenOutputWhitePoint = try numericSetting(value, key: key)
             case "levelsBlueBlackPoint": viewModel.levelsBlueBlackPoint = try numericSetting(value, key: key)
             case "levelsBlueGamma": viewModel.levelsBlueGamma = try numericSetting(value, key: key)
             case "levelsBlueWhitePoint": viewModel.levelsBlueWhitePoint = try numericSetting(value, key: key)
+            case "levelsBlueOutputBlackPoint": viewModel.levelsBlueOutputBlackPoint = try numericSetting(value, key: key)
+            case "levelsBlueOutputWhitePoint": viewModel.levelsBlueOutputWhitePoint = try numericSetting(value, key: key)
             case "curvesShadows": viewModel.curvesShadows = try numericSetting(value, key: key)
             case "curvesMidtones": viewModel.curvesMidtones = try numericSetting(value, key: key)
             case "curvesHighlights": viewModel.curvesHighlights = try numericSetting(value, key: key)
@@ -8388,15 +8396,23 @@ private extension XomoAutomationRegistry {
         "levelsBlackPoint": XomoAutomationSchema.number(description: "Levels black point"),
         "levelsGamma": XomoAutomationSchema.number(description: "Levels gamma"),
         "levelsWhitePoint": XomoAutomationSchema.number(description: "Levels white point"),
+        "levelsOutputBlackPoint": XomoAutomationSchema.number(description: "Levels output black point"),
+        "levelsOutputWhitePoint": XomoAutomationSchema.number(description: "Levels output white point"),
         "levelsRedBlackPoint": XomoAutomationSchema.number(description: "Red channel black point"),
         "levelsRedGamma": XomoAutomationSchema.number(description: "Red channel gamma"),
         "levelsRedWhitePoint": XomoAutomationSchema.number(description: "Red channel white point"),
+        "levelsRedOutputBlackPoint": XomoAutomationSchema.number(description: "Red channel output black point"),
+        "levelsRedOutputWhitePoint": XomoAutomationSchema.number(description: "Red channel output white point"),
         "levelsGreenBlackPoint": XomoAutomationSchema.number(description: "Green channel black point"),
         "levelsGreenGamma": XomoAutomationSchema.number(description: "Green channel gamma"),
         "levelsGreenWhitePoint": XomoAutomationSchema.number(description: "Green channel white point"),
+        "levelsGreenOutputBlackPoint": XomoAutomationSchema.number(description: "Green channel output black point"),
+        "levelsGreenOutputWhitePoint": XomoAutomationSchema.number(description: "Green channel output white point"),
         "levelsBlueBlackPoint": XomoAutomationSchema.number(description: "Blue channel black point"),
         "levelsBlueGamma": XomoAutomationSchema.number(description: "Blue channel gamma"),
         "levelsBlueWhitePoint": XomoAutomationSchema.number(description: "Blue channel white point"),
+        "levelsBlueOutputBlackPoint": XomoAutomationSchema.number(description: "Blue channel output black point"),
+        "levelsBlueOutputWhitePoint": XomoAutomationSchema.number(description: "Blue channel output white point"),
         "curvesShadows": XomoAutomationSchema.number(description: "Curves shadows"),
         "curvesMidtones": XomoAutomationSchema.number(description: "Curves midtones"),
         "curvesHighlights": XomoAutomationSchema.number(description: "Curves highlights"),
