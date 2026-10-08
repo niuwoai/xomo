@@ -5200,7 +5200,7 @@ final class ImageEditorViewModel: ObservableObject {
         redoXomoThemeStates.append(currentXomoThemeUndoState)
         let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
-        document = previous
+        restoreDocumentPreservingSelectionEdgeVisibility(previous)
         applyXomoThemeUndoState(previousThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         if document.canvasSize != canvasSizeBeforeRestore {
@@ -5241,7 +5241,7 @@ final class ImageEditorViewModel: ObservableObject {
         undoXomoThemeStates.append(currentXomoThemeUndoState)
         let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
-        document = next
+        restoreDocumentPreservingSelectionEdgeVisibility(next)
         applyXomoThemeUndoState(nextThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         if document.canvasSize != canvasSizeBeforeRestore {
@@ -5263,7 +5263,7 @@ final class ImageEditorViewModel: ObservableObject {
         else { return }
         pushUndo()
         let slicesBeforeRestore = document.slices
-        document = snapshot
+        restoreDocumentPreservingSelectionEdgeVisibility(snapshot)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -5292,7 +5292,7 @@ final class ImageEditorViewModel: ObservableObject {
 
         let removedCount = document.history.count - index
         pushUndo()
-        document = previousDocument
+        restoreDocumentPreservingSelectionEdgeVisibility(previousDocument)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -5336,7 +5336,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let snapshot = namedHistorySnapshots.first(where: { $0.id == id }) else { return }
 
         pushUndo()
-        document = snapshot.document
+        restoreDocumentPreservingSelectionEdgeVisibility(snapshot.document)
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
@@ -5410,6 +5410,13 @@ final class ImageEditorViewModel: ObservableObject {
         recordCurrentHistorySnapshot()
         updateStatus()
         statusText = L10n.text("imageEditor.status.historyCleared")
+    }
+
+    // Selection-edge visibility is saved with the document, but content history must not roll it back.
+    private func restoreDocumentPreservingSelectionEdgeVisibility(_ snapshot: ImageEditorDocument) {
+        let areSelectionEdgesVisible = document.areSelectionEdgesVisible
+        document = snapshot
+        document.areSelectionEdgesVisible = areSelectionEdgesVisible
     }
 
     func applyAndClose(close: () -> Void) {

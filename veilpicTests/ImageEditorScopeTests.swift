@@ -1826,12 +1826,15 @@ struct ImageEditorScopeTests {
 
         viewModel.createRectSelection(from: CGPoint(x: 10, y: 12), to: CGPoint(x: 42, y: 36))
         let selection = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
 
         viewModel.toggleSelectionEdgesVisible()
 
         #expect(viewModel.document.selection == selection)
         #expect(!viewModel.document.areSelectionEdgesVisible)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionEdgesVisibility"))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEdgesHidden"))
 
         viewModel.toggleSelectionEdgesVisible()
@@ -1839,6 +1842,48 @@ struct ImageEditorScopeTests {
         #expect(viewModel.document.selection == selection)
         #expect(viewModel.document.areSelectionEdgesVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEdgesVisible"))
+    }
+
+    @Test
+    @MainActor
+    func hidingSelectionEdgesDoesNotConsumeUndoAndSurvivesContentHistoryRestores() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-edges-undo.png",
+            image: .transparent(size: CGSize(width: 16, height: 12))
+        ) { _ in }
+        #expect(viewModel.createRectSelection(from: CGPoint(x: 2, y: 2), to: CGPoint(x: 8, y: 8)))
+        viewModel.foregroundColor = .systemRed
+        viewModel.fillSelection()
+
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let editedPixels = try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.createHistorySnapshot()
+        let snapshotID = try #require(viewModel.selectedHistorySnapshotID)
+
+        viewModel.toggleSelectionEdgesVisible()
+
+        let hiddenEdgesLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+        #expect(viewModel.document.layers[hiddenEdgesLayerIndex].image.qingtuPNGData() == editedPixels)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        viewModel.undo()
+        let undoneLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(viewModel.document.layers[undoneLayerIndex].image.qingtuPNGData() != editedPixels)
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+
+        viewModel.redo()
+        let redoneLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(viewModel.document.layers[redoneLayerIndex].image.qingtuPNGData() == editedPixels)
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+
+        viewModel.restoreHistorySnapshot(snapshotID)
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+        #expect(viewModel.document.layers[try #require(viewModel.document.selectedLayerIndex)]
+            .image.qingtuPNGData() == editedPixels)
     }
 
     @MainActor
