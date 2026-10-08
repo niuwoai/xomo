@@ -973,6 +973,15 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var curvesShadows: Double = 0
     var curvesMidtones: Double = 0
     var curvesHighlights: Double = 0
+    var curvesRedShadows: Double = 0
+    var curvesRedMidtones: Double = 0
+    var curvesRedHighlights: Double = 0
+    var curvesGreenShadows: Double = 0
+    var curvesGreenMidtones: Double = 0
+    var curvesGreenHighlights: Double = 0
+    var curvesBlueShadows: Double = 0
+    var curvesBlueMidtones: Double = 0
+    var curvesBlueHighlights: Double = 0
     var colorBalanceShadowsCyanRed: Double = 0
     var colorBalanceShadowsMagentaGreen: Double = 0
     var colorBalanceShadowsYellowBlue: Double = 0
@@ -1115,6 +1124,15 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
             curvesShadows: max(-1, min(1, curvesShadows)),
             curvesMidtones: max(-1, min(1, curvesMidtones)),
             curvesHighlights: max(-1, min(1, curvesHighlights)),
+            curvesRedShadows: Self.unit(curvesRedShadows),
+            curvesRedMidtones: Self.unit(curvesRedMidtones),
+            curvesRedHighlights: Self.unit(curvesRedHighlights),
+            curvesGreenShadows: Self.unit(curvesGreenShadows),
+            curvesGreenMidtones: Self.unit(curvesGreenMidtones),
+            curvesGreenHighlights: Self.unit(curvesGreenHighlights),
+            curvesBlueShadows: Self.unit(curvesBlueShadows),
+            curvesBlueMidtones: Self.unit(curvesBlueMidtones),
+            curvesBlueHighlights: Self.unit(curvesBlueHighlights),
             colorBalanceShadowsCyanRed: Self.unit(colorBalanceShadowsCyanRed),
             colorBalanceShadowsMagentaGreen: Self.unit(colorBalanceShadowsMagentaGreen),
             colorBalanceShadowsYellowBlue: Self.unit(colorBalanceShadowsYellowBlue),
@@ -1224,6 +1242,15 @@ extension ImageEditorAdjustmentSettings {
         case curvesShadows
         case curvesMidtones
         case curvesHighlights
+        case curvesRedShadows
+        case curvesRedMidtones
+        case curvesRedHighlights
+        case curvesGreenShadows
+        case curvesGreenMidtones
+        case curvesGreenHighlights
+        case curvesBlueShadows
+        case curvesBlueMidtones
+        case curvesBlueHighlights
         case colorBalanceShadowsCyanRed
         case colorBalanceShadowsMagentaGreen
         case colorBalanceShadowsYellowBlue
@@ -1315,6 +1342,15 @@ extension ImageEditorAdjustmentSettings {
         curvesShadows = try container.decodeIfPresent(Double.self, forKey: .curvesShadows) ?? 0
         curvesMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesMidtones) ?? 0
         curvesHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesHighlights) ?? 0
+        curvesRedShadows = try container.decodeIfPresent(Double.self, forKey: .curvesRedShadows) ?? 0
+        curvesRedMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesRedMidtones) ?? 0
+        curvesRedHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesRedHighlights) ?? 0
+        curvesGreenShadows = try container.decodeIfPresent(Double.self, forKey: .curvesGreenShadows) ?? 0
+        curvesGreenMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesGreenMidtones) ?? 0
+        curvesGreenHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesGreenHighlights) ?? 0
+        curvesBlueShadows = try container.decodeIfPresent(Double.self, forKey: .curvesBlueShadows) ?? 0
+        curvesBlueMidtones = try container.decodeIfPresent(Double.self, forKey: .curvesBlueMidtones) ?? 0
+        curvesBlueHighlights = try container.decodeIfPresent(Double.self, forKey: .curvesBlueHighlights) ?? 0
         colorBalanceShadowsCyanRed = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsCyanRed) ?? 0
         colorBalanceShadowsMagentaGreen = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsMagentaGreen) ?? 0
         colorBalanceShadowsYellowBlue = try container.decodeIfPresent(Double.self, forKey: .colorBalanceShadowsYellowBlue) ?? 0
@@ -1406,6 +1442,15 @@ extension ImageEditorAdjustmentSettings {
         try container.encode(curvesShadows, forKey: .curvesShadows)
         try container.encode(curvesMidtones, forKey: .curvesMidtones)
         try container.encode(curvesHighlights, forKey: .curvesHighlights)
+        try container.encode(curvesRedShadows, forKey: .curvesRedShadows)
+        try container.encode(curvesRedMidtones, forKey: .curvesRedMidtones)
+        try container.encode(curvesRedHighlights, forKey: .curvesRedHighlights)
+        try container.encode(curvesGreenShadows, forKey: .curvesGreenShadows)
+        try container.encode(curvesGreenMidtones, forKey: .curvesGreenMidtones)
+        try container.encode(curvesGreenHighlights, forKey: .curvesGreenHighlights)
+        try container.encode(curvesBlueShadows, forKey: .curvesBlueShadows)
+        try container.encode(curvesBlueMidtones, forKey: .curvesBlueMidtones)
+        try container.encode(curvesBlueHighlights, forKey: .curvesBlueHighlights)
         try container.encode(colorBalanceShadowsCyanRed, forKey: .colorBalanceShadowsCyanRed)
         try container.encode(colorBalanceShadowsMagentaGreen, forKey: .colorBalanceShadowsMagentaGreen)
         try container.encode(colorBalanceShadowsYellowBlue, forKey: .colorBalanceShadowsYellowBlue)

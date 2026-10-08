@@ -16235,26 +16235,45 @@ struct ImageEditorView: View {
 
     private var curvesControls: some View {
         VStack(alignment: .leading, spacing: 6) {
+            Picker(
+                L10n.text("imageEditor.curves.channel"),
+                selection: $viewModel.curvesChannel
+            ) {
+                ForEach(ImageEditorLevelsChannel.allCases, id: \.self) { channel in
+                    Text(L10n.text("imageEditor.curves.channel.\(channel.rawValue)"))
+                        .tag(channel)
+                }
+            }
+            .accessibilityIdentifier("image-editor-curves-channel-picker")
             adjustmentSlider(
                 labelKey: "imageEditor.curves.shadows",
-                value: $viewModel.curvesShadows,
+                value: Binding(
+                    get: { viewModel.selectedCurvesShadows },
+                    set: { viewModel.selectedCurvesShadows = $0 }
+                ),
                 range: -1...1,
                 step: 0.05,
-                displayText: "\(Int((viewModel.curvesShadows * 100).rounded()))%"
+                displayText: "\(Int((viewModel.selectedCurvesShadows * 100).rounded()))%"
             )
             adjustmentSlider(
                 labelKey: "imageEditor.curves.midtones",
-                value: $viewModel.curvesMidtones,
+                value: Binding(
+                    get: { viewModel.selectedCurvesMidtones },
+                    set: { viewModel.selectedCurvesMidtones = $0 }
+                ),
                 range: -1...1,
                 step: 0.05,
-                displayText: "\(Int((viewModel.curvesMidtones * 100).rounded()))%"
+                displayText: "\(Int((viewModel.selectedCurvesMidtones * 100).rounded()))%"
             )
             adjustmentSlider(
                 labelKey: "imageEditor.curves.highlights",
-                value: $viewModel.curvesHighlights,
+                value: Binding(
+                    get: { viewModel.selectedCurvesHighlights },
+                    set: { viewModel.selectedCurvesHighlights = $0 }
+                ),
                 range: -1...1,
                 step: 0.05,
-                displayText: "\(Int((viewModel.curvesHighlights * 100).rounded()))%"
+                displayText: "\(Int((viewModel.selectedCurvesHighlights * 100).rounded()))%"
             )
         }
     }

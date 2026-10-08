@@ -4298,3 +4298,9 @@
 "imageEditor.layer.thumbnailSelectionHelp" = "クリックでレイヤーを選択します。Commandクリックで透明度を読み込み、Shift、Option、または両方を加えると追加、削除、交差になります。";
 "imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "クリックでレイヤーマスクを編集し、\\ キーで赤いオーバーレイを切り替えます。Optionクリックでマスクチャンネルを単独表示し、Shift+Optionクリックでもオーバーレイを切り替え、Shiftクリックで有効・無効を切り替え、Commandクリックで境界を読み込み、ShiftまたはOptionで選択範囲を合成します。";
 "imageEditor.layer.vectorMaskThumbnailSelectionHelp" = "クリックでベクターマスクを編集します。Shiftクリックで有効・無効を切り替え、Commandクリックで境界を読み込み、ShiftまたはOptionで選択範囲を合成します。";
+"imageEditor.curves.channel" = "チャンネル";
+"imageEditor.curves.channel.rgb" = "RGB";
+"imageEditor.curves.channel.red" = "レッド";
+"imageEditor.curves.channel.green" = "グリーン";
+"imageEditor.curves.channel.blue" = "ブルー";
+"imageEditor.properties.curvesLayerChannelValue" = "%@: シャドウ %d%%、中間調 %d%%、ハイライト %d%%";

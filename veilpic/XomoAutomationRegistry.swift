@@ -6572,6 +6572,15 @@ final class XomoAutomationRegistry {
             case "curvesShadows": viewModel.curvesShadows = try numericSetting(value, key: key)
             case "curvesMidtones": viewModel.curvesMidtones = try numericSetting(value, key: key)
             case "curvesHighlights": viewModel.curvesHighlights = try numericSetting(value, key: key)
+            case "curvesRedShadows": viewModel.curvesRedShadows = try numericSetting(value, key: key)
+            case "curvesRedMidtones": viewModel.curvesRedMidtones = try numericSetting(value, key: key)
+            case "curvesRedHighlights": viewModel.curvesRedHighlights = try numericSetting(value, key: key)
+            case "curvesGreenShadows": viewModel.curvesGreenShadows = try numericSetting(value, key: key)
+            case "curvesGreenMidtones": viewModel.curvesGreenMidtones = try numericSetting(value, key: key)
+            case "curvesGreenHighlights": viewModel.curvesGreenHighlights = try numericSetting(value, key: key)
+            case "curvesBlueShadows": viewModel.curvesBlueShadows = try numericSetting(value, key: key)
+            case "curvesBlueMidtones": viewModel.curvesBlueMidtones = try numericSetting(value, key: key)
+            case "curvesBlueHighlights": viewModel.curvesBlueHighlights = try numericSetting(value, key: key)
             case "hue": viewModel.hueSaturationHue = try numericSetting(value, key: key)
             case "saturation": viewModel.hueSaturationSaturation = try numericSetting(value, key: key)
             case "lightness": viewModel.hueSaturationLightness = try numericSetting(value, key: key)
@@ -8416,6 +8425,15 @@ private extension XomoAutomationRegistry {
         "curvesShadows": XomoAutomationSchema.number(description: "Curves shadows"),
         "curvesMidtones": XomoAutomationSchema.number(description: "Curves midtones"),
         "curvesHighlights": XomoAutomationSchema.number(description: "Curves highlights"),
+        "curvesRedShadows": XomoAutomationSchema.number(description: "Red channel curves shadows"),
+        "curvesRedMidtones": XomoAutomationSchema.number(description: "Red channel curves midtones"),
+        "curvesRedHighlights": XomoAutomationSchema.number(description: "Red channel curves highlights"),
+        "curvesGreenShadows": XomoAutomationSchema.number(description: "Green channel curves shadows"),
+        "curvesGreenMidtones": XomoAutomationSchema.number(description: "Green channel curves midtones"),
+        "curvesGreenHighlights": XomoAutomationSchema.number(description: "Green channel curves highlights"),
+        "curvesBlueShadows": XomoAutomationSchema.number(description: "Blue channel curves shadows"),
+        "curvesBlueMidtones": XomoAutomationSchema.number(description: "Blue channel curves midtones"),
+        "curvesBlueHighlights": XomoAutomationSchema.number(description: "Blue channel curves highlights"),
         "hue": XomoAutomationSchema.number(description: "Hue shift"),
         "saturation": XomoAutomationSchema.number(description: "Saturation"),
         "lightness": XomoAutomationSchema.number(description: "Lightness"),

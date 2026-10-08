@@ -3670,6 +3670,25 @@ struct ImageEditorScopeTests {
         #expect(source.contains("formatter.maximumFractionDigits = maximumFractionDigits"))
     }
 
+    @Test func curvesControlsExposeChannelSelectionAndIndependentValues() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let curvesStart = try #require(source.range(of: "private var curvesControls"))
+        let curvesEnd = try #require(source[curvesStart.upperBound...].range(of: "private var colorBalanceControls"))
+        let curvesSource = source[curvesStart.lowerBound..<curvesEnd.lowerBound]
+
+        #expect(curvesSource.contains("image-editor-curves-channel-picker"))
+        #expect(curvesSource.contains("$viewModel.curvesChannel"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesShadows"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesMidtones"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesHighlights"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesShadows * 100"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesMidtones * 100"))
+        #expect(curvesSource.contains("viewModel.selectedCurvesHighlights * 100"))
+    }
+
     @Test func escapeDiscardsPendingSmartFilterControlsAfterObjectCancellation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

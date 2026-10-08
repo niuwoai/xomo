@@ -19,6 +19,16 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1766 - 2026-10-08
+
+### Added
+- Curves 调整增加 RGB、红、绿、蓝通道选择；先应用 RGB 曲线，再应用所选颜色通道曲线，保持透明度并随非破坏性调整图层保存。
+- 自动化调整设置支持各颜色通道的阴影、中间调和高光曲线参数，图层摘要显示非默认通道参数。
+
+### Verification
+- `ImageEditorAdjustmentTests` 32/32、`ImageEditorScopeTests` 198/198、旧项目缺字段解码 1/1、自动化设置 schema/读写 1/1 通过；发布合同 10/30、产品概览归档合同 3/30、CLI Release 合同 7/24 通过。修正了曲线处理对预乘 alpha 缓冲的错误解释。
+- 本版不是四十版本完整门槛；下一门槛 rc1800，不覆盖 `/Applications`。
+
 ## 2.12.0-rc1765 - 2026-10-08
 
 ### Added
