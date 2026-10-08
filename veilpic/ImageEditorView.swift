@@ -5116,10 +5116,12 @@ struct ImageEditorView: View {
                 }
                 .onChange(of: viewModel.selectedTool) { _ in
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
+                    finishPixelSelectionMoveForCanvasModeChange()
                     objectSelectionBoxDrag = nil
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { _ in
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
+                    finishPixelSelectionMoveForCanvasModeChange()
                     objectSelectionBoxDrag = nil
                     eyedropperSamplingRing = nil
                 }
@@ -7588,6 +7590,14 @@ struct ImageEditorView: View {
             ),
             modifierFlags: modifierFlags
         )
+    }
+
+    private func finishPixelSelectionMoveForCanvasModeChange() {
+        guard isPixelSelectionMoveGestureActive || viewModel.pixelSelectionMoveTransaction != nil else {
+            return
+        }
+        viewModel.finishPixelSelectionMove()
+        isPixelSelectionMoveGestureActive = false
     }
 
     private func fontFamilyPicker(width: CGFloat? = nil) -> some View {

@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1748 修复选区像素拖动预览中的模式切换事务：切换工具或侧栏前提交单步 Undo，画布同步清理旧手势状态，避免后续工具输入被旧拖动标记拦截。回归覆盖切换后 Undo/Redo 及再次移动，见[验证记录](docs/reviews/2026-10-08-rc1748-pixel-move-mode-boundary.md)。四十版本完整门槛仍为 rc1760。
 - rc1747 把 Display P3 PNG 打开、选区像素移动、Undo/Redo、项目保存重开和 PNG 导出串成一条逐像素验收；目标是验证真实用户任务而非继续按格式逐项补孤立用例。定向结果及已发现问题记于[验证记录](docs/reviews/2026-10-08-rc1747-p3-pixel-edit-workflow.md)。四十版本完整门槛仍为 rc1760。
 - rc1746 将普通 WebP 与 Layer Comp WebP 改为共享显式 sRGB 的有损位图编码；P3 输入输出 profile、颜色、透明度及导出事务回归通过。它只关闭现有正式格式的导出色彩缺口，不代表外部应用显示或完整色彩管理已验证；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1746-p3-webp-export.md)。
 - rc1745 将普通 JPEG 和 Layer Comp JPEG 导出统一为 sRGB CGContext 合成、ImageIO JPEG 编码；P3 JPEG 解码 sRGB profile 与 PNG 参考像素一致，半透明区域白底合成、0.5× 缩放及 Layer Comp 导出通过。外部软件打开和其它 profile 仍未实测，下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1745-p3-jpeg-export.md)。

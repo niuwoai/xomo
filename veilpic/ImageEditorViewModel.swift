@@ -4942,6 +4942,7 @@ final class ImageEditorViewModel: ObservableObject {
     func selectTool(_ tool: ImageEditorTool) {
         if selectedTool != tool {
             _ = cancelMovingPathAnchor()
+            finishPixelSelectionMove()
         }
         selectedTool = tool
         if tool == .pen, pendingPenPathPoints.isEmpty {
@@ -4966,6 +4967,7 @@ final class ImageEditorViewModel: ObservableObject {
     func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab) {
         if selectedLeftSidebarTab != tab {
             _ = cancelMovingPathAnchor()
+            finishPixelSelectionMove()
         }
         selectedLeftSidebarTab = tab
     }

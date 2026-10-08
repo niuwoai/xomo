@@ -176,6 +176,72 @@ struct ImageEditorPixelSelectionMoveTests {
         #expect(viewModel.document.selection?.bounds == CGRect(x: 6, y: 2, width: 3, height: 3))
     }
 
+    @Test func switchingToolCommitsPixelMoveAndLeavesUndoOwnershipClean() throws {
+        let viewModel = makeViewModel()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
+        let originalImage = try #require(viewModel.document.selectedLayer?.image)
+        let originalPixels = try #require(imageEditorRGBABytes(originalImage, width: 12, height: 8))
+        let originalUndoCount = viewModel.undoStack.count
+        let originalHistoryCount = viewModel.document.history.count
+
+        #expect(viewModel.beginPixelSelectionMove(at: CGPoint(x: 3, y: 3)))
+        viewModel.updatePixelSelectionMove(by: CGSize(width: 4, height: 0))
+        let previewImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        let previewPixels = try #require(imageEditorRGBABytes(previewImage, width: 12, height: 8))
+
+        viewModel.selectTool(.brush)
+
+        #expect(viewModel.selectedTool == .brush)
+        #expect(viewModel.pixelSelectionMoveTransaction.map { _ in true } == nil)
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 6, y: 2, width: 3, height: 3))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        let committedImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        let committedPixels = try #require(imageEditorRGBABytes(committedImage, width: 12, height: 8))
+        #expect(committedPixels == previewPixels)
+
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
+        let undoneImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        #expect(imageEditorMaximumPixelDifference(undoneImage, originalImage) == 0)
+        viewModel.redo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 6, y: 2, width: 3, height: 3))
+        let redoneImage = try #require(viewModel.document.layers.first { $0.id == layerID }?.image)
+        let redonePixels = try #require(imageEditorRGBABytes(redoneImage, width: 12, height: 8))
+        #expect(redonePixels == previewPixels)
+        #expect(originalPixels != previewPixels)
+    }
+
+    @Test func switchingSidebarModeCommitsPixelMoveAsOneUndoableEdit() throws {
+        let viewModel = makeViewModel()
+        viewModel.selectedTool = .move
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
+        let originalUndoCount = viewModel.undoStack.count
+        let originalHistoryCount = viewModel.document.history.count
+
+        #expect(viewModel.beginPixelSelectionMove(at: CGPoint(x: 3, y: 3)))
+        viewModel.updatePixelSelectionMove(by: CGSize(width: 4, height: 0))
+        viewModel.selectLeftSidebarTab(.components)
+
+        #expect(viewModel.selectedLeftSidebarTab == .components)
+        #expect(viewModel.pixelSelectionMoveTransaction.map { _ in true } == nil)
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 6, y: 2, width: 3, height: 3))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
+        viewModel.redo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 6, y: 2, width: 3, height: 3))
+
+        viewModel.selectLeftSidebarTab(.tools)
+        #expect(viewModel.beginPixelSelectionMove(at: CGPoint(x: 7, y: 3)))
+        viewModel.updatePixelSelectionMove(by: CGSize(width: -1, height: 0))
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(viewModel.pixelSelectionMoveTransaction.map { _ in true } == nil)
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 5, y: 2, width: 3, height: 3))
+    }
+
     @Test func zeroDistanceAndCancelledPixelMovesDoNotCommitHistoryOrUndo() throws {
         let viewModel = makeViewModel()
         viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 3, height: 3))
