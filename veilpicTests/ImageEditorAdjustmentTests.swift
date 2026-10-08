@@ -75,6 +75,35 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func automaticCorrectionsIgnoreLowAlphaColorOutliers() throws {
+        let size = NSSize(width: 20, height: 10)
+        let gray = NSColor(calibratedWhite: 0.40, alpha: 1)
+        let imageWithFaintColorFringe = bitmapImage(
+            size: size,
+            background: gray,
+            fills: [(
+                CGRect(x: 9, y: 9, width: 1, height: 1),
+                NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 0.004)
+            )]
+        )
+        let neutralReference = bitmapImage(size: size, background: gray, fills: [])
+        let corrections: [(String, (NSImage) -> NSImage?)] = [
+            ("Auto Levels", { $0.autoLeveled() }),
+            ("Auto Contrast", { $0.autoContrasted() }),
+            ("Auto Color", { $0.autoColored() })
+        ]
+
+        for (name, correction) in corrections {
+            let actualImage = try #require(correction(imageWithFaintColorFringe), "\(name) should produce an image")
+            let referenceImage = try #require(correction(neutralReference), "\(name) should produce a reference")
+            let actual = try #require(actualImage.color(at: CGPoint(x: 5, y: 5))?.usingColorSpace(.deviceRGB))
+            let reference = try #require(referenceImage.color(at: CGPoint(x: 5, y: 5))?.usingColorSpace(.deviceRGB))
+            #expect(abs(actual.redComponent - reference.redComponent) < 0.004, "\(name) red should ignore an isolated color fringe")
+            #expect(abs(actual.greenComponent - reference.greenComponent) < 0.004, "\(name) green should ignore an isolated color fringe")
+            #expect(abs(actual.blueComponent - reference.blueComponent) < 0.004, "\(name) blue should ignore an isolated color fringe")
+        }
+    }
+
     @Test func levelsNumericInputsClampToSupportedRangesWithoutCrossingChannels() {
         let viewModel = ImageEditorViewModel(
             sourceName: "levels-input-range.png",

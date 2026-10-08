@@ -2,6 +2,8 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1769 统一 Auto Color 与 Auto Levels 的稳健统计：按 RGB 通道使用相同 0.5% 直方图截尾估算颜色均值，孤立彩边不会拉偏整图校色，同时所有可见像素仍等权，保证不同 alpha 的同色照片与不透明参考行为一致。20×10 中性图含单个 alpha=1 红像素时三种校正结果与无彩边参考比较；`ImageEditorAdjustmentTests` 35/35、发布合同 10/10（30 断言）、产品概览归档合同 3/3（30 断言）、CLI Release 合同 7/7（24 断言）通过。下一完整门槛 rc1800，不扩张 Figma。
+
 - rc1768 将 Auto Levels 的 RGB 通道范围和 Auto Contrast 的亮度范围改为两端各裁剪 0.5% 的直方图区间，抑制少量孤立极值对普通照片的影响；样本不足阈值的小图保持原始极值策略，不改变 alpha 或项目格式。孤立黑白坏点回归及 `ImageEditorAdjustmentTests` 34/34、发布合同 10/10（30 断言）、产品概览归档合同 3/3（30 断言）、CLI Release 合同 7/7（24 断言）通过。下一完整门槛 rc1800，不扩张 Figma。
 
 - rc1767 修正 Auto Levels、Auto Contrast、Auto Color 对预乘 alpha 的处理：统计和颜色映射使用还原后的可见 RGB，回写保持原 alpha。半透明与不透明参考图上的三类自动校正 RGB 逐像素比较、alpha 保持通过；`ImageEditorAdjustmentTests` 33/33、发布合同 10/30、产品概览归档合同 3/30（30 断言）、CLI Release 合同 7/24 通过。当前小版本门槛为 rc1800，不扩张 Figma。
