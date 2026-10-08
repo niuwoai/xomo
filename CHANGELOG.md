@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1749 - 2026-10-08
+
+### Added
+- 为闭合路径的选中子路径开放组件布尔运算选择：排除、合并、减去、相交及延续上一组件；更改作为单步 Undo/Redo 历史事务。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1749`/1749；rc1760 仍是四十版本完整构建门槛。
+
+### Verification
+- `ImageEditorVectorLayerTests` 实际执行 108 项通过；新增目标测试覆盖子路径运算像素、一次历史项及 Undo/Redo。版本/CLI 合同复核见[验证记录](docs/reviews/2026-10-08-rc1749-path-component-operations.md)。
+
+---
+
 ## 2.12.0-rc1748 - 2026-10-08
 
 ### Fixed

@@ -2093,6 +2093,7 @@
 "imageEditor.history.pathAnchorDelete" = "パスアンカーを削除";
 "imageEditor.history.pathSubpathMove" = "パスサブパスを移動";
 "imageEditor.history.pathSubpathDuplicate" = "パスサブパスを複製";
+"imageEditor.history.pathComponentOperation" = "パスコンポーネント演算を変更";
 "imageEditor.history.pathSubpathDelete" = "パスサブパスを削除";
 "imageEditor.history.pathHandlesUpdate" = "パスハンドルを更新";
 "imageEditor.history.pathHandlesSymmetric" = "パスハンドルを対称化";
@@ -2359,6 +2360,7 @@
 "imageEditor.status.pathSubpathSelected" = "パスサブパスを選択：%d / %d";
 "imageEditor.status.pathSubpathMoved" = "パスサブパスを移動しました";
 "imageEditor.status.pathSubpathDuplicated" = "パスサブパスを複製しました";
+"imageEditor.status.pathComponentOperation" = "パスコンポーネント演算を変更しました";
 "imageEditor.status.pathSubpathDeleted" = "パスサブパスを削除しました";
 "imageEditor.status.pathHandlesSmoothed" = "パスハンドルを追加しました";
 "imageEditor.status.pathHandlesCleared" = "パスハンドルを消去しました";
@@ -2841,6 +2843,12 @@
 "imageEditor.action.pathSubpathNext" = "次のサブパス";
 "imageEditor.action.pathSubpathDuplicate" = "サブパス複製";
 "imageEditor.action.pathSubpathDelete" = "サブパス削除";
+"imageEditor.properties.pathComponentOperation" = "パスコンポーネント演算";
+"imageEditor.pathComponentOperation.exclude" = "重なりを除外";
+"imageEditor.pathComponentOperation.combine" = "形状を合成";
+"imageEditor.pathComponentOperation.subtract" = "前面形状を減算";
+"imageEditor.pathComponentOperation.intersect" = "形状の交差";
+"imageEditor.pathComponentOperation.continuePrevious" = "前のコンポーネントを続行";
 "imageEditor.action.pathSubpathNudgeLeft" = "左へ";
 "imageEditor.action.pathSubpathNudgeRight" = "右へ";
 "imageEditor.action.pathSubpathNudgeUp" = "上へ";

@@ -14861,6 +14861,27 @@ struct ImageEditorView: View {
                             .buttonStyle(EditorTextButtonStyle())
                             .disabled(!viewModel.canSelectAdjacentPathSubpath)
                         }
+                        if viewModel.selectedPathComponentOperation != nil {
+                            Picker(
+                                L10n.text("imageEditor.properties.pathComponentOperation"),
+                                selection: Binding(
+                                    get: { viewModel.selectedPathComponentOperation ?? .exclude },
+                                    set: { viewModel.setSelectedPathComponentOperation($0) }
+                                )
+                            ) {
+                                Text(L10n.text("imageEditor.pathComponentOperation.exclude"))
+                                    .tag(ImageEditorPathComponentOperation.exclude)
+                                Text(L10n.text("imageEditor.pathComponentOperation.combine"))
+                                    .tag(ImageEditorPathComponentOperation.combine)
+                                Text(L10n.text("imageEditor.pathComponentOperation.subtract"))
+                                    .tag(ImageEditorPathComponentOperation.subtract)
+                                Text(L10n.text("imageEditor.pathComponentOperation.intersect"))
+                                    .tag(ImageEditorPathComponentOperation.intersect)
+                                Text(L10n.text("imageEditor.pathComponentOperation.continuePrevious"))
+                                    .tag(ImageEditorPathComponentOperation.continuePrevious)
+                            }
+                            .disabled(!viewModel.canChangeSelectedPathComponentOperation)
+                        }
                         HStack {
                             Button(L10n.text("imageEditor.action.pathSubpathDuplicate")) {
                                 viewModel.duplicateSelectedPathSubpath()

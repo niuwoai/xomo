@@ -884,6 +884,44 @@ extension ImageEditorViewModel {
         return true
     }
 
+    var selectedPathComponentOperation: ImageEditorPathComponentOperation? {
+        guard selectedLayerCount == 1,
+              let content = document.selectedLayer?.shapeContent,
+              content.kind == .path,
+              content.isPathClosed,
+              content.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex)
+        else { return nil }
+        return content.resolvedPathComponentOperations[selectedPathSubpathIndex]
+    }
+
+    var canChangeSelectedPathComponentOperation: Bool {
+        guard let layer = document.selectedLayer,
+              selectedPathComponentOperation != nil,
+              !document.isEffectivelyPixelsLocked(layer)
+        else { return false }
+        return true
+    }
+
+    func setSelectedPathComponentOperation(_ operation: ImageEditorPathComponentOperation) {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand(),
+              canChangeSelectedPathComponentOperation,
+              let layerIndex = document.selectedLayerIndex,
+              var content = document.layers[layerIndex].shapeContent,
+              content.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex)
+        else { return }
+        let currentOperation = content.resolvedPathComponentOperations[selectedPathSubpathIndex]
+        guard currentOperation != operation else { return }
+
+        var operations = content.resolvedPathComponentOperations
+        operations[selectedPathSubpathIndex] = operation
+        content.pathComponentOperations = operations
+
+        pushUndo()
+        document.layers[layerIndex].kind = .shape(content)
+        appendHistory(L10n.text("imageEditor.history.pathComponentOperation"))
+        statusText = L10n.text("imageEditor.status.pathComponentOperation")
+    }
+
     func nudgeSelectedPathSubpath(dx: CGFloat, dy: CGFloat) {
         moveSelectedPathSubpath(by: CGSize(width: dx, height: dy))
     }

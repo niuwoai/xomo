@@ -459,6 +459,58 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDelete"))
     }
 
+    @Test func selectedPathComponentOperationIsUndoableAndRedoable() async throws {
+        let image = testBitmapImage(size: NSSize(width: 100, height: 80), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
+            points.map { ImageEditorPathAnchor(point: $0) }
+        }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 0,
+            strokeOpacity: 0,
+            pathAnchors: anchors([
+                CGPoint(x: 10, y: 10), CGPoint(x: 70, y: 10),
+                CGPoint(x: 70, y: 60), CGPoint(x: 10, y: 60)
+            ]),
+            pathSubpaths: [anchors([
+                CGPoint(x: 40, y: 30), CGPoint(x: 90, y: 30),
+                CGPoint(x: 90, y: 70), CGPoint(x: 40, y: 70)
+            ])],
+            pathComponentOperations: [.combine, .exclude],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].kind = .shape(content)
+        let layerID = viewModel.document.layers[layerIndex].id
+        viewModel.selectedPathSubpathIndex = 1
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedPathComponentOperation == .exclude)
+        #expect(viewModel.canChangeSelectedPathComponentOperation)
+        viewModel.setSelectedPathComponentOperation(.subtract)
+
+        let changedContent = try #require(viewModel.document.layers.first { $0.id == layerID }?.shapeContent)
+        #expect(changedContent.pathComponentOperations == [.combine, .subtract])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathComponentOperation"))
+        #expect(viewModel.canUndo)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 80, y: 50))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+
+        viewModel.undo()
+        let undoneContent = try #require(viewModel.document.layers.first { $0.id == layerID }?.shapeContent)
+        #expect(undoneContent.pathComponentOperations == [.combine, .exclude])
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 80, y: 50))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+
+        viewModel.redo()
+        let redoneContent = try #require(viewModel.document.layers.first { $0.id == layerID }?.shapeContent)
+        #expect(redoneContent.pathComponentOperations == [.combine, .subtract])
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 80, y: 50))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+    }
+
     @Test func pendingPenPathUndoRedoNeverCrossesIntoDocumentHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
