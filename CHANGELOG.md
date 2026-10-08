@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1781 - 2026-10-09
+
+### Added
+- 曲线图新增稳定的辅助功能容器标识，并补充真实 macOS UI 往返测试：使用 Command+M 打开曲线面板、枚举三个可访问控制点，拖动中间调锚点确认数值实时改变。
+
+### Verification
+- `ImageEditorAdjustmentTests` 与 `ImageEditorScopeTests` 共 237/237 通过；发布契约 10/30、CLI 发布构建契约 7/24 通过。
+- UI 测试宿主已编译，但 XCTest runner 卡在等待 worker materialize，未执行拖点用例；未将 UI 行为记为通过。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
+
 ## 2.12.0-rc1780 - 2026-10-09
 
 ### Added
