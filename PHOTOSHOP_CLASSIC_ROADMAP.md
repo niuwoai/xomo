@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-09）
 
+- rc1777 修复 Healing Brush 与 Spot Healing 的参考色统计：CoreGraphics RGBA 为预乘 alpha，参考色按像素覆盖率加权，避免低 alpha 彩色边缘污染颜色校正；新增 alpha=1/255 红色离群样本回归。`ImageEditorHealingBrushTests` 27/27，完整 Release 编译/桌面冒烟门槛仍为 rc1800，不扩张 Figma。
 - rc1776 将 Healing Brush 与 Spot Healing 的 Diffusion 高斯模糊范围限制在笔触经 source offset 平移后的取样 ROI；Core Image 继续使用原 TIFF 输入和 Gaussian Blur 路径，只请求受影响区域，尺寸不匹配的非标准图像保留旧全帧回退。ROI 与全帧参考 RGB 最大差异不超过 1/255、alpha 逐像素一致；4K 小笔触不再分配整幅模糊结果缓冲。`ImageEditorHealingBrushTests` 26/26 通过，完整门槛仍为 rc1800，不扩张 Figma。rc1775 GitHub 与 OSS 已发布，但 appcast 仍需补 `app_id=xomo` 配置。
 
 - rc1775 为 Healing Brush 的 Source 与 Spot 模式补齐统一 Diffusion 1–7 控制。低值保持源纹理，高值按 Patch 的半径映射平滑源纹理；颜色参考和污点候选仍使用未模糊图像，避免改变取样评分/颜色校正。选项栏、自动化和像素路径共用设置，Undo/Redo 仍由单笔图层像素替换提交为一个历史项。`ImageEditorHealingBrushTests` 24/24、自动化 Healing 3 项、选项栏 1 项、本地化 46/46、发布合同 10/30、CLI 合同 7/24、概览归档 3/30、隔离运行器合同通过。未运行完整 Release XCTest/桌面冒烟；完整构建门槛仍为 rc1800，不扩张 Figma。

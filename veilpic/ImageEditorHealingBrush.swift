@@ -1109,10 +1109,12 @@ enum ImageEditorHealingBrushKernel {
                 let offset = (y * width + x) * bytesPerPixel
                 let alpha = CGFloat(pixels[offset + 3]) / 255
                 guard alpha > 0 else { continue }
-                red += CGFloat(pixels[offset]) / 255 / alpha
-                green += CGFloat(pixels[offset + 1]) / 255 / alpha
-                blue += CGFloat(pixels[offset + 2]) / 255 / alpha
-                weight += 1
+                // These channels are premultiplied, so accumulating them
+                // directly weights each straight color by its visible coverage.
+                red += CGFloat(pixels[offset]) / 255
+                green += CGFloat(pixels[offset + 1]) / 255
+                blue += CGFloat(pixels[offset + 2]) / 255
+                weight += alpha
             }
         }
         guard weight > 0 else { return nil }

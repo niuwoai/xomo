@@ -98,6 +98,26 @@ struct ImageEditorHealingBrushTests {
         #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 8) == 3)
     }
 
+    @Test func healingReferenceColorWeightsPartiallyTransparentPixelsByCoverage() throws {
+        var pixels = rgbaPixels(width: 3, height: 3) { _, _ in (0, 0, 0, 255) }
+        let translucentRedOffset = (1 * 3 + 2) * ImageEditorHealingBrushKernel.bytesPerPixel
+        pixels[translucentRedOffset] = 1
+        pixels[translucentRedOffset + 3] = 1
+
+        let reference = try #require(ImageEditorHealingBrushKernel.averageColor(
+            pixels: pixels,
+            width: 3,
+            height: 3,
+            center: CGPoint(x: 1, y: 1),
+            innerRadius: 0,
+            outerRadius: 1
+        ))
+
+        #expect(reference.red < 0.01)
+        #expect(reference.green == 0)
+        #expect(reference.blue == 0)
+    }
+
     @Test func healingDiffusionRegionMatchesFullFrameBlurWithinOneChannelRoundingLevel() throws {
         let width = 53
         let height = 41
