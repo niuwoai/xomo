@@ -19,6 +19,16 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1757 - 2026-10-08
+
+### Changed
+- Direct Selection 点击路径曲线段时选中其子路径与最近锚点，不启动移动事务；点击锚点/控制柄仍沿用拖动编辑。
+
+### Verification
+- 定向覆盖线段点选、组件运算面板目标切换及无额外历史事务；完整结果见[验证记录](docs/reviews/2026-10-08-rc1757-direct-select-path-segment.md)。
+
+---
+
 ## 2.12.0-rc1756 - 2026-10-08
 
 ### Fixed

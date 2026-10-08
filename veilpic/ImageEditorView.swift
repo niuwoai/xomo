@@ -6942,7 +6942,8 @@ struct ImageEditorView: View {
                     if !isDirectPathGestureResolved {
                         isDirectPathGestureResolved = true
                         let pointerStart = imagePoint(from: value.startLocation, in: size)
-                        if viewModel.directPathAnchorState(at: pointerStart) == .available {
+                        let directPathState = viewModel.directPathAnchorState(at: pointerStart)
+                        if directPathState == .available {
                             isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(
                                 at: pointerStart,
                                 constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
@@ -6952,6 +6953,8 @@ struct ImageEditorView: View {
                                     ),
                                 preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                             )
+                        } else if directPathState == .occluded {
+                            viewModel.selectDirectPathSubpath(at: pointerStart)
                         }
                     } else if isMovingPathAnchor {
                         viewModel.moveSelectedPathAnchor(

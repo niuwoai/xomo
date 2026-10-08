@@ -1511,6 +1511,55 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
     }
 
+    @Test func directSelectionClickOnPathSegmentSelectsItsSubpathWithoutMoving() throws {
+        let image = testBitmapImage(size: NSSize(width: 120, height: 80), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
+            points.map { ImageEditorPathAnchor(point: $0) }
+        }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 0,
+            strokeOpacity: 0,
+            pathAnchors: anchors([
+                CGPoint(x: 8, y: 8), CGPoint(x: 38, y: 8),
+                CGPoint(x: 38, y: 38), CGPoint(x: 8, y: 38)
+            ]),
+            pathSubpaths: [anchors([
+                CGPoint(x: 50, y: 8), CGPoint(x: 108, y: 8),
+                CGPoint(x: 108, y: 68), CGPoint(x: 50, y: 68)
+            ])],
+            pathComponentOperations: [.combine, .subtract],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].kind = .shape(content)
+        let pathID = viewModel.document.layers[layerIndex].id
+        viewModel.selectLayer(backgroundID)
+        viewModel.selectTool(.directSelection)
+        let clickPoint = CGPoint(x: 80, y: 8)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.directPathAnchorState(at: clickPoint) == .occluded)
+        #expect(viewModel.selectDirectPathSubpath(at: clickPoint))
+        #expect(viewModel.document.selectedLayerID == pathID)
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 1)
+        #expect(viewModel.selectedPathComponentOperation == .subtract)
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.setSelectedPathComponentOperation(.intersect)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [
+            .combine, .intersect
+        ])
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func lockedTopAnchorBlocksDirectSelectionFromReachingLowerPath() throws {
         let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

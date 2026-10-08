@@ -4802,7 +4802,10 @@ struct ImageEditorScopeTests {
         let directGesture = viewSource[directStart.lowerBound..<directEnd.lowerBound]
         #expect(directGesture.contains("isDirectPathGestureResolved = true"))
         #expect(directGesture.contains("imagePoint(from: value.startLocation, in: size)"))
-        #expect(directGesture.contains("directPathAnchorState(at: pointerStart) == .available"))
+        #expect(directGesture.contains("let directPathState = viewModel.directPathAnchorState(at: pointerStart)"))
+        #expect(directGesture.contains("if directPathState == .available {"))
+        #expect(directGesture.contains("else if directPathState == .occluded {"))
+        #expect(directGesture.contains("viewModel.selectDirectPathSubpath(at: pointerStart)"))
         #expect(directGesture.contains("beginDirectPathAnchorMove(\n                                at: pointerStart"))
         #expect(directGesture.contains("} else if isMovingPathAnchor {"))
         #expect(viewSource.components(

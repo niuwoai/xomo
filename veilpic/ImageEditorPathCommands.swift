@@ -139,6 +139,38 @@ extension ImageEditorViewModel {
         }
     }
 
+    /// Selects the path component beneath a direct-selection click without
+    /// starting an anchor-move transaction. Anchor/control hits remain reserved
+    /// for the existing drag behavior.
+    @discardableResult
+    func selectDirectPathSubpath(at point: CGPoint?) -> Bool {
+        guard case .segment(let hit) = penPathInsertionHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID }),
+              !document.isEffectivelyPixelsLocked(layer),
+              !document.isEffectivelyPositionLocked(layer),
+              let content = layer.shapeContent,
+              content.kind == .path
+        else { return false }
+        let subpaths = content.allEditablePathSubpaths
+        guard subpaths.indices.contains(hit.subpathIndex),
+              subpaths[hit.subpathIndex].indices.contains(hit.startAnchorIndex),
+              subpaths[hit.subpathIndex].indices.contains(hit.endAnchorIndex)
+        else { return false }
+
+        selectLayer(layer.id)
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = hit.parameter < 0.5
+            ? hit.startAnchorIndex
+            : hit.endAnchorIndex
+        selectedPathControlRole = .anchor
+        statusText = L10n.format(
+            "imageEditor.status.pathSubpathSelected",
+            hit.subpathIndex + 1,
+            subpaths.count
+        )
+        return true
+    }
+
     @discardableResult
     func beginDirectPathAnchorMove(
         at point: CGPoint?,
