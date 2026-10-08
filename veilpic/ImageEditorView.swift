@@ -16246,7 +16246,13 @@ struct ImageEditorView: View {
     }
 
     private var curvesControls: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let histogramChannel: ImageEditorHistogramChannel = switch viewModel.curvesChannel {
+        case .rgb: .rgb
+        case .red: .red
+        case .green: .green
+        case .blue: .blue
+        }
+        return VStack(alignment: .leading, spacing: 6) {
             Picker(
                 L10n.text("imageEditor.curves.channel"),
                 selection: $viewModel.curvesChannel
@@ -16257,6 +16263,14 @@ struct ImageEditorView: View {
                 }
             }
             .accessibilityIdentifier("image-editor-curves-channel-picker")
+            ImageEditorCurvesGraph(
+                summary: viewModel.histogramSummary,
+                histogramChannel: histogramChannel,
+                channel: viewModel.curvesChannel,
+                shadows: $viewModel.selectedCurvesShadows,
+                midtones: $viewModel.selectedCurvesMidtones,
+                highlights: $viewModel.selectedCurvesHighlights
+            )
             adjustmentSlider(
                 labelKey: "imageEditor.curves.shadows",
                 value: Binding(

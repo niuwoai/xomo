@@ -4310,4 +4310,5 @@
 "imageEditor.curves.channel.red" = "レッド";
 "imageEditor.curves.channel.green" = "グリーン";
 "imageEditor.curves.channel.blue" = "ブルー";
+"imageEditor.curves.graph" = "カーブグラフ。コントロールポイントを上下にドラッグして階調出力を調整します。";
 "imageEditor.properties.curvesLayerChannelValue" = "%@: シャドウ %d%%、中間調 %d%%、ハイライト %d%%";

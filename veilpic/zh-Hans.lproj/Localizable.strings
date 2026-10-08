@@ -4310,4 +4310,5 @@
 "imageEditor.curves.channel.red" = "红色";
 "imageEditor.curves.channel.green" = "绿色";
 "imageEditor.curves.channel.blue" = "蓝色";
+"imageEditor.curves.graph" = "曲线图。上下拖动控制点以调整色调输出。";
 "imageEditor.properties.curvesLayerChannelValue" = "%@：阴影 %d%%、中间调 %d%%、高光 %d%%";

@@ -3680,6 +3680,8 @@ struct ImageEditorScopeTests {
         let curvesSource = source[curvesStart.lowerBound..<curvesEnd.lowerBound]
 
         #expect(curvesSource.contains("image-editor-curves-channel-picker"))
+        #expect(curvesSource.contains("ImageEditorCurvesGraph("))
+        #expect(curvesSource.contains("histogramChannel: histogramChannel"))
         #expect(curvesSource.contains("$viewModel.curvesChannel"))
         #expect(curvesSource.contains("viewModel.selectedCurvesShadows"))
         #expect(curvesSource.contains("viewModel.selectedCurvesMidtones"))
@@ -3687,6 +3689,14 @@ struct ImageEditorScopeTests {
         #expect(curvesSource.contains("viewModel.selectedCurvesShadows * 100"))
         #expect(curvesSource.contains("viewModel.selectedCurvesMidtones * 100"))
         #expect(curvesSource.contains("viewModel.selectedCurvesHighlights * 100"))
+
+        let graph = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorCurvesGraph.swift"),
+            encoding: .utf8
+        )
+        #expect(graph.contains("ImageEditorCurvesMapping.map(input, points: points)"))
+        #expect(graph.contains("DragGesture(minimumDistance: 0)"))
+        #expect(graph.contains("image-editor-curves-anchor-\\(anchor.rawValue)"))
     }
 
     @Test func escapeDiscardsPendingSmartFilterControlsAfterObjectCancellation() throws {

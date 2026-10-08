@@ -13,6 +13,34 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func curvesGraphMappingMatchesEditableAnchorValuesAndKeepsIdentityBaseline() {
+        let identity = ImageEditorCurvesMapping.points(shadows: 0, midtones: 0, highlights: 0)
+        for sample in stride(from: 0.0, through: 1.0, by: 0.1) {
+            #expect(abs(ImageEditorCurvesMapping.map(sample, points: identity) - sample) < 0.000001)
+        }
+
+        let adjusted = ImageEditorCurvesMapping.points(shadows: 0.4, midtones: -0.5, highlights: 0.2)
+        #expect(abs(adjusted[1].1 - 0.35) < 0.000001)
+        #expect(abs(adjusted[2].1 - 0.325) < 0.000001)
+        #expect(abs(adjusted[3].1 - 0.8) < 0.000001)
+        for anchor in ImageEditorCurvesAnchor.allCases {
+            let output = ImageEditorCurvesMapping.output(
+                for: anchor, shadows: 0.4, midtones: -0.5, highlights: 0.2
+            )
+            #expect(abs(ImageEditorCurvesMapping.adjustmentValue(for: anchor, output: output)
+                - (anchor == .shadows ? 0.4 : anchor == .midtones ? -0.5 : 0.2)) < 0.000001)
+        }
+
+        #expect(ImageEditorCurvesMapping.adjustmentValue(for: .shadows, output: -1) == -1)
+        #expect(ImageEditorCurvesMapping.adjustmentValue(for: .highlights, output: 2) == 1)
+
+        let monotonic = ImageEditorCurvesMapping.points(shadows: -1, midtones: 0.1, highlights: 1)
+        for sample in stride(from: 0.0, to: 1.0, by: 0.01) {
+            #expect(ImageEditorCurvesMapping.map(sample, points: monotonic)
+                <= ImageEditorCurvesMapping.map(sample + 0.01, points: monotonic) + 0.000001)
+        }
+    }
+
     @Test func histogramEqualizationRedistributesVisibleLuminanceAndPreservesAlpha() throws {
         let source = bitmapImage(
             size: NSSize(width: 4, height: 1),

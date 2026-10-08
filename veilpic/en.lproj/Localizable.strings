@@ -4310,4 +4310,5 @@
 "imageEditor.curves.channel.red" = "Red";
 "imageEditor.curves.channel.green" = "Green";
 "imageEditor.curves.channel.blue" = "Blue";
+"imageEditor.curves.graph" = "Curves graph. Drag a control point vertically to adjust tonal output.";
 "imageEditor.properties.curvesLayerChannelValue" = "%@: shadows %d%%, midtones %d%%, highlights %d%%";
