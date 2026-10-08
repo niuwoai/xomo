@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1759 把 PDF 像素读回加入真实 P3 编辑闭环：外部导入、软选区像素移动、Undo/Redo、项目重开后，对照 PNG、PDF 与画布；PDF 页面读取校正底部原点行序，颜色通道容差为 1；导出不改内容 History 或选择。完整门槛为 rc1760。
 - rc1758 为普通 PDF 导出增加 Display P3→PDF→sRGB 页面栅格读回像素对照，并检查导出不改变 History/选择状态；完整门槛仍为 rc1760。
 - rc1757 让 Direct Selection 点击路径曲线段时选择对应子路径和最近锚点，组件属性面板可直接跟随点击目标；该点击不启动移动事务，锚点/控制柄拖动保持原行为。定向测试覆盖路径选择与布尔属性编辑；完整门槛仍为 rc1760。
 - rc1756 修复剪贴板图像与 Xomo 原位粘贴位置分开写入的事务缺口：selection copy/cut/merged copy 现在作为同一 pasteboard item 写入图像与坐标元数据，cut 在写入失败前不改文档。专项回归见[记录](docs/reviews/2026-10-08-rc1756-atomic-selection-clipboard.md)；全量门槛仍为 rc1760。

@@ -19,6 +19,16 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1759 - 2026-10-08
+
+### Changed
+- 将 P3 导入、选区像素移动、Undo/Redo、项目重开和 PNG 导出的端到端任务扩展到 PDF；读回时校正 PDF 底部原点与图像行序，并允许颜色转换最多 1 级通道舍入差。
+
+### Verification
+- 同一真实 P3 用户任务逐像素对照 PNG、PDF 与画布（PDF 每通道容差为 1），并验证导出不改 History/选择；结果见[验证记录](docs/reviews/2026-10-08-rc1759-p3-pdf-workflow.md)。
+
+---
+
 ## 2.12.0-rc1758 - 2026-10-08
 
 ### Changed

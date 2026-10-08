@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 
 @MainActor
 struct ImageEditorP3PixelEditExportWorkflowTests {
-    @Test func p3PNGOpenSelectionMoveUndoRedoProjectReloadAndPNGExportStayConsistent() throws {
+    @Test func p3PNGOpenSelectionMoveUndoRedoProjectReloadAndPNGAndPDFExportsStayConsistent() throws {
         let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
         let sourceData = try p3PNGData(colorSpace: sourceSpace)
         let source = try #require(NSImage(data: sourceData))
@@ -59,6 +59,8 @@ struct ImageEditorP3PixelEditExportWorkflowTests {
         try reopened.loadProjectData(movedProject)
         let reopenedPixels = try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 8, height: 8))
         #expect(reopenedPixels == movedPixels)
+        let historyBeforeExport = reopened.document.history
+        let selectedLayersBeforeExport = reopened.document.selectedLayerIDs
 
         let pngData = try #require(reopened.exportData(settings: .init(format: .png, scope: .composited)))
         let pngSource = try #require(CGImageSourceCreateWithData(pngData as CFData, nil))
@@ -68,6 +70,46 @@ struct ImageEditorP3PixelEditExportWorkflowTests {
         #expect(exportedImage.height == 8)
         let exportedPixels = try #require(imageEditorRGBABytes(NSImage(cgImage: exportedImage, size: CGSize(width: 8, height: 8)), width: 8, height: 8))
         #expect(exportedPixels == movedPixels)
+
+        let pdfData = try #require(reopened.exportData(settings: .init(format: .pdf, scope: .composited)))
+        let pdfPixels = try renderedPDFRGBABytes(pdfData, width: 8, height: 8)
+        #expect(pdfPixels.count == movedPixels.count)
+        for (pdfChannel, canvasChannel) in zip(pdfPixels, movedPixels) {
+            #expect(abs(Int(pdfChannel) - Int(canvasChannel)) <= 1)
+        }
+        #expect(reopened.document.history == historyBeforeExport)
+        #expect(reopened.document.selectedLayerIDs == selectedLayersBeforeExport)
+    }
+
+    private func renderedPDFRGBABytes(_ data: Data, width: Int, height: Int) throws -> [UInt8] {
+        let provider = try #require(CGDataProvider(data: data as CFData))
+        let document = try #require(CGPDFDocument(provider))
+        let page = try #require(document.page(at: 1))
+        #expect(page.getBoxRect(.mediaBox).width == CGFloat(width))
+        #expect(page.getBoxRect(.mediaBox).height == CGFloat(height))
+
+        let colorSpace = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let didRender = pixels.withUnsafeMutableBytes { buffer in
+            guard let context = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: colorSpace,
+                bitmapInfo: CGBitmapInfo(
+                    rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
+                ).union(.byteOrder32Big).rawValue
+            ) else { return false }
+            context.interpolationQuality = .none
+            context.translateBy(x: 0, y: CGFloat(height))
+            context.scaleBy(x: 1, y: -1)
+            context.drawPDFPage(page)
+            return true
+        }
+        #expect(didRender)
+        return pixels
     }
 
     private func p3PNGData(colorSpace: CGColorSpace) throws -> Data {
