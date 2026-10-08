@@ -1618,15 +1618,17 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return false
         }
+        guard let frameData = XomoClipboardLayerPayload.data(for: clipboardCopy.frame) else {
+            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            return false
+        }
 
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
             preferredFileName: "\(layer.name)-selection.png",
+            additionalData: [XomoClipboardLayerPayload.pasteboardType: frameData],
             to: pasteboard
         )
-        if didCopy {
-            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
-        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
             : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
@@ -1714,6 +1716,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return false
         }
+        guard let frameData = XomoClipboardLayerPayload.data(for: clipboardCopy.frame) else {
+            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            return false
+        }
 
         let sourceLayer = document.layers[index]
         let preservesFilteredOutput = backing.smartFilters.contains {
@@ -1744,6 +1750,7 @@ extension ImageEditorViewModel {
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
             preferredFileName: "\(sourceLayer.name)-selection.png",
+            additionalData: [XomoClipboardLayerPayload.pasteboardType: frameData],
             to: pasteboard
         )
         guard didCopy else {
@@ -1751,7 +1758,6 @@ extension ImageEditorViewModel {
             return false
         }
 
-        XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
         pushUndo()
         if let cutoutMask {
             backing.postFilterCutoutMask = cutoutMask
@@ -1807,15 +1813,17 @@ extension ImageEditorViewModel {
                 CGRect(origin: .zero, size: document.canvasSize)
             )
         }
+        guard let frameData = XomoClipboardLayerPayload.data(for: clipboardCopy.frame) else {
+            statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+            return false
+        }
 
         let didCopy = ClipboardImageWriter.copy(
             clipboardCopy.image,
             preferredFileName: "\(document.sourceName)-merged.png",
+            additionalData: [XomoClipboardLayerPayload.pasteboardType: frameData],
             to: pasteboard
         )
-        if didCopy {
-            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame, to: pasteboard)
-        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
             : L10n.text("imageEditor.status.copyMergedToClipboardFailed")

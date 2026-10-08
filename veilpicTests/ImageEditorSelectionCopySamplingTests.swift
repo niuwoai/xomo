@@ -107,6 +107,34 @@ struct ImageEditorSelectionCopySamplingTests {
         #expect(try model.projectData() == original)
     }
 
+    @Test func selectionAndMergedClipboardFramesAreWrittenWithTheirImages() throws {
+        let model = try fixture(raster: true)
+        let pasteboard = isolatedPasteboard()
+        defer { pasteboard.clearContents() }
+
+        #expect(model.copySelectionToClipboard(to: pasteboard))
+        #expect(pasteboard.data(forType: .png) != nil)
+        #expect(pasteboard.pasteboardItems?.contains {
+            $0.data(forType: .png) != nil
+                && $0.data(forType: XomoClipboardLayerPayload.pasteboardType) != nil
+        } == true)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectedRect)
+
+        #expect(model.copyMergedToClipboard(to: pasteboard))
+        #expect(pasteboard.data(forType: .png) != nil)
+        #expect(pasteboard.pasteboardItems?.contains {
+            $0.data(forType: .png) != nil
+                && $0.data(forType: XomoClipboardLayerPayload.pasteboardType) != nil
+        } == true)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectedRect)
+        #expect(model.canPasteClipboardImageInPlace(from: pasteboard))
+
+        let originalLayerCount = model.document.layers.count
+        #expect(model.pasteClipboardInPlaceAsLayer(from: pasteboard))
+        #expect(model.document.layers.count == originalLayerCount + 1)
+        #expect(model.document.selectedLayer?.frame == selectedRect)
+    }
+
     @Test func copyRetainsFineVisibleLayerMaskAndFeatherTail() throws {
         let model = try fixture(raster: true)
         model.document.layers[0].mask = try #require(NSImage.rendered(size: CGSize(width: 12, height: 12)) { _ in

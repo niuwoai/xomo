@@ -60,6 +60,10 @@ struct ImageEditorSelectionCutSamplingTests {
         defer { pasteboard.clearContents() }
 
         #expect(model.cutSelectionToClipboard(to: pasteboard))
+        #expect(pasteboard.pasteboardItems?.contains {
+            $0.data(forType: .png) != nil
+                && $0.data(forType: XomoClipboardLayerPayload.pasteboardType) != nil
+        } == true)
         #expect(model.document.layers.count == 1)
         #expect(model.document.selectedLayerID == source.id)
         #expect(model.undoStack.count == undoCount + 1)
