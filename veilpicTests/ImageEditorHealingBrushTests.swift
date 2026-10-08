@@ -279,7 +279,6 @@ struct ImageEditorHealingBrushTests {
 
         let offset = ImageEditorHealingBrushKernel.spotSourceOffset(
             pixels: pixels,
-            targetContextPixels: pixels,
             width: width,
             height: height,
             points: [CGPoint(x: 7, y: 25)],
@@ -298,7 +297,6 @@ struct ImageEditorHealingBrushTests {
 
         let offset = ImageEditorHealingBrushKernel.spotSourceOffset(
             pixels: pixels,
-            targetContextPixels: pixels,
             width: width,
             height: height,
             points: [CGPoint(x: 20, y: 20)],

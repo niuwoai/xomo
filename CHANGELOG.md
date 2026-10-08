@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1773 - 2026-10-08
+
+### Changed
+- Spot Healing 现在只栅格化一次其共享取样图，同时用于源候选评分与颜色参考；移除每笔划重复展开的第二份全尺寸 RGBA 缓冲。
+
+### Verification
+- ImageEditorHealingBrushTests 18/18、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）、概览归档合同 3/3（30 断言）通过；本版未运行完整 Release XCTest，下一完整门槛 rc1800，不覆盖 /Applications。
+
 ## 2.12.0-rc1772 - 2026-10-08
 
 ### Changed

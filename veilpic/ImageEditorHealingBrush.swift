@@ -125,7 +125,6 @@ extension NSImage {
     func withSpotHealingBrush(
         points: [CGPoint],
         sourceImage: NSImage,
-        targetContextImage: NSImage,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat
@@ -133,7 +132,6 @@ extension NSImage {
         withSpotHealingBrush(
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
             sourceImage: sourceImage,
-            targetContextImage: targetContextImage,
             width: width,
             opacity: opacity,
             hardness: hardness,
@@ -145,7 +143,6 @@ extension NSImage {
     func withSpotHealingBrush(
         samples: [ImageEditorBrushStrokeSample],
         sourceImage: NSImage,
-        targetContextImage: NSImage,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
@@ -165,11 +162,6 @@ extension NSImage {
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
-        ),
-        let targetContextPixels = targetContextImage.healingRGBAPixels(
-            width: pixelWidth,
-            height: pixelHeight,
-            bytesPerRow: bytesPerRow
         ) else { return nil }
 
         let points = samples.map(\.point)
@@ -182,7 +174,6 @@ extension NSImage {
         )
         guard let sourceOffset = ImageEditorHealingBrushKernel.spotSourceOffset(
             pixels: sourcePixels,
-            targetContextPixels: targetContextPixels,
             width: pixelWidth,
             height: pixelHeight,
             points: points,
@@ -207,7 +198,7 @@ extension NSImage {
         ) else { return nil }
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
-            targetContextPixels: targetContextPixels,
+            targetContextPixels: sourcePixels,
             sourcePixels: sourcePixels,
             mask: mask,
             width: pixelWidth,
@@ -401,7 +392,6 @@ enum ImageEditorHealingBrushKernel {
 
     static func spotSourceOffset(
         pixels: [UInt8],
-        targetContextPixels: [UInt8],
         width: Int,
         height: Int,
         points: [CGPoint],
@@ -409,14 +399,13 @@ enum ImageEditorHealingBrushKernel {
         brushDiameter: CGFloat
     ) -> CGSize? {
         guard pixels.count == width * height * bytesPerPixel,
-              targetContextPixels.count == pixels.count,
               !points.isEmpty
         else { return nil }
 
         let radius = max(1, brushDiameter / 2)
         let referenceRadius = max(2, Int((brushDiameter * 0.9).rounded()))
         let targetReference = averageColor(
-            pixels: targetContextPixels,
+            pixels: pixels,
             width: width,
             height: height,
             center: destinationReference,

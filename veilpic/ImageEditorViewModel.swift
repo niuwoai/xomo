@@ -8927,7 +8927,6 @@ final class ImageEditorViewModel: ObservableObject {
             let output = layer.image.normalizedBitmapImage().withSpotHealingBrush(
                 samples: rasterLocalSamples(samples, layer: layer),
                 sourceImage: targetContext.image,
-                targetContextImage: targetContext.image,
                 width: rasterLocalBrushWidth(brushSize, layer: layer),
                 opacity: opacity,
                 hardness: hardness,

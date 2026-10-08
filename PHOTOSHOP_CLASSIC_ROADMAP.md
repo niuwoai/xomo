@@ -2,6 +2,8 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1773 收敛 Spot Healing 的同图双缓冲：源候选评分和目标颜色参考使用同一 sampledBrushInput，不再对同一张 NSImage 各展开一份全尺寸 RGBA 数组；像素算法与采样设置不变。ImageEditorHealingBrushTests 18/18、发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过；本版未运行完整 Release XCTest，下一完整门槛 rc1800，不扩张 Figma。
+
 - rc1771 让 Healing/Spot Healing 核对目标 RGBA 帧原位混合，避免每次笔划为输出复制一整帧；画布外 no-op 与逐像素结果保持不变。`ImageEditorHealingBrushTests` 16/16、发布合同 10/10（30 断言）、CLI Release 合同 7/7（24 断言）通过；本版未运行完整 Release XCTest。下一完整门槛 rc1800，不扩张 Figma。
 
 - rc1772 让普通非压感 Healing/Spot Healing 笔划直接渲染紧凑 alpha 遮罩，4096×4096 画布上的 24 px 点按由 16,777,216 字节降至 625 字节；压感路径保留原 Coverage 光栅并仅裁切输出遮罩。32×20 画布与旧全帧光栅逐像素一致，`ImageEditorHealingBrushTests` 18/18、发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过。本版未运行完整 Release XCTest，下一完整门槛 rc1800，不扩张 Figma。
