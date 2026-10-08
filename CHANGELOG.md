@@ -19,6 +19,15 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1760 - 2026-10-08
+
+### Verification
+- rc1721–rc1759 四十版本门槛完成：build-for-testing 成功，全量隔离回归 231/231 套件、3682/3682 项通过；Universal Developer ID Release archive 与 CLI Release 构建均成功。
+- `/Applications/Xomo.app` 已可恢复覆盖为 rc1760/build1760，安装包双架构与签名验证通过；安装版启动、主画布及原生菜单冒烟通过。PNG 文件事件冷启动未取得可见文档窗口，作为未验证风险记录，不据此声称完成图像导入 UI 验收。
+- 构建/安装范围、报告、签名与回滚证据见[rc1760 门槛记录](docs/reviews/2026-10-08-rc1760-full-gate.md)；未公证、未公开发布。
+
+---
+
 ## 2.12.0-rc1759 - 2026-10-08
 
 ### Changed

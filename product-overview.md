@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1759
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1760
+
+rc1760 四十版本门槛已完成：231 个测试套件、3,682 项全量隔离回归通过；Universal Release archive 与签名、Universal CLI、安装版启动/主画布/原生菜单均核验通过。`/Applications/Xomo.app` 为 rc1760/build1760，旧 rc1729 安装包保留为可恢复备份。冷启动 PNG 文件事件未取得可见文档窗口，因此 Finder 打开路径仍待专门验收；下一完整门槛 rc1800。详见[rc1760 门槛记录](docs/reviews/2026-10-08-rc1760-full-gate.md)。
 
 rc1759 把 PDF 像素读回加入 P3 端到端编辑任务：导入、选区移动、Undo/Redo、项目重开后，对照 PNG/PDF 与画布；PDF 读回校正页面坐标方向，颜色通道允许 1 级舍入误差。验证见[rc1759 记录](docs/reviews/2026-10-08-rc1759-p3-pdf-workflow.md)。
 
