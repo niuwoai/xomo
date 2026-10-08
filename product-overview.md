@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1774
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1775
+
+rc1775 为 Healing Brush 的 Source/Spot 模式增加 1–7 Diffusion：1 保持最清晰的取样纹理，值越高越平滑；原始未模糊源仍用于颜色匹配与 Spot 候选评分。选项栏与自动化共用参数。Healing/Spot Healing 像素与事务套件 24/24、自动化 Healing 3 项、选项栏接线 1 项、本地化 46/46、发布合同 10/30、CLI 合同 7/24、概览归档 3/30 通过；未运行完整 Release XCTest/桌面冒烟。下一完整编译门槛 rc1800，不扩张 Figma。
 
 rc1774 让 Healing Brush 在一个笔划中批量构造源采样与目标上下文：current-and-below/all-visible 共享一次整画布合成，当前图层的两个偏移共享同一归一化图像，相同图像对象只解码一份 RGBA；偏移关系与像素语义通过 `ImageEditorHealingBrushTests` 20/20、`ImageEditorCloneStampSamplingTests` 34/34 回归验证。发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过；未运行完整 Release XCTest，下一完整编译/冒烟门槛 rc1800，不扩张 Figma。
 

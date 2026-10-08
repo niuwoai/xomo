@@ -3848,6 +3848,8 @@
 "imageEditor.action.cloneSourceResetTransform" = "Reset Source Transform";
 "imageEditor.action.cloneSourceClear" = "Clear Clone Source";
 "imageEditor.option.healingMode" = "Healing Mode";
+"imageEditor.option.healingDiffusionValue" = "Diffusion %d";
+"imageEditor.option.healingDiffusion.help" = "1 preserves sampled detail; higher values smooth the sampled texture before it is blended into the repair area.";
 "imageEditor.healingMode.source" = "Source";
 "imageEditor.healingMode.spot" = "Spot";
 "imageEditor.option.spongeMode" = "Sponge Mode";

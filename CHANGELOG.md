@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1775 - 2026-10-08
+
+### Added
+- Healing Brush 与 Spot Healing 共用 1–7 Diffusion 控制；1 保留采样纹理，较高值先平滑源纹理再愈合，同时使用原始源图计算颜色匹配。
+- `xomo.paint.special` 的 `healing` / `setHealingSource` 支持同一 `diffusion` 参数；每笔修改仍作为一个可撤销历史事务。
+
+### Verification
+- `ImageEditorHealingBrushTests` 24/24：验证 Source/Spot 高低扩散像素差异、alpha/未触及像素及单事务 Undo/Redo；自动化 Healing Source/Spot/非法扩散 3 项、选项栏接线 1 项、本地化 46/46 通过。
+- `test_release_contract.rb` 10/30、CLI Release 合同 7/24、产品概览归档 3/30、隔离运行器合同通过；完整 Release XCTest/桌面冒烟未运行，下一完整门槛仍为 rc1800。
+
 ## 2.12.0-rc1774 - 2026-10-08
 
 ### Changed

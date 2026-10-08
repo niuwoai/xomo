@@ -2,6 +2,8 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1775 为 Healing Brush 的 Source 与 Spot 模式补齐统一 Diffusion 1–7 控制。低值保持源纹理，高值按 Patch 的半径映射平滑源纹理；颜色参考和污点候选仍使用未模糊图像，避免改变取样评分/颜色校正。选项栏、自动化和像素路径共用设置，Undo/Redo 仍由单笔图层像素替换提交为一个历史项。`ImageEditorHealingBrushTests` 24/24、自动化 Healing 3 项、选项栏 1 项、本地化 46/46、发布合同 10/30、CLI 合同 7/24、概览归档 3/30、隔离运行器合同通过。未运行完整 Release XCTest/桌面冒烟；完整构建门槛仍为 rc1800，不扩张 Figma。
+
 - rc1774 让 Healing Brush 一笔的源采样与目标上下文共享采样批次，current-and-below/all-visible 只合成一次文档画布；current-layer 复用归一化位图，像素转换进一步复用同一图像对象的 RGBA 数组。偏移/像素语义与 Clone Stamp 共用采样回归通过：`ImageEditorHealingBrushTests` 20/20、`ImageEditorCloneStampSamplingTests` 34/34；发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过。未运行完整 Release XCTest，完整 Release 编译与冒烟门槛仍为 rc1800，不扩张 Figma。
 
 - rc1773 收敛 Spot Healing 的同图双缓冲：源候选评分和目标颜色参考使用同一 sampledBrushInput，不再对同一张 NSImage 各展开一份全尺寸 RGBA 数组；像素算法与采样设置不变。ImageEditorHealingBrushTests 18/18、发布合同 10/30、CLI Release 合同 7/24、概览归档合同 3/30 通过；本版未运行完整 Release XCTest，下一完整门槛 rc1800，不扩张 Figma。

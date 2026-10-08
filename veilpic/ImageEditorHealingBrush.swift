@@ -32,7 +32,8 @@ extension NSImage {
         targetContextImage: NSImage,
         width: CGFloat,
         opacity: CGFloat,
-        hardness: CGFloat
+        hardness: CGFloat,
+        diffusion: Int = 1
     ) -> NSImage? {
         withHealingBrush(
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
@@ -43,7 +44,8 @@ extension NSImage {
             opacity: opacity,
             hardness: hardness,
             pressureControlsSize: false,
-            pressureSensitivity: 0.5
+            pressureSensitivity: 0.5,
+            diffusion: diffusion
         )
     }
 
@@ -56,7 +58,8 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat,
         pressureControlsSize: Bool,
-        pressureSensitivity: CGFloat
+        pressureSensitivity: CGFloat,
+        diffusion: Int = 1
     ) -> NSImage? {
         guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
@@ -83,6 +86,14 @@ extension NSImage {
             ) else { return nil }
             sourcePixels = sampledSourcePixels
         }
+        guard let healingSourcePixels = diffusedHealingPixels(
+            image: sourceImage,
+            originalPixels: sourcePixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow,
+            diffusion: diffusion
+        ) else { return nil }
 
         let effectiveDiameter = retouchMaximumDiameter(
             samples: samples,
@@ -110,7 +121,8 @@ extension NSImage {
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: targetContextPixels,
-            sourcePixels: sourcePixels,
+            sourcePixels: healingSourcePixels,
+            sourceReferencePixels: sourcePixels,
             mask: mask,
             width: pixelWidth,
             height: pixelHeight,
@@ -133,7 +145,8 @@ extension NSImage {
         sourceImage: NSImage,
         width: CGFloat,
         opacity: CGFloat,
-        hardness: CGFloat
+        hardness: CGFloat,
+        diffusion: Int = 1
     ) -> NSImage? {
         withSpotHealingBrush(
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
@@ -142,7 +155,8 @@ extension NSImage {
             opacity: opacity,
             hardness: hardness,
             pressureControlsSize: false,
-            pressureSensitivity: 0.5
+            pressureSensitivity: 0.5,
+            diffusion: diffusion
         )
     }
 
@@ -153,7 +167,8 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat,
         pressureControlsSize: Bool,
-        pressureSensitivity: CGFloat
+        pressureSensitivity: CGFloat,
+        diffusion: Int = 1
     ) -> NSImage? {
         guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
@@ -163,13 +178,20 @@ extension NSImage {
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
-        ),
-        let sourcePixels = sourceImage.healingRGBAPixels(
+        ) else { return nil }
+        guard let sourcePixels = sourceImage.healingRGBAPixels(
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow
         ) else { return nil }
-
+        guard let healingSourcePixels = diffusedHealingPixels(
+            image: sourceImage,
+            originalPixels: sourcePixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow,
+            diffusion: diffusion
+        ) else { return nil }
         let points = samples.map(\.point)
         let destinationReference = ImageEditorHealingBrushKernel.strokeCenter(points)
         let effectiveDiameter = retouchMaximumDiameter(
@@ -205,7 +227,8 @@ extension NSImage {
         ImageEditorHealingBrushKernel.heal(
             targetPixels: &targetPixels,
             targetContextPixels: sourcePixels,
-            sourcePixels: sourcePixels,
+            sourcePixels: healingSourcePixels,
+            sourceReferencePixels: sourcePixels,
             mask: mask,
             width: pixelWidth,
             height: pixelHeight,
@@ -296,6 +319,24 @@ extension NSImage {
         context.interpolationQuality = .none
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         return pixels
+    }
+
+    private func diffusedHealingPixels(
+        image: NSImage,
+        originalPixels: [UInt8],
+        width: Int,
+        height: Int,
+        bytesPerRow: Int,
+        diffusion: Int
+    ) -> [UInt8]? {
+        let radius = ImageEditorHealingBrushKernel.diffusionRadius(for: diffusion)
+        guard radius > 0 else { return originalPixels }
+        guard let diffusedImage = image.blurred(radius: radius) else { return nil }
+        return diffusedImage.healingRGBAPixels(
+            width: width,
+            height: height,
+            bytesPerRow: bytesPerRow
+        )
     }
 
     private static func healingImage(
@@ -758,6 +799,7 @@ enum ImageEditorHealingBrushKernel {
         targetPixels: inout [UInt8],
         targetContextPixels: [UInt8],
         sourcePixels: [UInt8],
+        sourceReferencePixels: [UInt8]? = nil,
         mask: StrokeMask,
         width: Int,
         height: Int,
@@ -797,7 +839,7 @@ enum ImageEditorHealingBrushKernel {
             outerRadius: referenceRadius
         )
         let sourceReference = averageColor(
-            pixels: sourcePixels,
+            pixels: sourceReferencePixels ?? sourcePixels,
             width: width,
             height: height,
             center: sourceStart,
@@ -849,6 +891,10 @@ enum ImageEditorHealingBrushKernel {
                 targetPixels[targetOffset + 3] = byte(outputAlpha)
             }
         }
+    }
+
+    static func diffusionRadius(for diffusion: Int) -> CGFloat {
+        CGFloat(max(1, min(7, diffusion)) - 1) * 0.5
     }
 
     static func strokeCenter(_ points: [CGPoint]) -> CGPoint {
