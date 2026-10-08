@@ -5200,7 +5200,7 @@ final class ImageEditorViewModel: ObservableObject {
         redoXomoThemeStates.append(currentXomoThemeUndoState)
         let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
-        restoreDocumentPreservingSelectionEdgeVisibility(previous)
+        restoreDocumentPreservingCanvasViewState(previous)
         applyXomoThemeUndoState(previousThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         if document.canvasSize != canvasSizeBeforeRestore {
@@ -5241,7 +5241,7 @@ final class ImageEditorViewModel: ObservableObject {
         undoXomoThemeStates.append(currentXomoThemeUndoState)
         let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
-        restoreDocumentPreservingSelectionEdgeVisibility(next)
+        restoreDocumentPreservingCanvasViewState(next)
         applyXomoThemeUndoState(nextThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         if document.canvasSize != canvasSizeBeforeRestore {
@@ -5263,7 +5263,7 @@ final class ImageEditorViewModel: ObservableObject {
         else { return }
         pushUndo()
         let slicesBeforeRestore = document.slices
-        restoreDocumentPreservingSelectionEdgeVisibility(snapshot)
+        restoreDocumentPreservingCanvasViewState(snapshot)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -5292,7 +5292,7 @@ final class ImageEditorViewModel: ObservableObject {
 
         let removedCount = document.history.count - index
         pushUndo()
-        restoreDocumentPreservingSelectionEdgeVisibility(previousDocument)
+        restoreDocumentPreservingCanvasViewState(previousDocument)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -5336,7 +5336,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let snapshot = namedHistorySnapshots.first(where: { $0.id == id }) else { return }
 
         pushUndo()
-        restoreDocumentPreservingSelectionEdgeVisibility(snapshot.document)
+        restoreDocumentPreservingCanvasViewState(snapshot.document)
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
@@ -5412,11 +5412,27 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.historyCleared")
     }
 
-    // Selection-edge visibility is saved with the document, but content history must not roll it back.
-    private func restoreDocumentPreservingSelectionEdgeVisibility(_ snapshot: ImageEditorDocument) {
-        let areSelectionEdgesVisible = document.areSelectionEdgesVisible
+    // Canvas display and snapping preferences are saved with the document, but content history must not roll them back.
+    private func restoreDocumentPreservingCanvasViewState(_ snapshot: ImageEditorDocument) {
+        let viewState = (
+            areSelectionEdgesVisible: document.areSelectionEdgesVisible,
+            areExtrasVisible: document.areExtrasVisible,
+            areGuidesVisible: document.areGuidesVisible,
+            areRulersVisible: document.areRulersVisible,
+            isGuideSnappingEnabled: document.isGuideSnappingEnabled,
+            areTransformControlsVisible: document.areTransformControlsVisible,
+            isGridVisible: document.isGridVisible,
+            isGridSnappingEnabled: document.isGridSnappingEnabled
+        )
         document = snapshot
-        document.areSelectionEdgesVisible = areSelectionEdgesVisible
+        document.areSelectionEdgesVisible = viewState.areSelectionEdgesVisible
+        document.areExtrasVisible = viewState.areExtrasVisible
+        document.areGuidesVisible = viewState.areGuidesVisible
+        document.areRulersVisible = viewState.areRulersVisible
+        document.isGuideSnappingEnabled = viewState.isGuideSnappingEnabled
+        document.areTransformControlsVisible = viewState.areTransformControlsVisible
+        document.isGridVisible = viewState.isGridVisible
+        document.isGridSnappingEnabled = viewState.isGridSnappingEnabled
     }
 
     func applyAndClose(close: () -> Void) {

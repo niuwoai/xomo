@@ -35,11 +35,7 @@ struct ImageEditorHistoryTests {
         }
 
         #expect(!viewModel.document.areTransformControlsVisible)
-        #expect(viewModel.document.history.count == historyCount + 1)
-        #expect(
-            viewModel.document.history.last?.title
-                == L10n.text("imageEditor.history.transformControlsVisibility")
-        )
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func transformControlsMouseBoundariesRemainIndependentWithoutAKeyEvent() {
@@ -695,11 +691,11 @@ struct ImageEditorHistoryTests {
         #expect(!viewModel.document.isGuideSnappingEnabled)
         #expect(viewModel.document.areGuidesLocked)
         #expect(viewModel.document.isGridVisible)
-        #expect(viewModel.document.history.count == historyCount + 5)
+        #expect(viewModel.document.history.count == historyCount + 1)
 
         dispatch(.grid, event: nextEvent)
         #expect(!viewModel.document.isGridVisible)
-        #expect(viewModel.document.history.count == historyCount + 6)
+        #expect(viewModel.document.history.count == historyCount + 1)
     }
 
     @Test func canvasAidMouseMenuBoundariesRemainIndependent() {

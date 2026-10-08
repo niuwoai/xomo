@@ -1895,6 +1895,7 @@ struct ImageEditorScopeTests {
         viewModel.document.isGridVisible = true
         viewModel.createRectSelection(from: CGPoint(x: 10, y: 12), to: CGPoint(x: 42, y: 36))
         let selection = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
 
         viewModel.toggleExtrasVisible()
 
@@ -1903,7 +1904,7 @@ struct ImageEditorScopeTests {
         #expect(viewModel.document.isGridVisible)
         #expect(viewModel.document.areSelectionEdgesVisible)
         #expect(viewModel.document.selection == selection)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.extrasVisibility"))
+        #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.extrasHidden"))
 
         viewModel.toggleGridSnapping()
@@ -1912,6 +1913,7 @@ struct ImageEditorScopeTests {
         #expect(viewModel.document.isGridSnappingEnabled)
         #expect(viewModel.document.isGridVisible)
         #expect(viewModel.document.selection == selection)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @MainActor
@@ -1927,13 +1929,14 @@ struct ImageEditorScopeTests {
             viewModel.document.layers.first { $0.id == selectedLayerID }?.frame
         )
         let selectedFrame = try #require(viewModel.selectedLayerTransformFrame)
+        let historyCount = viewModel.document.history.count
 
         viewModel.toggleTransformControlsVisible()
 
         #expect(!viewModel.document.areTransformControlsVisible)
         #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
         #expect(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame == persistedFrame)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.transformControlsVisibility"))
+        #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.transformControlsHidden"))
 
         viewModel.toggleTransformControlsVisible()
@@ -1944,6 +1947,56 @@ struct ImageEditorScopeTests {
         #expect(viewModel.document.areTransformControlsVisible)
         #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.transformControlsVisible"))
+    }
+
+    @MainActor
+    @Test func canvasViewAndSnappingTogglesDoNotConsumePixelUndoOrRevertAfterRedo() throws {
+        let image = NSImage(size: NSSize(width: 20, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "canvas-view-state.png", image: image) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 3, y: 3), to: CGPoint(x: 10, y: 10))
+        viewModel.foregroundColor = .systemBlue
+        viewModel.fillSelection()
+
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let editedPixels = try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.toggleSelectionEdgesVisible()
+        viewModel.toggleGuidesVisible()
+        viewModel.toggleRulersVisible()
+        viewModel.toggleExtrasVisible()
+        viewModel.toggleGuideSnapping()
+        viewModel.toggleTransformControlsVisible()
+        viewModel.toggleGridVisible()
+        viewModel.toggleGridSnapping()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.layers[layerIndex].image.qingtuPNGData() == editedPixels)
+        expectCanvasViewState(viewModel)
+
+        viewModel.undo()
+        let undoneLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(viewModel.document.layers[undoneLayerIndex].image.qingtuPNGData() != editedPixels)
+        expectCanvasViewState(viewModel)
+
+        viewModel.redo()
+        let redoneLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(viewModel.document.layers[redoneLayerIndex].image.qingtuPNGData() == editedPixels)
+        expectCanvasViewState(viewModel)
+    }
+
+    @MainActor
+    private func expectCanvasViewState(_ viewModel: ImageEditorViewModel) {
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+        #expect(!viewModel.document.areGuidesVisible)
+        #expect(!viewModel.document.areRulersVisible)
+        #expect(viewModel.document.areExtrasVisible)
+        #expect(!viewModel.document.isGuideSnappingEnabled)
+        #expect(!viewModel.document.areTransformControlsVisible)
+        #expect(viewModel.document.isGridVisible)
+        #expect(viewModel.document.isGridSnappingEnabled)
     }
 
     @Test func imageEditorDoesNotGrowIntoHeavyExpansionCategories() {

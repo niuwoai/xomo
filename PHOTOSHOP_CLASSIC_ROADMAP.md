@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1755 统一画布显示与吸附偏好：这些开关不再污染图像内容 History/Undo，像素编辑 Undo/Redo 后保留用户当前显示选择；专项验证见[记录](docs/reviews/2026-10-08-rc1755-canvas-aids-undo.md)。完整构建、全量回归、真实冒烟及安装仍按 rc1760 门槛执行。
 - rc1754 修复选区边缘显示开关污染内容撤销：切换不再创建 History/Undo，内容 Undo/Redo 与命名快照恢复保留当前显示状态；项目保存仍保存该选项。`ImageEditorGuideTests` 定向 37 项通过，尚未做 GUI 冒烟；下一完整门槛 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1754-selection-edge-undo.md)。
 - rc1753 为复合路径增加组件上移/下移，几何与布尔运算保持绑定；重排可改变交叠组件的累计结果，并作为单步 Undo/Redo 事务。向量套件 112/112 通过，尚未做 GUI 按钮冒烟；下一完整门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1753-path-component-reorder.md)。
 - rc1752 禁止第一路径组件使用无效的 `continuePrevious`：SwiftUI 选项禁用、ViewModel 命令校验，并将历史不合法文档值显示为当前 renderer 实际使用的 `.exclude`；未新增真实 GUI 冒烟，门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1752-first-path-component-operation.md)。

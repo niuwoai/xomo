@@ -19,6 +19,19 @@
 - [1.350.0 至 1.152.0](docs/changelog/part-02.md)
 - [1.151.0 至 1.1.0](docs/changelog/part-01.md)
 
+## 2.12.0-rc1755 - 2026-10-08
+
+### Fixed
+- 画布标尺、参考线、选区边缘、变换控件、网格及吸附设置不再占用内容 Undo/History，撤销/重做时保留当前视图设置。
+
+### Changed
+- App、CLI 与 Xcode 六配置同步至 `2.12.0-rc1755`/1755；rc1760 仍是四十版本完整构建门槛。
+
+### Verification
+- 验证切换画布辅助项不改像素/历史，并且像素填充 Undo/Redo 后仍保留这些视图设置；结果见[验证记录](docs/reviews/2026-10-08-rc1755-canvas-aids-undo.md)。
+
+---
+
 ## 2.12.0-rc1754 - 2026-10-08
 
 ### Fixed

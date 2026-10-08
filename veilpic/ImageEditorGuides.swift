@@ -199,9 +199,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleGuidesVisible() {
-        pushUndo()
         document.areGuidesVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.guidesVisibility"))
         statusText = L10n.text(
             document.areGuidesVisible
                 ? "imageEditor.status.guidesVisible"
@@ -210,9 +208,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleRulersVisible() {
-        pushUndo()
         document.areRulersVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.rulersVisibility"))
         statusText = L10n.text(
             document.areRulersVisible
                 ? "imageEditor.status.rulersVisible"
@@ -221,9 +217,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleExtrasVisible() {
-        pushUndo()
         document.areExtrasVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.extrasVisibility"))
         statusText = L10n.text(
             document.areExtrasVisible
                 ? "imageEditor.status.extrasVisible"
@@ -232,9 +226,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleGuideSnapping() {
-        pushUndo()
         document.isGuideSnappingEnabled.toggle()
-        appendHistory(L10n.text("imageEditor.history.guidesSnapping"))
         statusText = L10n.text(
             document.isGuideSnappingEnabled
                 ? "imageEditor.status.guidesSnappingOn"
@@ -263,9 +255,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleTransformControlsVisible() {
-        pushUndo()
         document.areTransformControlsVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.transformControlsVisibility"))
         statusText = L10n.text(
             document.areTransformControlsVisible
                 ? "imageEditor.status.transformControlsVisible"
@@ -274,9 +264,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleGridVisible() {
-        pushUndo()
         document.isGridVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.gridVisibility"))
         statusText = L10n.text(
             document.isGridVisible
                 ? "imageEditor.status.gridVisible"
@@ -285,13 +273,11 @@ extension ImageEditorViewModel {
     }
 
     func toggleGridSnapping() {
-        pushUndo()
         document.isGridSnappingEnabled.toggle()
         if document.isGridSnappingEnabled {
             document.areExtrasVisible = true
             document.isGridVisible = true
         }
-        appendHistory(L10n.text("imageEditor.history.gridSnapping"))
         statusText = L10n.text(
             document.isGridSnappingEnabled
                 ? "imageEditor.status.gridSnappingOn"
