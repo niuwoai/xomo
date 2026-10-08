@@ -2092,6 +2092,7 @@
 "imageEditor.history.pathJoin" = "開いたパスを連結";
 "imageEditor.history.pathAnchorDelete" = "パスアンカーを削除";
 "imageEditor.history.pathSubpathMove" = "パスサブパスを移動";
+"imageEditor.history.pathSubpathReorder" = "パスコンポーネントの順序を変更";
 "imageEditor.history.pathSubpathDuplicate" = "パスサブパスを複製";
 "imageEditor.history.pathComponentOperation" = "パスコンポーネント演算を変更";
 "imageEditor.history.pathSubpathDelete" = "パスサブパスを削除";
@@ -2359,6 +2360,7 @@
 "imageEditor.status.pathAnchorDeleted" = "パスアンカーを削除しました";
 "imageEditor.status.pathSubpathSelected" = "パスサブパスを選択：%d / %d";
 "imageEditor.status.pathSubpathMoved" = "パスサブパスを移動しました";
+"imageEditor.status.pathSubpathReordered" = "パスコンポーネントの順序を変更しました";
 "imageEditor.status.pathSubpathDuplicated" = "パスサブパスを複製しました";
 "imageEditor.status.pathComponentOperation" = "パスコンポーネント演算を変更しました";
 "imageEditor.status.pathSubpathDeleted" = "パスサブパスを削除しました";
@@ -2841,6 +2843,8 @@
 "imageEditor.action.pathAnchorDelete" = "アンカー削除";
 "imageEditor.action.pathSubpathPrevious" = "前のサブパス";
 "imageEditor.action.pathSubpathNext" = "次のサブパス";
+"imageEditor.action.pathSubpathMoveEarlier" = "コンポーネントを前へ移動";
+"imageEditor.action.pathSubpathMoveLater" = "コンポーネントを後ろへ移動";
 "imageEditor.action.pathSubpathDuplicate" = "サブパス複製";
 "imageEditor.action.pathSubpathDelete" = "サブパス削除";
 "imageEditor.properties.pathComponentOperation" = "パスコンポーネント演算";

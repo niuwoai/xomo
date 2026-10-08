@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-08）
 
+- rc1753 为复合路径增加组件上移/下移，几何与布尔运算保持绑定；重排可改变交叠组件的累计结果，并作为单步 Undo/Redo 事务。向量套件 112/112 通过，尚未做 GUI 按钮冒烟；下一完整门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1753-path-component-reorder.md)。
 - rc1752 禁止第一路径组件使用无效的 `continuePrevious`：SwiftUI 选项禁用、ViewModel 命令校验，并将历史不合法文档值显示为当前 renderer 实际使用的 `.exclude`；未新增真实 GUI 冒烟，门槛仍 rc1760。详见[验证记录](docs/reviews/2026-10-08-rc1752-first-path-component-operation.md)。
 - rc1751 在 `ImageEditorShapeContent.normalized` 中过滤退化子路径时同步过滤相同路径槽位的组件布尔运算；针对外部/旧项目路径 JSON 增加索引映射测试。完整向量套件与合同结果见[验证记录](docs/reviews/2026-10-08-rc1751-path-normalization-operations.md)。仍需检查真实 UI 流程，完整门槛 rc1760。
 - rc1750 修复路径几何与组件运算索引脱节：复制子路径时复制其运算，删除时移除同索引运算；回归覆盖顺序、Undo/Redo。未执行真实 GUI Picker 冒烟，rc1760 门槛不变。详见[路径运算索引验证](docs/reviews/2026-10-08-rc1750-path-operation-alignment.md)。

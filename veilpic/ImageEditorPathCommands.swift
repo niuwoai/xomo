@@ -969,6 +969,69 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.pathSubpathMoved")
     }
 
+    var canMoveSelectedPathSubpathEarlier: Bool {
+        canReorderSelectedPathSubpath(by: -1)
+    }
+
+    var canMoveSelectedPathSubpathLater: Bool {
+        canReorderSelectedPathSubpath(by: 1)
+    }
+
+    private func canReorderSelectedPathSubpath(by offset: Int) -> Bool {
+        guard abs(offset) == 1,
+              canMoveSelectedPathSubpath,
+              let content = document.selectedLayer?.shapeContent
+        else { return false }
+        let targetIndex = selectedPathSubpathIndex + offset
+        guard content.allEditablePathSubpaths.indices.contains(targetIndex) else { return false }
+
+        var operations = content.resolvedPathComponentOperations
+        operations.swapAt(selectedPathSubpathIndex, targetIndex)
+        return operations.first != .continuePrevious
+    }
+
+    func reorderSelectedPathSubpath(by offset: Int) {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
+        guard canReorderSelectedPathSubpath(by: offset),
+              let layerIndex = document.selectedLayerIndex,
+              let content = document.layers[layerIndex].shapeContent
+        else { return }
+
+        let targetIndex = selectedPathSubpathIndex + offset
+        let layer = document.layers[layerIndex]
+        let reordered = reorderedPathSubpaths(
+            from: selectedPathSubpathIndex,
+            to: targetIndex,
+            content: content,
+            layer: layer
+        )
+
+        pushUndo()
+        updatePathLayer(at: layerIndex, shapeContent: reordered.content, canvasSubpaths: reordered.subpaths)
+        selectedPathSubpathIndex = targetIndex
+        appendHistory(L10n.text("imageEditor.history.pathSubpathReorder"))
+        statusText = L10n.text("imageEditor.status.pathSubpathReordered")
+    }
+
+    private func reorderedPathSubpaths(
+        from sourceIndex: Int,
+        to targetIndex: Int,
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> (content: ImageEditorShapeContent, subpaths: [[ImageEditorPathAnchor]]) {
+        var canvasSubpaths = content.allEditablePathSubpaths.map { subpath in
+            canvasAnchors(for: subpath, layer: layer)
+        }
+        var updatedContent = content
+        if !content.pathComponentOperations.isEmpty {
+            var operations = content.resolvedPathComponentOperations
+            operations.swapAt(sourceIndex, targetIndex)
+            updatedContent.pathComponentOperations = operations
+        }
+        canvasSubpaths.swapAt(sourceIndex, targetIndex)
+        return (updatedContent, canvasSubpaths)
+    }
+
     func duplicateSelectedPathSubpath() {
         guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canDuplicateSelectedPathSubpath,

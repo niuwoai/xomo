@@ -511,6 +511,105 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.currentImage.color(at: CGPoint(x: 80, y: 50))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
     }
 
+    @Test func reorderingCompoundPathSubpathsKeepsOperationsAndIsUndoable() async throws {
+        let image = testBitmapImage(size: NSSize(width: 120, height: 80), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
+            points.map { ImageEditorPathAnchor(point: $0) }
+        }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 0,
+            strokeOpacity: 0,
+            pathAnchors: anchors([
+                CGPoint(x: 8, y: 8), CGPoint(x: 36, y: 8),
+                CGPoint(x: 36, y: 36), CGPoint(x: 8, y: 36)
+            ]),
+            pathSubpaths: [
+                anchors([
+                    CGPoint(x: 44, y: 8), CGPoint(x: 72, y: 8),
+                    CGPoint(x: 72, y: 36), CGPoint(x: 44, y: 36)
+                ]),
+                anchors([
+                    CGPoint(x: 70, y: 8), CGPoint(x: 108, y: 8),
+                    CGPoint(x: 108, y: 36), CGPoint(x: 70, y: 36)
+                ])
+            ],
+            pathComponentOperations: [.combine, .subtract, .combine],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].kind = .shape(content)
+        let layerID = viewModel.document.layers[layerIndex].id
+        viewModel.selectedPathSubpathIndex = 1
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canMoveSelectedPathSubpathEarlier)
+        #expect(viewModel.canMoveSelectedPathSubpathLater)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 20, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 58, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 94, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 71, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+
+        viewModel.reorderSelectedPathSubpath(by: 1)
+
+        let reorderedContent = try #require(viewModel.document.layers.first { $0.id == layerID }?.shapeContent)
+        #expect(reorderedContent.pathComponentOperations == [.combine, .combine, .subtract])
+        #expect(viewModel.selectedPathSubpathIndex == 2)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 20, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 58, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 94, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 71, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+
+        viewModel.undo()
+        let undoneContent = try #require(viewModel.document.layers.first { $0.id == layerID }?.shapeContent)
+        #expect(undoneContent.pathComponentOperations == [.combine, .subtract, .combine])
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 58, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 94, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 71, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.combine, .combine, .subtract])
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 58, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 94, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 0 > 0.9)
+        #expect(viewModel.currentImage.color(at: CGPoint(x: 71, y: 20))?.usingColorSpace(.deviceRGB)?.redComponent ?? 1 < 0.1)
+    }
+
+    @Test func firstContinuePreviousComponentCannotBeProducedByReordering() throws {
+        let image = testBitmapImage(size: NSSize(width: 24, height: 16), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
+            points.map { ImageEditorPathAnchor(point: $0) }
+        }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 0,
+            strokeOpacity: 0,
+            pathAnchors: anchors([CGPoint(x: 2, y: 2), CGPoint(x: 8, y: 2), CGPoint(x: 8, y: 8)]),
+            pathSubpaths: [anchors([CGPoint(x: 10, y: 2), CGPoint(x: 16, y: 2), CGPoint(x: 16, y: 8)])],
+            pathComponentOperations: [.subtract, .continuePrevious],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].kind = .shape(content)
+        viewModel.selectedPathSubpathIndex = 1
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.canMoveSelectedPathSubpathEarlier)
+        viewModel.reorderSelectedPathSubpath(by: -1)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathComponentOperations == [.subtract, .continuePrevious])
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func normalizedPathSubpathsKeepMatchingComponentOperations() throws {
         let anchors: ([CGPoint]) -> [ImageEditorPathAnchor] = { points in
             points.map { ImageEditorPathAnchor(point: $0) }

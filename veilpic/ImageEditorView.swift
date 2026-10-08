@@ -14861,6 +14861,19 @@ struct ImageEditorView: View {
                             .buttonStyle(EditorTextButtonStyle())
                             .disabled(!viewModel.canSelectAdjacentPathSubpath)
                         }
+                        HStack {
+                            Button(L10n.text("imageEditor.action.pathSubpathMoveEarlier")) {
+                                viewModel.reorderSelectedPathSubpath(by: -1)
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canMoveSelectedPathSubpathEarlier)
+
+                            Button(L10n.text("imageEditor.action.pathSubpathMoveLater")) {
+                                viewModel.reorderSelectedPathSubpath(by: 1)
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canMoveSelectedPathSubpathLater)
+                        }
                         if viewModel.selectedPathComponentOperation != nil {
                             Picker(
                                 L10n.text("imageEditor.properties.pathComponentOperation"),

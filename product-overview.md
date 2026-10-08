@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1752
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1753
+
+rc1753 为复合路径增加组件顺序调整；几何和布尔运算一起移动，交叠区域按新的累计顺序渲染，单步 Undo/Redo 可恢复；见[验证记录](docs/reviews/2026-10-08-rc1753-path-component-reorder.md)。
 
 rc1752 禁止第一条路径组件选择无效的“延续上一组件”，并将旧文档中该无效值显示为其真实渲染语义“排除”；见[验证记录](docs/reviews/2026-10-08-rc1752-first-path-component-operation.md)。rc1751 修复项目路径归一化时退化子路径被丢弃、布尔运算却未同步过滤的问题，避免外部/旧版路径 JSON 的后续组件误用其它运算；见[验证记录](docs/reviews/2026-10-08-rc1751-path-normalization-operations.md)。rc1750 修复闭合复合路径的子路径复制/删除后布尔运算数组错位：复制时继承该组件运算，删除时同步移除对应运算，撤销重做恢复几何与运算；见[验证记录](docs/reviews/2026-10-08-rc1750-path-operation-alignment.md)。rc1749 让闭合路径子路径可设置排除、合并、减去、相交或延续上一组件，视觉变化和路径数据更改共用一个 Undo/Redo 步骤；见[验证记录](docs/reviews/2026-10-08-rc1749-path-component-operations.md)。rc1748 修复像素选区移动预览中途切换工具或侧栏的事务边界：当前移动先提交为单步 Undo，视图清除旧拖动标记，切换后仍可继续编辑；见[验证记录](docs/reviews/2026-10-08-rc1748-pixel-move-mode-boundary.md)。
 

@@ -2092,6 +2092,7 @@
 "imageEditor.history.pathJoin" = "Join Open Paths";
 "imageEditor.history.pathAnchorDelete" = "Delete Path Anchor";
 "imageEditor.history.pathSubpathMove" = "Move Path Subpath";
+"imageEditor.history.pathSubpathReorder" = "Reorder Path Component";
 "imageEditor.history.pathSubpathDuplicate" = "Duplicate Path Subpath";
 "imageEditor.history.pathComponentOperation" = "Change Path Component Operation";
 "imageEditor.history.pathSubpathDelete" = "Delete Path Subpath";
@@ -2359,6 +2360,7 @@
 "imageEditor.status.pathAnchorDeleted" = "Path anchor deleted";
 "imageEditor.status.pathSubpathSelected" = "Path subpath selected: %d / %d";
 "imageEditor.status.pathSubpathMoved" = "Path subpath moved";
+"imageEditor.status.pathSubpathReordered" = "Path component reordered";
 "imageEditor.status.pathSubpathDuplicated" = "Path subpath duplicated";
 "imageEditor.status.pathComponentOperation" = "Path component operation changed";
 "imageEditor.status.pathSubpathDeleted" = "Path subpath deleted";
@@ -2841,6 +2843,8 @@
 "imageEditor.action.pathAnchorDelete" = "Delete Anchor";
 "imageEditor.action.pathSubpathPrevious" = "Previous Subpath";
 "imageEditor.action.pathSubpathNext" = "Next Subpath";
+"imageEditor.action.pathSubpathMoveEarlier" = "Move Component Earlier";
+"imageEditor.action.pathSubpathMoveLater" = "Move Component Later";
 "imageEditor.action.pathSubpathDuplicate" = "Duplicate Subpath";
 "imageEditor.action.pathSubpathDelete" = "Delete Subpath";
 "imageEditor.properties.pathComponentOperation" = "Path Component Operation";
