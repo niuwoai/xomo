@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1776 - 2026-10-09
+
+### Changed
+- Healing Brush 与 Spot Healing 的 Diffusion 只渲染笔触偏移后实际取样的源图区域，不再为小笔触模糊整幅图；非标准图像尺寸仍回退到既有全帧路径。
+
+### Verification
+- `ImageEditorHealingBrushTests` 26/26：对照旧全帧模糊，ROI 区域 RGB 最大差异不超过 1/255 且 alpha 完全一致；偏移边界裁剪、Source/Spot Healing 与单笔 Undo/Redo 回归通过。
+- 本版未运行完整 Release XCTest 或桌面冒烟；下次完整门槛仍为 rc1800。rc1775 GitHub/OSS 制品已发布，但 `app_id=xomo` 的 appcast 条目尚待补齐。
+
 ## 2.12.0-rc1775 - 2026-10-08
 
 ### Added

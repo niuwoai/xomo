@@ -98,6 +98,73 @@ struct ImageEditorHealingBrushTests {
         #expect(ImageEditorHealingBrushKernel.diffusionRadius(for: 8) == 3)
     }
 
+    @Test func healingDiffusionRegionMatchesFullFrameBlurWithinOneChannelRoundingLevel() throws {
+        let width = 53
+        let height = 41
+        let sourcePixels = rgbaPixels(width: width, height: height) { x, y in
+            let red = UInt8((x * 17 + y * 3) % 256)
+            let green = UInt8((x * 5 + y * 19) % 256)
+            let blue = UInt8((x * 11 + y * 7) % 256)
+            return (red, green, blue, 255)
+        }
+        let image = try #require(pixelImage(sourcePixels, width: width, height: height))
+        let bounds: ImageEditorHealingBrushKernel.MaskBounds = (19, 25, 13, 20)
+        let expectedImage = try #require(image.blurred(radius: 2.5))
+        let expectedPixels = try #require(expectedImage.healingRGBAPixels(
+            width: width,
+            height: height,
+            bytesPerRow: width * ImageEditorHealingBrushKernel.bytesPerPixel
+        ))
+        let actual = try #require(image.healingDiffusionRegion(
+            image: image,
+            radius: 2.5,
+            bounds: bounds,
+            canvasWidth: width,
+            canvasHeight: height
+        ))
+        let regionWidth = bounds.maxX - bounds.minX + 1
+
+        #expect(actual.bounds.minX == bounds.minX)
+        #expect(actual.bounds.maxX == bounds.maxX)
+        #expect(actual.bounds.minY == bounds.minY)
+        #expect(actual.bounds.maxY == bounds.maxY)
+        #expect(actual.pixels.count == regionWidth * (bounds.maxY - bounds.minY + 1) * 4)
+        for y in bounds.minY...bounds.maxY {
+            for x in bounds.minX...bounds.maxX {
+                let expectedOffset = (y * width + x) * 4
+                let actualOffset = try #require(actual.pixelOffset(x: x, y: y))
+                for channel in 0..<3 {
+                    #expect(abs(
+                        Int(actual.pixels[actualOffset + channel])
+                            - Int(expectedPixels[expectedOffset + channel])
+                    ) <= 1)
+                }
+                #expect(actual.pixels[actualOffset + 3] == expectedPixels[expectedOffset + 3])
+            }
+        }
+    }
+
+    @Test func healingDiffusionSourceBoundsTranslateAndClipTheBrushRegion() {
+        let bounds = ImageEditorHealingBrushKernel.diffusionSourceBounds(
+            destinationBounds: (4, 12, 3, 7),
+            sourceOffset: CGSize(width: -6, height: 3),
+            width: 20,
+            height: 12
+        )
+
+        #expect(bounds?.minX == 0)
+        #expect(bounds?.maxX == 6)
+        #expect(bounds?.minY == 6)
+        #expect(bounds?.maxY == 10)
+        let outsideBounds = ImageEditorHealingBrushKernel.diffusionSourceBounds(
+            destinationBounds: (4, 12, 3, 7),
+            sourceOffset: CGSize(width: 50, height: 0),
+            width: 20,
+            height: 12
+        )
+        #expect(outsideBounds?.minX == nil)
+    }
+
     @Test func healingKernelTouchesOnlyPixelsCoveredByItsMask() throws {
         let width = 5
         let height = 5
