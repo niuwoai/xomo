@@ -10,6 +10,8 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 
 extension NSImage {
+    private static let automaticCorrectionClipPercent = 0.5
+
     func adjusted(
         kind: ImageEditorAdjustment,
         amount: Double,
@@ -89,35 +91,35 @@ extension NSImage {
         context.interpolationQuality = .none
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        var minimum = [UInt8](repeating: UInt8.max, count: 3)
-        var maximum = [UInt8](repeating: 0, count: 3)
-        var hasVisiblePixels = false
+        var histograms = Array(repeating: [Int](repeating: 0, count: 256), count: 3)
+        var visiblePixelCount = 0
 
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 0 else { continue }
-                hasVisiblePixels = true
+                visiblePixelCount += 1
                 for channel in 0..<3 {
                     let straight = Self.unpremultipliedChannel(
                         pixels[offset + channel],
                         alpha: pixels[offset + 3]
                     )
-                    minimum[channel] = min(minimum[channel], straight)
-                    maximum[channel] = max(maximum[channel], straight)
+                    histograms[channel][Int(straight)] += 1
                 }
             }
         }
 
-        guard hasVisiblePixels else { return self }
+        guard visiblePixelCount > 0 else { return self }
+        let ranges = histograms.map {
+            Self.clippedHistogramRange($0, sampleCount: visiblePixelCount)
+        }
 
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 0 else { continue }
                 for channel in 0..<3 {
-                    let low = Int(minimum[channel])
-                    let high = Int(maximum[channel])
+                    let (low, high) = ranges[channel]
                     guard high > low else { continue }
                     let straight = Self.unpremultipliedChannel(
                         pixels[offset + channel],
@@ -170,26 +172,31 @@ extension NSImage {
         context.interpolationQuality = .none
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        var minimum = 1.0
-        var maximum = 0.0
-        var hasVisiblePixels = false
+        var luminanceHistogram = [Int](repeating: 0, count: 256)
+        var visiblePixelCount = 0
 
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 0 else { continue }
-                hasVisiblePixels = true
+                visiblePixelCount += 1
                 let luminance = Self.luminosity(
                     red: Double(Self.unpremultipliedChannel(pixels[offset], alpha: pixels[offset + 3])) / 255,
                     green: Double(Self.unpremultipliedChannel(pixels[offset + 1], alpha: pixels[offset + 3])) / 255,
                     blue: Double(Self.unpremultipliedChannel(pixels[offset + 2], alpha: pixels[offset + 3])) / 255
                 )
-                minimum = min(minimum, luminance)
-                maximum = max(maximum, luminance)
+                luminanceHistogram[Int(Self.byte(luminance))] += 1
             }
         }
 
-        guard hasVisiblePixels, maximum > minimum else { return self }
+        guard visiblePixelCount > 0 else { return self }
+        let (minimumByte, maximumByte) = Self.clippedHistogramRange(
+            luminanceHistogram,
+            sampleCount: visiblePixelCount
+        )
+        let minimum = Double(minimumByte) / 255
+        let maximum = Double(maximumByte) / 255
+        guard maximum > minimum else { return self }
 
         let range = maximum - minimum
         for y in 0..<height {
@@ -1422,5 +1429,32 @@ extension NSImage {
 
     private static func premultipliedChannel(_ value: Double, alpha: UInt8) -> UInt8 {
         byte(value * Double(alpha) / 255)
+    }
+
+    private static func clippedHistogramRange(_ histogram: [Int], sampleCount: Int) -> (Int, Int) {
+        guard sampleCount > 0, histogram.count == 256 else { return (0, 255) }
+        let clippedSamples = Int((Double(sampleCount) * automaticCorrectionClipPercent / 100).rounded(.down))
+
+        var samplesBelow = 0
+        var lower = 0
+        for value in histogram.indices {
+            samplesBelow += histogram[value]
+            if samplesBelow > clippedSamples {
+                lower = value
+                break
+            }
+        }
+
+        var samplesAbove = 0
+        var upper = histogram.count - 1
+        for value in histogram.indices.reversed() {
+            samplesAbove += histogram[value]
+            if samplesAbove > clippedSamples {
+                upper = value
+                break
+            }
+        }
+
+        return (lower, upper)
     }
 }

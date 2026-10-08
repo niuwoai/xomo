@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1767
+> 最后更新：2026-10-08 | 当前版本：v2.12.0-rc1768
+
+rc1768 让 Auto Levels 按每个 RGB 通道、Auto Contrast 按亮度的直方图两端各裁剪 0.5% 样本，减少孤立坏点导致的整图对比度损失；小样本不裁剪，alpha 保持不变。`ImageEditorAdjustmentTests` 34/34、发布合同 10/30、产品概览归档合同 3/30、CLI Release 合同 7/24 通过。下一完整门槛 rc1800，不扩张 Figma。
 
 rc1767 修正 Auto Levels、Auto Contrast 和 Auto Color 对 CGContext 预乘 alpha 的误用：统计时使用还原后的可见 RGB，写回时重新乘回原 alpha；同一颜色在不同透明度下现在与不透明参考一致。`ImageEditorAdjustmentTests` 33/33、发布合同 10/30、产品概览归档合同 3/30（30 断言）、CLI Release 合同 7/24 通过。下一完整门槛 rc1800，不扩张 Figma。
 
