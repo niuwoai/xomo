@@ -1384,6 +1384,7 @@
 "imageEditor.properties.groupLayer" = "Layer Group";
 "imageEditor.properties.adjustmentLayerValue" = "%@ Adjustment: %d%%";
 "imageEditor.properties.levelsLayerValue" = "Levels: black %d · γ %@ · white %d";
+"imageEditor.properties.levelsLayerChannelValue" = "%1$@ channel: black %2$d · γ %3$@ · white %4$d";
 "imageEditor.properties.curvesLayerValue" = "Curves: shadows %d%% · midtones %d%% · highlights %d%%";
 "imageEditor.properties.colorBalanceLayerValue" = "Color Balance: shadows / midtones / highlights";
 "imageEditor.properties.hueSaturationLayerValue" = "Hue/Saturation: hue %d° · saturation %d%% · lightness %d%%";
@@ -1424,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "Black point";
 "imageEditor.levels.gamma" = "Midtones";
 "imageEditor.levels.whitePoint" = "White point";
+"imageEditor.levels.channel" = "Channel";
+"imageEditor.levels.channel.rgb" = "RGB";
+"imageEditor.levels.channel.red" = "Red";
+"imageEditor.levels.channel.green" = "Green";
+"imageEditor.levels.channel.blue" = "Blue";
 "imageEditor.curves.shadows" = "Shadows";
 "imageEditor.curves.midtones" = "Midtones";
 "imageEditor.curves.highlights" = "Highlights";

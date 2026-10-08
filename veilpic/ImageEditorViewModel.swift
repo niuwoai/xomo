@@ -405,6 +405,73 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var levelsBlackPoint: Double = 0
     @Published var levelsGamma: Double = 1
     @Published var levelsWhitePoint: Double = 1
+    @Published var levelsRedBlackPoint: Double = 0
+    @Published var levelsRedGamma: Double = 1
+    @Published var levelsRedWhitePoint: Double = 1
+    @Published var levelsGreenBlackPoint: Double = 0
+    @Published var levelsGreenGamma: Double = 1
+    @Published var levelsGreenWhitePoint: Double = 1
+    @Published var levelsBlueBlackPoint: Double = 0
+    @Published var levelsBlueGamma: Double = 1
+    @Published var levelsBlueWhitePoint: Double = 1
+    @Published var levelsChannel: ImageEditorLevelsChannel = .rgb
+
+    var selectedLevelsBlackPoint: Double {
+        get {
+            switch levelsChannel {
+            case .rgb: levelsBlackPoint
+            case .red: levelsRedBlackPoint
+            case .green: levelsGreenBlackPoint
+            case .blue: levelsBlueBlackPoint
+            }
+        }
+        set {
+            switch levelsChannel {
+            case .rgb: levelsBlackPoint = newValue
+            case .red: levelsRedBlackPoint = newValue
+            case .green: levelsGreenBlackPoint = newValue
+            case .blue: levelsBlueBlackPoint = newValue
+            }
+        }
+    }
+
+    var selectedLevelsGamma: Double {
+        get {
+            switch levelsChannel {
+            case .rgb: levelsGamma
+            case .red: levelsRedGamma
+            case .green: levelsGreenGamma
+            case .blue: levelsBlueGamma
+            }
+        }
+        set {
+            switch levelsChannel {
+            case .rgb: levelsGamma = newValue
+            case .red: levelsRedGamma = newValue
+            case .green: levelsGreenGamma = newValue
+            case .blue: levelsBlueGamma = newValue
+            }
+        }
+    }
+
+    var selectedLevelsWhitePoint: Double {
+        get {
+            switch levelsChannel {
+            case .rgb: levelsWhitePoint
+            case .red: levelsRedWhitePoint
+            case .green: levelsGreenWhitePoint
+            case .blue: levelsBlueWhitePoint
+            }
+        }
+        set {
+            switch levelsChannel {
+            case .rgb: levelsWhitePoint = newValue
+            case .red: levelsRedWhitePoint = newValue
+            case .green: levelsGreenWhitePoint = newValue
+            case .blue: levelsBlueWhitePoint = newValue
+            }
+        }
+    }
     @Published var curvesShadows: Double = 0
     @Published var curvesMidtones: Double = 0
     @Published var curvesHighlights: Double = 0
@@ -10672,6 +10739,15 @@ final class ImageEditorViewModel: ObservableObject {
             levelsBlackPoint: levelsBlackPoint,
             levelsGamma: levelsGamma,
             levelsWhitePoint: levelsWhitePoint,
+            levelsRedBlackPoint: levelsRedBlackPoint,
+            levelsRedGamma: levelsRedGamma,
+            levelsRedWhitePoint: levelsRedWhitePoint,
+            levelsGreenBlackPoint: levelsGreenBlackPoint,
+            levelsGreenGamma: levelsGreenGamma,
+            levelsGreenWhitePoint: levelsGreenWhitePoint,
+            levelsBlueBlackPoint: levelsBlueBlackPoint,
+            levelsBlueGamma: levelsBlueGamma,
+            levelsBlueWhitePoint: levelsBlueWhitePoint,
             curvesShadows: curvesShadows,
             curvesMidtones: curvesMidtones,
             curvesHighlights: curvesHighlights,
@@ -10818,6 +10894,15 @@ final class ImageEditorViewModel: ObservableObject {
         levelsBlackPoint = 0
         levelsGamma = 1
         levelsWhitePoint = 1
+        levelsRedBlackPoint = 0
+        levelsRedGamma = 1
+        levelsRedWhitePoint = 1
+        levelsGreenBlackPoint = 0
+        levelsGreenGamma = 1
+        levelsGreenWhitePoint = 1
+        levelsBlueBlackPoint = 0
+        levelsBlueGamma = 1
+        levelsBlueWhitePoint = 1
         curvesShadows = 0
         curvesMidtones = 0
         curvesHighlights = 0
@@ -12105,6 +12190,15 @@ final class ImageEditorViewModel: ObservableObject {
         levelsBlackPoint = settings.levelsBlackPoint
         levelsGamma = settings.levelsGamma
         levelsWhitePoint = settings.levelsWhitePoint
+        levelsRedBlackPoint = settings.levelsRedBlackPoint
+        levelsRedGamma = settings.levelsRedGamma
+        levelsRedWhitePoint = settings.levelsRedWhitePoint
+        levelsGreenBlackPoint = settings.levelsGreenBlackPoint
+        levelsGreenGamma = settings.levelsGreenGamma
+        levelsGreenWhitePoint = settings.levelsGreenWhitePoint
+        levelsBlueBlackPoint = settings.levelsBlueBlackPoint
+        levelsBlueGamma = settings.levelsBlueGamma
+        levelsBlueWhitePoint = settings.levelsBlueWhitePoint
         curvesShadows = settings.curvesShadows
         curvesMidtones = settings.curvesMidtones
         curvesHighlights = settings.curvesHighlights

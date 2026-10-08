@@ -1384,6 +1384,7 @@
 "imageEditor.properties.groupLayer" = "图层组";
 "imageEditor.properties.adjustmentLayerValue" = "%@ 调整：%d%%";
 "imageEditor.properties.levelsLayerValue" = "色阶：黑场 %d · γ %@ · 白场 %d";
+"imageEditor.properties.levelsLayerChannelValue" = "%1$@通道：黑场 %2$d · γ %3$@ · 白场 %4$d";
 "imageEditor.properties.curvesLayerValue" = "曲线：暗部 %d%% · 中间调 %d%% · 高光 %d%%";
 "imageEditor.properties.colorBalanceLayerValue" = "色彩平衡：暗部 / 中间调 / 高光";
 "imageEditor.properties.hueSaturationLayerValue" = "色相/饱和度：色相 %d° · 饱和度 %d%% · 明度 %d%%";
@@ -1424,6 +1425,11 @@
 "imageEditor.levels.blackPoint" = "黑场";
 "imageEditor.levels.gamma" = "中间调";
 "imageEditor.levels.whitePoint" = "白场";
+"imageEditor.levels.channel" = "通道";
+"imageEditor.levels.channel.rgb" = "RGB";
+"imageEditor.levels.channel.red" = "红";
+"imageEditor.levels.channel.green" = "绿";
+"imageEditor.levels.channel.blue" = "蓝";
 "imageEditor.curves.shadows" = "暗部";
 "imageEditor.curves.midtones" = "中间调";
 "imageEditor.curves.highlights" = "高光";

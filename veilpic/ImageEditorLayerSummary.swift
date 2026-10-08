@@ -84,12 +84,42 @@ extension ImageEditorViewModel {
         let settings = layer.adjustmentSettings.normalized()
         switch adjustment.kind {
         case .levels:
-            return L10n.format(
+            let compositeSummary = L10n.format(
                 "imageEditor.properties.levelsLayerValue",
                 Int((settings.levelsBlackPoint * 255).rounded()),
                 String(format: "%.2f", settings.levelsGamma),
                 Int((settings.levelsWhitePoint * 255).rounded())
             )
+            let channelSummaries = [
+                (
+                    channel: ImageEditorLevelsChannel.red,
+                    black: settings.levelsRedBlackPoint,
+                    gamma: settings.levelsRedGamma,
+                    white: settings.levelsRedWhitePoint
+                ),
+                (
+                    channel: ImageEditorLevelsChannel.green,
+                    black: settings.levelsGreenBlackPoint,
+                    gamma: settings.levelsGreenGamma,
+                    white: settings.levelsGreenWhitePoint
+                ),
+                (
+                    channel: ImageEditorLevelsChannel.blue,
+                    black: settings.levelsBlueBlackPoint,
+                    gamma: settings.levelsBlueGamma,
+                    white: settings.levelsBlueWhitePoint
+                )
+            ].compactMap { channel -> String? in
+                guard channel.black != 0 || channel.gamma != 1 || channel.white != 1 else { return nil }
+                return L10n.format(
+                    "imageEditor.properties.levelsLayerChannelValue",
+                    L10n.text(channel.channel.localizationKey),
+                    Int((channel.black * 255).rounded()),
+                    String(format: "%.2f", channel.gamma),
+                    Int((channel.white * 255).rounded())
+                )
+            }
+            return ([compositeSummary] + channelSummaries).joined(separator: " · ")
         case .curves:
             return L10n.format(
                 "imageEditor.properties.curvesLayerValue",
