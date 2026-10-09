@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1790 - 2026-10-09
+
+### Fixed
+- 为涂抹自动化回归改用含实际像素的画布夹具，并断言涂抹后图层像素变化，避免透明空画布上的 no-op 让历史标题成为脆弱的成功信号。
+
+### Verification
+- `XomoAutomationTests/fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption` 1/1 通过；发布合同 10/30、CLI 发布构建合同 7/24 通过，`git diff --check` 通过。未运行完整 Release/桌面门槛；下一门槛仍为 rc1800。
+
 ## 2.12.0-rc1789 - 2026-10-09
 
 ### Fixed

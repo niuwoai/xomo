@@ -12382,6 +12382,17 @@ struct XomoAutomationTests {
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
         viewModel.foregroundColor = .systemRed
+        let initialImage = try #require(NSImage.rendered(size: viewModel.document.canvasSize) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+            NSColor.systemBlue.setFill()
+            CGRect(x: 12, y: 12, width: 24, height: 24).fill()
+        })
+        viewModel.replaceSelectedLayerImageForTesting(
+            initialImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let initialPixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
 
         let response = registry.execute(request(
             operation: "call",
@@ -12399,6 +12410,7 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.smudgeFingerPaintingEnabled)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() != initialPixels)
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         guard case .array(let tools) = toolsResponse.result else {
