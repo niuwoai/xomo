@@ -5,6 +5,7 @@
 - rc1795 增加「编辑 → 水平/垂直翻转选区像素」：翻转选区内的实际像素并同步镜像选区，支持羽化覆盖、多选像素层及单事务 Undo/Redo；测试与状态见[rc1795 验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。
 - rc1796 校准选区翻转测试为比较实际覆盖，并保留覆盖相同时的几何选区；5 项新功能测试、187 项相关像素/编辑回归及版本合约均通过，仍未公开发布；证据见[rc1795 验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。
 - rc1797 补充羽化选区半透明覆盖的端到端模型回归；当前验证和发布状态见[rc1795 验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。
+- rc1797 已发布到 GitHub Release、OSS 版本化/latest 下载和 `xomo` Sparkle appcast；3738 项 Release 测试、universal archive、签名、公证与远端读回通过。下一门槛仍为 rc1800；组件库真实指针 UI 测试在 2026-10-09 的重试中再次于 XCTest runner 握手前挂起（0 项测试体执行），详见[光标 UI 运行记录](docs/reviews/2026-10-09-rc1790-cursor-ui-run.md)。
 - rc1794 增加 Photoshop 式 Smart Filter 蒙版临时停用：Shift-click 缩略图或使用属性面板按钮可绕过蒙版并恢复；蒙版像素、密度、羽化与反相保留，改变参与渲染、Undo/Redo 和项目持久化。测试与状态记录见[rc1794 验证记录](docs/reviews/2026-10-09-rc1794-smart-filter-mask-toggle.md)。
 - rc1793 为 Smart Filter 蒙版缩略图增加 Option-click 灰度单独查看，普通点击继续绘制蒙版；预览退出 Quick Mask、通道及图层蒙版预览，不产生图像历史。同步校正产品概览顶部的当前完整门槛为 rc1800。测试与状态核验见[验证记录](docs/reviews/2026-10-09-rc1793-smart-filter-mask-solo-preview.md)。
 - rc1792 修复进入 Smart Filter 蒙版绘制时仍停留 Quick Mask/通道预览的模式冲突；画布以缓存红色叠加层标出有效蒙版排除区域，密度、羽化与反相沿用实际滤镜覆盖语义。`ImageEditorSmartFilterMaskTests` 11/11、蒙版/图层缩略图接线 20/20、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。详见[验证记录](docs/reviews/2026-10-09-rc1792-smart-filter-mask-overlay.md)。
