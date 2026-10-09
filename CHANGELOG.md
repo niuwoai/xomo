@@ -6,7 +6,7 @@
 - 为涂抹自动化回归改用含实际像素的画布夹具，并断言涂抹后图层像素变化，避免透明空画布上的 no-op 让历史标题成为脆弱的成功信号。
 
 ### Verification
-- `XomoAutomationTests/fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption` 1/1 通过；发布合同 10/30、CLI 发布构建合同 7/24 通过，`git diff --check` 通过。未运行完整 Release/桌面门槛；下一门槛仍为 rc1800。
+- `XomoAutomationTests/fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption` 1/1、`ImageEditorCanvasCursorTests` 130/130、发布合同 10/30、CLI 发布构建合同 7/24、概览归档合同 3/30 通过。原生光标 UI runner 两次都在连接 XCTest 前被 SIGKILL，目标测试体未执行；因此不宣称真实指针已验收。未运行完整 Release/桌面门槛；下一门槛仍为 rc1800。详见 [光标 UI 运行记录](docs/reviews/2026-10-09-rc1790-cursor-ui-run.md)。
 
 ## 2.12.0-rc1789 - 2026-10-09
 

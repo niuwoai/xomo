@@ -3,6 +3,7 @@
 ## 当前状态（2026-10-09）
 
 - rc1790 加固涂抹 automation 回归的测试夹具：先在不透明、有纹理画布上操作，并要求图层 PNG 字节变化，避免空透明画布 no-op 仅由历史标题断言误判为功能成功。专项 XCTest 1/1、发布合同 10/30、CLI 合同 7/24 及 `git diff --check` 通过；未运行完整 Release 或桌面验证。下一完整门槛 rc1800，不扩张 Figma。
+- rc1790 光标验收补充：`ImageEditorCanvasCursorTests` 在当前源码实际执行 130/130；原生 `testComponentLibraryHoverAndSelectionRestoreSystemArrow` 两次均在 XCTest 握手前被 SIGKILL，`.xcresult` 为 0 passed / 1 runner failure / 0 skipped，目标方法未执行。不得将策略单测记作真实指针通过。诊断记录见 [rc1790 光标 UI 回归尝试](docs/reviews/2026-10-09-rc1790-cursor-ui-run.md)；rc1800 仍须补真实桌面光标冒烟，不扩张 Figma。
 - rc1789 修复 Smart Filter 蒙版解码或浓度/羽化处理失败时的 fail-open：无效蒙版不再被转成 `nil` 并意外让滤镜全层生效，而是保持当前输入图像。修复前新增像素回归实际失败；修复后蒙版套件 8/8、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
 - rc1788 为 Smart Filter 蒙版加入直接涂绘入口，Brush/Pencil 隐藏、Eraser 恢复；笔刷动态复用既有共享设置，画布选区按覆盖率映射到图层局部坐标，每笔作为独立 Undo/Redo 事务且不改像素层。蒙版套件 7/7、Smart Filter inspector 契约 1/1、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过；这是定向测试宿主构建，不是 rc1800 完整 Release/桌面门槛，不扩张 Figma。
 - rc1786 补齐 Smart Filter 选区蒙版密度、羽化、反相和 automation 控制；参数参与单事务 Undo/Redo、项目编码与渲染。遮罩创建在生成 canvas/layer 位图前统一检查有限尺寸和 64M 像素预算。普通滤镜专用，Backdrop Blur 继续保留合成语义。蒙版套件 5/5、automation 1/1、属性面板契约 1/1、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过；完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
