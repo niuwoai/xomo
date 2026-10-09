@@ -27,12 +27,38 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canRotateSelectedPixelsQuarterTurn: Bool {
+        guard canFlipSelectedPixels else { return false }
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        let selectedLayers = document.layers.filter { selectedIDs.contains($0.id) }
+        guard !selectedLayers.isEmpty else { return false }
+        return selectedLayers.allSatisfy { layer in
+            let scaleX = layer.frame.width / max(layer.image.size.width, 1)
+            let scaleY = layer.frame.height / max(layer.image.size.height, 1)
+            return scaleX.isFinite && scaleY.isFinite && abs(scaleX - scaleY) < 0.0001
+        }
+    }
+
     func flipSelectedPixelsHorizontally() {
         flipSelectedPixels(horizontally: true)
     }
 
     func flipSelectedPixelsVertically() {
         flipSelectedPixels(horizontally: false)
+    }
+
+    func rotateSelectedPixelsClockwise() {
+        rotateSelectedPixels(clockwiseTurns: 1)
+    }
+
+    func rotateSelectedPixelsCounterclockwise() {
+        rotateSelectedPixels(clockwiseTurns: -1)
+    }
+
+    func rotateSelectedPixels180() {
+        rotateSelectedPixels(clockwiseTurns: 2)
     }
 
     private func flipSelectedPixels(horizontally: Bool) {
@@ -94,6 +120,78 @@ extension ImageEditorViewModel {
         statusText = L10n.text(statusKey)
     }
 
+    private func rotateSelectedPixels(clockwiseTurns: Int) {
+        guard clockwiseTurns.isMultiple(of: 2) ? canFlipSelectedPixels : canRotateSelectedPixelsQuarterTurn else { return }
+        finishActiveCanvasEditForNewCommand()
+        guard let selection = document.selection,
+              let rotatedSelection = selection.rotatedQuarterTurns(
+                clockwiseTurns: clockwiseTurns,
+                canvasSize: document.canvasSize
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let selectionCoverageChanged: Bool
+        if let originalMask = selection.rasterizedMask(canvasSize: document.canvasSize),
+           let transformedMask = rotatedSelection.rasterizedMask(canvasSize: document.canvasSize) {
+            selectionCoverageChanged = originalMask != transformedMask
+        } else {
+            selectionCoverageChanged = rotatedSelection != selection
+        }
+        let committedSelection = selectionCoverageChanged ? rotatedSelection : selection
+
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        let selectedIndices = document.layers.indices.filter { selectedIDs.contains(document.layers[$0].id) }
+        var updatedLayers = document.layers
+        var pixelDataChanged = false
+
+        for index in selectedIndices {
+            guard let result = rotatedLayer(
+                document.layers[index], selection: selection, destinationSelection: rotatedSelection,
+                clockwiseTurns: clockwiseTurns
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            if result.pixelDataChanged {
+                pixelDataChanged = true
+                updatedLayers[index] = result.layer
+            }
+        }
+
+        guard pixelDataChanged || selectionCoverageChanged else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+
+        var updatedDocument = document
+        updatedDocument.layers = updatedLayers
+        updatedDocument.selection = committedSelection
+        pushUndo()
+        document = updatedDocument
+
+        let normalizedTurns = ((clockwiseTurns % 4) + 4) % 4
+        let historyKey: String
+        let statusKey: String
+        switch normalizedTurns {
+        case 1:
+            historyKey = "imageEditor.history.selectionPixelsRotateClockwise"
+            statusKey = "imageEditor.status.selectionPixelsRotatedClockwise"
+        case 2:
+            historyKey = "imageEditor.history.selectionPixelsRotate180"
+            statusKey = "imageEditor.status.selectionPixelsRotated180"
+        default:
+            historyKey = "imageEditor.history.selectionPixelsRotateCounterclockwise"
+            statusKey = "imageEditor.status.selectionPixelsRotatedCounterclockwise"
+        }
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.text(statusKey)
+    }
+
     private func flippedLayer(
         _ layer: ImageEditorLayer, selection: ImageEditorSelection, horizontally: Bool
     ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
@@ -112,6 +210,40 @@ extension ImageEditorViewModel {
            let source = ImageEditorRGBAImage.pixels(from: backingLayer.image, width: width, height: height),
            let output = ImageEditorPixelSelectionTransform.flipped(
                source: source, maskAlpha: mask, width: width, height: height, horizontally: horizontally
+           ), let image = ImageEditorRGBAImage.image(
+               width: width, height: height, pixels: output, size: backingLayer.image.size
+           )
+        else { return nil }
+
+        var result = backingLayer
+        result.image = image
+        return (result, source != output)
+    }
+
+    private func rotatedLayer(
+        _ layer: ImageEditorLayer,
+        selection: ImageEditorSelection,
+        destinationSelection: ImageEditorSelection,
+        clockwiseTurns: Int
+    ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
+        guard let backingLayer = layer.expandedPixelSelectionTransformBacking(
+            selection: selection,
+            destinationSelection: destinationSelection,
+            canvasSize: document.canvasSize,
+            feather: feather
+        ) else { return nil }
+        let width = Int(backingLayer.image.size.width.rounded())
+        let height = Int(backingLayer.image.size.height.rounded())
+        guard let maskImage = selection.layerMask(
+            layerFrame: backingLayer.frame,
+            layerSize: backingLayer.image.size,
+            canvasSize: document.canvasSize,
+            feather: feather,
+            usesNearestSampling: true
+        ), let mask = ImageEditorPixelMoveMaskAlpha.read(from: maskImage, width: width, height: height),
+           let source = ImageEditorRGBAImage.pixels(from: backingLayer.image, width: width, height: height),
+           let output = ImageEditorPixelSelectionTransform.rotatedQuarterTurns(
+               source: source, maskAlpha: mask, width: width, height: height, clockwiseTurns: clockwiseTurns
            ), let image = ImageEditorRGBAImage.image(
                width: width, height: height, pixels: output, size: backingLayer.image.size
            )

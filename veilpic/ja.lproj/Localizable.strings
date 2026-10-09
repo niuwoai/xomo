@@ -354,6 +354,7 @@
 "imageEditor.menu.layer.comps" = "レイヤーコンプ";
 "imageEditor.menu.select.alphaChannels" = "Alpha チャンネル";
 "imageEditor.menu.select.transform" = "選択範囲を変形";
+"imageEditor.menu.selectionPixelRotation" = "選択ピクセルを回転";
 "imageEditor.menu.view.zoomIn" = "ズームイン";
 "imageEditor.menu.view.zoomOut" = "ズームアウト";
 "imageEditor.menu.view.actualPixels" = "実際のピクセル";
@@ -2184,6 +2185,9 @@
 "imageEditor.history.selectionPixelsMove" = "選択ピクセルを移動";
 "imageEditor.history.selectionPixelsFlipHorizontal" = "選択ピクセルを水平方向に反転";
 "imageEditor.history.selectionPixelsFlipVertical" = "選択ピクセルを垂直方向に反転";
+"imageEditor.history.selectionPixelsRotateClockwise" = "選択ピクセルを時計回りに回転";
+"imageEditor.history.selectionPixelsRotateCounterclockwise" = "選択ピクセルを反時計回りに回転";
+"imageEditor.history.selectionPixelsRotate180" = "選択ピクセルを 180 度回転";
 "imageEditor.history.selectionFlipHorizontal" = "選択範囲を水平方向に反転";
 "imageEditor.history.selectionFlipVertical" = "選択範囲を垂直方向に反転";
 "imageEditor.history.selectionRotateClockwise" = "選択範囲を時計回りに回転";
@@ -2585,6 +2589,9 @@
 "imageEditor.status.selectionPixelsMoved" = "選択ピクセルを移動しました";
 "imageEditor.status.selectionPixelsFlippedHorizontal" = "選択ピクセルを水平方向に反転しました";
 "imageEditor.status.selectionPixelsFlippedVertical" = "選択ピクセルを垂直方向に反転しました";
+"imageEditor.status.selectionPixelsRotatedClockwise" = "選択ピクセルを時計回りに回転しました";
+"imageEditor.status.selectionPixelsRotatedCounterclockwise" = "選択ピクセルを反時計回りに回転しました";
+"imageEditor.status.selectionPixelsRotated180" = "選択ピクセルを 180 度回転しました";
 "imageEditor.status.selectionFlippedHorizontal" = "選択範囲を水平方向に反転しました";
 "imageEditor.status.selectionFlippedVertical" = "選択範囲を垂直方向に反転しました";
 "imageEditor.status.selectionRotatedClockwise" = "選択範囲を時計回りに回転しました";
@@ -3144,6 +3151,9 @@
 "imageEditor.action.selectionRotateClockwise" = "90 度時計回りに回転";
 "imageEditor.action.selectionRotateCounterclockwise" = "90 度反時計回りに回転";
 "imageEditor.action.selectionRotate180" = "180 度回転";
+"imageEditor.action.rotateSelectedPixelsClockwise" = "90° 時計回りに回転";
+"imageEditor.action.rotateSelectedPixelsCounterclockwise" = "90° 反時計回りに回転";
+"imageEditor.action.rotateSelectedPixels180" = "180° 回転";
 "imageEditor.action.selectionScaleUp" = "200% に拡大";
 "imageEditor.action.selectionScaleDown" = "50% に縮小";
 "imageEditor.action.selectionFitCanvas" = "キャンバスに合わせる";

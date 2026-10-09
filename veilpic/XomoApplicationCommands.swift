@@ -157,7 +157,11 @@ struct XomoEditCommandActions {
     let toggleFreeTransform: () -> Void
     let flipSelectedPixelsHorizontally: () -> Void
     let flipSelectedPixelsVertically: () -> Void
+    let rotateSelectedPixelsClockwise: () -> Void
+    let rotateSelectedPixelsCounterclockwise: () -> Void
+    let rotateSelectedPixels180: () -> Void
     let canFlipSelectedPixels: Bool
+    let canRotateSelectedPixelsQuarterTurn: Bool
     let presentFillDialog: () -> Void
     let canPresentFillDialog: Bool
     let fillSelection: () -> Void
@@ -287,6 +291,21 @@ struct XomoEditMenuItems: View {
         .disabled(actions?.canFlipSelectedPixels != true)
         Button(L10n.text("imageEditor.action.flipSelectedPixelsVertical")) {
             actions?.flipSelectedPixelsVertically()
+        }
+        .disabled(actions?.canFlipSelectedPixels != true)
+        Menu(L10n.text("imageEditor.menu.selectionPixelRotation")) {
+            Button(L10n.text("imageEditor.action.rotateSelectedPixelsClockwise")) {
+                actions?.rotateSelectedPixelsClockwise()
+            }
+            .disabled(actions?.canRotateSelectedPixelsQuarterTurn != true)
+            Button(L10n.text("imageEditor.action.rotateSelectedPixelsCounterclockwise")) {
+                actions?.rotateSelectedPixelsCounterclockwise()
+            }
+            .disabled(actions?.canRotateSelectedPixelsQuarterTurn != true)
+            Button(L10n.text("imageEditor.action.rotateSelectedPixels180")) {
+                actions?.rotateSelectedPixels180()
+            }
+            .disabled(actions?.canFlipSelectedPixels != true)
         }
         .disabled(actions?.canFlipSelectedPixels != true)
         Divider()

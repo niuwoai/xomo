@@ -29,15 +29,25 @@ extension ImageEditorLayer {
     }
 
     func expandedPixelSelectionTransformBacking(
-        selection: ImageEditorSelection, canvasSize: CGSize, feather: CGFloat
+        selection: ImageEditorSelection,
+        destinationSelection: ImageEditorSelection? = nil,
+        canvasSize: CGSize,
+        feather: CGFloat
     ) -> ImageEditorLayer? {
         guard feather.isFinite,
               let selectedBounds = selection.effectiveSelectedBounds(in: canvasSize)
         else { return nil }
-        let expandedBounds = feather > 0
+        var affectedBounds = feather > 0
             ? selectedBounds.insetBy(dx: -feather * 3, dy: -feather * 3)
             : selectedBounds
-        let destination = expandedBounds.intersection(CGRect(origin: .zero, size: canvasSize))
+        if let destinationSelection,
+           let destinationBounds = destinationSelection.effectiveSelectedBounds(in: canvasSize) {
+            let expandedDestination = feather > 0
+                ? destinationBounds.insetBy(dx: -feather * 3, dy: -feather * 3)
+                : destinationBounds
+            affectedBounds = affectedBounds.union(expandedDestination)
+        }
+        let destination = affectedBounds.intersection(CGRect(origin: .zero, size: canvasSize))
         guard !destination.isNull, !destination.isEmpty,
               let geometry = ImageEditorPixelMoveExpansion(layer: self, destination: destination)
         else { return nil }

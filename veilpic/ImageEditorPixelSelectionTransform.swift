@@ -40,6 +40,57 @@ enum ImageEditorPixelSelectionTransform {
         return output
     }
 
+    static func rotatedQuarterTurns(
+        source: [UInt8], maskAlpha: [UInt8], width: Int, height: Int, clockwiseTurns: Int
+    ) -> [UInt8]? {
+        guard width > 0, height > 0,
+              height <= maskAlpha.count / width,
+              maskAlpha.count == width * height,
+              source.count.isMultiple(of: componentsPerPixel),
+              source.count / componentsPerPixel == maskAlpha.count,
+              let bounds = ImageEditorPixelMoveCoverageBounds(maskAlpha: maskAlpha, width: width, height: height)
+        else { return nil }
+
+        let turns = ((clockwiseTurns % 4) + 4) % 4
+        guard turns != 0 else { return source }
+
+        var output = source
+        clear(source: source, maskAlpha: maskAlpha, width: width, bounds: bounds, into: &output)
+        let selectedWidth = bounds.columns.count
+        let selectedHeight = bounds.rows.count
+        for y in bounds.rows {
+            for x in bounds.columns {
+                let sourcePixel = y * width + x
+                let coverage = CGFloat(maskAlpha[sourcePixel]) / maximumComponent
+                guard coverage > 0 else { continue }
+
+                let localX = x - bounds.columns.lowerBound
+                let localY = y - bounds.rows.lowerBound
+                let target: (x: Int, y: Int)
+                switch turns {
+                case 1:
+                    target = (bounds.columns.lowerBound + selectedHeight - 1 - localY,
+                              bounds.rows.lowerBound + localX)
+                case 2:
+                    target = (bounds.columns.upperBound - 1 - localX,
+                              bounds.rows.upperBound - 1 - localY)
+                default:
+                    target = (bounds.columns.lowerBound + localY,
+                              bounds.rows.lowerBound + selectedWidth - 1 - localX)
+                }
+                guard target.x >= 0, target.y >= 0, target.x < width, target.y < height else { continue }
+                ImageEditorPremultipliedPixelCompositing.composite(
+                    source: source,
+                    sourcePixel: sourcePixel,
+                    targetPixel: target.y * width + target.x,
+                    coverage: coverage,
+                    into: &output
+                )
+            }
+        }
+        return output
+    }
+
     private static func clear(
         source: [UInt8], maskAlpha: [UInt8], width: Int,
         bounds: ImageEditorPixelMoveCoverageBounds, into output: inout [UInt8]
