@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.12.0-rc1797 - 2026-10-09
+
+### Added
+- Added an integration regression for flipping pixels through a feathered selection and its partial alpha coverage.
+
+### Verification
+- Selection-pixel transform suite 6/6 passed, including feathered partial-alpha coverage; full Release/desktop gate remains rc1800.
+
+## 2.12.0-rc1796 - 2026-10-09
+
+### Fixed
+- Pixel-flip tests now compare persisted selection coverage rather than requiring a rasterized selection object when the geometric selection is preserved.
+
+### Verification
+- Selected-pixel transform 5/5, pixel movement/bounds 47/47, selection fill 65/65, Patch/Healing 67/67, content-aware 2/2, menu wiring 1/1; release contracts 10/30, CLI 7/24, product overview 3/30. Full Release/desktop gate remains rc1800. See [verification record](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md).
+
+## 2.12.0-rc1795 - 2026-10-09
+
+### Added
+- Edit menu commands to flip selected pixel content horizontally or vertically while reflecting the selection; each command applies atomically across selected pixel layers and supports feathered coverage.
+
+### Verification
+- Focused pixel, layer-transaction, Undo/Redo, and project round-trip checks completed under rc1796; see [verification record](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md). Full Release/desktop gate remains rc1800.
+
 ## 2.12.0-rc1794 - 2026-10-09
 
 ### Added

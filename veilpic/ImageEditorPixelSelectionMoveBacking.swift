@@ -27,6 +27,33 @@ extension ImageEditorLayer {
         guard expanded.compensateUnlinkedLocalMasks(from: stationaryMasks) else { return nil }
         return expanded
     }
+
+    func expandedPixelSelectionTransformBacking(
+        selection: ImageEditorSelection, canvasSize: CGSize, feather: CGFloat
+    ) -> ImageEditorLayer? {
+        guard feather.isFinite,
+              let selectedBounds = selection.effectiveSelectedBounds(in: canvasSize)
+        else { return nil }
+        let expandedBounds = feather > 0
+            ? selectedBounds.insetBy(dx: -feather * 3, dy: -feather * 3)
+            : selectedBounds
+        let destination = expandedBounds.intersection(CGRect(origin: .zero, size: canvasSize))
+        guard !destination.isNull, !destination.isEmpty,
+              let geometry = ImageEditorPixelMoveExpansion(layer: self, destination: destination)
+        else { return nil }
+        guard geometry.frame != frame else { return self }
+        guard let expandedImage = image.canvasResized(
+            to: geometry.size, oldCanvasSize: image.size, offset: geometry.bitmapOffset
+        ) else { return nil }
+
+        var expanded = self
+        expanded.image = expandedImage
+        expanded.frame = geometry.frame
+        var stationaryMasks = self
+        stationaryMasks.isMaskLinked = false
+        guard expanded.compensateUnlinkedLocalMasks(from: stationaryMasks) else { return nil }
+        return expanded
+    }
 }
 
 private struct ImageEditorPixelMoveExpansion {

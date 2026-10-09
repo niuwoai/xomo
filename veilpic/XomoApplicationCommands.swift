@@ -155,6 +155,9 @@ struct XomoEditCommandActions {
     let pasteAsSmartObject: () -> Void
     let canPasteAsSmartObject: Bool
     let toggleFreeTransform: () -> Void
+    let flipSelectedPixelsHorizontally: () -> Void
+    let flipSelectedPixelsVertically: () -> Void
+    let canFlipSelectedPixels: Bool
     let presentFillDialog: () -> Void
     let canPresentFillDialog: Bool
     let fillSelection: () -> Void
@@ -278,6 +281,14 @@ struct XomoEditMenuItems: View {
         }
         .keyboardShortcut("t", modifiers: [.command])
         .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.flipSelectedPixelsHorizontal")) {
+            actions?.flipSelectedPixelsHorizontally()
+        }
+        .disabled(actions?.canFlipSelectedPixels != true)
+        Button(L10n.text("imageEditor.action.flipSelectedPixelsVertical")) {
+            actions?.flipSelectedPixelsVertically()
+        }
+        .disabled(actions?.canFlipSelectedPixels != true)
         Divider()
         Button(L10n.text("imageEditor.action.fillDialog")) {
             actions?.presentFillDialog()

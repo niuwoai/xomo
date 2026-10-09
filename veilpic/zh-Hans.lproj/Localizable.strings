@@ -2182,6 +2182,8 @@
 "imageEditor.history.selectionGrow" = "扩展相邻相似颜色";
 "imageEditor.history.selectionMove" = "移动选区";
 "imageEditor.history.selectionPixelsMove" = "移动选中像素";
+"imageEditor.history.selectionPixelsFlipHorizontal" = "水平翻转选区像素";
+"imageEditor.history.selectionPixelsFlipVertical" = "垂直翻转选区像素";
 "imageEditor.history.selectionFlipHorizontal" = "水平翻转选区";
 "imageEditor.history.selectionFlipVertical" = "垂直翻转选区";
 "imageEditor.history.selectionRotateClockwise" = "顺时针旋转选区";
@@ -2581,6 +2583,8 @@
 "imageEditor.status.selectionGrown" = "已扩展相邻相似颜色选区";
 "imageEditor.status.selectionMoved" = "已移动选区 X:%d Y:%d px";
 "imageEditor.status.selectionPixelsMoved" = "已移动选中像素";
+"imageEditor.status.selectionPixelsFlippedHorizontal" = "已水平翻转选区像素";
+"imageEditor.status.selectionPixelsFlippedVertical" = "已垂直翻转选区像素";
 "imageEditor.status.selectionFlippedHorizontal" = "已水平翻转选区";
 "imageEditor.status.selectionFlippedVertical" = "已垂直翻转选区";
 "imageEditor.status.selectionRotatedClockwise" = "已顺时针旋转选区";
@@ -3213,6 +3217,8 @@
 "imageEditor.action.pasteClipboardInPlaceLayer" = "原位粘贴";
 "imageEditor.action.pasteClipboardAsSmartObject" = "粘贴为智能对象";
 "imageEditor.action.freeTransform" = "自由变换";
+"imageEditor.action.flipSelectedPixelsHorizontal" = "水平翻转选区像素";
+"imageEditor.action.flipSelectedPixelsVertical" = "垂直翻转选区像素";
 "imageEditor.action.clearSelectionPixels" = "清除选区像素";
 "imageEditor.action.deleteSelectedObject" = "删除所选对象";
 "imageEditor.action.saveSelection" = "保存选区";

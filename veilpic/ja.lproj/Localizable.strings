@@ -2182,6 +2182,8 @@
 "imageEditor.history.selectionGrow" = "隣接する近似色へ拡張";
 "imageEditor.history.selectionMove" = "選択範囲を移動";
 "imageEditor.history.selectionPixelsMove" = "選択ピクセルを移動";
+"imageEditor.history.selectionPixelsFlipHorizontal" = "選択ピクセルを水平方向に反転";
+"imageEditor.history.selectionPixelsFlipVertical" = "選択ピクセルを垂直方向に反転";
 "imageEditor.history.selectionFlipHorizontal" = "選択範囲を水平方向に反転";
 "imageEditor.history.selectionFlipVertical" = "選択範囲を垂直方向に反転";
 "imageEditor.history.selectionRotateClockwise" = "選択範囲を時計回りに回転";
@@ -2581,6 +2583,8 @@
 "imageEditor.status.selectionGrown" = "隣接する近似色へ選択範囲を拡張しました";
 "imageEditor.status.selectionMoved" = "選択範囲を移動しました X:%d Y:%d px";
 "imageEditor.status.selectionPixelsMoved" = "選択ピクセルを移動しました";
+"imageEditor.status.selectionPixelsFlippedHorizontal" = "選択ピクセルを水平方向に反転しました";
+"imageEditor.status.selectionPixelsFlippedVertical" = "選択ピクセルを垂直方向に反転しました";
 "imageEditor.status.selectionFlippedHorizontal" = "選択範囲を水平方向に反転しました";
 "imageEditor.status.selectionFlippedVertical" = "選択範囲を垂直方向に反転しました";
 "imageEditor.status.selectionRotatedClockwise" = "選択範囲を時計回りに回転しました";
@@ -3213,6 +3217,8 @@
 "imageEditor.action.pasteClipboardInPlaceLayer" = "同じ位置にペースト";
 "imageEditor.action.pasteClipboardAsSmartObject" = "スマートオブジェクトとしてペースト";
 "imageEditor.action.freeTransform" = "自由変形";
+"imageEditor.action.flipSelectedPixelsHorizontal" = "選択ピクセルを水平方向に反転";
+"imageEditor.action.flipSelectedPixelsVertical" = "選択ピクセルを垂直方向に反転";
 "imageEditor.action.clearSelectionPixels" = "選択ピクセルを消去";
 "imageEditor.action.deleteSelectedObject" = "選択項目を削除";
 "imageEditor.action.saveSelection" = "選択範囲を保存";

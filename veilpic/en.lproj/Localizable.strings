@@ -2182,6 +2182,8 @@
 "imageEditor.history.selectionGrow" = "Grow Adjacent Similar Colors";
 "imageEditor.history.selectionMove" = "Move Selection";
 "imageEditor.history.selectionPixelsMove" = "Move Selected Pixels";
+"imageEditor.history.selectionPixelsFlipHorizontal" = "Flip Selected Pixels Horizontally";
+"imageEditor.history.selectionPixelsFlipVertical" = "Flip Selected Pixels Vertically";
 "imageEditor.history.selectionFlipHorizontal" = "Flip Selection Horizontal";
 "imageEditor.history.selectionFlipVertical" = "Flip Selection Vertical";
 "imageEditor.history.selectionRotateClockwise" = "Rotate Selection Clockwise";
@@ -2581,6 +2583,8 @@
 "imageEditor.status.selectionGrown" = "Grew the selection to adjacent similar colors";
 "imageEditor.status.selectionMoved" = "Moved selection X:%d Y:%d px";
 "imageEditor.status.selectionPixelsMoved" = "Moved selected pixels";
+"imageEditor.status.selectionPixelsFlippedHorizontal" = "Flipped selected pixels horizontally";
+"imageEditor.status.selectionPixelsFlippedVertical" = "Flipped selected pixels vertically";
 "imageEditor.status.selectionFlippedHorizontal" = "Selection flipped horizontally";
 "imageEditor.status.selectionFlippedVertical" = "Selection flipped vertically";
 "imageEditor.status.selectionRotatedClockwise" = "Selection rotated clockwise";
@@ -3213,6 +3217,8 @@
 "imageEditor.action.pasteClipboardInPlaceLayer" = "Paste in Place";
 "imageEditor.action.pasteClipboardAsSmartObject" = "Paste as Smart Object";
 "imageEditor.action.freeTransform" = "Free Transform";
+"imageEditor.action.flipSelectedPixelsHorizontal" = "Flip Selected Pixels Horizontally";
+"imageEditor.action.flipSelectedPixelsVertical" = "Flip Selected Pixels Vertically";
 "imageEditor.action.clearSelectionPixels" = "Clear Pixels";
 "imageEditor.action.deleteSelectedObject" = "Delete Selected";
 "imageEditor.action.saveSelection" = "Save Selection";

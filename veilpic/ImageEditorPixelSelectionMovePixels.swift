@@ -74,7 +74,7 @@ enum ImageEditorPixelSelectionMovePixels {
             for x in bounds.columns {
                 let pixel = y * width + x
                 guard maskAlpha[pixel] > 0 else { continue }
-                let inverse = 1 - CGFloat(maskAlpha[pixel]) / maximumComponent
+                let inverse = 1 - CGFloat(maskAlpha[pixel]) / 255
                 for channel in 0..<componentsPerPixel {
                     let offset = pixel * componentsPerPixel + channel
                     output[offset] = UInt8((CGFloat(source[offset]) * inverse).rounded())
@@ -93,16 +93,37 @@ enum ImageEditorPixelSelectionMovePixels {
                 guard maskAlpha[pixel] > 0 else { continue }
                 let tx = x + dx, ty = y + dy
                 guard (0..<width).contains(tx), (0..<height).contains(ty) else { continue }
-                let sourceOffset = pixel * componentsPerPixel
-                let targetOffset = (ty * width + tx) * componentsPerPixel
                 let coverage = CGFloat(maskAlpha[pixel]) / maximumComponent
-                let inverse = 1 - CGFloat(source[sourceOffset + 3]) / maximumComponent * coverage
-                for channel in 0..<componentsPerPixel {
-                    let value = CGFloat(source[sourceOffset + channel]) * coverage
-                        + CGFloat(output[targetOffset + channel]) * inverse
-                    output[targetOffset + channel] = UInt8(max(0, min(maximumComponent, value.rounded())))
-                }
+                ImageEditorPremultipliedPixelCompositing.composite(
+                    source: source, sourcePixel: pixel, targetPixel: ty * width + tx,
+                    coverage: coverage, into: &output
+                )
             }
+        }
+    }
+
+}
+
+enum ImageEditorPremultipliedPixelCompositing {
+    private static let componentsPerPixel = 4
+    private static let maximumComponent: CGFloat = 255
+
+    static func composite(
+        source: [UInt8], sourcePixel: Int, targetPixel: Int, coverage: CGFloat, into output: inout [UInt8]
+    ) {
+        guard sourcePixel >= 0, targetPixel >= 0,
+              sourcePixel < source.count / componentsPerPixel,
+              targetPixel < output.count / componentsPerPixel,
+              coverage.isFinite
+        else { return }
+        let sourceOffset = sourcePixel * componentsPerPixel
+        let targetOffset = targetPixel * componentsPerPixel
+        let clampedCoverage = max(0, min(1, coverage))
+        let inverse = 1 - CGFloat(source[sourceOffset + 3]) / maximumComponent * clampedCoverage
+        for channel in 0..<componentsPerPixel {
+            let value = CGFloat(source[sourceOffset + channel]) * clampedCoverage
+                + CGFloat(output[targetOffset + channel]) * inverse
+            output[targetOffset + channel] = UInt8(max(0, min(maximumComponent, value.rounded())))
         }
     }
 }

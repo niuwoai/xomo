@@ -1332,8 +1332,8 @@ extension ImageEditorViewModel {
         let normalizedOutput = protectedOutput.normalizedBitmapImage()
         let pixelWidth = max(1, Int(layer.image.size.width.rounded()))
         let pixelHeight = max(1, Int(layer.image.size.height.rounded()))
-        let originalPixels = layer.image.rgbaPixels(width: pixelWidth, height: pixelHeight)
-        let outputPixels = normalizedOutput.rgbaPixels(width: pixelWidth, height: pixelHeight)
+        let originalPixels = ImageEditorRGBAImage.pixels(from: layer.image, width: pixelWidth, height: pixelHeight)
+        let outputPixels = ImageEditorRGBAImage.pixels(from: normalizedOutput, width: pixelWidth, height: pixelHeight)
         let didChangePixels = originalPixels != outputPixels
         return ImageEditorPatchEditResult(
             layerIndex: index,
@@ -2066,7 +2066,7 @@ private extension NSImage {
         )
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard let overlayPixels = patternImage.rgbaPixels(width: width, height: height) else {
+        guard let overlayPixels = ImageEditorRGBAImage.pixels(from: patternImage, width: width, height: height) else {
             return nil
         }
         return compositedSelectionFill(
@@ -2203,8 +2203,8 @@ private extension NSImage {
         }
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard var pixels = rgbaPixels(width: width, height: height),
-              let sourcePixels = alignedSource?.rgbaPixels(width: width, height: height),
+        guard var pixels = ImageEditorRGBAImage.pixels(from: self, width: width, height: height),
+              let sourcePixels = alignedSource.flatMap({ ImageEditorRGBAImage.pixels(from: $0, width: width, height: height) }),
               inputCoverage.count == width * height
         else { return nil }
 
@@ -2261,7 +2261,7 @@ private extension NSImage {
             }
         }
 
-        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+        return ImageEditorRGBAImage.image(width: width, height: height, pixels: pixels, size: size)
     }
 
     private func compositedSelectionFill(
@@ -2272,7 +2272,7 @@ private extension NSImage {
     ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard var pixels = rgbaPixels(width: width, height: height),
+        guard var pixels = ImageEditorRGBAImage.pixels(from: self, width: width, height: height),
               let mask = selectionMask.alphaMask(width: width, height: height)
         else { return nil }
 
@@ -2327,7 +2327,7 @@ private extension NSImage {
             }
         }
 
-        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+        return ImageEditorRGBAImage.image(width: width, height: height, pixels: pixels, size: size)
     }
 
     private static func selectionFillByte(_ value: Double) -> UInt8 {
@@ -2418,7 +2418,7 @@ private extension NSImage {
 
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard let pixels = rgbaPixels(width: width, height: height),
+        guard let pixels = ImageEditorRGBAImage.pixels(from: self, width: width, height: height),
               let mask = selectionMask.alphaMask(width: width, height: height)
         else { return nil }
 
@@ -2484,7 +2484,7 @@ private extension NSImage {
 
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard var pixels = rgbaPixels(width: width, height: height),
+        guard var pixels = ImageEditorRGBAImage.pixels(from: self, width: width, height: height),
               let mask = selectionMask.alphaMask(width: width, height: height)
         else { return nil }
 
@@ -2495,7 +2495,7 @@ private extension NSImage {
         if samplingImage == nil {
             samplingBasePixels = pixels
         } else {
-            guard let sampledPixels = samplingBaseImage.rgbaPixels(width: width, height: height)
+            guard let sampledPixels = ImageEditorRGBAImage.pixels(from: samplingBaseImage, width: width, height: height)
             else { return nil }
             samplingBasePixels = sampledPixels
         }
@@ -2505,7 +2505,7 @@ private extension NSImage {
         let sourcePixels: [UInt8]
         if diffusionRadius > 0 {
             guard let diffusedImage = samplingBaseImage.blurred(radius: diffusionRadius),
-                  let diffusedPixels = diffusedImage.rgbaPixels(width: width, height: height)
+                  let diffusedPixels = ImageEditorRGBAImage.pixels(from: diffusedImage, width: width, height: height)
             else { return nil }
             sampledImage = diffusedImage
             sourcePixels = diffusedPixels
@@ -2522,7 +2522,7 @@ private extension NSImage {
         if extractsTextureTransparently {
             guard let localBaselinePixels = sampledImage.blurred(
                 radius: PatchTransparentTextureSampler.textureRadius
-            )?.rgbaPixels(width: width, height: height) else { return nil }
+            ).flatMap({ ImageEditorRGBAImage.pixels(from: $0, width: width, height: height) }) else { return nil }
             textureSampler = PatchTransparentTextureSampler(
                 pixels: sourcePixels,
                 localBaselinePixels: localBaselinePixels,
@@ -2566,7 +2566,7 @@ private extension NSImage {
             }
         }
 
-        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+        return ImageEditorRGBAImage.image(width: width, height: height, pixels: pixels, size: size)
     }
 
     func cleared(
@@ -2617,7 +2617,7 @@ private extension NSImage {
 
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard let source = rgbaPixels(width: width, height: height),
+        guard let source = ImageEditorRGBAImage.pixels(from: self, width: width, height: height),
               let maskAlpha = ImageEditorPixelMoveMaskAlpha.read(from: selectionMask, width: width, height: height)
         else { return nil }
         guard maskAlpha.contains(where: { $0 > 0 }) else { return self }
@@ -2636,7 +2636,7 @@ private extension NSImage {
             source: source, maskAlpha: maskAlpha, width: width, height: height,
             delta: CGSize(width: localDeltaX, height: localDeltaY)
         ) else { return nil }
-        return NSImage.rgbaImage(width: width, height: height, pixels: output, size: size)
+        return ImageEditorRGBAImage.image(width: width, height: height, pixels: output, size: size)
     }
 
     private func contentAwareFallbackColor(
@@ -2727,11 +2727,26 @@ private extension NSImage {
         return ContentAwareColor(red: red / weightTotal, green: green / weightTotal, blue: blue / weightTotal, alpha: alpha / weightTotal)
     }
 
-    fileprivate func rgbaPixels(width: Int, height: Int) -> [UInt8]? {
+    private func blendedByte(original: UInt8, replacement: CGFloat, alpha: CGFloat, inverseAlpha: CGFloat) -> UInt8 {
+        UInt8(max(0, min(255, (CGFloat(original) * inverseAlpha + replacement * alpha).rounded())))
+    }
+}
+
+private struct ContentAwareColor {
+    var red: CGFloat
+    var green: CGFloat
+    var blue: CGFloat
+    var alpha: CGFloat
+}
+
+enum ImageEditorRGBAImage {
+    static func pixels(from image: NSImage, width: Int, height: Int) -> [UInt8]? {
+        guard width > 0, height > 0, width <= Int.max / 4 else { return nil }
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
+        guard height <= Int.max / bytesPerRow else { return nil }
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
-        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
               let context = CGContext(
                 data: &pixels,
                 width: width,
@@ -2748,22 +2763,11 @@ private extension NSImage {
         return pixels
     }
 
-    private func blendedByte(original: UInt8, replacement: CGFloat, alpha: CGFloat, inverseAlpha: CGFloat) -> UInt8 {
-        UInt8(max(0, min(255, (CGFloat(original) * inverseAlpha + replacement * alpha).rounded())))
-    }
-}
-
-private struct ContentAwareColor {
-    var red: CGFloat
-    var green: CGFloat
-    var blue: CGFloat
-    var alpha: CGFloat
-}
-
-private extension NSImage {
-    static func rgbaImage(width: Int, height: Int, pixels: [UInt8], size: CGSize) -> NSImage? {
+    static func image(width: Int, height: Int, pixels: [UInt8], size: CGSize) -> NSImage? {
         let bytesPerPixel = 4
+        guard width > 0, height > 0, width <= Int.max / bytesPerPixel else { return nil }
         let bytesPerRow = width * bytesPerPixel
+        guard height <= Int.max / bytesPerRow else { return nil }
         guard pixels.count == bytesPerRow * height,
               let provider = CGDataProvider(data: Data(pixels) as CFData),
               let output = CGImage(
@@ -2785,8 +2789,8 @@ private extension NSImage {
     }
 }
 
-private extension ImageEditorSelection {
-    func patchTranslated(by delta: CGSize, canvasSize: CGSize) -> ImageEditorSelection? {
+extension ImageEditorSelection {
+    fileprivate func patchTranslated(by delta: CGSize, canvasSize: CGSize) -> ImageEditorSelection? {
         guard rasterMask == nil else {
             return translated(by: delta, canvasSize: canvasSize)
         }
@@ -2842,7 +2846,7 @@ private extension ImageEditorSelection {
         }
     }
 
-    func layerStroke(
+    fileprivate func layerStroke(
         layerFrame: CGRect,
         layerSize: CGSize,
         canvasSize: CGSize,
@@ -2873,7 +2877,7 @@ private extension ImageEditorSelection {
         }
     }
 
-    func canvasMask(size: CGSize, feather: CGFloat) -> NSImage? {
+    private func canvasMask(size: CGSize, feather: CGFloat) -> NSImage? {
         if let rasterMask,
            let image = NSImage.selectionMaskImage(rasterMask, inverted: isInverted, targetSize: size) {
             guard feather > 0 else { return image }
@@ -2904,7 +2908,7 @@ private extension ImageEditorSelection {
         return hardMask.blurred(radius: feather) ?? hardMask
     }
 
-    func canvasStroke(size: CGSize, color: NSColor, width: CGFloat, opacity: CGFloat, feather: CGFloat) -> NSImage? {
+    private func canvasStroke(size: CGSize, color: NSColor, width: CGFloat, opacity: CGFloat, feather: CGFloat) -> NSImage? {
         let strokeImage = NSImage.rendered(size: size) { _ in
             let strokePath = self.path()
             strokePath.lineJoinStyle = .miter
