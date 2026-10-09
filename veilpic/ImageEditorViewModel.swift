@@ -153,6 +153,12 @@ final class ImageEditorViewModel: ObservableObject {
                !document.layers.contains(where: { $0.id == previewedLayerMaskID && $0.mask != nil }) {
                 clearLayerMaskSoloPreview()
             }
+            if let previewedSmartFilterMaskID,
+               document.selectedLayer?.smartFilters.contains(where: {
+                   $0.id == previewedSmartFilterMaskID && $0.mask != nil
+               }) != true {
+                clearSmartFilterMaskSoloPreview()
+            }
             refreshSelectionEdgeGeometry()
             refreshQuickMaskOverlay()
             if preservesRenderedImageCachesForNextDocumentMutation {
@@ -992,6 +998,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published private(set) var previewedLayerMaskID: UUID?
     @Published private(set) var previewedLayerMaskMode: ImageEditorLayerMaskPreviewMode?
+    @Published private(set) var previewedSmartFilterMaskID: UUID?
     @Published var isEditingLayerMask: Bool = false
     @Published var editingSmartFilterMaskID: UUID?
     @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
@@ -1052,6 +1059,7 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedLayerMaskSoloPreviewImages: [UUID: NSImage] = [:]
     private var cachedLayerMaskRubylithOverlayImages: [UUID: NSImage] = [:]
     var cachedSmartFilterMaskOverlayImages: [UUID: NSImage] = [:]
+    var cachedSmartFilterMaskSoloPreviewImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
     private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
@@ -1440,6 +1448,9 @@ final class ImageEditorViewModel: ObservableObject {
            let image = quickMaskGrayscalePreviewImage {
             return image
         }
+        if let image = smartFilterMaskSoloPreviewImage {
+            return image
+        }
         if previewedLayerMaskMode == .solo,
            let image = layerMaskSoloPreviewImage {
             return image
@@ -1474,6 +1485,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         selectLayer(layerID, editingMask: true)
+        clearSmartFilterMaskSoloPreview()
         leaveQuickMaskMode()
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
@@ -1500,6 +1512,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         selectLayer(layerID, editingMask: true)
+        clearSmartFilterMaskSoloPreview()
         leaveQuickMaskMode()
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
@@ -1621,6 +1634,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
+        clearSmartFilterMaskSoloPreview()
         clearLayerMaskSoloPreview()
         leaveQuickMaskModeForChannelPreview()
         selectedChannelPreview = channel
@@ -5678,6 +5692,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func toggleQuickMaskMode() {
+        clearSmartFilterMaskSoloPreview()
         if isQuickMaskMode {
             leaveQuickMaskMode()
             statusText = L10n.text("imageEditor.status.quickMaskDisabled")
@@ -6406,6 +6421,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
+        clearSmartFilterMaskSoloPreview()
         editingSmartFilterMaskID = nil
         if !editingMask || previewedLayerMaskID != id {
             clearLayerMaskSoloPreview()
@@ -7849,12 +7865,14 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func editLayerPixels() {
+        clearSmartFilterMaskSoloPreview()
         editingSmartFilterMaskID = nil
         isEditingLayerMask = false
         statusText = L10n.text("imageEditor.status.editingLayer")
     }
 
     func editLayerMask() {
+        clearSmartFilterMaskSoloPreview()
         editingSmartFilterMaskID = nil
         guard selectedLayerHasMask else {
             statusText = L10n.text("imageEditor.status.noLayerMask")
@@ -10330,6 +10348,59 @@ final class ImageEditorViewModel: ObservableObject {
         editingSmartFilterMaskID == filterID
     }
 
+    func isPreviewingSmartFilterMask(_ filterID: UUID) -> Bool {
+        previewedSmartFilterMaskID == filterID
+    }
+
+    func activateSmartFilterMaskThumbnail(
+        _ filterID: UUID,
+        modifierFlags: NSEvent.ModifierFlags
+    ) {
+        if modifierFlags.contains(.option) {
+            _ = toggleSmartFilterMaskSoloPreview(filterID)
+            return
+        }
+        clearSmartFilterMaskSoloPreview()
+        toggleSmartFilterMaskEditing(filterID)
+    }
+
+    @discardableResult
+    func toggleSmartFilterMaskSoloPreview(_ filterID: UUID) -> Bool {
+        if previewedSmartFilterMaskID == filterID {
+            clearSmartFilterMaskSoloPreview()
+            statusText = L10n.format(
+                "imageEditor.status.channelPreview",
+                ImageEditorChannelPreview.composite.title
+            )
+            return true
+        }
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID),
+              let layer = document.selectedLayer,
+              !layer.smartFilters[filterIndex].appliesToBackdrop,
+              layer.smartFilters[filterIndex].mask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        leaveQuickMaskMode()
+        clearLayerMaskSoloPreview()
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
+        editingSmartFilterMaskID = nil
+        isEditingLayerMask = false
+        previewedSmartFilterMaskID = filterID
+        statusText = L10n.format(
+            "imageEditor.status.channelPreview",
+            L10n.text("imageEditor.channel.smartFilterMaskName")
+        )
+        return true
+    }
+
+    func clearSmartFilterMaskSoloPreview() {
+        previewedSmartFilterMaskID = nil
+    }
+
     func toggleSmartFilterMaskEditing(_ filterID: UUID) {
         if editingSmartFilterMaskID == filterID {
             editingSmartFilterMaskID = nil
@@ -10344,6 +10415,7 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        clearSmartFilterMaskSoloPreview()
         leaveQuickMaskMode()
         clearLayerMaskSoloPreview()
         selectedChannelPreview = .composite
@@ -13220,6 +13292,7 @@ final class ImageEditorViewModel: ObservableObject {
         cachedLayerMaskSoloPreviewImages.removeAll(keepingCapacity: true)
         cachedLayerMaskRubylithOverlayImages.removeAll(keepingCapacity: true)
         cachedSmartFilterMaskOverlayImages.removeAll(keepingCapacity: true)
+        cachedSmartFilterMaskSoloPreviewImages.removeAll(keepingCapacity: true)
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil

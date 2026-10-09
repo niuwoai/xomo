@@ -1481,6 +1481,7 @@
 "imageEditor.channel.alpha" = "Alpha";
 "imageEditor.channel.previewing" = "%@ をプレビュー中";
 "imageEditor.channel.layerMaskName" = "%@ のレイヤーマスク";
+"imageEditor.channel.smartFilterMaskName" = "スマートフィルターマスク";
 "imageEditor.channel.previewHint" = "チャンネルをプレビューしたり、選択範囲として読み込めます。書き出しは完全な合成画像を使います。";
 "imageEditor.channel.savedAlphaChannels" = "保存済み Alpha チャンネル";
 "imageEditor.channel.alphaChannelName" = "Alpha チャンネル %d";
@@ -2844,6 +2845,7 @@
 "imageEditor.action.layerSmartFilterLoadSettings" = "このフィルター設定を読み込む";
 "imageEditor.action.layerSmartFilterDiscardChanges" = "未保存のフィルター設定を破棄";
 "imageEditor.state.editing" = "編集中";
+"imageEditor.state.previewingSmartFilterMask" = "マスクをグレースケール表示中";
 "imageEditor.state.editingModified" = "編集中、未保存の変更あり";
 "imageEditor.state.unsavedChanges" = "未保存の変更あり";
 "imageEditor.action.layerSmartFilterEnable" = "オン";
@@ -2857,6 +2859,7 @@
 "imageEditor.action.smartFilterMaskInvert" = "マスクを反転";
 "imageEditor.action.smartFilterMaskPaint" = "マスクを描画";
 "imageEditor.action.smartFilterMaskStopPainting" = "マスク描画を終了";
+"imageEditor.action.smartFilterMaskThumbnailHelp" = "クリックでマスクを描画、Optionキーを押しながらクリックでグレースケール表示";
 "imageEditor.option.smartFilterMaskDensity" = "マスク濃度";
 "imageEditor.option.smartFilterMaskFeather" = "マスクのぼかし";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d px";

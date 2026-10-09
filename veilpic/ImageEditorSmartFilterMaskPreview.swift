@@ -2,6 +2,32 @@ import AppKit
 
 @MainActor
 extension ImageEditorViewModel {
+    var smartFilterMaskSoloPreviewImage: NSImage? {
+        guard let filterID = previewedSmartFilterMaskID,
+              let layerIndex = document.selectedLayerIndex,
+              document.layers.indices.contains(layerIndex),
+              let layer = document.selectedLayer,
+              let mask = layer.smartFilters.first(where: { $0.id == filterID })?.mask,
+              mask.width > 0,
+              mask.height > 0,
+              mask.width <= Int.max / mask.height,
+              mask.alpha.count == mask.width * mask.height
+        else { return nil }
+        if let cached = cachedSmartFilterMaskSoloPreviewImages[filterID] {
+            return cached
+        }
+
+        guard let localMask = NSImage.selectionMaskImage(
+            mask,
+            inverted: false,
+            targetSize: layer.image.size
+        ), let canvasMask = canvasMaskImage(fromLayerMask: localMask, layer: layer),
+           let preview = canvasMask.grayscaleAlphaPreviewImage(targetSize: document.canvasSize)
+        else { return nil }
+        cachedSmartFilterMaskSoloPreviewImages[filterID] = preview
+        return preview
+    }
+
     var smartFilterMaskOverlayImage: NSImage? {
         guard let filterID = editingSmartFilterMaskID,
               let layerIndex = document.selectedLayerIndex,

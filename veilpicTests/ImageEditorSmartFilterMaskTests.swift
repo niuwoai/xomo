@@ -312,6 +312,41 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(featheredEdge.alphaComponent < 0.48)
     }
 
+    @Test func optionClickPreviewsSmartFilterMaskAndNormalClickPaintsIt() throws {
+        let source = patternedImage(width: 32, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-solo-preview.png", image: source) { _ in }
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 16, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.activateSmartFilterMaskThumbnail(filterID, modifierFlags: .option)
+
+        #expect(viewModel.isPreviewingSmartFilterMask(filterID))
+        #expect(!viewModel.isEditingSmartFilterMask(filterID))
+        #expect(viewModel.smartFilterMaskOverlayImage == nil)
+        let previewPixels = try #require(imageEditorRGBABytes(viewModel.previewImage, width: 32, height: 16))
+        #expect(previewPixels[(8 * 32 + 4) * 4] > 250)
+        #expect(previewPixels[(8 * 32 + 28) * 4] < 5)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        viewModel.activateSmartFilterMaskThumbnail(filterID, modifierFlags: [])
+
+        #expect(!viewModel.isPreviewingSmartFilterMask(filterID))
+        #expect(viewModel.isEditingSmartFilterMask(filterID))
+        #expect(viewModel.smartFilterMaskOverlayImage != nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        viewModel.selectChannelPreview(.red)
+        #expect(!viewModel.isPreviewingSmartFilterMask(filterID))
+        #expect(viewModel.previewImage.qingtuPNGData() == viewModel.channelPreviewImage(for: .red).qingtuPNGData())
+    }
+
     @Test func legacySmartFilterDecodingDefaultsToNoMask() throws {
         let data = Data(
             #"{"kind":"pixelate","intensity":0.75,"settings":{},"isEnabled":true}"#.utf8

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1793 - 2026-10-09
+
+### Added
+- Option-clicking a Smart Filter mask thumbnail now displays the mask alone in grayscale; normal click still enters mask painting.
+
+### Verification
+- Mask solo-preview behavior, thumbnail interaction wiring, and version contracts are recorded in [the verification report](docs/reviews/2026-10-09-rc1793-smart-filter-mask-solo-preview.md). Full Release/desktop gate remains rc1800.
+
 ## 2.12.0-rc1792 - 2026-10-09
 
 ### Fixed

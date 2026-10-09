@@ -16030,6 +16030,7 @@ struct ImageEditorView: View {
             ?? (blendModeState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : blendMode.title)
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
         let isEditingMask = viewModel.isEditingSmartFilterMask(filter.id)
+        let isPreviewingMask = viewModel.isPreviewingSmartFilterMask(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
         let canDiscardControlChanges = viewModel.canDiscardSmartFilterControlChanges(filter.id)
         let canMoveUp = viewModel.canMoveSmartFilterOnSelectedLayer(filter.id, offset: -1)
@@ -16047,7 +16048,7 @@ struct ImageEditorView: View {
                 if let mask = filter.mask {
                     ImageEditorSmartFilterMaskThumbnail(
                         image: mask.grayscaleThumbnailImage(targetSize: CGSize(width: 24, height: 24)),
-                        isEditing: isEditingMask,
+                        isEditing: isEditingMask || isPreviewingMask,
                         accessibilityLabel: L10n.text(
                             isEditingMask
                                 ? "imageEditor.action.smartFilterMaskStopPainting"
@@ -16055,10 +16056,15 @@ struct ImageEditorView: View {
                         ),
                         accessibilityValue: isEditingMask
                             ? L10n.text("imageEditor.state.editing")
-                            : "",
+                            : isPreviewingMask
+                                ? L10n.text("imageEditor.state.previewingSmartFilterMask")
+                                : "",
                         accessibilityIdentifier: "image-editor-smart-filter-mask-thumbnail-\(filter.id)"
                     ) {
-                        viewModel.toggleSmartFilterMaskEditing(filter.id)
+                        viewModel.activateSmartFilterMaskThumbnail(
+                            filter.id,
+                            modifierFlags: NSApp.currentEvent?.modifierFlags ?? []
+                        )
                     }
                 }
                 Text(viewModel.smartFilterLabel(filter))

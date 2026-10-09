@@ -31,6 +31,6 @@ struct ImageEditorSmartFilterMaskThumbnail: View {
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(accessibilityValue)
         .accessibilityIdentifier(accessibilityIdentifier)
-        .help(accessibilityLabel)
+        .help(L10n.text("imageEditor.action.smartFilterMaskThumbnailHelp"))
     }
 }

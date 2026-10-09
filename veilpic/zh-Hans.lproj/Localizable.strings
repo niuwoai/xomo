@@ -1481,6 +1481,7 @@
 "imageEditor.channel.alpha" = "Alpha";
 "imageEditor.channel.previewing" = "正在预览 %@";
 "imageEditor.channel.layerMaskName" = "%@ 的图层蒙版";
+"imageEditor.channel.smartFilterMaskName" = "智能滤镜蒙版";
 "imageEditor.channel.previewHint" = "可预览通道，也可载入为选区；导出仍使用完整合成图。";
 "imageEditor.channel.savedAlphaChannels" = "已保存 Alpha 通道";
 "imageEditor.channel.alphaChannelName" = "Alpha 通道 %d";
@@ -2844,6 +2845,7 @@
 "imageEditor.action.layerSmartFilterLoadSettings" = "载入这项滤镜参数";
 "imageEditor.action.layerSmartFilterDiscardChanges" = "放弃未保存的滤镜参数";
 "imageEditor.state.editing" = "正在编辑";
+"imageEditor.state.previewingSmartFilterMask" = "正在以灰度查看蒙版";
 "imageEditor.state.editingModified" = "正在编辑，有未保存更改";
 "imageEditor.state.unsavedChanges" = "有未保存更改";
 "imageEditor.action.layerSmartFilterEnable" = "启用";
@@ -2857,6 +2859,7 @@
 "imageEditor.action.smartFilterMaskInvert" = "反相蒙版";
 "imageEditor.action.smartFilterMaskPaint" = "绘制蒙版";
 "imageEditor.action.smartFilterMaskStopPainting" = "结束绘制蒙版";
+"imageEditor.action.smartFilterMaskThumbnailHelp" = "单击绘制蒙版；按住 Option 单击以灰度查看蒙版";
 "imageEditor.option.smartFilterMaskDensity" = "蒙版浓度";
 "imageEditor.option.smartFilterMaskFeather" = "蒙版羽化";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d 像素";
