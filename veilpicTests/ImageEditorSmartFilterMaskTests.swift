@@ -5,6 +5,23 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSmartFilterMaskTests {
+    @Test func invalidStoredMaskDoesNotExpandSmartFilterAcrossTheWholeLayer() throws {
+        let source = patternedImage(width: 8, height: 8)
+        var layer = ImageEditorLayer.blank(name: "Invalid filter mask", size: source.size)
+        layer.image = source
+        layer.smartFilters = [
+            ImageEditorSmartFilter(
+                kind: .pixelate,
+                intensity: 1,
+                settings: ImageEditorFilterSettings(pixelateCellSize: 8),
+                mask: ImageEditorSelectionMask(width: 2, height: 2, alpha: [])
+            )
+        ]
+
+        let rendered = try #require(layer.contentImage)
+        #expect(imageEditorMaximumPixelDifference(rendered, source) == 0)
+    }
+
     @Test func selectionMaskLimitsOneSmartFilterAndUndoRedoRestoresIt() throws {
         let source = patternedImage(width: 32, height: 16)
         let viewModel = ImageEditorViewModel(sourceName: "filter-mask.png", image: source) { _ in }

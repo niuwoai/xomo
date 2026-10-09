@@ -567,17 +567,20 @@ struct ImageEditorLayer: Identifiable {
         }
         return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
-            let filterMask = filter.mask.flatMap { sourceMask -> NSImage? in
+            let filterMask: NSImage?
+            if let sourceMask = filter.mask {
                 guard let mask = NSImage.selectionMaskImage(
                     sourceMask,
                     inverted: filter.isMaskInverted,
                     targetSize: partial.size
-                ) else { return nil }
-                return mask.processedLayerMask(
+                ), let processedMask = mask.processedLayerMask(
                     density: filter.normalizedMaskDensity,
                     feather: filter.normalizedMaskFeather,
                     samplingScale: filter.pixelSamplingScale
-                ) ?? mask
+                ) else { return partial }
+                filterMask = processedMask
+            } else {
+                filterMask = nil
             }
             return partial.applyingFilter(
                 kind: filter.kind,
