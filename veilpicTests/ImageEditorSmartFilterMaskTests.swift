@@ -125,6 +125,45 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(reopened.document.selectedLayer?.smartFilters.first?.mask == nil)
     }
 
+    @Test func replacingFilterMaskFromSelectionPreservesRefinementAndUndoRedo() throws {
+        let source = patternedImage(width: 24, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-replace.png", image: source) { _ in }
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 12, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        #expect(viewModel.setSmartFilterMaskDensityOnSelectedLayer(filterID, density: 0.65) == 1)
+        #expect(viewModel.setSmartFilterMaskFeatherOnSelectedLayer(filterID, feather: 3) == 1)
+        #expect(viewModel.invertSmartFilterMaskOnSelectedLayer(filterID) == 1)
+        let originalFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        let originalMask = try #require(originalFilter.mask)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 12, y: 0, width: 12, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        let replacementFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        let replacementMask = try #require(replacementFilter.mask)
+        #expect(replacementMask != originalMask)
+        #expect(replacementFilter.normalizedMaskDensity == 0.65)
+        #expect(replacementFilter.normalizedMaskFeather == 3)
+        #expect(replacementFilter.isMaskInverted)
+
+        viewModel.undo()
+        let undoneFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(undoneFilter.mask == originalMask)
+        #expect(undoneFilter.normalizedMaskDensity == 0.65)
+        #expect(undoneFilter.normalizedMaskFeather == 3)
+        #expect(undoneFilter.isMaskInverted)
+
+        viewModel.redo()
+        let redoneFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(redoneFilter.mask == replacementMask)
+        #expect(redoneFilter.normalizedMaskDensity == 0.65)
+        #expect(redoneFilter.normalizedMaskFeather == 3)
+        #expect(redoneFilter.isMaskInverted)
+    }
+
     @Test func legacySmartFilterDecodingDefaultsToNoMask() throws {
         let data = Data(
             #"{"kind":"pixelate","intensity":0.75,"settings":{},"isEnabled":true}"#.utf8

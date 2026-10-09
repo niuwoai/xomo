@@ -10348,9 +10348,6 @@ final class ImageEditorViewModel: ObservableObject {
         let changedMasks = stagedMasks.filter { stagedMask in
             let filter = document.layers[stagedMask.layerIndex].smartFilters[filterIndex]
             return filter.mask != stagedMask.mask
-                || filter.normalizedMaskDensity != 1
-                || filter.normalizedMaskFeather != 0
-                || filter.isMaskInverted
         }
         guard !changedMasks.isEmpty else {
             statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
@@ -10360,9 +10357,6 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         for (layerIndex, mask) in changedMasks {
             document.layers[layerIndex].smartFilters[filterIndex].mask = mask
-            document.layers[layerIndex].smartFilters[filterIndex].maskDensity = 1
-            document.layers[layerIndex].smartFilters[filterIndex].maskFeather = 0
-            document.layers[layerIndex].smartFilters[filterIndex].isMaskInverted = false
         }
         appendHistory(L10n.text(
             changedMasks.count == 1

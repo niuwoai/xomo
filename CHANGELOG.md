@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1787 - 2026-10-09
+
+### Fixed
+- Replacing a Smart Filter mask from a new selection now preserves its density, feather, and inversion settings; Undo/Redo restores the exact mask and refinements.
+
+### Verification
+- `ImageEditorSmartFilterMaskTests` 6/6 passed, including replacement, parameter preservation, and full Undo/Redo state.
+- Release contract 10/30, CLI release-build contract 7/24, product-overview archive contract 3/30, and `git diff --check` passed.
+
 ## 2.12.0-rc1786 - 2026-10-09
 
 ### Added
