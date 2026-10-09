@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1799 - 2026-10-10
+
+### Tests
+- Added a regression for painting Smart Filter masks through canvas selections on offset, scaled pixel layers, including selection clipping, unchanged layer pixels, and Undo/Redo.
+
+### Verification
+- Smart Filter mask suite 14/14, release contract 10/30, CLI build contract 7/24, and product-overview contract 3/30 passed; see [rc1799 verification record](docs/reviews/2026-10-10-rc1799-scaled-smart-filter-mask-selection.md). Full Release, smoke, signing, and installation remain scheduled for rc1800.
+
 ## 2.12.0-rc1798 - 2026-10-09
 
 ### Added

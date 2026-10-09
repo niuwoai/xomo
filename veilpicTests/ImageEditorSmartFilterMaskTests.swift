@@ -237,6 +237,48 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == restoredMask)
     }
 
+    @Test func paintingSmartFilterMaskMapsCanvasSelectionOntoScaledOffsetLayerPixels() throws {
+        let layerSize = CGSize(width: 16, height: 12)
+        let source = patternedImage(width: 16, height: 12)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "scaled-filter-mask-paint.png",
+            image: patternedImage(width: 64, height: 48)
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].image = source
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 16, y: 12, width: 32, height: 24)
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        let layerFrame = try #require(viewModel.document.selectedLayer?.frame)
+        viewModel.document.selection = .rectangle(layerFrame)
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        let originalMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+        #expect(originalMask.width == Int(layerSize.width))
+        #expect(originalMask.height == Int(layerSize.height))
+        #expect(originalMask.alpha[6 * originalMask.width + 8] == .max)
+        let originalPixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.toggleSmartFilterMaskEditing(filterID)
+        viewModel.brushSize = 8
+        viewModel.document.selection = .rectangle(CGRect(x: 24, y: 18, width: 8, height: 12))
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.drawBrush(points: [CGPoint(x: 28, y: 24)])
+
+        let paintedMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+        #expect(paintedMask.alpha[6 * paintedMask.width + 6] < .max)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        viewModel.drawBrush(points: [CGPoint(x: 20, y: 24)])
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == paintedMask)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalPixels)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == originalMask)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == paintedMask)
+    }
+
     @Test func enteringSmartFilterMaskEditingLeavesQuickMaskBeforePainting() throws {
         let source = patternedImage(width: 32, height: 16)
         let viewModel = ImageEditorViewModel(sourceName: "filter-mask-from-quick-mask.png", image: source) { _ in }
