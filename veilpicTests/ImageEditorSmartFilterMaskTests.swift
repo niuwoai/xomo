@@ -237,6 +237,81 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == restoredMask)
     }
 
+    @Test func enteringSmartFilterMaskEditingLeavesQuickMaskBeforePainting() throws {
+        let source = patternedImage(width: 32, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-from-quick-mask.png", image: source) { _ in }
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 32, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        viewModel.document.selection = nil
+        let originalMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        viewModel.toggleSmartFilterMaskEditing(filterID)
+
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.isEditingSmartFilterMask(filterID))
+        viewModel.brushSize = 6
+        viewModel.drawBrush(points: [CGPoint(x: 16, y: 8)])
+
+        let paintedMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+        #expect(paintedMask != originalMask)
+        #expect(paintedMask.alpha[8 * paintedMask.width + 16] == .min)
+        #expect(viewModel.isQuickMaskMode == false)
+    }
+
+    @Test func smartFilterMaskEditingShowsRubylithForExcludedFilterCoverage() throws {
+        let source = patternedImage(width: 32, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-overlay.png", image: source) { _ in }
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 16, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        viewModel.toggleSmartFilterMaskEditing(filterID)
+
+        let overlay = try #require(viewModel.smartFilterMaskOverlayImage)
+        let included = try #require(overlay.color(at: CGPoint(x: 4.5, y: 8.5))?.usingColorSpace(.deviceRGB))
+        let excluded = try #require(overlay.color(at: CGPoint(x: 28.5, y: 8.5))?.usingColorSpace(.deviceRGB))
+        #expect(included.alphaComponent < 0.02)
+        #expect(excluded.redComponent > 0.98)
+        #expect(excluded.greenComponent < 0.02)
+        #expect(excluded.blueComponent < 0.02)
+        #expect(abs(excluded.alphaComponent - 0.5) < 0.02)
+
+        #expect(viewModel.setSmartFilterMaskDensityOnSelectedLayer(filterID, density: 0.5) == 1)
+        let densityAdjustedOverlay = try #require(viewModel.smartFilterMaskOverlayImage)
+        let partiallyExcluded = try #require(
+            densityAdjustedOverlay.color(at: CGPoint(x: 28.5, y: 8.5))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(partiallyExcluded.alphaComponent - 0.25) < 0.03)
+
+        #expect(viewModel.invertSmartFilterMaskOnSelectedLayer(filterID) == 1)
+        let invertedOverlay = try #require(viewModel.smartFilterMaskOverlayImage)
+        let nowExcluded = try #require(
+            invertedOverlay.color(at: CGPoint(x: 4.5, y: 8.5))?.usingColorSpace(.deviceRGB)
+        )
+        let nowIncluded = try #require(
+            invertedOverlay.color(at: CGPoint(x: 28.5, y: 8.5))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(nowExcluded.alphaComponent - 0.25) < 0.03)
+        #expect(nowIncluded.alphaComponent < 0.02)
+
+        #expect(viewModel.setSmartFilterMaskDensityOnSelectedLayer(filterID, density: 1) == 1)
+        #expect(viewModel.invertSmartFilterMaskOnSelectedLayer(filterID) == 1)
+        #expect(viewModel.setSmartFilterMaskFeatherOnSelectedLayer(filterID, feather: 2) == 1)
+        let featheredOverlay = try #require(viewModel.smartFilterMaskOverlayImage)
+        let featheredEdge = try #require(
+            featheredOverlay.color(at: CGPoint(x: 15.5, y: 8.5))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(featheredEdge.alphaComponent > 0.02)
+        #expect(featheredEdge.alphaComponent < 0.48)
+    }
+
     @Test func legacySmartFilterDecodingDefaultsToNoMask() throws {
         let data = Data(
             #"{"kind":"pixelate","intensity":0.75,"settings":{},"isEnabled":true}"#.utf8

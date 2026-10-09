@@ -10888,7 +10888,26 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func maskColorOverlay(in size: CGSize) -> some View {
-        if let overlayImage = viewModel.canvasMaskOverlayImage {
+        if let overlayImage = viewModel.smartFilterMaskOverlayImage,
+           let layer = viewModel.document.selectedLayer {
+            let imageRect = fittedImageRect(in: size)
+            let canvasSize = viewModel.document.canvasSize
+            let scaleX = imageRect.width / max(1, canvasSize.width)
+            let scaleY = imageRect.height / max(1, canvasSize.height)
+            let overlayRect = CGRect(
+                x: imageRect.minX + layer.frame.minX * scaleX,
+                y: imageRect.minY + (canvasSize.height - layer.frame.maxY) * scaleY,
+                width: layer.frame.width * scaleX,
+                height: layer.frame.height * scaleY
+            )
+            Image(nsImage: overlayImage)
+                .resizable()
+                .interpolation(.none)
+                .frame(width: overlayRect.width, height: overlayRect.height)
+                .position(x: overlayRect.midX, y: overlayRect.midY)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        } else if let overlayImage = viewModel.canvasMaskOverlayImage {
             let imageRect = fittedImageRect(in: size)
             Image(nsImage: overlayImage)
                 .resizable()

@@ -617,6 +617,8 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(source.contains(".disabled(viewModel.document.isEffectivelyLocked(layer))"))
         #expect(source.contains("sidebarTab: viewModel.selectedLeftSidebarTab"))
         #expect(viewSource.contains("maskColorOverlay(in: geometry.size)"))
+        #expect(viewSource.contains("viewModel.smartFilterMaskOverlayImage"))
+        #expect(viewSource.contains("canvasSize.height - layer.frame.maxY"))
         #expect(viewSource.contains("viewModel.canvasMaskOverlayImage"))
         #expect(viewSource.contains("canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview"))
         #expect(viewSource.contains("case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()"))

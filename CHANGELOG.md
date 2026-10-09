@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1792 - 2026-10-09
+
+### Fixed
+- Entering Smart Filter mask painting now exits Quick Mask and channel previews before routing brush strokes to the filter mask; the canvas shows a cached red overlay for regions excluded by the effective mask.
+
+### Verification
+- `ImageEditorSmartFilterMaskTests` 11/11 and `ImageEditorLayerThumbnailSelectionTests` 20/20 passed; release contract 10/30, CLI Release contract 7/24, and product-overview archive contract 3/30 passed. Full Release/desktop gate remains rc1800. See [verification report](docs/reviews/2026-10-09-rc1792-smart-filter-mask-overlay.md).
+
 ## 2.12.0-rc1791 - 2026-10-09
 
 ### Added

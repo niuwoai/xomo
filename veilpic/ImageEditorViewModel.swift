@@ -1051,6 +1051,7 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
     private var cachedLayerMaskSoloPreviewImages: [UUID: NSImage] = [:]
     private var cachedLayerMaskRubylithOverlayImages: [UUID: NSImage] = [:]
+    var cachedSmartFilterMaskOverlayImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
     private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
@@ -10343,6 +10344,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        leaveQuickMaskMode()
+        clearLayerMaskSoloPreview()
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
         isEditingLayerMask = false
         editingSmartFilterMaskID = filterID
         if ![.brush, .pencil, .eraser].contains(selectedTool) {
@@ -13214,6 +13219,7 @@ final class ImageEditorViewModel: ObservableObject {
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedLayerMaskSoloPreviewImages.removeAll(keepingCapacity: true)
         cachedLayerMaskRubylithOverlayImages.removeAll(keepingCapacity: true)
+        cachedSmartFilterMaskOverlayImages.removeAll(keepingCapacity: true)
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil

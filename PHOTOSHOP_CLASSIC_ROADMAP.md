@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-09）
 
+- rc1792 修复进入 Smart Filter 蒙版绘制时仍停留 Quick Mask/通道预览的模式冲突；画布以缓存红色叠加层标出有效蒙版排除区域，密度、羽化与反相沿用实际滤镜覆盖语义。`ImageEditorSmartFilterMaskTests` 11/11、蒙版/图层缩略图接线 20/20、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。详见[验证记录](docs/reviews/2026-10-09-rc1792-smart-filter-mask-overlay.md)。
 - rc1791 为有蒙版的 Smart Filter 项加入灰度覆盖缩略图；点击预览进入/退出对应蒙版绘制，方便直接定位实际滤镜作用区域。`ImageEditorSmartFilterMaskTests` 9/9、属性面板接线 1/1、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过；未运行完整 Release/桌面门槛，下一完整门槛仍为 rc1800，不扩张 Figma。详见[验证记录](docs/reviews/2026-10-09-rc1791-smart-filter-mask-thumbnail.md)。
 
 - rc1790 加固涂抹 automation 回归的测试夹具：先在不透明、有纹理画布上操作，并要求图层 PNG 字节变化，避免空透明画布 no-op 仅由历史标题断言误判为功能成功。专项 XCTest 1/1、发布合同 10/30、CLI 合同 7/24 及 `git diff --check` 通过；未运行完整 Release 或桌面验证。下一完整门槛 rc1800，不扩张 Figma。
