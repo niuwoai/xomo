@@ -267,6 +267,53 @@ extension ImageEditorSelection {
 }
 
 extension ImageEditorSelectionMask {
+    func paintedByBrushStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        canvasSize: CGSize,
+        settings: ImageEditorBrushStrokeSettings,
+        targetAlpha: UInt8,
+        blendMode: ImageEditorBlendMode,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
+    ) -> ImageEditorSelectionMask? {
+        paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: canvasSize,
+            diameter: settings.diameter,
+            opacity: settings.opacity,
+            hardness: settings.hardness,
+            flow: settings.flow,
+            spacing: settings.spacing,
+            pressureControlsSize: settings.pressureControlsSize,
+            pressureControlsOpacity: settings.pressureControlsOpacity,
+            pressureControlsFlow: settings.pressureControlsFlow,
+            pressureSensitivity: settings.pressureSensitivity,
+            sizeJitter: settings.sizeJitter,
+            angleJitter: settings.angleJitter,
+            angleFollowsStrokeDirection: settings.angleFollowsStrokeDirection,
+            roundnessJitter: settings.roundnessJitter,
+            opacityJitter: settings.opacityJitter,
+            flowJitter: settings.flowJitter,
+            minimumRoundness: settings.minimumRoundness,
+            scatter: settings.scatter,
+            scatterBothAxes: settings.scatterBothAxes,
+            scatterCount: settings.scatterCount,
+            scatterCountJitter: settings.scatterCountJitter,
+            noiseEnabled: settings.noiseEnabled,
+            wetEdgesEnabled: settings.wetEdgesEnabled,
+            minimumDiameter: settings.minimumDiameter,
+            minimumOpacity: settings.minimumOpacity,
+            minimumFlow: settings.minimumFlow,
+            tiltControlsShape: settings.tiltControlsShape,
+            tipRoundness: settings.tipRoundness,
+            tipAngleDegrees: settings.tipAngleDegrees,
+            smoothing: settings.smoothing,
+            edgeStyle: settings.edgeStyle,
+            targetAlpha: targetAlpha,
+            blendMode: blendMode,
+            airbrushPulseSamples: airbrushPulseSamples
+        )
+    }
+
     func paintedByQuickMaskStroke(
         points: [CGPoint],
         canvasSize: CGSize,

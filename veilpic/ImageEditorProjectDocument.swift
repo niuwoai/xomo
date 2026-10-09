@@ -1308,6 +1308,8 @@ extension ImageEditorViewModel {
         selectedChannelPreview = .composite
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
+        editingSmartFilterMaskID = nil
+        editingSmartFilterMaskID = nil
         statusText = L10n.format("imageEditor.status.projectOpened", document.sourceName)
         resetProjectSaveBaseline()
     }
@@ -1653,6 +1655,7 @@ extension ImageEditorViewModel {
         selectedChannelPreview = .composite
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
+        editingSmartFilterMaskID = nil
     }
 
     private func projectFilename() -> String {

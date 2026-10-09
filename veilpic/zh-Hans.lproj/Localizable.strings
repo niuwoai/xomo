@@ -2100,6 +2100,7 @@
 "imageEditor.history.smartFilterMaskFeather" = "调整智能滤镜蒙版羽化";
 "imageEditor.history.smartFilterMasksFeather" = "调整所选图层的智能滤镜蒙版羽化";
 "imageEditor.history.smartFilterMaskInvert" = "反相智能滤镜蒙版";
+"imageEditor.history.smartFilterMaskPaint" = "绘制智能滤镜蒙版";
 "imageEditor.history.smartFilterMasksInvert" = "反相所选图层的智能滤镜蒙版";
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
@@ -2728,6 +2729,7 @@
 "imageEditor.status.magicWandOutsideCanvas" = "请在画布范围内点击使用魔棒";
 "imageEditor.status.editingLayer" = "正在编辑图层内容";
 "imageEditor.status.editingMask" = "正在编辑图层蒙版：画笔隐藏，橡皮恢复";
+"imageEditor.status.editingSmartFilterMask" = "正在编辑智能滤镜蒙版：画笔隐藏，橡皮恢复";
 "imageEditor.status.layerMoved" = "已移动当前图层";
 "imageEditor.status.layerResized" = "已缩放当前图层";
 "imageEditor.status.textBoxResized" = "已调整文本框，字号保持不变";
@@ -2853,6 +2855,8 @@
 "imageEditor.action.smartFilterMaskFromSelection" = "从选区创建蒙版";
 "imageEditor.action.smartFilterMaskClear" = "清除蒙版";
 "imageEditor.action.smartFilterMaskInvert" = "反相蒙版";
+"imageEditor.action.smartFilterMaskPaint" = "绘制蒙版";
+"imageEditor.action.smartFilterMaskStopPainting" = "结束绘制蒙版";
 "imageEditor.option.smartFilterMaskDensity" = "蒙版浓度";
 "imageEditor.option.smartFilterMaskFeather" = "蒙版羽化";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d 像素";

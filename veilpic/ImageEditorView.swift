@@ -16150,6 +16150,17 @@ struct ImageEditorView: View {
             }
             if !filter.appliesToBackdrop || filter.mask != nil {
                 HStack(spacing: 6) {
+                    if filter.mask != nil {
+                        Button(L10n.text(
+                            viewModel.isEditingSmartFilterMask(filter.id)
+                                ? "imageEditor.action.smartFilterMaskStopPainting"
+                                : "imageEditor.action.smartFilterMaskPaint"
+                        )) {
+                            viewModel.toggleSmartFilterMaskEditing(filter.id)
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                        .accessibilityIdentifier("image-editor-smart-filter-mask-paint-\(filter.id)")
+                    }
                     if !filter.appliesToBackdrop {
                         Button(L10n.text("imageEditor.action.smartFilterMaskFromSelection")) {
                             viewModel.setSmartFilterMaskFromSelection(filter.id)

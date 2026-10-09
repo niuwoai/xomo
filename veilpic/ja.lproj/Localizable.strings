@@ -2100,6 +2100,7 @@
 "imageEditor.history.smartFilterMaskFeather" = "スマートフィルターマスクのぼかしを変更";
 "imageEditor.history.smartFilterMasksFeather" = "選択レイヤーのスマートフィルターマスクのぼかしを変更";
 "imageEditor.history.smartFilterMaskInvert" = "スマートフィルターマスクを反転";
+"imageEditor.history.smartFilterMaskPaint" = "スマートフィルターマスクを描画";
 "imageEditor.history.smartFilterMasksInvert" = "選択レイヤーのスマートフィルターマスクを反転";
 "imageEditor.history.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.history.layerTextUpdate" = "文字レイヤーを更新";
@@ -2728,6 +2729,7 @@
 "imageEditor.status.magicWandOutsideCanvas" = "カンバス内をクリックして自動選択してください";
 "imageEditor.status.editingLayer" = "レイヤー内容を編集中";
 "imageEditor.status.editingMask" = "レイヤーマスクを編集中：ブラシで隠し、消しゴムで戻します";
+"imageEditor.status.editingSmartFilterMask" = "スマートフィルターマスクを編集中：ブラシで隠し、消しゴムで戻します";
 "imageEditor.status.layerMoved" = "選択中のレイヤーを移動しました";
 "imageEditor.status.layerResized" = "選択中のレイヤーを拡大縮小しました";
 "imageEditor.status.textBoxResized" = "文字サイズを変えずにテキスト枠を調整しました";
@@ -2853,6 +2855,8 @@
 "imageEditor.action.smartFilterMaskFromSelection" = "選択範囲からマスク";
 "imageEditor.action.smartFilterMaskClear" = "マスクをクリア";
 "imageEditor.action.smartFilterMaskInvert" = "マスクを反転";
+"imageEditor.action.smartFilterMaskPaint" = "マスクを描画";
+"imageEditor.action.smartFilterMaskStopPainting" = "マスク描画を終了";
 "imageEditor.option.smartFilterMaskDensity" = "マスク濃度";
 "imageEditor.option.smartFilterMaskFeather" = "マスクのぼかし";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d px";

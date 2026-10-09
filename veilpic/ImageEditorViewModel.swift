@@ -993,6 +993,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var previewedLayerMaskID: UUID?
     @Published private(set) var previewedLayerMaskMode: ImageEditorLayerMaskPreviewMode?
     @Published var isEditingLayerMask: Bool = false
+    @Published var editingSmartFilterMaskID: UUID?
     @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
     @Published var undonePendingPenPathAnchors: [ImageEditorPathAnchor] = []
     var pendingPenContinuationLayerID: UUID?
@@ -1414,6 +1415,7 @@ final class ImageEditorViewModel: ObservableObject {
         previewedAlphaChannelID = nil
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
+        editingSmartFilterMaskID = nil
         clearUndoHistory()
         historySnapshots.removeAll()
         namedHistorySnapshots.removeAll()
@@ -5141,6 +5143,9 @@ final class ImageEditorViewModel: ObservableObject {
             _ = cancelMovingPathAnchor()
             finishPixelSelectionMove()
         }
+        if ![.brush, .pencil, .eraser].contains(tool) {
+            editingSmartFilterMaskID = nil
+        }
         selectedTool = tool
         if tool == .pen, pendingPenPathPoints.isEmpty {
             statusText = L10n.text("imageEditor.status.penReady")
@@ -5165,6 +5170,9 @@ final class ImageEditorViewModel: ObservableObject {
         if selectedLeftSidebarTab != tab {
             _ = cancelMovingPathAnchor()
             finishPixelSelectionMove()
+        }
+        if tab == .components {
+            editingSmartFilterMaskID = nil
         }
         selectedLeftSidebarTab = tab
     }
@@ -6397,6 +6405,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
+        editingSmartFilterMaskID = nil
         if !editingMask || previewedLayerMaskID != id {
             clearLayerMaskSoloPreview()
         }
@@ -7839,11 +7848,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func editLayerPixels() {
+        editingSmartFilterMaskID = nil
         isEditingLayerMask = false
         statusText = L10n.text("imageEditor.status.editingLayer")
     }
 
     func editLayerMask() {
+        editingSmartFilterMaskID = nil
         guard selectedLayerHasMask else {
             statusText = L10n.text("imageEditor.status.noLayerMask")
             return
@@ -8117,6 +8128,16 @@ final class ImageEditorViewModel: ObservableObject {
             )
             return
         }
+        if editingSmartFilterMaskID != nil {
+            paintSelectedSmartFilterMask(
+                samples: samples,
+                reveal: usesBackgroundColorForMasks,
+                edgeStyle: edgeStyle,
+                blendMode: erase ? .normal : paintBlendMode,
+                airbrushPulseSamples: airbrushPulseSamples
+            )
+            return
+        }
         if isEditingLayerMask {
             paintSelectedLayerMask(
                 samples: samples,
@@ -8139,38 +8160,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let output = layer.image.withBrushStroke(
             samples: localSamples,
             color: paintColor,
-            settings: ImageEditorBrushStrokeSettings(
-                diameter: rasterLocalBrushWidth(brushSize, layer: layer),
-                hardness: edgeStyle == .aliased ? 1 : hardness,
-                opacity: opacity,
-                flow: brushFlow / 100,
-                spacing: brushSpacing / 100,
-                pressureControlsSize: brushPressureControlsSize,
-                pressureControlsOpacity: brushPressureControlsOpacity,
-                pressureControlsFlow: brushPressureControlsFlow,
-                pressureSensitivity: brushPressureSensitivity / 100,
-                sizeJitter: brushSizeJitter / 100,
-                angleJitter: brushAngleJitter / 100,
-                angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
-                roundnessJitter: brushRoundnessJitter / 100,
-                opacityJitter: brushOpacityJitter / 100,
-                flowJitter: brushFlowJitter / 100,
-                minimumRoundness: brushMinimumRoundness / 100,
-                scatter: brushScatter / 100,
-                scatterBothAxes: brushScatterBothAxes,
-                scatterCount: brushScatterCount,
-                scatterCountJitter: brushScatterCountJitter / 100,
-                noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled,
-                wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled,
-                minimumDiameter: brushMinimumDiameter / 100,
-                minimumOpacity: brushMinimumOpacity / 100,
-                minimumFlow: brushMinimumFlow / 100,
-                tiltControlsShape: brushTiltControlsShape,
-                tipRoundness: brushTipRoundness / 100,
-                tipAngleDegrees: brushTipAngleDegrees,
-                smoothing: brushSmoothing / 100,
-                edgeStyle: edgeStyle
-            ),
+            settings: brushStrokeSettings(for: layer, edgeStyle: edgeStyle),
             erase: erase,
             blendMode: erase ? .normal : paintBlendMode,
             airbrushPulseSamples: localPaintAirbrushPulseSamples
@@ -8204,6 +8194,25 @@ final class ImageEditorViewModel: ObservableObject {
                 at: canvasPoint,
                 layer: layer,
                 mask: mask
+            )
+        }
+        if let filterID = editingSmartFilterMaskID,
+           let (_, filterIndex) = selectedSmartFilterIndex(filterID),
+           let mask = layer.smartFilters[filterIndex].mask {
+            guard mask.width > 0, mask.height > 0,
+                  mask.width <= Int.max / mask.height,
+                  mask.alpha.count == mask.width * mask.height
+            else { return false }
+            let localPoint = rasterLocalPoint(canvasPoint, layer: layer)
+            guard localPoint.x >= 0, localPoint.y >= 0,
+                  localPoint.x < CGFloat(mask.width), localPoint.y < CGFloat(mask.height)
+            else { return false }
+            let x = Int(localPoint.x)
+            let y = Int(localPoint.y)
+            return ImageEditorPencilAutoErasePolicy.usesBackgroundTone(
+                isEnabled: true,
+                sampledValue: mask.alpha[y * mask.width + x],
+                foregroundValue: UInt8.min
             )
         }
         let localPoint = rasterLocalPoint(canvasPoint, layer: layer)
@@ -10316,6 +10325,32 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    func isEditingSmartFilterMask(_ filterID: UUID) -> Bool {
+        editingSmartFilterMaskID == filterID
+    }
+
+    func toggleSmartFilterMaskEditing(_ filterID: UUID) {
+        if editingSmartFilterMaskID == filterID {
+            editingSmartFilterMaskID = nil
+            statusText = L10n.text("imageEditor.status.editingLayer")
+            return
+        }
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex]),
+              !document.layers[layerIndex].smartFilters[filterIndex].appliesToBackdrop,
+              document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        isEditingLayerMask = false
+        editingSmartFilterMaskID = filterID
+        if ![.brush, .pencil, .eraser].contains(selectedTool) {
+            selectTool(.brush)
+        }
+        statusText = L10n.text("imageEditor.status.editingSmartFilterMask")
+    }
+
     @discardableResult
     func setSmartFilterMaskFromSelection(_ filterID: UUID) -> Int {
         guard let (_, filterIndex) = selectedSmartFilterIndex(filterID),
@@ -10385,6 +10420,9 @@ final class ImageEditorViewModel: ObservableObject {
             document.layers[layerIndex].smartFilters[filterIndex].maskDensity = 1
             document.layers[layerIndex].smartFilters[filterIndex].maskFeather = 0
             document.layers[layerIndex].smartFilters[filterIndex].isMaskInverted = false
+        }
+        if editingSmartFilterMaskID == filterID {
+            editingSmartFilterMaskID = nil
         }
         appendHistory(L10n.text(
             targetIndices.count == 1
@@ -10949,6 +10987,152 @@ final class ImageEditorViewModel: ObservableObject {
 
     func maskSize(for layer: ImageEditorLayer) -> CGSize {
         layer.isGroup ? document.canvasSize : layer.image.size
+    }
+
+    private func paintSelectedSmartFilterMask(
+        samples: [ImageEditorBrushStrokeSample],
+        reveal: Bool,
+        edgeStyle: ImageEditorBrushEdgeStyle,
+        blendMode: ImageEditorBlendMode,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample]
+    ) {
+        guard let filterID = editingSmartFilterMaskID,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else {
+            editingSmartFilterMaskID = nil
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let layer = document.layers[layerIndex]
+        guard canEditSmartFilters(on: layer),
+              !layer.smartFilters[filterIndex].appliesToBackdrop,
+              let currentMask = layer.smartFilters[filterIndex].mask,
+              currentMask.width > 0,
+              currentMask.height > 0,
+              currentMask.width <= Int.max / currentMask.height,
+              currentMask.width == Int(layer.image.size.width.rounded()),
+              currentMask.height == Int(layer.image.size.height.rounded()),
+              currentMask.alpha.count == currentMask.width * currentMask.height
+        else {
+            editingSmartFilterMaskID = nil
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let localSamples = rasterLocalSamples(samples, layer: layer)
+        let localPulseSamples = rasterLocalSamples(airbrushPulseSamples, layer: layer)
+        guard let updatedMask = currentMask.paintedByBrushStroke(
+            samples: localSamples,
+            canvasSize: layer.image.size,
+            settings: brushStrokeSettings(for: layer, edgeStyle: edgeStyle),
+            targetAlpha: reveal ? UInt8.max : UInt8.min,
+            blendMode: blendMode,
+            airbrushPulseSamples: localPulseSamples
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard updatedMask != currentMask else {
+            statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
+            return
+        }
+        guard let maskToStore = smartFilterMask(updatedMask, clippedToSelectionFrom: currentMask, in: layer) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard maskToStore != currentMask else {
+            statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
+            return
+        }
+        pushUndo()
+        document.layers[layerIndex].smartFilters[filterIndex].mask = maskToStore
+        appendHistory(L10n.text("imageEditor.history.smartFilterMaskPaint"))
+    }
+
+    private func brushStrokeSettings(
+        for layer: ImageEditorLayer,
+        edgeStyle: ImageEditorBrushEdgeStyle
+    ) -> ImageEditorBrushStrokeSettings {
+        ImageEditorBrushStrokeSettings(
+            diameter: rasterLocalBrushWidth(brushSize, layer: layer),
+            hardness: edgeStyle == .aliased ? 1 : hardness,
+            opacity: opacity,
+            flow: brushFlow / 100,
+            spacing: brushSpacing / 100,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: brushPressureSensitivity / 100,
+            sizeJitter: brushSizeJitter / 100,
+            angleJitter: brushAngleJitter / 100,
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
+            roundnessJitter: brushRoundnessJitter / 100,
+            opacityJitter: brushOpacityJitter / 100,
+            flowJitter: brushFlowJitter / 100,
+            minimumRoundness: brushMinimumRoundness / 100,
+            scatter: brushScatter / 100,
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: brushScatterCountJitter / 100,
+            noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled,
+            wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled,
+            minimumDiameter: brushMinimumDiameter / 100,
+            minimumOpacity: brushMinimumOpacity / 100,
+            minimumFlow: brushMinimumFlow / 100,
+            tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: brushTipRoundness / 100,
+            tipAngleDegrees: brushTipAngleDegrees,
+            smoothing: brushSmoothing / 100,
+            edgeStyle: edgeStyle
+        )
+    }
+
+    private func smartFilterMask(
+        _ updatedMask: ImageEditorSelectionMask,
+        clippedToSelectionFrom currentMask: ImageEditorSelectionMask,
+        in layer: ImageEditorLayer
+    ) -> ImageEditorSelectionMask? {
+        guard let selection = document.selection else { return updatedMask }
+        guard let coverage = selection.rasterizedMask(canvasSize: document.canvasSize),
+              coverage.width > 0,
+              coverage.height > 0,
+              coverage.width <= Int.max / coverage.height,
+              coverage.alpha.count == coverage.width * coverage.height,
+              currentMask.width == updatedMask.width,
+              currentMask.height == updatedMask.height,
+              currentMask.alpha.count == updatedMask.alpha.count,
+              layer.frame.width.isFinite,
+              layer.frame.height.isFinite,
+              layer.frame.width > 0,
+              layer.frame.height > 0,
+              document.canvasSize.width > 0,
+              document.canvasSize.height > 0
+        else { return nil }
+
+        var alpha = updatedMask.alpha
+        for y in 0..<updatedMask.height {
+            let canvasY = layer.frame.minY
+                + (CGFloat(y) + 0.5) / CGFloat(updatedMask.height) * layer.frame.height
+            guard canvasY >= 0, canvasY < document.canvasSize.height else { continue }
+            let selectionY = min(
+                coverage.height - 1,
+                Int(canvasY / document.canvasSize.height * CGFloat(coverage.height))
+            )
+            for x in 0..<updatedMask.width {
+                let canvasX = layer.frame.minX
+                    + (CGFloat(x) + 0.5) / CGFloat(updatedMask.width) * layer.frame.width
+                guard canvasX >= 0, canvasX < document.canvasSize.width else { continue }
+                let selectionX = min(
+                    coverage.width - 1,
+                    Int(canvasX / document.canvasSize.width * CGFloat(coverage.width))
+                )
+                let index = y * updatedMask.width + x
+                let selectionAlpha = Int(coverage.alpha[selectionY * coverage.width + selectionX])
+                let retainedAlpha = Int(currentMask.alpha[index]) * (Int(UInt8.max) - selectionAlpha)
+                let paintedAlpha = Int(updatedMask.alpha[index]) * selectionAlpha
+                alpha[index] = UInt8((retainedAlpha + paintedAlpha + Int(UInt8.max) / 2) / Int(UInt8.max))
+            }
+        }
+        return ImageEditorSelectionMask(width: updatedMask.width, height: updatedMask.height, alpha: alpha)
     }
 
     private func clippedToSelection(original: NSImage, output: NSImage, layerFrame: CGRect) -> NSImage {

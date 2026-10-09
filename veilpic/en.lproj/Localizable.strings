@@ -2100,6 +2100,7 @@
 "imageEditor.history.smartFilterMaskFeather" = "Change Smart Filter Mask Feather";
 "imageEditor.history.smartFilterMasksFeather" = "Change Smart Filter Mask Feather on Selected Layers";
 "imageEditor.history.smartFilterMaskInvert" = "Invert Smart Filter Mask";
+"imageEditor.history.smartFilterMaskPaint" = "Paint Smart Filter Mask";
 "imageEditor.history.smartFilterMasksInvert" = "Invert Smart Filter Masks on Selected Layers";
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
@@ -2728,6 +2729,7 @@
 "imageEditor.status.magicWandOutsideCanvas" = "Click inside the canvas to make a magic-wand selection";
 "imageEditor.status.editingLayer" = "Editing layer pixels";
 "imageEditor.status.editingMask" = "Editing layer mask: brush hides, eraser restores";
+"imageEditor.status.editingSmartFilterMask" = "Editing Smart Filter mask: brush hides, eraser restores";
 "imageEditor.status.layerMoved" = "Selected layer moved";
 "imageEditor.status.layerResized" = "Selected layer resized";
 "imageEditor.status.textBoxResized" = "Text box resized without scaling the type";
@@ -2853,6 +2855,8 @@
 "imageEditor.action.smartFilterMaskFromSelection" = "Mask from Selection";
 "imageEditor.action.smartFilterMaskClear" = "Clear Mask";
 "imageEditor.action.smartFilterMaskInvert" = "Invert Mask";
+"imageEditor.action.smartFilterMaskPaint" = "Paint Mask";
+"imageEditor.action.smartFilterMaskStopPainting" = "Stop Painting Mask";
 "imageEditor.option.smartFilterMaskDensity" = "Mask Density";
 "imageEditor.option.smartFilterMaskFeather" = "Mask Feather";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d px";

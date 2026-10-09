@@ -164,6 +164,48 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(redoneFilter.isMaskInverted)
     }
 
+    @Test func brushAndEraserPaintOnlySelectedSmartFilterMaskAndUndoRedoRestoreStrokes() throws {
+        let source = patternedImage(width: 32, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-paint.png", image: source) { _ in }
+        viewModel.selectedFilter = .pixelate
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 32, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+        let layerPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let originalMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+
+        viewModel.toggleSmartFilterMaskEditing(filterID)
+        #expect(viewModel.isEditingSmartFilterMask(filterID))
+        viewModel.brushSize = 6
+        viewModel.document.selection = .rectangle(CGRect(x: 8, y: 4, width: 16, height: 8))
+        viewModel.drawBrush(points: [CGPoint(x: 16, y: 8)])
+        let maskAfterSelectedStroke = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+        viewModel.drawBrush(points: [CGPoint(x: 2, y: 8)])
+
+        let paintedFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        let paintedMask = try #require(paintedFilter.mask)
+        #expect(maskAfterSelectedStroke != originalMask)
+        #expect(paintedMask != originalMask)
+        #expect(paintedMask.alpha[8 * paintedMask.width + 16] == .min)
+        #expect(paintedMask.alpha[8 * paintedMask.width + 2] == originalMask.alpha[8 * originalMask.width + 2])
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerPixelsBefore)
+
+        viewModel.drawBrush(points: [CGPoint(x: 16, y: 8)], erase: true)
+        let restoredMask = try #require(viewModel.document.selectedLayer?.smartFilters.first?.mask)
+        #expect(restoredMask.alpha[8 * restoredMask.width + 16] == .max)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerPixelsBefore)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == paintedMask)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == originalMask)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == paintedMask)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == restoredMask)
+    }
+
     @Test func legacySmartFilterDecodingDefaultsToNoMask() throws {
         let data = Data(
             #"{"kind":"pixelate","intensity":0.75,"settings":{},"isEnabled":true}"#.utf8

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1788 - 2026-10-09
+
+### Added
+- Smart Filter masks can now be painted directly with Brush, Pencil, and Eraser; selection clipping, brush dynamics, filter-only targeting, and stroke-level Undo/Redo are preserved.
+
+### Verification
+- `ImageEditorSmartFilterMaskTests` 7/7 and `ImageEditorScopeTests/smartFilterRowsExposeNonFocusableResultOpacityAndBlendControls` 1/1 passed; release contract 10/30, CLI release-build contract 7/24, product-overview archive contract 3/30, Swift syntax parse, and `git diff --check` passed. This was a targeted test-host build, not the rc1800 full Release build or desktop smoke gate.
+
 ## 2.12.0-rc1787 - 2026-10-09
 
 ### Fixed
