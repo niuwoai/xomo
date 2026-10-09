@@ -33,6 +33,51 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(actual[(width - 1) * 4..<width * 4] == source[(width - 1) * 4..<width * 4])
     }
 
+    @Test(arguments: [1, -1, 2])
+    func quarterTurnRotatesOnlyMaskedPixels(clockwiseTurns: Int) throws {
+        let width = 5
+        let height = 4
+        let source = pixels(width: width, height: height, seed: 7)
+        var mask = [UInt8](repeating: 0, count: width * height)
+        for y in 1..<3 {
+            for x in 1..<4 { mask[y * width + x] = 255 }
+        }
+        let turns = ((clockwiseTurns % 4) + 4) % 4
+        var expected = source
+        for y in 1..<3 {
+            for x in 1..<4 {
+                let offset = (y * width + x) * 4
+                expected.replaceSubrange(offset..<(offset + 4), with: [0, 0, 0, 0])
+            }
+        }
+        for y in 1..<3 {
+            for x in 1..<4 {
+                let localX = x - 1
+                let localY = y - 1
+                let target: (x: Int, y: Int)
+                switch turns {
+                case 1: target = (2 - localY, 1 + localX)
+                case 2: target = (3 - localX, 2 - localY)
+                default: target = (1 + localY, 3 - localX)
+                }
+                ImageEditorPremultipliedPixelCompositing.composite(
+                    source: source,
+                    sourcePixel: y * width + x,
+                    targetPixel: target.y * width + target.x,
+                    coverage: 1,
+                    into: &expected
+                )
+            }
+        }
+
+        let actual = try #require(ImageEditorPixelSelectionTransform.rotatedQuarterTurns(
+            source: source, maskAlpha: mask, width: width, height: height, clockwiseTurns: clockwiseTurns
+        ))
+        #expect(actual == expected)
+        #expect(actual[0..<4] == source[0..<4])
+        #expect(actual[(width - 1) * 4..<width * 4] == source[(width - 1) * 4..<width * 4])
+    }
+
     @Test func emptyCoverageAndMalformedRasterAreRejectedWithoutSourceMutation() {
         let source = pixels(width: 3, height: 2)
         let original = source
@@ -95,6 +140,140 @@ struct ImageEditorSelectionPixelTransformTests {
             == flippedSelection.rasterizedMask(canvasSize: size))
         #expect(try ImageEditorRGBAImage.pixels(from: reopened.document.layers[0].image, width: 8, height: 6) == expectedFirst)
         #expect(try ImageEditorRGBAImage.pixels(from: reopened.document.layers[1].image, width: 8, height: 6) == expectedSecond)
+    }
+
+    @Test func selectedPixelQuarterTurnIsAtomicAcrossLayersAndUndoRedoProjectRoundTrip() throws {
+        let size = CGSize(width: 8, height: 6)
+        let firstPixels = pixels(width: 8, height: 6, seed: 13)
+        let secondPixels = pixels(width: 8, height: 6, seed: 37)
+        let firstImage = try #require(ImageEditorRGBAImage.image(width: 8, height: 6, pixels: firstPixels, size: size))
+        let secondImage = try #require(ImageEditorRGBAImage.image(width: 8, height: 6, pixels: secondPixels, size: size))
+        var first = ImageEditorLayer.blank(name: "First", size: size)
+        var second = ImageEditorLayer.blank(name: "Second", size: size)
+        first.image = firstImage
+        second.image = secondImage
+        first.frame = CGRect(origin: .zero, size: size)
+        second.frame = CGRect(origin: .zero, size: size)
+        let selection = ImageEditorSelection.rectangle(CGRect(x: 1, y: 1, width: 3, height: 2))
+        let viewModel = ImageEditorViewModel(sourceName: "selection-rotate.png", image: .transparent(size: size)) { _ in }
+        viewModel.document.layers = [first, second]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id]
+        viewModel.document.selection = selection
+        let originalDocument = try viewModel.projectData()
+        let firstMaskImage = try #require(selection.layerMask(
+            layerFrame: first.frame, layerSize: first.image.size, canvasSize: size,
+            feather: 0, usesNearestSampling: true
+        ))
+        let secondMaskImage = try #require(selection.layerMask(
+            layerFrame: second.frame, layerSize: second.image.size, canvasSize: size,
+            feather: 0, usesNearestSampling: true
+        ))
+        let firstMask = try #require(ImageEditorPixelMoveMaskAlpha.read(from: firstMaskImage, width: 8, height: 6))
+        let secondMask = try #require(ImageEditorPixelMoveMaskAlpha.read(from: secondMaskImage, width: 8, height: 6))
+        let expectedFirst = try #require(ImageEditorPixelSelectionTransform.rotatedQuarterTurns(
+            source: firstPixels, maskAlpha: firstMask, width: 8, height: 6, clockwiseTurns: 1
+        ))
+        let expectedSecond = try #require(ImageEditorPixelSelectionTransform.rotatedQuarterTurns(
+            source: secondPixels, maskAlpha: secondMask, width: 8, height: 6, clockwiseTurns: 1
+        ))
+        let rotatedSelection = try #require(selection.rotatedQuarterTurns(clockwiseTurns: 1, canvasSize: size))
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.rotateSelectedPixelsClockwise()
+
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPixelsRotateClockwise"))
+        #expect(viewModel.document.selection?.rasterizedMask(canvasSize: size)
+            == rotatedSelection.rasterizedMask(canvasSize: size))
+        #expect(try ImageEditorRGBAImage.pixels(from: viewModel.document.layers[0].image, width: 8, height: 6) == expectedFirst)
+        #expect(try ImageEditorRGBAImage.pixels(from: viewModel.document.layers[1].image, width: 8, height: 6) == expectedSecond)
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalDocument)
+        viewModel.redo()
+        let saved = try viewModel.projectData()
+        let reopened = ImageEditorViewModel(sourceName: "reopened.png", image: .transparent(size: size)) { _ in }
+        try reopened.loadProjectData(saved)
+        #expect(reopened.document.selection?.rasterizedMask(canvasSize: size)
+            == rotatedSelection.rasterizedMask(canvasSize: size))
+        #expect(try ImageEditorRGBAImage.pixels(from: reopened.document.layers[0].image, width: 8, height: 6) == expectedFirst)
+        #expect(try ImageEditorRGBAImage.pixels(from: reopened.document.layers[1].image, width: 8, height: 6) == expectedSecond)
+    }
+
+    @Test func quarterTurnExpandsPixelLayerBackingForRotatedSelectionBounds() throws {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let layerSize = CGSize(width: 4, height: 2)
+        let source = pixels(width: 4, height: 2, seed: 53)
+        let image = try #require(ImageEditorRGBAImage.image(width: 4, height: 2, pixels: source, size: layerSize))
+        var layer = ImageEditorLayer.blank(name: "Short layer", size: layerSize)
+        layer.image = image
+        layer.frame = CGRect(origin: .zero, size: layerSize)
+        let selection = ImageEditorSelection.rectangle(CGRect(origin: .zero, size: layerSize))
+        let rotatedSelection = try #require(selection.rotatedQuarterTurns(clockwiseTurns: 1, canvasSize: canvasSize))
+        let backing = try #require(layer.expandedPixelSelectionTransformBacking(
+            selection: selection, destinationSelection: rotatedSelection,
+            canvasSize: canvasSize, feather: 0
+        ))
+        let maskImage = try #require(selection.layerMask(
+            layerFrame: backing.frame, layerSize: backing.image.size,
+            canvasSize: canvasSize, feather: 0, usesNearestSampling: true
+        ))
+        let width = Int(backing.image.size.width.rounded())
+        let height = Int(backing.image.size.height.rounded())
+        let mask = try #require(ImageEditorPixelMoveMaskAlpha.read(from: maskImage, width: width, height: height))
+        let backingPixels = try #require(ImageEditorRGBAImage.pixels(
+            from: backing.image, width: width, height: height
+        ))
+        let expected = try #require(ImageEditorPixelSelectionTransform.rotatedQuarterTurns(
+            source: backingPixels, maskAlpha: mask, width: width, height: height, clockwiseTurns: 1
+        ))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-rotate-expanded.png", image: .transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.document.layers = [layer]
+        viewModel.document.selectedLayerID = layer.id
+        viewModel.document.selectedLayerIDs = [layer.id]
+        viewModel.document.selection = selection
+
+        viewModel.rotateSelectedPixelsClockwise()
+
+        let rotatedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(rotatedLayer.frame == backing.frame)
+        #expect(rotatedLayer.image.size == backing.image.size)
+        #expect(rotatedLayer.frame.height > layer.frame.height)
+        #expect(try ImageEditorRGBAImage.pixels(
+            from: rotatedLayer.image, width: width, height: height
+        ) == expected)
+        #expect(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize)
+            == rotatedSelection.rasterizedMask(canvasSize: canvasSize))
+    }
+
+    @Test func quarterTurnIsDisabledForAnisotropicallyScaledPixelLayerButHalfTurnRemainsAvailable() throws {
+        let canvasSize = CGSize(width: 12, height: 12)
+        let imageSize = CGSize(width: 4, height: 4)
+        let image = try #require(ImageEditorRGBAImage.image(
+            width: 4, height: 4, pixels: pixels(width: 4, height: 4, seed: 67), size: imageSize
+        ))
+        var layer = ImageEditorLayer.blank(name: "Anisotropic", size: imageSize)
+        layer.image = image
+        layer.frame = CGRect(x: 1, y: 1, width: 8, height: 4)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "anisotropic-selection-rotate.png", image: .transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.document.layers = [layer]
+        viewModel.document.selectedLayerID = layer.id
+        viewModel.document.selectedLayerIDs = [layer.id]
+        viewModel.document.selection = .rectangle(CGRect(x: 1, y: 1, width: 8, height: 4))
+
+        #expect(viewModel.canFlipSelectedPixels)
+        #expect(!viewModel.canRotateSelectedPixelsQuarterTurn)
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.rotateSelectedPixelsClockwise()
+
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.document.history.count == 1)
     }
 
     @Test func alphaLockedOrUnselectedLayersCannotFlipSelectedPixels() throws {

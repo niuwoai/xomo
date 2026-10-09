@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1798 - 2026-10-09
+
+### Added
+- Added Edit-menu rotation of selected pixel content by 90° clockwise, 90° counterclockwise, or 180°, updating the selection and selected pixel layers in one Undo/Redo transaction.
+
+### Verification
+- The focused 10-test pixel-selection transform suite and release/CLI/product-overview contract tests passed; see [rc1798 verification record](docs/reviews/2026-10-09-rc1798-selected-pixel-rotation.md). Full Release, smoke, signing, and installation remain scheduled for rc1800.
+
 ## 2.12.0-rc1797 - 2026-10-09
 
 ### Added

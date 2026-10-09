@@ -1,8 +1,10 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1797
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1798
 
 rc1795 在「编辑」菜单中支持水平/垂直翻转选区内像素并镜像选区形状，涵盖羽化覆盖与多选像素层的原子 Undo/Redo；rc1796 修正验证断言，以像素覆盖比较选区持久化语义；rc1797 增加羽化选区半透明覆盖的集成回归。详见[验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。rc1797 已完成 3738 项全量测试、universal Release archive、Developer ID 签名、公证与 staple，并发布到 GitHub Release、OSS 版本化/latest 下载及 some.im `xomo` Sparkle appcast；GitHub 资产 SHA256 与发布报告一致，两个 OSS 地址均返回 200 且文件长度一致。完整 Release/全量回归/真实桌面冒烟与可恢复安装门槛仍为 rc1800，`/Applications/Xomo.app` 仍为 rc1760/build1760；本次未覆盖安装。组件库真实光标的 XCUITest 已在当前源码上重试，但 runner 在握手前挂起、0 项测试体执行；光标策略单测通过不能替代运行时验收，详见[光标验证记录](docs/reviews/2026-10-09-rc1790-cursor-ui-run.md)。
+
+rc1798 在「编辑」菜单中增加对选区内像素顺时针/逆时针旋转 90° 和旋转 180°；旋转后的选区覆盖与像素图层作为一个 Undo/Redo 事务提交，多选像素层共用同一操作。验证结果见[rc1798 记录](docs/reviews/2026-10-09-rc1798-selected-pixel-rotation.md)。下一完整 Release、全量测试、真实桌面光标/编辑冒烟与可恢复安装门槛仍为 rc1800；Figma 范围不扩张。
 
 rc1793 支持在 Smart Filter 蒙版缩略图上按住 Option 点击，以灰度单独查看原始蒙版；普通点击进入/退出蒙版绘制，预览不改像素或 Undo 历史。当前最近一次完整门槛为 rc1760；下一完整 Release、全量回归、真实桌面冒烟和可恢复安装门槛为 rc1800。实读 `/Applications/Xomo.app` 为 rc1760/build1760；rc1793 未覆盖安装。详见[验证记录](docs/reviews/2026-10-09-rc1793-smart-filter-mask-solo-preview.md)。
 

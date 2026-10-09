@@ -354,6 +354,7 @@
 "imageEditor.menu.layer.comps" = "Layer Comps";
 "imageEditor.menu.select.alphaChannels" = "Alpha Channels";
 "imageEditor.menu.select.transform" = "Transform Selection";
+"imageEditor.menu.selectionPixelRotation" = "Rotate Selected Pixels";
 "imageEditor.menu.view.zoomIn" = "Zoom In";
 "imageEditor.menu.view.zoomOut" = "Zoom Out";
 "imageEditor.menu.view.actualPixels" = "Actual Pixels";
@@ -2184,6 +2185,9 @@
 "imageEditor.history.selectionPixelsMove" = "Move Selected Pixels";
 "imageEditor.history.selectionPixelsFlipHorizontal" = "Flip Selected Pixels Horizontally";
 "imageEditor.history.selectionPixelsFlipVertical" = "Flip Selected Pixels Vertically";
+"imageEditor.history.selectionPixelsRotateClockwise" = "Rotate Selected Pixels Clockwise";
+"imageEditor.history.selectionPixelsRotateCounterclockwise" = "Rotate Selected Pixels Counterclockwise";
+"imageEditor.history.selectionPixelsRotate180" = "Rotate Selected Pixels 180 Degrees";
 "imageEditor.history.selectionFlipHorizontal" = "Flip Selection Horizontal";
 "imageEditor.history.selectionFlipVertical" = "Flip Selection Vertical";
 "imageEditor.history.selectionRotateClockwise" = "Rotate Selection Clockwise";
@@ -2585,6 +2589,9 @@
 "imageEditor.status.selectionPixelsMoved" = "Moved selected pixels";
 "imageEditor.status.selectionPixelsFlippedHorizontal" = "Flipped selected pixels horizontally";
 "imageEditor.status.selectionPixelsFlippedVertical" = "Flipped selected pixels vertically";
+"imageEditor.status.selectionPixelsRotatedClockwise" = "Rotated selected pixels clockwise";
+"imageEditor.status.selectionPixelsRotatedCounterclockwise" = "Rotated selected pixels counterclockwise";
+"imageEditor.status.selectionPixelsRotated180" = "Rotated selected pixels 180 degrees";
 "imageEditor.status.selectionFlippedHorizontal" = "Selection flipped horizontally";
 "imageEditor.status.selectionFlippedVertical" = "Selection flipped vertically";
 "imageEditor.status.selectionRotatedClockwise" = "Selection rotated clockwise";
@@ -3144,6 +3151,9 @@
 "imageEditor.action.selectionRotateClockwise" = "Rotate 90 Clockwise";
 "imageEditor.action.selectionRotateCounterclockwise" = "Rotate 90 Counterclockwise";
 "imageEditor.action.selectionRotate180" = "Rotate 180";
+"imageEditor.action.rotateSelectedPixelsClockwise" = "Rotate 90° Clockwise";
+"imageEditor.action.rotateSelectedPixelsCounterclockwise" = "Rotate 90° Counterclockwise";
+"imageEditor.action.rotateSelectedPixels180" = "Rotate 180°";
 "imageEditor.action.selectionScaleUp" = "Scale to 200%";
 "imageEditor.action.selectionScaleDown" = "Scale to 50%";
 "imageEditor.action.selectionFitCanvas" = "Fit to Canvas";
