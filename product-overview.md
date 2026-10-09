@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1798
+> 最后更新：2026-10-10 | 当前版本：v2.12.0-rc1799
+
+rc1799 补充 Smart Filter 蒙版绘制的坐标回归：选区以画布坐标定义、蒙版以图层像素存储时，使用缩放且有偏移的像素图层验证选区内绘制、选区外不变、原图层像素不变及 Undo/Redo。蒙版套件 14/14、发布契约 10/30、CLI 契约 7/24、概览归档契约 3/30 通过。验证结果见[rc1799 记录](docs/reviews/2026-10-10-rc1799-scaled-smart-filter-mask-selection.md)。下一完整 Release、全量测试、真实桌面光标/编辑冒烟与可恢复安装门槛仍为 rc1800；Figma 范围不扩张。
 
 rc1795 在「编辑」菜单中支持水平/垂直翻转选区内像素并镜像选区形状，涵盖羽化覆盖与多选像素层的原子 Undo/Redo；rc1796 修正验证断言，以像素覆盖比较选区持久化语义；rc1797 增加羽化选区半透明覆盖的集成回归。详见[验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。rc1797 已完成 3738 项全量测试、universal Release archive、Developer ID 签名、公证与 staple，并发布到 GitHub Release、OSS 版本化/latest 下载及 some.im `xomo` Sparkle appcast；GitHub 资产 SHA256 与发布报告一致，两个 OSS 地址均返回 200 且文件长度一致。完整 Release/全量回归/真实桌面冒烟与可恢复安装门槛仍为 rc1800，`/Applications/Xomo.app` 仍为 rc1760/build1760；本次未覆盖安装。组件库真实光标的 XCUITest 已在当前源码上重试，但 runner 在握手前挂起、0 项测试体执行；光标策略单测通过不能替代运行时验收，详见[光标验证记录](docs/reviews/2026-10-09-rc1790-cursor-ui-run.md)。
 
