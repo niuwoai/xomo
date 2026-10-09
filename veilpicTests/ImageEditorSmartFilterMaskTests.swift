@@ -5,6 +5,20 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSmartFilterMaskTests {
+    @Test func smartFilterMaskThumbnailShowsGrayscaleCoverage() throws {
+        let mask = ImageEditorSelectionMask(width: 4, height: 1, alpha: [0, 64, 128, 255])
+        let thumbnail = mask.grayscaleThumbnailImage(targetSize: CGSize(width: 4, height: 1))
+        let pixels = try #require(imageEditorRGBABytes(thumbnail, width: 4, height: 1))
+
+        for (x, expected) in [UInt8(0), 64, 128, 255].enumerated() {
+            let offset = x * 4
+            #expect(pixels[offset] == expected)
+            #expect(pixels[offset + 1] == expected)
+            #expect(pixels[offset + 2] == expected)
+            #expect(pixels[offset + 3] == .max)
+        }
+    }
+
     @Test func invalidStoredMaskDoesNotExpandSmartFilterAcrossTheWholeLayer() throws {
         let source = patternedImage(width: 8, height: 8)
         var layer = ImageEditorLayer.blank(name: "Invalid filter mask", size: source.size)

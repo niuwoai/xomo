@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1791 - 2026-10-09
+
+### Added
+- Smart Filter entries with masks now show a grayscale coverage thumbnail; selecting it enters or exits that filter's mask-painting mode.
+
+### Verification
+- `ImageEditorSmartFilterMaskTests` 9/9, including grayscale mask-pixel values; Smart Filter inspector connection 1/1; release contract 10 runs / 30 assertions; CLI release build contract 7/7 / 24 assertions; product overview archive contract 3/30; `git diff --check` passed. Targeted `build-for-testing` succeeded; no full Release, desktop smoke, or install was run. Full gate remains rc1800. See [verification record](docs/reviews/2026-10-09-rc1791-smart-filter-mask-thumbnail.md).
+
 ## 2.12.0-rc1790 - 2026-10-09
 
 ### Fixed

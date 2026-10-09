@@ -16010,6 +16010,7 @@ struct ImageEditorView: View {
         let blendModeTitle = blendModeState.value?.title
             ?? (blendModeState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : blendMode.title)
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
+        let isEditingMask = viewModel.isEditingSmartFilterMask(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
         let canDiscardControlChanges = viewModel.canDiscardSmartFilterControlChanges(filter.id)
         let canMoveUp = viewModel.canMoveSmartFilterOnSelectedLayer(filter.id, offset: -1)
@@ -16024,6 +16025,23 @@ struct ImageEditorView: View {
 
         return AnyView(VStack(spacing: 4) {
             HStack(spacing: 6) {
+                if let mask = filter.mask {
+                    ImageEditorSmartFilterMaskThumbnail(
+                        image: mask.grayscaleThumbnailImage(targetSize: CGSize(width: 24, height: 24)),
+                        isEditing: isEditingMask,
+                        accessibilityLabel: L10n.text(
+                            isEditingMask
+                                ? "imageEditor.action.smartFilterMaskStopPainting"
+                                : "imageEditor.action.smartFilterMaskPaint"
+                        ),
+                        accessibilityValue: isEditingMask
+                            ? L10n.text("imageEditor.state.editing")
+                            : "",
+                        accessibilityIdentifier: "image-editor-smart-filter-mask-thumbnail-\(filter.id)"
+                    ) {
+                        viewModel.toggleSmartFilterMaskEditing(filter.id)
+                    }
+                }
                 Text(viewModel.smartFilterLabel(filter))
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
@@ -16150,17 +16168,6 @@ struct ImageEditorView: View {
             }
             if !filter.appliesToBackdrop || filter.mask != nil {
                 HStack(spacing: 6) {
-                    if filter.mask != nil {
-                        Button(L10n.text(
-                            viewModel.isEditingSmartFilterMask(filter.id)
-                                ? "imageEditor.action.smartFilterMaskStopPainting"
-                                : "imageEditor.action.smartFilterMaskPaint"
-                        )) {
-                            viewModel.toggleSmartFilterMaskEditing(filter.id)
-                        }
-                        .buttonStyle(EditorTextButtonStyle())
-                        .accessibilityIdentifier("image-editor-smart-filter-mask-paint-\(filter.id)")
-                    }
                     if !filter.appliesToBackdrop {
                         Button(L10n.text("imageEditor.action.smartFilterMaskFromSelection")) {
                             viewModel.setSmartFilterMaskFromSelection(filter.id)
