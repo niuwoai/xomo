@@ -2926,6 +2926,11 @@ extension ImageEditorSelection {
         layerSize: CGSize,
         canvasSize: CGSize
     ) -> ImageEditorSelectionMask? {
+        guard let bitmapSize = ImageEditorMaskSampling.bitmapSize(layerSize),
+              ImageEditorMaskSampling.bitmapSize(canvasSize) != nil,
+              [layerFrame.minX, layerFrame.minY, layerFrame.width, layerFrame.height].allSatisfy(\.isFinite),
+              layerFrame.width > 0,
+              layerFrame.height > 0 else { return nil }
         guard let image = layerMask(
             layerFrame: layerFrame,
             layerSize: layerSize,
@@ -2933,8 +2938,8 @@ extension ImageEditorSelection {
             feather: 0
         ), let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
 
-        let width = max(1, Int(layerSize.width.rounded()))
-        let height = max(1, Int(layerSize.height.rounded()))
+        let width = Int(bitmapSize.width)
+        let height = Int(bitmapSize.height)
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)

@@ -10155,6 +10155,130 @@ final class ImageEditorViewModel: ObservableObject {
         return allMatch ? .value(firstOpacity) : .mixed
     }
 
+    func smartFilterMaskDensity(_ filterID: UUID) -> Double? {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        else { return nil }
+        return document.layers[layerIndex].smartFilters[filterIndex].normalizedMaskDensity
+    }
+
+    func smartFilterMaskDensityState(_ filterID: UUID) -> ImageEditorSmartFilterValueState<Double> {
+        smartFilterMaskValueState(filterID) { $0.normalizedMaskDensity }
+    }
+
+    func smartFilterMaskFeather(_ filterID: UUID) -> Double? {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        else { return nil }
+        return document.layers[layerIndex].smartFilters[filterIndex].normalizedMaskFeather
+    }
+
+    func smartFilterMaskFeatherState(_ filterID: UUID) -> ImageEditorSmartFilterValueState<Double> {
+        smartFilterMaskValueState(filterID) { $0.normalizedMaskFeather }
+    }
+
+    func smartFilterMaskInversionState(_ filterID: UUID) -> ImageEditorSmartFilterValueState<Bool> {
+        smartFilterMaskValueState(filterID) { $0.isMaskInverted }
+    }
+
+    private func smartFilterMaskValueState<Value: Equatable>(
+        _ filterID: UUID,
+        value: (ImageEditorSmartFilter) -> Value
+    ) -> ImageEditorSmartFilterValueState<Value> {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              !document.layers[layerIndex].smartFilters[filterIndex].appliesToBackdrop,
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else { return .unavailable }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard targetIndices.contains(layerIndex), !targetIndices.isEmpty else {
+            return .unavailable
+        }
+        let filters = targetIndices.map { document.layers[$0].smartFilters[filterIndex] }
+        guard filters.allSatisfy({ $0.mask != nil }) else { return .mixed }
+        let firstValue = value(filters[0])
+        return filters.dropFirst().allSatisfy({ value($0) == firstValue })
+            ? .value(firstValue)
+            : .mixed
+    }
+
+    @discardableResult
+    func setSmartFilterMaskDensityOnSelectedLayer(_ filterID: UUID, density: Double) -> Int {
+        guard density.isFinite else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let normalizedDensity = max(0, min(1, density))
+        return updateSmartFilterMaskProperty(
+            filterID,
+            differs: { abs($0.normalizedMaskDensity - normalizedDensity) > 0.000_001 },
+            update: { $0.maskDensity = normalizedDensity },
+            singleHistoryKey: "imageEditor.history.smartFilterMaskDensity",
+            multipleHistoryKey: "imageEditor.history.smartFilterMasksDensity"
+        )
+    }
+
+    @discardableResult
+    func setSmartFilterMaskFeatherOnSelectedLayer(_ filterID: UUID, feather: Double) -> Int {
+        guard feather.isFinite else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let normalizedFeather = max(0, min(80, feather))
+        return updateSmartFilterMaskProperty(
+            filterID,
+            differs: { abs($0.normalizedMaskFeather - normalizedFeather) > 0.000_001 },
+            update: { $0.maskFeather = normalizedFeather },
+            singleHistoryKey: "imageEditor.history.smartFilterMaskFeather",
+            multipleHistoryKey: "imageEditor.history.smartFilterMasksFeather"
+        )
+    }
+
+    @discardableResult
+    func invertSmartFilterMaskOnSelectedLayer(_ filterID: UUID) -> Int {
+        updateSmartFilterMaskProperty(
+            filterID,
+            differs: { $0.mask != nil },
+            update: { $0.isMaskInverted.toggle() },
+            singleHistoryKey: "imageEditor.history.smartFilterMaskInvert",
+            multipleHistoryKey: "imageEditor.history.smartFilterMasksInvert"
+        )
+    }
+
+    private func updateSmartFilterMaskProperty(
+        _ filterID: UUID,
+        differs: (ImageEditorSmartFilter) -> Bool,
+        update: (inout ImageEditorSmartFilter) -> Void,
+        singleHistoryKey: String,
+        multipleHistoryKey: String
+    ) -> Int {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              !document.layers[layerIndex].smartFilters[filterIndex].appliesToBackdrop else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let matchingTargets = selectedSmartFilterTargetIndices(at: filterIndex).filter {
+            let filter = document.layers[$0].smartFilters[filterIndex]
+            return !filter.appliesToBackdrop && filter.mask != nil
+        }
+        let targetIndices = matchingTargets.filter {
+            differs(document.layers[$0].smartFilters[filterIndex])
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
+            return 0
+        }
+        pushUndo()
+        for targetIndex in targetIndices {
+            var filter = document.layers[targetIndex].smartFilters[filterIndex]
+            update(&filter)
+            document.layers[targetIndex].smartFilters[filterIndex] = filter
+        }
+        appendHistory(L10n.text(
+            matchingTargets.count > 1 ? multipleHistoryKey : singleHistoryKey
+        ))
+        return targetIndices.count
+    }
+
     func smartFilterBlendMode(_ filterID: UUID) -> ImageEditorBlendMode? {
         guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else { return nil }
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode
@@ -10222,7 +10346,11 @@ final class ImageEditorViewModel: ObservableObject {
             stagedMasks.append((layerIndex, mask))
         }
         let changedMasks = stagedMasks.filter { stagedMask in
-            document.layers[stagedMask.layerIndex].smartFilters[filterIndex].mask != stagedMask.mask
+            let filter = document.layers[stagedMask.layerIndex].smartFilters[filterIndex]
+            return filter.mask != stagedMask.mask
+                || filter.normalizedMaskDensity != 1
+                || filter.normalizedMaskFeather != 0
+                || filter.isMaskInverted
         }
         guard !changedMasks.isEmpty else {
             statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
@@ -10232,6 +10360,9 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         for (layerIndex, mask) in changedMasks {
             document.layers[layerIndex].smartFilters[filterIndex].mask = mask
+            document.layers[layerIndex].smartFilters[filterIndex].maskDensity = 1
+            document.layers[layerIndex].smartFilters[filterIndex].maskFeather = 0
+            document.layers[layerIndex].smartFilters[filterIndex].isMaskInverted = false
         }
         appendHistory(L10n.text(
             changedMasks.count == 1
@@ -10257,6 +10388,9 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         for layerIndex in targetIndices {
             document.layers[layerIndex].smartFilters[filterIndex].mask = nil
+            document.layers[layerIndex].smartFilters[filterIndex].maskDensity = 1
+            document.layers[layerIndex].smartFilters[filterIndex].maskFeather = 0
+            document.layers[layerIndex].smartFilters[filterIndex].isMaskInverted = false
         }
         appendHistory(L10n.text(
             targetIndices.count == 1

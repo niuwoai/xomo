@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1785
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1786
+
+rc1786 补齐 Smart Filter 选区蒙版的可调浓度、羽化和反相：参数随项目持久化，并通过单步 Undo/Redo 编辑；蒙版生成对非法尺寸与超预算像素数采取 fail-closed。Xomo automation 可读回并设置浓度/羽化、反相蒙版。Backdrop Blur 保持单独的背景采样语义，不开放这些普通滤镜蒙版控制。rc1800 仍为下一完整 Release/桌面冒烟门槛，Figma 范围不扩张。
 
 rc1785 为普通 Smart Filter 增加非破坏选区遮罩：从当前选区生成可持久化的灰度 mask，滤镜只影响 mask 覆盖区域；可清除遮罩，Undo/Redo 与项目保存重开保持一致，Xomo automation 可创建、查询与清除。遮罩/像素/撤销及项目往返 3/3、automation schema/调用/回读/撤销 1/1 通过；Backdrop Blur 不提供新建遮罩入口以保留其合成语义。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
 

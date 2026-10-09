@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1786 - 2026-10-09
+
+### Added
+- Smart Filter masks now support density, feather, and inversion controls with undoable edits, project persistence, and Xomo automation actions.
+
+### Fixed
+- Smart Filter mask creation now rejects invalid or over-budget canvas/layer dimensions before rendering or allocating pixel buffers.
+
+### Verification
+- Smart Filter mask XCTest 5/5, Xomo automation mask regression 1/1, and Smart Filter inspector contract 1/1 passed.
+- Release contract 10/30, CLI release-build contract 7/24, product-overview archive contract 3/30, and `git diff --check` passed.
+
 ## 2.12.0-rc1785 - 2026-10-09
 
 ### Added

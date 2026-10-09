@@ -15990,6 +15990,21 @@ struct ImageEditorView: View {
         let opacityTitle = opacityState.value.map {
             L10n.format("imageEditor.option.percentPreset", Int(($0 * 100).rounded()))
         } ?? (opacityState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
+        let maskDensityState = viewModel.smartFilterMaskDensityState(filter.id)
+        let maskDensityTitle = maskDensityState.value.map {
+            L10n.format("imageEditor.option.percentPreset", Int(($0 * 100).rounded()))
+        } ?? (maskDensityState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
+        let maskFeatherState = viewModel.smartFilterMaskFeatherState(filter.id)
+        let maskFeatherTitle = maskFeatherState.value.map {
+            L10n.format("imageEditor.option.smartFilterMaskFeatherValue", Int($0.rounded()))
+        } ?? (maskFeatherState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
+        let maskInversionState = viewModel.smartFilterMaskInversionState(filter.id)
+        let maskInversionTitle = maskInversionState.value.map {
+            L10n.text($0
+                ? "imageEditor.state.smartFilterMaskInverted"
+                : "imageEditor.state.smartFilterMaskNormal"
+            )
+        } ?? (maskInversionState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
         let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
         let blendModeState = viewModel.smartFilterBlendModeState(filter.id)
         let blendModeTitle = blendModeState.value?.title
@@ -16152,6 +16167,59 @@ struct ImageEditorView: View {
                         .accessibilityIdentifier("image-editor-smart-filter-mask-clear-\(filter.id)")
                     }
                 }
+            }
+            if !filter.appliesToBackdrop && filter.mask != nil {
+                Stepper(
+                    value: Binding(
+                        get: { viewModel.smartFilterMaskDensity(filter.id) ?? filter.normalizedMaskDensity },
+                        set: { viewModel.setSmartFilterMaskDensityOnSelectedLayer(filter.id, density: $0) }
+                    ),
+                    in: 0...1,
+                    step: 0.05
+                ) {
+                    HStack(spacing: 6) {
+                        Text(L10n.text("imageEditor.option.smartFilterMaskDensity"))
+                        Spacer(minLength: 4)
+                        Text(maskDensityTitle)
+                            .monospacedDigit()
+                    }
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                }
+                .disabled(maskDensityState == .unavailable)
+                .focusable(false)
+                .accessibilityValue(maskDensityTitle)
+                .accessibilityIdentifier("image-editor-smart-filter-mask-density-\(filter.id)")
+
+                Stepper(
+                    value: Binding(
+                        get: { viewModel.smartFilterMaskFeather(filter.id) ?? filter.normalizedMaskFeather },
+                        set: { viewModel.setSmartFilterMaskFeatherOnSelectedLayer(filter.id, feather: $0) }
+                    ),
+                    in: 0...80,
+                    step: 1
+                ) {
+                    HStack(spacing: 6) {
+                        Text(L10n.text("imageEditor.option.smartFilterMaskFeather"))
+                        Spacer(minLength: 4)
+                        Text(maskFeatherTitle)
+                            .monospacedDigit()
+                    }
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                }
+                .disabled(maskFeatherState == .unavailable)
+                .focusable(false)
+                .accessibilityValue(maskFeatherTitle)
+                .accessibilityIdentifier("image-editor-smart-filter-mask-feather-\(filter.id)")
+
+                Button(L10n.text("imageEditor.action.smartFilterMaskInvert")) {
+                    viewModel.invertSmartFilterMaskOnSelectedLayer(filter.id)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .disabled(maskInversionState == .unavailable)
+                .accessibilityValue(maskInversionTitle)
+                .accessibilityIdentifier("image-editor-smart-filter-mask-invert-\(filter.id)")
             }
         }
         .padding(6)

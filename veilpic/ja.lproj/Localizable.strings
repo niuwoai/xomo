@@ -2095,6 +2095,12 @@
 "imageEditor.history.smartFilterMasksFromSelection" = "選択レイヤーのスマートフィルターマスクを設定";
 "imageEditor.history.smartFilterMaskClear" = "スマートフィルターマスクをクリア";
 "imageEditor.history.smartFilterMasksClear" = "選択レイヤーのスマートフィルターマスクをクリア";
+"imageEditor.history.smartFilterMaskDensity" = "スマートフィルターマスクの濃度を変更";
+"imageEditor.history.smartFilterMasksDensity" = "選択レイヤーのスマートフィルターマスク濃度を変更";
+"imageEditor.history.smartFilterMaskFeather" = "スマートフィルターマスクのぼかしを変更";
+"imageEditor.history.smartFilterMasksFeather" = "選択レイヤーのスマートフィルターマスクのぼかしを変更";
+"imageEditor.history.smartFilterMaskInvert" = "スマートフィルターマスクを反転";
+"imageEditor.history.smartFilterMasksInvert" = "選択レイヤーのスマートフィルターマスクを反転";
 "imageEditor.history.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.history.layerTextUpdate" = "文字レイヤーを更新";
 "imageEditor.history.layerTextUpdateSelected" = "選択文字レイヤーを更新";
@@ -2846,6 +2852,12 @@
 "imageEditor.action.layerSmartFilterRemove" = "削除";
 "imageEditor.action.smartFilterMaskFromSelection" = "選択範囲からマスク";
 "imageEditor.action.smartFilterMaskClear" = "マスクをクリア";
+"imageEditor.action.smartFilterMaskInvert" = "マスクを反転";
+"imageEditor.option.smartFilterMaskDensity" = "マスク濃度";
+"imageEditor.option.smartFilterMaskFeather" = "マスクのぼかし";
+"imageEditor.option.smartFilterMaskFeatherValue" = "%d px";
+"imageEditor.state.smartFilterMaskNormal" = "通常";
+"imageEditor.state.smartFilterMaskInverted" = "反転";
 "imageEditor.action.layerSmartFilterClear" = "スマートフィルターをクリア";
 "imageEditor.action.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.action.layerTextUpdate" = "文字レイヤーを更新";

@@ -80,6 +80,11 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     /// Per-filter grayscale coverage stored in the filtered layer's pixel space.
     /// Nil means the filter applies everywhere, preserving older project files.
     var mask: ImageEditorSelectionMask?
+    /// Photoshop-style mask density; 1 preserves authored coverage and 0 reveals the full filter result.
+    var maskDensity = 1.0
+    /// Gaussian feather radius in filter-local pixels.
+    var maskFeather = 0.0
+    var isMaskInverted = false
     /// Retained samples per original filter pixel unit after a pixel edit promotes its backing.
     var pixelSamplingScale: Double?
 
@@ -92,7 +97,10 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         opacity: Double = 1,
         blendMode: ImageEditorBlendMode = .normal,
         appliesToBackdrop: Bool = false,
-        mask: ImageEditorSelectionMask? = nil
+        mask: ImageEditorSelectionMask? = nil,
+        maskDensity: Double = 1,
+        maskFeather: Double = 0,
+        isMaskInverted: Bool = false
     ) {
         self.id = id
         self.kind = kind
@@ -103,6 +111,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         self.blendMode = blendMode == .passThrough ? .normal : blendMode
         self.appliesToBackdrop = appliesToBackdrop
         self.mask = mask
+        self.maskDensity = Self.normalizedMaskDensity(maskDensity)
+        self.maskFeather = Self.normalizedMaskFeather(maskFeather)
+        self.isMaskInverted = isMaskInverted
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -116,6 +127,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         case appliesToBackdrop
         case pixelSamplingScale
         case mask
+        case maskDensity
+        case maskFeather
+        case isMaskInverted
     }
 
     init(from decoder: Decoder) throws {
@@ -131,6 +145,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         appliesToBackdrop = try container.decodeIfPresent(Bool.self, forKey: .appliesToBackdrop) ?? false
         pixelSamplingScale = try container.decodeIfPresent(Double.self, forKey: .pixelSamplingScale)
         mask = try container.decodeIfPresent(ImageEditorSelectionMask.self, forKey: .mask)
+        maskDensity = Self.normalizedMaskDensity(try container.decodeIfPresent(Double.self, forKey: .maskDensity) ?? 1)
+        maskFeather = Self.normalizedMaskFeather(try container.decodeIfPresent(Double.self, forKey: .maskFeather) ?? 0)
+        isMaskInverted = try container.decodeIfPresent(Bool.self, forKey: .isMaskInverted) ?? false
     }
 
     func encode(to encoder: Encoder) throws {
@@ -145,6 +162,25 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         try container.encode(appliesToBackdrop, forKey: .appliesToBackdrop)
         try container.encodeIfPresent(pixelSamplingScale, forKey: .pixelSamplingScale)
         try container.encodeIfPresent(mask, forKey: .mask)
+        try container.encode(normalizedMaskDensity, forKey: .maskDensity)
+        try container.encode(normalizedMaskFeather, forKey: .maskFeather)
+        try container.encode(isMaskInverted, forKey: .isMaskInverted)
+    }
+
+    var normalizedMaskDensity: Double {
+        Self.normalizedMaskDensity(maskDensity)
+    }
+
+    var normalizedMaskFeather: Double {
+        Self.normalizedMaskFeather(maskFeather)
+    }
+
+    private static func normalizedMaskDensity(_ value: Double) -> Double {
+        value.isFinite ? max(0, min(1, value)) : 1
+    }
+
+    private static func normalizedMaskFeather(_ value: Double) -> Double {
+        value.isFinite ? max(0, min(80, value)) : 0
     }
 
     var normalizedIntensity: Double {

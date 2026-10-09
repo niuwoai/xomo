@@ -704,6 +704,9 @@ struct XomoAutomationTests {
         let actions = try #require(manageProperties["action"]?.objectValue?["enum"]?.arrayValue)
         #expect(actions.contains(.string("maskFromSelection")))
         #expect(actions.contains(.string("clearMask")))
+        #expect(actions.contains(.string("setMaskDensity")))
+        #expect(actions.contains(.string("setMaskFeather")))
+        #expect(actions.contains(.string("invertMask")))
 
         let addResponse = registry.execute(request(
             operation: "call",
@@ -730,7 +733,64 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask != nil)
 
         let listResponse = registry.execute(request(operation: "call", name: "xomo.smart_filter.list"))
-        #expect(listResponse.result?.arrayValue?.first?.objectValue?["hasMask"] == .bool(true))
+        let listedFilter = try #require(listResponse.result?.arrayValue?.first?.objectValue)
+        #expect(listedFilter["hasMask"] == .bool(true))
+        #expect(listedFilter["maskDensity"] == .number(1))
+        #expect(listedFilter["maskFeather"] == .number(0))
+        #expect(listedFilter["isMaskInverted"] == .bool(false))
+
+        let densityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("setMaskDensity"),
+                "maskDensity": .number(0.6)
+            ]
+        ))
+        #expect(densityResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskDensity == 0.6)
+
+        let featherResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("setMaskFeather"),
+                "maskFeather": .number(2.5)
+            ]
+        ))
+        #expect(featherResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskFeather == 2.5)
+
+        let invertResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("invertMask")
+            ]
+        ))
+        #expect(invertResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.isMaskInverted == true)
+
+        let updatedListResponse = registry.execute(request(operation: "call", name: "xomo.smart_filter.list"))
+        let updatedFilter = try #require(updatedListResponse.result?.arrayValue?.first?.objectValue)
+        #expect(updatedFilter["maskDensity"] == .number(0.6))
+        #expect(updatedFilter["maskFeather"] == .number(2.5))
+        #expect(updatedFilter["isMaskInverted"] == .bool(true))
+
+        let historyCountBeforeInvalidDensity = viewModel.document.history.count
+        let invalidDensityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("setMaskDensity")
+            ]
+        ))
+        #expect(!invalidDensityResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidDensity)
 
         let clearResponse = registry.execute(request(
             operation: "call",
@@ -743,8 +803,14 @@ struct XomoAutomationTests {
         #expect(clearResponse.ok)
         #expect(clearResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == nil)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskDensity == 1)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskFeather == 0)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.isMaskInverted == false)
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask != nil)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskDensity == 0.6)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.normalizedMaskFeather == 2.5)
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.isMaskInverted == true)
     }
 
     @Test func smartFilterAutomationReportsAffectedLayerCountsAndRejectsNoOpMutations() throws {

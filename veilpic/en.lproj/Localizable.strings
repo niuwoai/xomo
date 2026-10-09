@@ -2095,6 +2095,12 @@
 "imageEditor.history.smartFilterMasksFromSelection" = "Set Smart Filter Masks from Selection";
 "imageEditor.history.smartFilterMaskClear" = "Clear Smart Filter Mask";
 "imageEditor.history.smartFilterMasksClear" = "Clear Smart Filter Masks";
+"imageEditor.history.smartFilterMaskDensity" = "Change Smart Filter Mask Density";
+"imageEditor.history.smartFilterMasksDensity" = "Change Smart Filter Mask Density on Selected Layers";
+"imageEditor.history.smartFilterMaskFeather" = "Change Smart Filter Mask Feather";
+"imageEditor.history.smartFilterMasksFeather" = "Change Smart Filter Mask Feather on Selected Layers";
+"imageEditor.history.smartFilterMaskInvert" = "Invert Smart Filter Mask";
+"imageEditor.history.smartFilterMasksInvert" = "Invert Smart Filter Masks on Selected Layers";
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
 "imageEditor.history.layerTextUpdateSelected" = "Update Selected Text Layers";
@@ -2846,6 +2852,12 @@
 "imageEditor.action.layerSmartFilterRemove" = "Delete";
 "imageEditor.action.smartFilterMaskFromSelection" = "Mask from Selection";
 "imageEditor.action.smartFilterMaskClear" = "Clear Mask";
+"imageEditor.action.smartFilterMaskInvert" = "Invert Mask";
+"imageEditor.option.smartFilterMaskDensity" = "Mask Density";
+"imageEditor.option.smartFilterMaskFeather" = "Mask Feather";
+"imageEditor.option.smartFilterMaskFeatherValue" = "%d px";
+"imageEditor.state.smartFilterMaskNormal" = "Normal";
+"imageEditor.state.smartFilterMaskInverted" = "Inverted";
 "imageEditor.action.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.action.layerTextNew" = "New Text Layer";
 "imageEditor.action.layerTextUpdate" = "Update Text Layer";

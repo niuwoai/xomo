@@ -3655,7 +3655,10 @@ final class XomoAutomationRegistry {
                 "opacity": .number(filter.normalizedOpacity),
                 "blendMode": .string(filter.normalizedBlendMode.rawValue),
                 "enabled": .bool(filter.isEnabled),
-                "hasMask": .bool(filter.mask != nil)
+                "hasMask": .bool(filter.mask != nil),
+                "maskDensity": .number(filter.normalizedMaskDensity),
+                "maskFeather": .number(filter.normalizedMaskFeather),
+                "isMaskInverted": .bool(filter.isMaskInverted)
             ])
         })
     }
@@ -6530,6 +6533,36 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
+        case "setMaskDensity":
+            let updatedLayerCount = viewModel.setSmartFilterMaskDensityOnSelectedLayer(
+                id,
+                density: try requiredNumber("maskDensity", in: arguments)
+            )
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter mask density cannot be updated")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
+        case "setMaskFeather":
+            let updatedLayerCount = viewModel.setSmartFilterMaskFeatherOnSelectedLayer(
+                id,
+                feather: try requiredNumber("maskFeather", in: arguments)
+            )
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter mask feather cannot be updated")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
+        case "invertMask":
+            let updatedLayerCount = viewModel.invertSmartFilterMaskOnSelectedLayer(id)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter mask cannot be inverted")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "duplicate":
             guard let duplication = viewModel.duplicateSmartFilterOnSelectedLayer(id) else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be duplicated")
@@ -8251,10 +8284,12 @@ private extension XomoAutomationRegistry {
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
         tool("xomo.smart_filter.manage", "Load, update, mask from the current selection, clear a filter mask, duplicate, reorder, or remove a smart filter; mutations return their affected layer count.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "maskFromSelection", "clearMask", "duplicate", "remove", "moveUp", "moveDown"]),
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "maskFromSelection", "clearMask", "setMaskDensity", "setMaskFeather", "invertMask", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
-            "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
+            "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue)),
+            "maskDensity": XomoAutomationSchema.number(description: "Smart filter mask density from 0 to 1"),
+            "maskFeather": XomoAutomationSchema.number(description: "Smart filter mask feather radius from 0 to 80 pixels")
         ], required: ["id", "action"]),
         tool("xomo.filter.list", "List raster filters."),
         tool("xomo.filter.apply", "Apply a raster filter to selected layers.", [
