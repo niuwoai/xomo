@@ -10177,6 +10177,95 @@ final class ImageEditorViewModel: ObservableObject {
         return allMatch ? .value(firstBlendMode) : .mixed
     }
 
+    func canSetSmartFilterMaskFromSelection(_ filterID: UUID) -> Bool {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              !document.layers[layerIndex].smartFilters[filterIndex].appliesToBackdrop,
+              document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
+        else { return false }
+        return !selectedSmartFilterTargetIndices(at: filterIndex).isEmpty
+    }
+
+    func canClearSmartFilterMask(_ filterID: UUID) -> Bool {
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID) else { return false }
+        return selectedSmartFilterTargetIndices(at: filterIndex).contains { layerIndex in
+            document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        }
+    }
+
+    @discardableResult
+    func setSmartFilterMaskFromSelection(_ filterID: UUID) -> Int {
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID),
+              let selection = document.selection,
+              selection.effectiveSelectedBounds(in: document.canvasSize) != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        var stagedMasks: [(layerIndex: Int, mask: ImageEditorSelectionMask)] = []
+        for layerIndex in targetIndices {
+            let layer = document.layers[layerIndex]
+            guard !layer.smartFilters[filterIndex].appliesToBackdrop,
+                  let mask = selection.smartFilterMask(
+                layerFrame: layer.frame,
+                layerSize: layer.image.size,
+                canvasSize: document.canvasSize
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return 0
+            }
+            stagedMasks.append((layerIndex, mask))
+        }
+        let changedMasks = stagedMasks.filter { stagedMask in
+            document.layers[stagedMask.layerIndex].smartFilters[filterIndex].mask != stagedMask.mask
+        }
+        guard !changedMasks.isEmpty else {
+            statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
+            return 0
+        }
+
+        pushUndo()
+        for (layerIndex, mask) in changedMasks {
+            document.layers[layerIndex].smartFilters[filterIndex].mask = mask
+        }
+        appendHistory(L10n.text(
+            changedMasks.count == 1
+                ? "imageEditor.history.smartFilterMaskFromSelection"
+                : "imageEditor.history.smartFilterMasksFromSelection"
+        ))
+        return changedMasks.count
+    }
+
+    @discardableResult
+    func clearSmartFilterMask(_ filterID: UUID) -> Int {
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { layerIndex in
+            document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.smartFilterMaskUnchanged")
+            return 0
+        }
+        pushUndo()
+        for layerIndex in targetIndices {
+            document.layers[layerIndex].smartFilters[filterIndex].mask = nil
+        }
+        appendHistory(L10n.text(
+            targetIndices.count == 1
+                ? "imageEditor.history.smartFilterMaskClear"
+                : "imageEditor.history.smartFilterMasksClear"
+        ))
+        return targetIndices.count
+    }
+
     func isSmartFilterLoadedForEditing(_ filterID: UUID) -> Bool {
         loadedSmartFilterID == filterID
             && document.selectedLayer?.smartFilters.contains(where: { $0.id == filterID }) == true

@@ -2091,6 +2091,10 @@
 "imageEditor.history.layerSmartFilterMoveSelected" = "移动所选图层的智能滤镜";
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";
 "imageEditor.history.layerSmartFilterClearSelected" = "清空所选图层的智能滤镜";
+"imageEditor.history.smartFilterMaskFromSelection" = "用选区设置智能滤镜蒙版";
+"imageEditor.history.smartFilterMasksFromSelection" = "用选区设置所选图层的智能滤镜蒙版";
+"imageEditor.history.smartFilterMaskClear" = "清除智能滤镜蒙版";
+"imageEditor.history.smartFilterMasksClear" = "清除所选图层的智能滤镜蒙版";
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
 "imageEditor.history.layerTextUpdateSelected" = "更新所选文字图层";
@@ -2451,6 +2455,7 @@
 "imageEditor.status.adjustmentReady" = "已准备 %@ 调整";
 "imageEditor.status.filterReady" = "已准备 %@ 滤镜";
 "imageEditor.status.smartFilterUnchanged" = "智能滤镜参数没有变化";
+"imageEditor.status.smartFilterMaskUnchanged" = "智能滤镜蒙版没有变化";
 "imageEditor.status.smartFilterChangesDiscarded" = "已恢复智能滤镜保存的参数";
 "imageEditor.status.layerSmartFilterEnabledSelected" = "已启用 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "已停用 %d 个图层的智能滤镜";
@@ -2839,6 +2844,8 @@
 "imageEditor.action.layerSmartFilterMoveUp" = "上移";
 "imageEditor.action.layerSmartFilterMoveDown" = "下移";
 "imageEditor.action.layerSmartFilterRemove" = "删除";
+"imageEditor.action.smartFilterMaskFromSelection" = "从选区创建蒙版";
+"imageEditor.action.smartFilterMaskClear" = "清除蒙版";
 "imageEditor.action.layerSmartFilterClear" = "清空智能滤镜";
 "imageEditor.action.layerTextNew" = "新建文字图层";
 "imageEditor.action.layerTextUpdate" = "更新文字图层";

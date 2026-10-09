@@ -77,6 +77,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     /// When true, a Gaussian blur samples the already-composited pixels behind the layer.
     /// This keeps Figma BACKGROUND_BLUR non-destructive instead of baking the backdrop.
     var appliesToBackdrop = false
+    /// Per-filter grayscale coverage stored in the filtered layer's pixel space.
+    /// Nil means the filter applies everywhere, preserving older project files.
+    var mask: ImageEditorSelectionMask?
     /// Retained samples per original filter pixel unit after a pixel edit promotes its backing.
     var pixelSamplingScale: Double?
 
@@ -88,7 +91,8 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         isEnabled: Bool = true,
         opacity: Double = 1,
         blendMode: ImageEditorBlendMode = .normal,
-        appliesToBackdrop: Bool = false
+        appliesToBackdrop: Bool = false,
+        mask: ImageEditorSelectionMask? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -98,6 +102,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         self.opacity = max(0, min(1, opacity))
         self.blendMode = blendMode == .passThrough ? .normal : blendMode
         self.appliesToBackdrop = appliesToBackdrop
+        self.mask = mask
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -110,6 +115,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         case blendMode
         case appliesToBackdrop
         case pixelSamplingScale
+        case mask
     }
 
     init(from decoder: Decoder) throws {
@@ -124,6 +130,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         if blendMode == .passThrough { blendMode = .normal }
         appliesToBackdrop = try container.decodeIfPresent(Bool.self, forKey: .appliesToBackdrop) ?? false
         pixelSamplingScale = try container.decodeIfPresent(Double.self, forKey: .pixelSamplingScale)
+        mask = try container.decodeIfPresent(ImageEditorSelectionMask.self, forKey: .mask)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -137,6 +144,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         try container.encode(normalizedBlendMode, forKey: .blendMode)
         try container.encode(appliesToBackdrop, forKey: .appliesToBackdrop)
         try container.encodeIfPresent(pixelSamplingScale, forKey: .pixelSamplingScale)
+        try container.encodeIfPresent(mask, forKey: .mask)
     }
 
     var normalizedIntensity: Double {

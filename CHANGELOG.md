@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1785 - 2026-10-09
+
+### Added
+- Smart Filters can now create or clear a non-destructive grayscale mask from the active selection; masks persist in projects, render within each filter's stack position, and are exposed through the Xomo automation API.
+
+### Verification
+- `ImageEditorSmartFilterMaskTests` 3/3 passed: constrained rendering, Undo/Redo, project save/reopen, clear/Undo/Redo, and legacy decode; `XomoAutomationTests/smartFilterAutomationCanSetAndClearMaskFromSelection` 1/1 passed.
+- This is not the rc1800 full Release build/desktop smoke gate; `app_id=xomo` appcast metadata for rc1784 remains a separate pending action.
+
 ## 2.12.0-rc1784 - 2026-10-09
 
 ### Fixed

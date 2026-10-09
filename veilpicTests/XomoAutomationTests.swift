@@ -692,6 +692,61 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCountBeforeEmptyClear)
     }
 
+    @Test func smartFilterAutomationCanSetAndClearMaskFromSelection() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let manageTool = try #require(automationTool(named: "xomo.smart_filter.manage", in: toolsResponse))
+        let manageProperties = try #require(manageTool["inputSchema"]?.objectValue?["properties"]?.objectValue)
+        let actions = try #require(manageProperties["action"]?.objectValue?["enum"]?.arrayValue)
+        #expect(actions.contains(.string("maskFromSelection")))
+        #expect(actions.contains(.string("clearMask")))
+
+        let addResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.add",
+            arguments: [
+                "filter": .string(ImageEditorFilter.median.rawValue),
+                "intensity": .number(0.6)
+            ]
+        ))
+        #expect(addResponse.ok)
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        viewModel.document.selection = .rectangle(CGRect(x: 20, y: 30, width: 100, height: 80))
+
+        let maskResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("maskFromSelection")
+            ]
+        ))
+        #expect(maskResponse.ok)
+        #expect(maskResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask != nil)
+
+        let listResponse = registry.execute(request(operation: "call", name: "xomo.smart_filter.list"))
+        #expect(listResponse.result?.arrayValue?.first?.objectValue?["hasMask"] == .bool(true))
+
+        let clearResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("clearMask")
+            ]
+        ))
+        #expect(clearResponse.ok)
+        #expect(clearResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask == nil)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.mask != nil)
+    }
+
     @Test func smartFilterAutomationReportsAffectedLayerCountsAndRejectsNoOpMutations() throws {
         let viewModel = makeViewModel()
         let primaryID = try #require(viewModel.document.selectedLayerID)

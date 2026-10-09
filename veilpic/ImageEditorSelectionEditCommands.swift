@@ -2919,3 +2919,37 @@ private extension ImageEditorSelection {
         return strokeImage.blurred(radius: feather) ?? strokeImage
     }
 }
+
+extension ImageEditorSelection {
+    func smartFilterMask(
+        layerFrame: CGRect,
+        layerSize: CGSize,
+        canvasSize: CGSize
+    ) -> ImageEditorSelectionMask? {
+        guard let image = layerMask(
+            layerFrame: layerFrame,
+            layerSize: layerSize,
+            canvasSize: canvasSize,
+            feather: 0
+        ), let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+
+        let width = max(1, Int(layerSize.width.rounded()))
+        let height = max(1, Int(layerSize.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let alpha = (0..<(width * height)).map { pixels[$0 * bytesPerPixel] }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+}

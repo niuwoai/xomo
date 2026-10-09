@@ -3654,7 +3654,8 @@ final class XomoAutomationRegistry {
                 "intensity": .number(filter.intensity),
                 "opacity": .number(filter.normalizedOpacity),
                 "blendMode": .string(filter.normalizedBlendMode.rawValue),
-                "enabled": .bool(filter.isEnabled)
+                "enabled": .bool(filter.isEnabled),
+                "hasMask": .bool(filter.mask != nil)
             ])
         })
     }
@@ -6513,6 +6514,22 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
+        case "maskFromSelection":
+            let updatedLayerCount = viewModel.setSmartFilterMaskFromSelection(id)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter mask requires a non-empty selection")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
+        case "clearMask":
+            let updatedLayerCount = viewModel.clearSmartFilterMask(id)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter has no mask to clear")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "duplicate":
             guard let duplication = viewModel.duplicateSmartFilterOnSelectedLayer(id) else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be duplicated")
@@ -8232,9 +8249,9 @@ private extension XomoAutomationRegistry {
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID and return the toggled layer count.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
-        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter; mutations return their affected layer count.", [
+        tool("xomo.smart_filter.manage", "Load, update, mask from the current selection, clear a filter mask, duplicate, reorder, or remove a smart filter; mutations return their affected layer count.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "maskFromSelection", "clearMask", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
             "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))

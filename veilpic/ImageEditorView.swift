@@ -16133,6 +16133,26 @@ struct ImageEditorView: View {
                 .accessibilityValue(blendModeTitle)
                 .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
             }
+            if !filter.appliesToBackdrop || filter.mask != nil {
+                HStack(spacing: 6) {
+                    if !filter.appliesToBackdrop {
+                        Button(L10n.text("imageEditor.action.smartFilterMaskFromSelection")) {
+                            viewModel.setSmartFilterMaskFromSelection(filter.id)
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                        .disabled(!viewModel.canSetSmartFilterMaskFromSelection(filter.id))
+                        .accessibilityIdentifier("image-editor-smart-filter-mask-from-selection-\(filter.id)")
+                    }
+                    if filter.mask != nil || viewModel.canClearSmartFilterMask(filter.id) {
+                        Button(L10n.text("imageEditor.action.smartFilterMaskClear")) {
+                            viewModel.clearSmartFilterMask(filter.id)
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                        .disabled(!viewModel.canClearSmartFilterMask(filter.id))
+                        .accessibilityIdentifier("image-editor-smart-filter-mask-clear-\(filter.id)")
+                    }
+                }
+            }
         }
         .padding(6)
         .background(

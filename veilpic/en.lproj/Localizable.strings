@@ -2091,6 +2091,10 @@
 "imageEditor.history.layerSmartFilterMoveSelected" = "Move Smart Filters on Selected Layers";
 "imageEditor.history.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.history.layerSmartFilterClearSelected" = "Clear Smart Filters from Selected Layers";
+"imageEditor.history.smartFilterMaskFromSelection" = "Set Smart Filter Mask from Selection";
+"imageEditor.history.smartFilterMasksFromSelection" = "Set Smart Filter Masks from Selection";
+"imageEditor.history.smartFilterMaskClear" = "Clear Smart Filter Mask";
+"imageEditor.history.smartFilterMasksClear" = "Clear Smart Filter Masks";
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
 "imageEditor.history.layerTextUpdateSelected" = "Update Selected Text Layers";
@@ -2451,6 +2455,7 @@
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.filterReady" = "%@ filter ready";
 "imageEditor.status.smartFilterUnchanged" = "Smart filter settings are unchanged";
+"imageEditor.status.smartFilterMaskUnchanged" = "The smart filter mask is unchanged";
 "imageEditor.status.smartFilterChangesDiscarded" = "Restored the saved smart filter settings";
 "imageEditor.status.layerSmartFilterEnabledSelected" = "Enabled smart filters on %d layers";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "Disabled smart filters on %d layers";
@@ -2839,6 +2844,8 @@
 "imageEditor.action.layerSmartFilterMoveUp" = "Up";
 "imageEditor.action.layerSmartFilterMoveDown" = "Down";
 "imageEditor.action.layerSmartFilterRemove" = "Delete";
+"imageEditor.action.smartFilterMaskFromSelection" = "Mask from Selection";
+"imageEditor.action.smartFilterMaskClear" = "Clear Mask";
 "imageEditor.action.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.action.layerTextNew" = "New Text Layer";
 "imageEditor.action.layerTextUpdate" = "Update Text Layer";

@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1784
+> 最后更新：2026-10-09 | 当前版本：v2.12.0-rc1785
+
+rc1785 为普通 Smart Filter 增加非破坏选区遮罩：从当前选区生成可持久化的灰度 mask，滤镜只影响 mask 覆盖区域；可清除遮罩，Undo/Redo 与项目保存重开保持一致，Xomo automation 可创建、查询与清除。遮罩/像素/撤销及项目往返 3/3、automation schema/调用/回读/撤销 1/1 通过；Backdrop Blur 不提供新建遮罩入口以保留其合成语义。下一完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
 
 rc1784 修复 `xomo.adjustment.configure` 的失败请求副作用：完整校验参数与 action 后才更新调整选择和草稿控件，非法曲线点/未知 action 不会留下半更新的面板状态或 Undo/History 项。两条新失败原子性回归 2/2、原自定义曲线成功路径 1/1、发布合同 10/30、CLI 7/24、概览归档合同 3/30 通过；完整 Release/桌面门槛仍为 rc1800，不扩张 Figma。
 

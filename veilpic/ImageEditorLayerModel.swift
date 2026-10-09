@@ -567,11 +567,14 @@ struct ImageEditorLayer: Identifiable {
         }
         return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
+            let filterMask = filter.mask.flatMap {
+                NSImage.selectionMaskImage($0, inverted: false, targetSize: partial.size)
+            }
             return partial.applyingFilter(
                 kind: filter.kind,
                 intensity: filter.normalizedIntensity,
                 settings: filter.renderingSettings,
-                mask: nil,
+                mask: filterMask,
                 opacity: filter.normalizedOpacity,
                 blendMode: filter.normalizedBlendMode
             ) ?? partial

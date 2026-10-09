@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-09）
 
+- rc1785 为普通 Smart Filter 增加 Photoshop 式选区遮罩：当前选区可生成独立于图层蒙版的 per-filter 灰度 mask，保存在项目并限制对应滤镜效果；可清除，Undo/Redo 和保存重开可往返。Xomo automation 增加 `maskFromSelection`、`clearMask` 并回读 `hasMask`。`ImageEditorSmartFilterMaskTests` 3/3、automation 专项 1/1 通过。Backdrop Blur 仅允许清除已有遮罩，不提供新建入口以保留背景采样语义。下个完整 Release/桌面门槛仍为 rc1800，不扩张 Figma；rc1784 appcast 补录另待当前 Chrome 登录态恢复。
 - rc1784 修复 `xomo.adjustment.configure` 失败请求仍会切换当前调整面板、并可能留下部分草稿值的问题：参数和 action 全部解析成功后才应用，非法曲线点或未知 action 不写文档、History/Undo 或面板状态。两条失败原子性回归 2/2、既有自定义曲线成功路径 1/1、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过；下一完整 Release/桌面门槛为 rc1800，不扩张 Figma。
 - rc1782 让 Curves 支持自定义点：点击曲线插入，沿 X/Y 两轴拖动塑形，双击或辅助功能移除；RGB、红、绿、蓝控制点独立持久化，图表与渲染使用相同曲线映射。旧项目缺少字段时保持默认恒等。`ImageEditorAdjustmentTests` 40/40、`ImageEditorScopeTests` 198/198、发布契约 10/30、CLI 契约 7/24、三语本地化键 4320/4320、diff 检查通过。下一完整 Release/桌面门槛为 rc1800，不扩张 Figma。
 - rc1779 增加 Photoshop 风格的 Image > Equalize 破坏性校正：在每个可编辑栅格层的可见像素上统计亮度 CDF，按选区裁切输出，保留像素 alpha 与统一 Undo/Redo 事务；局部亮度比例映射尽量保持色相。rc1779 专项算法、选区/透明度锁和 Undo/Redo 测试结果待本轮验证；下一完整门槛为 rc1800，不扩张 Figma。
