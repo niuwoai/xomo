@@ -7,6 +7,7 @@
 
 ### Verification
 - Selection-pixel transform suite 6/6 passed, including feathered partial-alpha coverage; full Release/desktop gate remains rc1800.
+- Published the universal, signed and notarized macOS release to GitHub, OSS versioned/latest downloads, and the `xomo` Sparkle appcast.
 
 ## 2.12.0-rc1796 - 2026-10-09
 
