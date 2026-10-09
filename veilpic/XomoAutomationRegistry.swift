@@ -7,6 +7,12 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 
+private enum XomoAdjustmentConfigureAction: String {
+    case apply
+    case addLayer
+    case updateLayer
+}
+
 @MainActor
 final class XomoAutomationRegistry {
     static let shared = XomoAutomationRegistry()
@@ -6561,72 +6567,89 @@ final class XomoAutomationRegistry {
         guard let adjustment = ImageEditorAdjustment(rawValue: rawValue) else {
             throw XomoAutomationCallError.invalidArgument("Unknown adjustment")
         }
-        viewModel.selectedAdjustment = adjustment
+        guard let action = XomoAdjustmentConfigureAction(
+            rawValue: arguments["action"]?.stringValue ?? "apply"
+        ) else {
+            throw XomoAutomationCallError.invalidArgument("Unknown adjustment configure action")
+        }
+
+        var stateUpdates: [@MainActor () -> Void] = []
+        func stage<Value>(
+            _ keyPath: ReferenceWritableKeyPath<ImageEditorViewModel, Value>,
+            _ value: Value
+        ) {
+            stateUpdates.append { @MainActor in
+                viewModel[keyPath: keyPath] = value
+            }
+        }
+
         let settings = arguments["settings"]?.objectValue ?? [:]
         for (key, value) in settings {
             switch key {
-            case "amount": viewModel.adjustmentValue = try numericSetting(value, key: key)
-            case "levelsBlackPoint": viewModel.levelsBlackPoint = try numericSetting(value, key: key)
-            case "levelsGamma": viewModel.levelsGamma = try numericSetting(value, key: key)
-            case "levelsWhitePoint": viewModel.levelsWhitePoint = try numericSetting(value, key: key)
-            case "levelsOutputBlackPoint": viewModel.levelsOutputBlackPoint = try numericSetting(value, key: key)
-            case "levelsOutputWhitePoint": viewModel.levelsOutputWhitePoint = try numericSetting(value, key: key)
-            case "levelsRedBlackPoint": viewModel.levelsRedBlackPoint = try numericSetting(value, key: key)
-            case "levelsRedGamma": viewModel.levelsRedGamma = try numericSetting(value, key: key)
-            case "levelsRedWhitePoint": viewModel.levelsRedWhitePoint = try numericSetting(value, key: key)
-            case "levelsRedOutputBlackPoint": viewModel.levelsRedOutputBlackPoint = try numericSetting(value, key: key)
-            case "levelsRedOutputWhitePoint": viewModel.levelsRedOutputWhitePoint = try numericSetting(value, key: key)
-            case "levelsGreenBlackPoint": viewModel.levelsGreenBlackPoint = try numericSetting(value, key: key)
-            case "levelsGreenGamma": viewModel.levelsGreenGamma = try numericSetting(value, key: key)
-            case "levelsGreenWhitePoint": viewModel.levelsGreenWhitePoint = try numericSetting(value, key: key)
-            case "levelsGreenOutputBlackPoint": viewModel.levelsGreenOutputBlackPoint = try numericSetting(value, key: key)
-            case "levelsGreenOutputWhitePoint": viewModel.levelsGreenOutputWhitePoint = try numericSetting(value, key: key)
-            case "levelsBlueBlackPoint": viewModel.levelsBlueBlackPoint = try numericSetting(value, key: key)
-            case "levelsBlueGamma": viewModel.levelsBlueGamma = try numericSetting(value, key: key)
-            case "levelsBlueWhitePoint": viewModel.levelsBlueWhitePoint = try numericSetting(value, key: key)
-            case "levelsBlueOutputBlackPoint": viewModel.levelsBlueOutputBlackPoint = try numericSetting(value, key: key)
-            case "levelsBlueOutputWhitePoint": viewModel.levelsBlueOutputWhitePoint = try numericSetting(value, key: key)
-            case "curvesShadows": viewModel.curvesShadows = try numericSetting(value, key: key)
-            case "curvesMidtones": viewModel.curvesMidtones = try numericSetting(value, key: key)
-            case "curvesHighlights": viewModel.curvesHighlights = try numericSetting(value, key: key)
-            case "curvesRedShadows": viewModel.curvesRedShadows = try numericSetting(value, key: key)
-            case "curvesRedMidtones": viewModel.curvesRedMidtones = try numericSetting(value, key: key)
-            case "curvesRedHighlights": viewModel.curvesRedHighlights = try numericSetting(value, key: key)
-            case "curvesGreenShadows": viewModel.curvesGreenShadows = try numericSetting(value, key: key)
-            case "curvesGreenMidtones": viewModel.curvesGreenMidtones = try numericSetting(value, key: key)
-            case "curvesGreenHighlights": viewModel.curvesGreenHighlights = try numericSetting(value, key: key)
-            case "curvesBlueShadows": viewModel.curvesBlueShadows = try numericSetting(value, key: key)
-            case "curvesBlueMidtones": viewModel.curvesBlueMidtones = try numericSetting(value, key: key)
-            case "curvesBlueHighlights": viewModel.curvesBlueHighlights = try numericSetting(value, key: key)
-            case "curvesRGBControlPoints": viewModel.curvesRGBControlPoints = try curveControlPoints(value, key: key)
-            case "curvesRedControlPoints": viewModel.curvesRedControlPoints = try curveControlPoints(value, key: key)
-            case "curvesGreenControlPoints": viewModel.curvesGreenControlPoints = try curveControlPoints(value, key: key)
-            case "curvesBlueControlPoints": viewModel.curvesBlueControlPoints = try curveControlPoints(value, key: key)
-            case "hue": viewModel.hueSaturationHue = try numericSetting(value, key: key)
-            case "saturation": viewModel.hueSaturationSaturation = try numericSetting(value, key: key)
-            case "lightness": viewModel.hueSaturationLightness = try numericSetting(value, key: key)
-            case "colorize": viewModel.hueSaturationColorize = try booleanSetting(value, key: key)
-            case "brightness": viewModel.brightnessContrastBrightness = try numericSetting(value, key: key)
-            case "contrast": viewModel.brightnessContrastContrast = try numericSetting(value, key: key)
-            case "exposureEV": viewModel.exposureEV = try numericSetting(value, key: key)
-            case "exposureOffset": viewModel.exposureOffset = try numericSetting(value, key: key)
-            case "exposureGamma": viewModel.exposureGamma = try numericSetting(value, key: key)
-            case "shadows": viewModel.shadowsHighlightsShadows = try numericSetting(value, key: key)
-            case "highlights": viewModel.shadowsHighlightsHighlights = try numericSetting(value, key: key)
-            case "vibrance": viewModel.vibranceAmount = try numericSetting(value, key: key)
-            case "vibranceSaturation": viewModel.vibranceSaturation = try numericSetting(value, key: key)
-            case "gradientReverse": viewModel.gradientMapReverse = try booleanSetting(value, key: key)
-            case "gradientDither": viewModel.gradientMapDither = try booleanSetting(value, key: key)
-            case "photoFilterDensity": viewModel.photoFilterDensity = try numericSetting(value, key: key)
-            case "preserveLuminosity": viewModel.photoFilterPreserveLuminosity = try booleanSetting(value, key: key)
+            case "amount": stage(\.adjustmentValue, try numericSetting(value, key: key))
+            case "levelsBlackPoint": stage(\.levelsBlackPoint, try numericSetting(value, key: key))
+            case "levelsGamma": stage(\.levelsGamma, try numericSetting(value, key: key))
+            case "levelsWhitePoint": stage(\.levelsWhitePoint, try numericSetting(value, key: key))
+            case "levelsOutputBlackPoint": stage(\.levelsOutputBlackPoint, try numericSetting(value, key: key))
+            case "levelsOutputWhitePoint": stage(\.levelsOutputWhitePoint, try numericSetting(value, key: key))
+            case "levelsRedBlackPoint": stage(\.levelsRedBlackPoint, try numericSetting(value, key: key))
+            case "levelsRedGamma": stage(\.levelsRedGamma, try numericSetting(value, key: key))
+            case "levelsRedWhitePoint": stage(\.levelsRedWhitePoint, try numericSetting(value, key: key))
+            case "levelsRedOutputBlackPoint": stage(\.levelsRedOutputBlackPoint, try numericSetting(value, key: key))
+            case "levelsRedOutputWhitePoint": stage(\.levelsRedOutputWhitePoint, try numericSetting(value, key: key))
+            case "levelsGreenBlackPoint": stage(\.levelsGreenBlackPoint, try numericSetting(value, key: key))
+            case "levelsGreenGamma": stage(\.levelsGreenGamma, try numericSetting(value, key: key))
+            case "levelsGreenWhitePoint": stage(\.levelsGreenWhitePoint, try numericSetting(value, key: key))
+            case "levelsGreenOutputBlackPoint": stage(\.levelsGreenOutputBlackPoint, try numericSetting(value, key: key))
+            case "levelsGreenOutputWhitePoint": stage(\.levelsGreenOutputWhitePoint, try numericSetting(value, key: key))
+            case "levelsBlueBlackPoint": stage(\.levelsBlueBlackPoint, try numericSetting(value, key: key))
+            case "levelsBlueGamma": stage(\.levelsBlueGamma, try numericSetting(value, key: key))
+            case "levelsBlueWhitePoint": stage(\.levelsBlueWhitePoint, try numericSetting(value, key: key))
+            case "levelsBlueOutputBlackPoint": stage(\.levelsBlueOutputBlackPoint, try numericSetting(value, key: key))
+            case "levelsBlueOutputWhitePoint": stage(\.levelsBlueOutputWhitePoint, try numericSetting(value, key: key))
+            case "curvesShadows": stage(\.curvesShadows, try numericSetting(value, key: key))
+            case "curvesMidtones": stage(\.curvesMidtones, try numericSetting(value, key: key))
+            case "curvesHighlights": stage(\.curvesHighlights, try numericSetting(value, key: key))
+            case "curvesRedShadows": stage(\.curvesRedShadows, try numericSetting(value, key: key))
+            case "curvesRedMidtones": stage(\.curvesRedMidtones, try numericSetting(value, key: key))
+            case "curvesRedHighlights": stage(\.curvesRedHighlights, try numericSetting(value, key: key))
+            case "curvesGreenShadows": stage(\.curvesGreenShadows, try numericSetting(value, key: key))
+            case "curvesGreenMidtones": stage(\.curvesGreenMidtones, try numericSetting(value, key: key))
+            case "curvesGreenHighlights": stage(\.curvesGreenHighlights, try numericSetting(value, key: key))
+            case "curvesBlueShadows": stage(\.curvesBlueShadows, try numericSetting(value, key: key))
+            case "curvesBlueMidtones": stage(\.curvesBlueMidtones, try numericSetting(value, key: key))
+            case "curvesBlueHighlights": stage(\.curvesBlueHighlights, try numericSetting(value, key: key))
+            case "curvesRGBControlPoints": stage(\.curvesRGBControlPoints, try curveControlPoints(value, key: key))
+            case "curvesRedControlPoints": stage(\.curvesRedControlPoints, try curveControlPoints(value, key: key))
+            case "curvesGreenControlPoints": stage(\.curvesGreenControlPoints, try curveControlPoints(value, key: key))
+            case "curvesBlueControlPoints": stage(\.curvesBlueControlPoints, try curveControlPoints(value, key: key))
+            case "hue": stage(\.hueSaturationHue, try numericSetting(value, key: key))
+            case "saturation": stage(\.hueSaturationSaturation, try numericSetting(value, key: key))
+            case "lightness": stage(\.hueSaturationLightness, try numericSetting(value, key: key))
+            case "colorize": stage(\.hueSaturationColorize, try booleanSetting(value, key: key))
+            case "brightness": stage(\.brightnessContrastBrightness, try numericSetting(value, key: key))
+            case "contrast": stage(\.brightnessContrastContrast, try numericSetting(value, key: key))
+            case "exposureEV": stage(\.exposureEV, try numericSetting(value, key: key))
+            case "exposureOffset": stage(\.exposureOffset, try numericSetting(value, key: key))
+            case "exposureGamma": stage(\.exposureGamma, try numericSetting(value, key: key))
+            case "shadows": stage(\.shadowsHighlightsShadows, try numericSetting(value, key: key))
+            case "highlights": stage(\.shadowsHighlightsHighlights, try numericSetting(value, key: key))
+            case "vibrance": stage(\.vibranceAmount, try numericSetting(value, key: key))
+            case "vibranceSaturation": stage(\.vibranceSaturation, try numericSetting(value, key: key))
+            case "gradientReverse": stage(\.gradientMapReverse, try booleanSetting(value, key: key))
+            case "gradientDither": stage(\.gradientMapDither, try booleanSetting(value, key: key))
+            case "photoFilterDensity": stage(\.photoFilterDensity, try numericSetting(value, key: key))
+            case "preserveLuminosity": stage(\.photoFilterPreserveLuminosity, try booleanSetting(value, key: key))
             default: throw XomoAutomationCallError.invalidArgument("Unknown adjustment setting: \(key)")
             }
         }
-        switch arguments["action"]?.stringValue ?? "apply" {
-        case "apply": viewModel.applyAdjustment()
-        case "addLayer": viewModel.addAdjustmentLayer()
-        case "updateLayer": viewModel.updateSelectedAdjustmentLayer()
-        default: throw XomoAutomationCallError.invalidArgument("Unknown adjustment configure action")
+
+        viewModel.selectedAdjustment = adjustment
+        stateUpdates.forEach { $0() }
+        switch action {
+        case .apply: viewModel.applyAdjustment()
+        case .addLayer: viewModel.addAdjustmentLayer()
+        case .updateLayer: viewModel.updateSelectedAdjustmentLayer()
         }
     }
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1784 - 2026-10-09
+
+### Fixed
+- `xomo.adjustment.configure` will validate its complete settings object and action before changing the selected adjustment or any panel draft state; rejected calls leave editor state and Undo/History untouched.
+
+### Verification
+- New rejected-request regressions: 2/2 passed after reproducing both failures against the prior implementation; existing custom-curve automation path: 1/1 passed.
+- Release contract: 10 tests / 30 assertions, CLI release contract: 7 tests / 24 assertions, and product-overview archive contract: 3 tests / 30 assertions passed. Full Release/XCTest and desktop gate remains rc1800.
+
 ## 2.12.0-rc1783 - 2026-10-09
 
 ### Added

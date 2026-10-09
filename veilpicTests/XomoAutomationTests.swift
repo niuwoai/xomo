@@ -6587,6 +6587,66 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == invalidHistoryCount)
     }
 
+    @Test func rejectedAdjustmentConfigurePreservesSelectionOnInvalidPoints() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.selectedAdjustment = .levels
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let layerCount = viewModel.document.layers.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.adjustment.configure",
+            arguments: [
+                "adjustment": .string(ImageEditorAdjustment.curves.rawValue),
+                "action": .string("addLayer"),
+                "settings": .object([
+                    "curvesRGBControlPoints": .array([
+                        .object(["input": .number(0.5), "output": .number(0.8)])
+                    ])
+                ])
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.selectedAdjustment == .levels)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func rejectedAdjustmentConfigurePreservesControlsOnUnknownAction() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.selectedAdjustment = .levels
+        viewModel.curvesShadows = -0.25
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.adjustment.configure",
+            arguments: [
+                "adjustment": .string(ImageEditorAdjustment.curves.rawValue),
+                "action": .string("unknownAction"),
+                "settings": .object(["curvesShadows": .number(0.75)])
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.selectedAdjustment == .levels)
+        #expect(viewModel.curvesShadows == -0.25)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func registryConfiguresGaussianBlurRadiusThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
