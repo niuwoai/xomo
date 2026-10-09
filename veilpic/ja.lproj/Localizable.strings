@@ -2102,6 +2102,8 @@
 "imageEditor.history.smartFilterMasksFeather" = "選択レイヤーのスマートフィルターマスクのぼかしを変更";
 "imageEditor.history.smartFilterMaskInvert" = "スマートフィルターマスクを反転";
 "imageEditor.history.smartFilterMaskPaint" = "スマートフィルターマスクを描画";
+"imageEditor.history.smartFilterMaskEnable" = "スマートフィルターマスクを有効化";
+"imageEditor.history.smartFilterMaskDisable" = "スマートフィルターマスクを無効化";
 "imageEditor.history.smartFilterMasksInvert" = "選択レイヤーのスマートフィルターマスクを反転";
 "imageEditor.history.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.history.layerTextUpdate" = "文字レイヤーを更新";
@@ -2467,6 +2469,8 @@
 "imageEditor.status.smartFilterChangesDiscarded" = "保存済みのスマートフィルター設定に戻しました";
 "imageEditor.status.layerSmartFilterEnabledSelected" = "%d個のレイヤーでスマートフィルターを有効にしました";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "%d個のレイヤーでスマートフィルターを無効にしました";
+"imageEditor.status.smartFilterMaskEnabled" = "スマートフィルターマスクを有効化しました";
+"imageEditor.status.smartFilterMaskDisabled" = "スマートフィルターマスクを無効化しました";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "スマートフィルターの不透明度を%d%%に設定し、%d個のレイヤーを更新しました";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "スマートフィルターの描画モードを%@に設定し、%d個のレイヤーを更新しました";
 "imageEditor.status.layerSmartFilterAddedSelected" = "%d個のレイヤーにスマートフィルターを追加しました";
@@ -2859,12 +2863,15 @@
 "imageEditor.action.smartFilterMaskInvert" = "マスクを反転";
 "imageEditor.action.smartFilterMaskPaint" = "マスクを描画";
 "imageEditor.action.smartFilterMaskStopPainting" = "マスク描画を終了";
-"imageEditor.action.smartFilterMaskThumbnailHelp" = "クリックでマスクを描画、Optionキーを押しながらクリックでグレースケール表示";
+"imageEditor.action.smartFilterMaskThumbnailHelp" = "クリックでマスクを描画、Option+クリックでグレースケール表示、Shift+クリックでマスクを切り替え";
+"imageEditor.action.smartFilterMaskEnable" = "マスクを有効化";
+"imageEditor.action.smartFilterMaskDisable" = "マスクを無効化";
 "imageEditor.option.smartFilterMaskDensity" = "マスク濃度";
 "imageEditor.option.smartFilterMaskFeather" = "マスクのぼかし";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d px";
 "imageEditor.state.smartFilterMaskNormal" = "通常";
 "imageEditor.state.smartFilterMaskInverted" = "反転";
+"imageEditor.state.smartFilterMaskDisabled" = "無効";
 "imageEditor.action.layerSmartFilterClear" = "スマートフィルターをクリア";
 "imageEditor.action.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.action.layerTextUpdate" = "文字レイヤーを更新";

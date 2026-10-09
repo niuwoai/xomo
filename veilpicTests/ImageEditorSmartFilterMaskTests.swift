@@ -347,12 +347,73 @@ struct ImageEditorSmartFilterMaskTests {
         #expect(viewModel.previewImage.qingtuPNGData() == viewModel.channelPreviewImage(for: .red).qingtuPNGData())
     }
 
+    @Test func shiftClickDisablesSmartFilterMaskWithoutDiscardingItAndUndoRedoPersists() throws {
+        let source = patternedImage(width: 32, height: 16)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-mask-toggle.png", image: source) { _ in }
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].image = source
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 1
+        viewModel.filterPixelateCellSize = 4
+        viewModel.addSmartFilterToSelectedLayer()
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        let fullFilterImage = try #require(viewModel.document.selectedLayer?.contentImage)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 16, height: 16))
+        #expect(viewModel.setSmartFilterMaskFromSelection(filterID) == 1)
+
+        let maskedImage = try #require(viewModel.document.selectedLayer?.contentImage)
+        #expect(imageEditorMaximumPixelDifference(maskedImage, fullFilterImage) > 0)
+        #expect(viewModel.setSmartFilterMaskDensityOnSelectedLayer(filterID, density: 0.65) == 1)
+        #expect(viewModel.setSmartFilterMaskFeatherOnSelectedLayer(filterID, feather: 2) == 1)
+        #expect(viewModel.invertSmartFilterMaskOnSelectedLayer(filterID) == 1)
+        let beforeToggle = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.activateSmartFilterMaskThumbnail(filterID, modifierFlags: .shift)
+
+        let disabledFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(!disabledFilter.isMaskEnabled)
+        #expect(disabledFilter.mask == beforeToggle.mask)
+        #expect(disabledFilter.normalizedMaskDensity == 0.65)
+        #expect(disabledFilter.normalizedMaskFeather == 2)
+        #expect(disabledFilter.isMaskInverted)
+        #expect(imageEditorMaximumPixelDifference(
+            try #require(viewModel.document.selectedLayer?.contentImage),
+            fullFilterImage
+        ) == 0)
+        #expect(!viewModel.isEditingSmartFilterMask(filterID))
+        #expect(!viewModel.isPreviewingSmartFilterMask(filterID))
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.selectedLayer?.smartFilters.first).isMaskEnabled)
+        viewModel.redo()
+        #expect(!(try #require(viewModel.document.selectedLayer?.smartFilters.first).isMaskEnabled))
+
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: NSImage.transparent(size: NSSize(width: 4, height: 4))
+        ) { _ in }
+        try reopened.loadProjectData(viewModel.projectData())
+        let reopenedFilter = try #require(reopened.document.selectedLayer?.smartFilters.first)
+        #expect(!reopenedFilter.isMaskEnabled)
+        #expect(reopenedFilter.mask == beforeToggle.mask)
+        #expect(reopenedFilter.normalizedMaskDensity == 0.65)
+        #expect(reopenedFilter.normalizedMaskFeather == 2)
+        #expect(reopenedFilter.isMaskInverted)
+
+        reopened.activateSmartFilterMaskThumbnail(filterID, modifierFlags: .shift)
+        #expect(try #require(reopened.document.selectedLayer?.smartFilters.first).isMaskEnabled)
+        #expect(try #require(reopened.document.selectedLayer?.smartFilters.first).mask == beforeToggle.mask)
+    }
+
     @Test func legacySmartFilterDecodingDefaultsToNoMask() throws {
         let data = Data(
             #"{"kind":"pixelate","intensity":0.75,"settings":{},"isEnabled":true}"#.utf8
         )
         let filter = try JSONDecoder().decode(ImageEditorSmartFilter.self, from: data)
         #expect(filter.mask == nil)
+        #expect(filter.isMaskEnabled)
         #expect(filter.normalizedMaskDensity == 1)
         #expect(filter.normalizedMaskFeather == 0)
         #expect(!filter.isMaskInverted)

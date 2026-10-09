@@ -2102,6 +2102,8 @@
 "imageEditor.history.smartFilterMasksFeather" = "Change Smart Filter Mask Feather on Selected Layers";
 "imageEditor.history.smartFilterMaskInvert" = "Invert Smart Filter Mask";
 "imageEditor.history.smartFilterMaskPaint" = "Paint Smart Filter Mask";
+"imageEditor.history.smartFilterMaskEnable" = "Enable Smart Filter Mask";
+"imageEditor.history.smartFilterMaskDisable" = "Disable Smart Filter Mask";
 "imageEditor.history.smartFilterMasksInvert" = "Invert Smart Filter Masks on Selected Layers";
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
@@ -2467,6 +2469,8 @@
 "imageEditor.status.smartFilterChangesDiscarded" = "Restored the saved smart filter settings";
 "imageEditor.status.layerSmartFilterEnabledSelected" = "Enabled smart filters on %d layers";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "Disabled smart filters on %d layers";
+"imageEditor.status.smartFilterMaskEnabled" = "Smart Filter mask enabled";
+"imageEditor.status.smartFilterMaskDisabled" = "Smart Filter mask disabled";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "Set smart filter opacity to %d%% on %d layers";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "Set smart filter blend mode to %@ on %d layers";
 "imageEditor.status.layerSmartFilterAddedSelected" = "Added smart filters to %d layers";
@@ -2859,12 +2863,15 @@
 "imageEditor.action.smartFilterMaskInvert" = "Invert Mask";
 "imageEditor.action.smartFilterMaskPaint" = "Paint Mask";
 "imageEditor.action.smartFilterMaskStopPainting" = "Stop Painting Mask";
-"imageEditor.action.smartFilterMaskThumbnailHelp" = "Click to paint the mask; Option-click to view it in grayscale";
+"imageEditor.action.smartFilterMaskThumbnailHelp" = "Click to paint the mask; Option-click to view it in grayscale; Shift-click to toggle the mask";
+"imageEditor.action.smartFilterMaskEnable" = "Enable Mask";
+"imageEditor.action.smartFilterMaskDisable" = "Disable Mask";
 "imageEditor.option.smartFilterMaskDensity" = "Mask Density";
 "imageEditor.option.smartFilterMaskFeather" = "Mask Feather";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d px";
 "imageEditor.state.smartFilterMaskNormal" = "Normal";
 "imageEditor.state.smartFilterMaskInverted" = "Inverted";
+"imageEditor.state.smartFilterMaskDisabled" = "Disabled";
 "imageEditor.action.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.action.layerTextNew" = "New Text Layer";
 "imageEditor.action.layerTextUpdate" = "Update Text Layer";

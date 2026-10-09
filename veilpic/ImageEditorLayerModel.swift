@@ -568,7 +568,7 @@ struct ImageEditorLayer: Identifiable {
         return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
             let filterMask: NSImage?
-            if let sourceMask = filter.mask {
+            if filter.isMaskEnabled, let sourceMask = filter.mask {
                 guard let mask = NSImage.selectionMaskImage(
                     sourceMask,
                     inverted: filter.isMaskInverted,

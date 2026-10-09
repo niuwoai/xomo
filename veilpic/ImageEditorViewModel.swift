@@ -10356,12 +10356,55 @@ final class ImageEditorViewModel: ObservableObject {
         _ filterID: UUID,
         modifierFlags: NSEvent.ModifierFlags
     ) {
+        if modifierFlags.contains(.shift) {
+            _ = toggleSmartFilterMaskEnabledOnSelectedLayer(filterID)
+            return
+        }
         if modifierFlags.contains(.option) {
             _ = toggleSmartFilterMaskSoloPreview(filterID)
             return
         }
         clearSmartFilterMaskSoloPreview()
         toggleSmartFilterMaskEditing(filterID)
+    }
+
+    @discardableResult
+    func toggleSmartFilterMaskEnabledOnSelectedLayer(_ filterID: UUID) -> Int {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              !document.layers[layerIndex].smartFilters[filterIndex].appliesToBackdrop,
+              document.layers[layerIndex].smartFilters[filterIndex].mask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
+        let isEnabled = !document.layers[layerIndex].smartFilters[filterIndex].isMaskEnabled
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { targetIndex in
+            let filter = document.layers[targetIndex].smartFilters[filterIndex]
+            return !filter.appliesToBackdrop
+                && filter.mask != nil
+                && filter.isMaskEnabled != isEnabled
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
+        pushUndo()
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].smartFilters[filterIndex].isMaskEnabled = isEnabled
+        }
+        appendHistory(L10n.text(
+            isEnabled
+                ? "imageEditor.history.smartFilterMaskEnable"
+                : "imageEditor.history.smartFilterMaskDisable"
+        ))
+        statusText = L10n.text(
+            isEnabled
+                ? "imageEditor.status.smartFilterMaskEnabled"
+                : "imageEditor.status.smartFilterMaskDisabled"
+        )
+        return targetIndices.count
     }
 
     @discardableResult
@@ -10494,6 +10537,7 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         for layerIndex in targetIndices {
             document.layers[layerIndex].smartFilters[filterIndex].mask = nil
+            document.layers[layerIndex].smartFilters[filterIndex].isMaskEnabled = true
             document.layers[layerIndex].smartFilters[filterIndex].maskDensity = 1
             document.layers[layerIndex].smartFilters[filterIndex].maskFeather = 0
             document.layers[layerIndex].smartFilters[filterIndex].isMaskInverted = false

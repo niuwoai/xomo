@@ -2102,6 +2102,8 @@
 "imageEditor.history.smartFilterMasksFeather" = "调整所选图层的智能滤镜蒙版羽化";
 "imageEditor.history.smartFilterMaskInvert" = "反相智能滤镜蒙版";
 "imageEditor.history.smartFilterMaskPaint" = "绘制智能滤镜蒙版";
+"imageEditor.history.smartFilterMaskEnable" = "启用智能滤镜蒙版";
+"imageEditor.history.smartFilterMaskDisable" = "停用智能滤镜蒙版";
 "imageEditor.history.smartFilterMasksInvert" = "反相所选图层的智能滤镜蒙版";
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
@@ -2467,6 +2469,8 @@
 "imageEditor.status.smartFilterChangesDiscarded" = "已恢复智能滤镜保存的参数";
 "imageEditor.status.layerSmartFilterEnabledSelected" = "已启用 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "已停用 %d 个图层的智能滤镜";
+"imageEditor.status.smartFilterMaskEnabled" = "已启用智能滤镜蒙版";
+"imageEditor.status.smartFilterMaskDisabled" = "已停用智能滤镜蒙版";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "已将智能滤镜不透明度设为 %d%%，更新 %d 个图层";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "已将智能滤镜混合模式设为 %@，更新 %d 个图层";
 "imageEditor.status.layerSmartFilterAddedSelected" = "已为 %d 个图层添加智能滤镜";
@@ -2859,12 +2863,15 @@
 "imageEditor.action.smartFilterMaskInvert" = "反相蒙版";
 "imageEditor.action.smartFilterMaskPaint" = "绘制蒙版";
 "imageEditor.action.smartFilterMaskStopPainting" = "结束绘制蒙版";
-"imageEditor.action.smartFilterMaskThumbnailHelp" = "单击绘制蒙版；按住 Option 单击以灰度查看蒙版";
+"imageEditor.action.smartFilterMaskThumbnailHelp" = "单击绘制蒙版；按住 Option 单击以灰度查看蒙版；按住 Shift 单击以启用或停用蒙版";
+"imageEditor.action.smartFilterMaskEnable" = "启用蒙版";
+"imageEditor.action.smartFilterMaskDisable" = "停用蒙版";
 "imageEditor.option.smartFilterMaskDensity" = "蒙版浓度";
 "imageEditor.option.smartFilterMaskFeather" = "蒙版羽化";
 "imageEditor.option.smartFilterMaskFeatherValue" = "%d 像素";
 "imageEditor.state.smartFilterMaskNormal" = "正常";
 "imageEditor.state.smartFilterMaskInverted" = "已反相";
+"imageEditor.state.smartFilterMaskDisabled" = "已停用";
 "imageEditor.action.layerSmartFilterClear" = "清空智能滤镜";
 "imageEditor.action.layerTextNew" = "新建文字图层";
 "imageEditor.action.layerTextUpdate" = "更新文字图层";

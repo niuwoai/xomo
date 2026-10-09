@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1794 - 2026-10-09
+
+### Added
+- Shift-click a Smart Filter mask thumbnail, or use the inspector control, to bypass and restore the mask without losing its pixels or refinements.
+
+### Verification
+- Mask rendering, project round-trip, Undo/Redo, and UI wiring are covered by the rc1794 verification record. Full Release/desktop gate remains rc1800.
+
 ## 2.12.0-rc1793 - 2026-10-09
 
 ### Added

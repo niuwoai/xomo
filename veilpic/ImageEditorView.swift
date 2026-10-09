@@ -16048,6 +16048,7 @@ struct ImageEditorView: View {
                 if let mask = filter.mask {
                     ImageEditorSmartFilterMaskThumbnail(
                         image: mask.grayscaleThumbnailImage(targetSize: CGSize(width: 24, height: 24)),
+                        isMaskEnabled: filter.isMaskEnabled,
                         isEditing: isEditingMask || isPreviewingMask,
                         accessibilityLabel: L10n.text(
                             isEditingMask
@@ -16058,6 +16059,8 @@ struct ImageEditorView: View {
                             ? L10n.text("imageEditor.state.editing")
                             : isPreviewingMask
                                 ? L10n.text("imageEditor.state.previewingSmartFilterMask")
+                                : !filter.isMaskEnabled
+                                    ? L10n.text("imageEditor.state.smartFilterMaskDisabled")
                                 : "",
                         accessibilityIdentifier: "image-editor-smart-filter-mask-thumbnail-\(filter.id)"
                     ) {
@@ -16200,6 +16203,18 @@ struct ImageEditorView: View {
                         .buttonStyle(EditorTextButtonStyle())
                         .disabled(!viewModel.canSetSmartFilterMaskFromSelection(filter.id))
                         .accessibilityIdentifier("image-editor-smart-filter-mask-from-selection-\(filter.id)")
+
+                        if filter.mask != nil {
+                            Button(L10n.text(
+                                filter.isMaskEnabled
+                                    ? "imageEditor.action.smartFilterMaskDisable"
+                                    : "imageEditor.action.smartFilterMaskEnable"
+                            )) {
+                                viewModel.toggleSmartFilterMaskEnabledOnSelectedLayer(filter.id)
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .accessibilityIdentifier("image-editor-smart-filter-mask-toggle-\(filter.id)")
+                        }
                     }
                     if filter.mask != nil || viewModel.canClearSmartFilterMask(filter.id) {
                         Button(L10n.text("imageEditor.action.smartFilterMaskClear")) {
