@@ -6,7 +6,7 @@
 - Preserve pixels generated beyond the canvas when scaling an edge-touching selection; the expanded layer backing reveals them after a later canvas expansion.
 
 ### Verification
-- The selected-pixel transform suite passes 15/15 and the full suite passes 3,748 tests. The 40-version signed Release, notarization, desktop smoke, and recoverable `/Applications` installation gate remains open because Apple's timestamp service is unreachable in the build environment.
+- The selected-pixel transform suite passes 15/15 and the full suite passes 3,748 tests. The universal Release was signed and notarized; the app and DMG were stapled, the candidate launched successfully for desktop smoke, and GitHub, versioned/latest OSS downloads, and the Sparkle appcast were published and read back. Replacing `/Applications/Xomo.app` is pending because its existing process still has an unnamed canvas open; no window was closed or document discarded.
 
 ## 2.12.0-rc1800 - 2026-10-11
 
