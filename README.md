@@ -13,6 +13,7 @@ Layers · masks · smart objects · layer comps · PSD in **and** out · 146 aut
 [![Automation tools](https://img.shields.io/badge/automation%20tools-146-green)](#automation-and-ai-agents)
 [![Download](https://img.shields.io/github/v/release/niuwoai/xomo?label=download&color=brightgreen)](https://github.com/niuwoai/xomo/releases/latest)
 [![Stars](https://img.shields.io/github/stars/niuwoai/xomo?color=yellow)](https://github.com/niuwoai/xomo/stargazers)
+[![CI](https://img.shields.io/github/actions/workflow/status/niuwoai/xomo/ci.yml?branch=main&label=CI)](https://github.com/niuwoai/xomo/actions/workflows/ci.yml)
 
 <a href="https://github.com/niuwoai/xomo/releases/latest"><b>⬇︎ Download the DMG</b></a> ·
 <a href="docs/xomo-tutorial/README.md"><b>Read the tutorial</b></a> ·
@@ -26,7 +27,7 @@ Layers · masks · smart objects · layer comps · PSD in **and** out · 146 aut
 
 ---
 
-**Jump to:** [Why Xomo exists](#why-xomo-exists) · [Try it in 60 seconds](#try-it-in-60-seconds) · [Screenshots](#screenshots) · [What's inside](#whats-inside) · [Automation and AI agents](#automation-and-ai-agents) · [Extend it](#extend-it) · [Install](#install) · [Scope, honestly](#scope-honestly) · [Documentation](#documentation) · [License](#license)
+**Jump to:** [Why Xomo exists](#why-xomo-exists) · [Try it in 60 seconds](#try-it-in-60-seconds) · [Screenshots](#screenshots) · [What's inside](#whats-inside) · [Automation and AI agents](#automation-and-ai-agents) · [Extend it](#extend-it) · [Install](#install) · [Scope, honestly](#scope-honestly) · [Documentation](#documentation) · [Contributing](#contributing) · [License](#license)
 
 ---
 
@@ -157,7 +158,7 @@ Xomo is built to be forked, and the automation surface was deliberately kept in 
 
 - **macOS 13 Ventura or newer** (Apple silicon or Intel — the release DMG is universal)
 - Working in the canvas, painting and exporting needs no account and no cloud service
-- Building from source: Xcode 16+ (the `xomo` CLI package uses `swift-tools-version 6.0`)
+- Building from source: **Xcode 26 or newer.** The app target sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and `SWIFT_APPROACHABLE_CONCURRENCY = YES` (Swift 6.2 nonisolated-nonsending). Xcode 16.x does not support those settings and fails with `expression is 'async' but is not marked with 'await'` at `veilpic/ImageEditorPSD.swift:417`. The `xomo` CLI package is more forgiving: `swift-tools-version 6.0`. CI runs on `macos-26` for the same reason.
 
 ## Install
 
@@ -176,7 +177,7 @@ cd xomo
 open veilpic.xcodeproj        # scheme: veilpic
 ```
 
-The Xcode target is configured for the maintainers' Developer ID team, and the project ships without shared schemes. Open it in Xcode once — that creates the `veilpic` scheme — then build from the command line with your own team, or with signing off:
+The Xcode target is configured for the maintainers' Developer ID team. The `veilpic` scheme is shared, so this works on a fresh clone without opening Xcode first — set your own team, or turn signing off:
 
 ```bash
 xcodebuild -project veilpic.xcodeproj -scheme veilpic -configuration Debug build CODE_SIGNING_ALLOWED=NO
@@ -224,7 +225,11 @@ This README is English; the deep reference docs are written in Chinese today. **
 
 ## Contributing
 
-Pull requests are welcome — the fastest way in is to fork, pick a `[x]`-able item from the roadmap docs, and open a PR with tests.
+Pull requests are welcome. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** has the full picture — setup, test gates, house rules, and worked examples for the two most common contributions. The short version:
+
+- **Translate the docs.** The README is English; the illustrated tutorial, `XOMO_MCP.md` and `docs/PSD_SUPPORT.md` are still 中文. Highest value per hour, and it needs no Swift.
+- **Add an automation tool.** [`veilpic/XomoAutomationRegistry.swift`](veilpic/XomoAutomationRegistry.swift) — the JSON schema and its handler live side by side in one file.
+- **Take an item off a roadmap.** [`PHOTOSHOP_CLASSIC_ROADMAP.md`](PHOTOSHOP_CLASSIC_ROADMAP.md) and [`XOMO_UI_DESIGN_ROADMAP.md`](XOMO_UI_DESIGN_ROADMAP.md) list the gaps in priority order.
 
 House rules that keep the codebase predictable:
 
@@ -233,6 +238,8 @@ House rules that keep the codebase predictable:
 - Batch operations must commit as a **single** History/Undo step, and must fail atomically on invalid input instead of half-applying.
 - Run `ruby scripts/run_tests_isolated.rb` before opening a PR.
 - If you touch this README, run `ruby scripts/verify_readme.rb` — it re-checks every relative link, every in-page anchor and every headline number against the repository.
+
+Found a bug, or want to propose something? [Open an issue](https://github.com/niuwoai/xomo/issues/new/choose) — there are structured templates for bug reports and feature requests, and they ask for exactly the details that make a fix fast.
 
 ## License
 
