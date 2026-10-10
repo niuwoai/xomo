@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1801 - 2026-10-11
+
+### Fixed
+- Preserve pixels generated beyond the canvas when scaling an edge-touching selection; the expanded layer backing reveals them after a later canvas expansion.
+
+### Verification
+- The selected-pixel transform suite passes 15/15 and the full suite passes 3,748 tests. The 40-version signed Release, notarization, desktop smoke, and recoverable `/Applications` installation gate remains open because Apple's timestamp service is unreachable in the build environment.
+
 ## 2.12.0-rc1800 - 2026-10-11
 
 ### Added

@@ -241,7 +241,6 @@ extension ImageEditorViewModel {
             guard let result = scaledLayer(
                 document.layers[index],
                 selection: selection,
-                destinationSelection: scaledSelection,
                 sourceCanvasBounds: scaling.sourceCanvasBounds,
                 destinationCanvasBounds: scaling.destinationCanvasBounds
             ) else {
@@ -332,13 +331,12 @@ extension ImageEditorViewModel {
     private func scaledLayer(
         _ layer: ImageEditorLayer,
         selection: ImageEditorSelection,
-        destinationSelection: ImageEditorSelection,
         sourceCanvasBounds: CGRect,
         destinationCanvasBounds: CGRect
     ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
         guard let backingLayer = layer.expandedPixelSelectionTransformBacking(
             selection: selection,
-            destinationSelection: destinationSelection,
+            destinationCanvasBounds: destinationCanvasBounds,
             canvasSize: document.canvasSize,
             feather: feather
         ) else { return nil }

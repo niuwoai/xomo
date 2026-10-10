@@ -177,6 +177,55 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(pixel(from: actual, x: 0, y: 0, width: width) == pixel(from: source, x: 0, y: 0, width: width))
     }
 
+    @Test func scalingSelectionAtCanvasEdgeRetainsGeneratedPixelsOutsideCanvas() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        let layerSize = CGSize(width: 4, height: 4)
+        let source = opaquePixels(width: 4, height: 4)
+        let image = try #require(ImageEditorRGBAImage.image(
+            width: 4, height: 4, pixels: source, size: layerSize
+        ))
+        var layer = ImageEditorLayer.blank(name: "Edge", size: layerSize)
+        layer.image = image
+        layer.frame = CGRect(origin: .zero, size: layerSize)
+        let selection = ImageEditorSelection.rectangle(CGRect(x: 2, y: 1, width: 2, height: 2))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "edge-scale.png", image: .transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.document.layers = [layer]
+        viewModel.document.selectedLayerID = layer.id
+        viewModel.document.selectedLayerIDs = [layer.id]
+        viewModel.document.selection = selection
+        let originalProject = try viewModel.projectData()
+
+        #expect(viewModel.canScaleSelectedPixels)
+        viewModel.scaleSelectedPixelsUp()
+
+        let result = viewModel.document.layers[0]
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPixelsScaledUp"))
+        #expect(result.frame.maxX > canvasSize.width)
+        let resultWidth = Int(result.image.size.width.rounded())
+        let resultHeight = Int(result.image.size.height.rounded())
+        let resultPixels = try #require(ImageEditorRGBAImage.pixels(
+            from: result.image, width: resultWidth, height: resultHeight
+        ))
+        #expect(pixel(from: resultPixels, x: resultWidth - 1, y: 1, width: resultWidth)[3] > 0)
+
+        let scaledProject = try viewModel.projectData()
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == scaledProject)
+        viewModel.resizeCanvas(to: CGSize(width: 8, height: 8), anchor: .bottomLeft)
+        let revealedLayer = viewModel.document.layers[0]
+        let revealedWidth = Int(revealedLayer.image.size.width.rounded())
+        let revealedHeight = Int(revealedLayer.image.size.height.rounded())
+        let revealedPixels = try #require(ImageEditorRGBAImage.pixels(
+            from: revealedLayer.image, width: revealedWidth, height: revealedHeight
+        ))
+        #expect(viewModel.document.canvasSize == CGSize(width: 8, height: 8))
+        #expect(pixel(from: revealedPixels, x: revealedWidth - 1, y: 1, width: revealedWidth)[3] > 0)
+    }
+
     @Test func selectedPixelScaleIsAtomicAcrossLayersAndUndoRedoProjectRoundTrip() throws {
         let canvasSize = CGSize(width: 12, height: 4)
         let firstSize = CGSize(width: 5, height: 4)
