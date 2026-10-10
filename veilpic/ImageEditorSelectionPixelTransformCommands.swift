@@ -1,6 +1,10 @@
 import AppKit
 
 extension ImageEditorViewModel {
+    var canScaleSelectedPixels: Bool {
+        canFlipSelectedPixels
+    }
+
     var canFlipSelectedPixels: Bool {
         guard !isQuickMaskMode,
               !isEditingLayerMask,
@@ -59,6 +63,22 @@ extension ImageEditorViewModel {
 
     func rotateSelectedPixels180() {
         rotateSelectedPixels(clockwiseTurns: 2)
+    }
+
+    func scaleSelectedPixelsUp() {
+        scaleSelectedPixels(
+            by: 2,
+            historyKey: "imageEditor.history.selectionPixelsScaleUp",
+            statusKey: "imageEditor.status.selectionPixelsScaledUp"
+        )
+    }
+
+    func scaleSelectedPixelsDown() {
+        scaleSelectedPixels(
+            by: 0.5,
+            historyKey: "imageEditor.history.selectionPixelsScaleDown",
+            statusKey: "imageEditor.status.selectionPixelsScaledDown"
+        )
     }
 
     private func flipSelectedPixels(horizontally: Bool) {
@@ -192,6 +212,61 @@ extension ImageEditorViewModel {
         statusText = L10n.text(statusKey)
     }
 
+    private func scaleSelectedPixels(by factor: CGFloat, historyKey: String, statusKey: String) {
+        guard canScaleSelectedPixels, factor.isFinite, factor > 0 else { return }
+        finishActiveCanvasEditForNewCommand()
+        guard let selection = document.selection,
+              let scaling = selection.scaledWithGeometry(by: factor, canvasSize: document.canvasSize)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let scaledSelection = scaling.selection
+
+        let selectionCoverageChanged: Bool
+        if let originalMask = selection.rasterizedMask(canvasSize: document.canvasSize),
+           let transformedMask = scaledSelection.rasterizedMask(canvasSize: document.canvasSize) {
+            selectionCoverageChanged = originalMask != transformedMask
+        } else {
+            selectionCoverageChanged = scaledSelection != selection
+        }
+
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : Set(document.selectedLayerIDs)
+        let selectedIndices = document.layers.indices.filter { selectedIDs.contains(document.layers[$0].id) }
+        var updatedLayers = document.layers
+        var pixelDataChanged = false
+        for index in selectedIndices {
+            guard let result = scaledLayer(
+                document.layers[index],
+                selection: selection,
+                destinationSelection: scaledSelection,
+                sourceCanvasBounds: scaling.sourceCanvasBounds,
+                destinationCanvasBounds: scaling.destinationCanvasBounds
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            if result.pixelDataChanged {
+                pixelDataChanged = true
+                updatedLayers[index] = result.layer
+            }
+        }
+
+        guard pixelDataChanged || selectionCoverageChanged else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+        var updatedDocument = document
+        updatedDocument.layers = updatedLayers
+        updatedDocument.selection = selectionCoverageChanged ? scaledSelection : selection
+        pushUndo()
+        document = updatedDocument
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.text(statusKey)
+    }
+
     private func flippedLayer(
         _ layer: ImageEditorLayer, selection: ImageEditorSelection, horizontally: Bool
     ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
@@ -248,6 +323,60 @@ extension ImageEditorViewModel {
                width: width, height: height, pixels: output, size: backingLayer.image.size
            )
         else { return nil }
+
+        var result = backingLayer
+        result.image = image
+        return (result, source != output)
+    }
+
+    private func scaledLayer(
+        _ layer: ImageEditorLayer,
+        selection: ImageEditorSelection,
+        destinationSelection: ImageEditorSelection,
+        sourceCanvasBounds: CGRect,
+        destinationCanvasBounds: CGRect
+    ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
+        guard let backingLayer = layer.expandedPixelSelectionTransformBacking(
+            selection: selection,
+            destinationSelection: destinationSelection,
+            canvasSize: document.canvasSize,
+            feather: feather
+        ) else { return nil }
+        let width = Int(backingLayer.image.size.width.rounded())
+        let height = Int(backingLayer.image.size.height.rounded())
+        guard let sourceMaskImage = selection.layerMask(
+            layerFrame: backingLayer.frame,
+            layerSize: backingLayer.image.size,
+            canvasSize: document.canvasSize,
+            feather: feather,
+            usesNearestSampling: true
+        ), let sourceMask = ImageEditorPixelMoveMaskAlpha.read(
+            from: sourceMaskImage, width: width, height: height
+        ), let destinationMask = ImageEditorPixelSelectionTransform.scaledCoverageMask(
+            sourceMaskAlpha: sourceMask,
+            width: width,
+            height: height,
+            layerFrame: backingLayer.frame,
+            sourceCanvasBounds: sourceCanvasBounds,
+            destinationCanvasBounds: destinationCanvasBounds,
+            coverageCanvasBounds: feather > 0
+                ? destinationCanvasBounds.insetBy(dx: -feather * 3, dy: -feather * 3)
+                : destinationCanvasBounds,
+            usesNearestSampling: feather <= 0
+        ), let source = ImageEditorRGBAImage.pixels(
+            from: backingLayer.image, width: width, height: height
+        ), let output = ImageEditorPixelSelectionTransform.scaled(
+            source: source,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: width,
+            height: height,
+            layerFrame: backingLayer.frame,
+            sourceCanvasBounds: sourceCanvasBounds,
+            destinationCanvasBounds: destinationCanvasBounds
+        ), let image = ImageEditorRGBAImage.image(
+            width: width, height: height, pixels: output, size: backingLayer.image.size
+        ) else { return nil }
 
         var result = backingLayer
         result.image = image

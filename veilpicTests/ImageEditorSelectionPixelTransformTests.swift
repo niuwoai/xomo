@@ -78,6 +78,185 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(actual[(width - 1) * 4..<width * 4] == source[(width - 1) * 4..<width * 4])
     }
 
+    @Test func scalingResamplesSelectedPixelsIntoDestinationCoverageAndKeepsOutsidePixels() throws {
+        let width = 6
+        let height = 6
+        let source = opaquePixels(width: width, height: height)
+        var sourceMask = [UInt8](repeating: 0, count: width * height)
+        var destinationMask = [UInt8](repeating: 0, count: width * height)
+        for y in 2..<4 {
+            for x in 2..<4 { sourceMask[y * width + x] = 255 }
+        }
+        for y in 1..<5 {
+            for x in 1..<5 { destinationMask[y * width + x] = 255 }
+        }
+
+        let actual = try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: source,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: width,
+            height: height,
+            layerFrame: CGRect(x: 0, y: 0, width: 6, height: 6),
+            sourceCanvasBounds: CGRect(x: 2, y: 2, width: 2, height: 2),
+            destinationCanvasBounds: CGRect(x: 1, y: 1, width: 4, height: 4)
+        ))
+        let upperLeft = pixel(from: source, x: 2, y: 2, width: width)
+        let lowerRight = pixel(from: source, x: 3, y: 3, width: width)
+
+        #expect(pixel(from: actual, x: 1, y: 1, width: width) == upperLeft)
+        #expect(pixel(from: actual, x: 4, y: 4, width: width) == lowerRight)
+        #expect(pixel(from: actual, x: 2, y: 2, width: width)[0] > upperLeft[0])
+        #expect(pixel(from: actual, x: 2, y: 2, width: width)[0] < lowerRight[0])
+        #expect(pixel(from: actual, x: 0, y: 0, width: width) == pixel(from: source, x: 0, y: 0, width: width))
+        #expect(pixel(from: actual, x: 5, y: 5, width: width) == pixel(from: source, x: 5, y: 5, width: width))
+    }
+
+    @Test func scalingClippedLayerMaskUsesSharedCanvasTransform() throws {
+        let width = 7
+        let height = 4
+        var source = [UInt8](repeating: 0, count: width * height * 4)
+        let selectedPixelOffset = (1 * width) * 4
+        source[selectedPixelOffset] = 220
+        source[selectedPixelOffset + 3] = 255
+        var sourceMask = [UInt8](repeating: 0, count: width * height)
+        sourceMask[1 * width] = 255
+        var destinationMask = [UInt8](repeating: 0, count: width * height)
+        for y in 1..<3 {
+            for x in 0..<3 { destinationMask[y * width + x] = 255 }
+        }
+
+        let actual = try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: source,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: width,
+            height: height,
+            layerFrame: CGRect(x: 5, y: 0, width: 7, height: 4),
+            sourceCanvasBounds: CGRect(x: 2, y: 1, width: 4, height: 1),
+            destinationCanvasBounds: CGRect(x: 0, y: 1, width: 8, height: 2)
+        ))
+
+        #expect(pixel(from: actual, x: 0, y: 1, width: width)[3] == 0)
+        #expect(pixel(from: actual, x: 1, y: 1, width: width) == [220, 0, 0, 255])
+        #expect(pixel(from: actual, x: 2, y: 1, width: width) == [220, 0, 0, 255])
+    }
+
+    @Test func scalingDownResamplesSelectedPixelsToTheSharedCanvasBounds() throws {
+        let width = 4
+        let height = 4
+        let source = opaquePixels(width: width, height: height)
+        var sourceMask = [UInt8](repeating: 0, count: width * height)
+        var destinationMask = [UInt8](repeating: 0, count: width * height)
+        for y in 1..<3 {
+            for x in 1..<3 { sourceMask[y * width + x] = 255 }
+        }
+        destinationMask[2 * width + 2] = 255
+
+        let actual = try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: source,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: width,
+            height: height,
+            layerFrame: CGRect(x: 0, y: 0, width: 4, height: 4),
+            sourceCanvasBounds: CGRect(x: 1, y: 1, width: 2, height: 2),
+            destinationCanvasBounds: CGRect(x: 2, y: 2, width: 1, height: 1)
+        ))
+        let sourcePixels = [
+            pixel(from: source, x: 1, y: 1, width: width),
+            pixel(from: source, x: 2, y: 1, width: width),
+            pixel(from: source, x: 1, y: 2, width: width),
+            pixel(from: source, x: 2, y: 2, width: width)
+        ]
+        let expected = (0..<4).map { channel in
+            UInt8((sourcePixels.reduce(0) { $0 + Int($1[channel]) } + 2) / 4)
+        }
+
+        #expect(pixel(from: actual, x: 2, y: 2, width: width) == expected)
+        #expect(pixel(from: actual, x: 0, y: 0, width: width) == pixel(from: source, x: 0, y: 0, width: width))
+    }
+
+    @Test func selectedPixelScaleIsAtomicAcrossLayersAndUndoRedoProjectRoundTrip() throws {
+        let canvasSize = CGSize(width: 12, height: 4)
+        let firstSize = CGSize(width: 5, height: 4)
+        let secondSize = CGSize(width: 7, height: 4)
+        let firstPixels = opaquePixels(width: 5, height: 4, seed: 5)
+        let secondPixels = opaquePixels(width: 7, height: 4, seed: 73)
+        let firstImage = try #require(ImageEditorRGBAImage.image(
+            width: 5, height: 4, pixels: firstPixels, size: firstSize
+        ))
+        let secondImage = try #require(ImageEditorRGBAImage.image(
+            width: 7, height: 4, pixels: secondPixels, size: secondSize
+        ))
+        var first = ImageEditorLayer.blank(name: "First", size: firstSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: secondSize)
+        first.image = firstImage
+        second.image = secondImage
+        first.frame = CGRect(x: 0, y: 0, width: 5, height: 4)
+        second.frame = CGRect(x: 5, y: 0, width: 7, height: 4)
+        let selection = ImageEditorSelection.rectangle(CGRect(x: 2, y: 1, width: 4, height: 1))
+        let scaledSelection = try #require(selection.scaled(by: 2, canvasSize: canvasSize))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-scale.png", image: .transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.document.layers = [first, second]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id]
+        viewModel.document.selection = selection
+
+        let expectedFirst = try scaledPixels(first, selection: selection,
+            destination: scaledSelection, canvasSize: canvasSize)
+        let expectedSecond = try scaledPixels(second, selection: selection,
+            destination: scaledSelection, canvasSize: canvasSize)
+        let originalProject = try viewModel.projectData()
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canScaleSelectedPixels)
+        viewModel.scaleSelectedPixelsUp()
+
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPixelsScaleUp"))
+        #expect(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize)
+            == scaledSelection.rasterizedMask(canvasSize: canvasSize))
+        let firstResultWidth = Int(viewModel.document.layers[0].image.size.width.rounded())
+        let firstResultHeight = Int(viewModel.document.layers[0].image.size.height.rounded())
+        let secondResultWidth = Int(viewModel.document.layers[1].image.size.width.rounded())
+        let secondResultHeight = Int(viewModel.document.layers[1].image.size.height.rounded())
+        let firstResult = try #require(ImageEditorRGBAImage.pixels(
+            from: viewModel.document.layers[0].image, width: firstResultWidth, height: firstResultHeight
+        ))
+        let secondResult = try #require(ImageEditorRGBAImage.pixels(
+            from: viewModel.document.layers[1].image, width: secondResultWidth, height: secondResultHeight
+        ))
+        #expect(firstResult == expectedFirst)
+        #expect(secondResult == expectedSecond)
+
+        let scaledProject = try viewModel.projectData()
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == scaledProject)
+        let reopened = ImageEditorViewModel(
+            sourceName: "reopened.png", image: .transparent(size: canvasSize)
+        ) { _ in }
+        try reopened.loadProjectData(scaledProject)
+        #expect(reopened.document.selection?.rasterizedMask(canvasSize: canvasSize)
+            == scaledSelection.rasterizedMask(canvasSize: canvasSize))
+        let reopenedFirst = try #require(ImageEditorRGBAImage.pixels(
+            from: reopened.document.layers[0].image,
+            width: Int(reopened.document.layers[0].image.size.width.rounded()),
+            height: Int(reopened.document.layers[0].image.size.height.rounded())
+        ))
+        let reopenedSecond = try #require(ImageEditorRGBAImage.pixels(
+            from: reopened.document.layers[1].image,
+            width: Int(reopened.document.layers[1].image.size.width.rounded()),
+            height: Int(reopened.document.layers[1].image.size.height.rounded())
+        ))
+        #expect(reopenedFirst == expectedFirst)
+        #expect(reopenedSecond == expectedSecond)
+    }
+
     @Test func emptyCoverageAndMalformedRasterAreRejectedWithoutSourceMutation() {
         let source = pixels(width: 3, height: 2)
         let original = source
@@ -368,6 +547,65 @@ struct ImageEditorSelectionPixelTransformTests {
             return [UInt8((index * 17 + seed) % 255), UInt8((index * 31 + seed) % 255),
                     UInt8((index * 47 + seed) % 255), alpha]
         }
+    }
+
+    private func opaquePixels(width: Int, height: Int, seed: Int = 0) -> [UInt8] {
+        var pixels = [UInt8]()
+        pixels.reserveCapacity(width * height * 4)
+        for index in 0..<(width * height) {
+            pixels.append(UInt8((index * 17 + seed) % 230 + 10))
+            pixels.append(UInt8((index * 29 + seed) % 230 + 10))
+            pixels.append(UInt8((index * 43 + seed) % 230 + 10))
+            pixels.append(255)
+        }
+        return pixels
+    }
+
+    private func pixel(from pixels: [UInt8], x: Int, y: Int, width: Int) -> [UInt8] {
+        let offset = (y * width + x) * 4
+        return Array(pixels[offset..<(offset + 4)])
+    }
+
+    private func scaledPixels(
+        _ layer: ImageEditorLayer, selection: ImageEditorSelection,
+        destination: ImageEditorSelection, canvasSize: CGSize
+    ) throws -> [UInt8] {
+        let geometry = try #require(selection.scaledWithGeometry(by: 2, canvasSize: canvasSize))
+        let backingLayer = try #require(layer.expandedPixelSelectionTransformBacking(
+            selection: selection,
+            destinationSelection: destination,
+            canvasSize: canvasSize,
+            feather: 0
+        ))
+        let width = Int(backingLayer.image.size.width.rounded())
+        let height = Int(backingLayer.image.size.height.rounded())
+        let sourceMaskImage = try #require(selection.layerMask(
+            layerFrame: backingLayer.frame, layerSize: backingLayer.image.size, canvasSize: canvasSize,
+            feather: 0, usesNearestSampling: true
+        ))
+        let destinationMaskImage = try #require(destination.layerMask(
+            layerFrame: backingLayer.frame, layerSize: backingLayer.image.size, canvasSize: canvasSize,
+            feather: 0, usesNearestSampling: true
+        ))
+        let source = try #require(ImageEditorRGBAImage.pixels(
+            from: backingLayer.image, width: width, height: height
+        ))
+        let sourceMask = try #require(ImageEditorPixelMoveMaskAlpha.read(
+            from: sourceMaskImage, width: width, height: height
+        ))
+        let destinationMask = try #require(ImageEditorPixelMoveMaskAlpha.read(
+            from: destinationMaskImage, width: width, height: height
+        ))
+        return try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: source,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: width,
+            height: height,
+            layerFrame: backingLayer.frame,
+            sourceCanvasBounds: geometry.sourceCanvasBounds,
+            destinationCanvasBounds: geometry.destinationCanvasBounds
+        ))
     }
 
     private func copyPixel(from source: [UInt8], x: Int, y: Int, to output: inout [UInt8],

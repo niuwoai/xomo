@@ -355,6 +355,7 @@
 "imageEditor.menu.select.alphaChannels" = "Alpha 通道";
 "imageEditor.menu.select.transform" = "变换选区";
 "imageEditor.menu.selectionPixelRotation" = "旋转选区像素";
+"imageEditor.menu.selectionPixelScale" = "缩放选区像素";
 "imageEditor.menu.view.zoomIn" = "放大";
 "imageEditor.menu.view.zoomOut" = "缩小";
 "imageEditor.menu.view.actualPixels" = "实际像素";
@@ -2188,6 +2189,8 @@
 "imageEditor.history.selectionPixelsRotateClockwise" = "顺时针旋转选区像素";
 "imageEditor.history.selectionPixelsRotateCounterclockwise" = "逆时针旋转选区像素";
 "imageEditor.history.selectionPixelsRotate180" = "旋转选区像素 180 度";
+"imageEditor.history.selectionPixelsScaleUp" = "将选区像素缩放至 200%";
+"imageEditor.history.selectionPixelsScaleDown" = "将选区像素缩放至 50%";
 "imageEditor.history.selectionFlipHorizontal" = "水平翻转选区";
 "imageEditor.history.selectionFlipVertical" = "垂直翻转选区";
 "imageEditor.history.selectionRotateClockwise" = "顺时针旋转选区";
@@ -2592,6 +2595,8 @@
 "imageEditor.status.selectionPixelsRotatedClockwise" = "已顺时针旋转选区像素";
 "imageEditor.status.selectionPixelsRotatedCounterclockwise" = "已逆时针旋转选区像素";
 "imageEditor.status.selectionPixelsRotated180" = "已旋转选区像素 180 度";
+"imageEditor.status.selectionPixelsScaledUp" = "已将选区像素缩放至 200%";
+"imageEditor.status.selectionPixelsScaledDown" = "已将选区像素缩放至 50%";
 "imageEditor.status.selectionFlippedHorizontal" = "已水平翻转选区";
 "imageEditor.status.selectionFlippedVertical" = "已垂直翻转选区";
 "imageEditor.status.selectionRotatedClockwise" = "已顺时针旋转选区";
@@ -3154,6 +3159,8 @@
 "imageEditor.action.rotateSelectedPixelsClockwise" = "顺时针旋转 90°";
 "imageEditor.action.rotateSelectedPixelsCounterclockwise" = "逆时针旋转 90°";
 "imageEditor.action.rotateSelectedPixels180" = "旋转 180°";
+"imageEditor.action.scaleSelectedPixelsUp" = "缩放至 200%";
+"imageEditor.action.scaleSelectedPixelsDown" = "缩放至 50%";
 "imageEditor.action.selectionScaleUp" = "放大到 200%";
 "imageEditor.action.selectionScaleDown" = "缩小到 50%";
 "imageEditor.action.selectionFitCanvas" = "适配到画布";

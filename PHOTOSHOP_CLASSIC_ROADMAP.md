@@ -1,7 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-## 当前状态（2026-10-10）
+## 当前状态（2026-10-11）
 
+- rc1800 新增选区像素 50%/200% 缩放：以预乘 RGBA 双线性采样把选中像素写入缩放后的蒙版覆盖，多个像素层共用画布空间缩放映射，选区与像素在一个 Undo/Redo 事务中提交。第 40 版本门槛尚未关闭，须完成全量 Release、签名、公证、桌面冒烟与可恢复 `/Applications` 安装；Figma 范围不扩张。
 - rc1799 补充缩放/偏移像素图层上的 Smart Filter 蒙版笔刷选区坐标回归：14 项蒙版测试、发布/CLI/概览契约通过；不改生产算法，锁定画布选区到图层像素的行为。完整 Release/桌面门槛仍为 rc1800，详见[验证记录](docs/reviews/2026-10-10-rc1799-scaled-smart-filter-mask-selection.md)。
 - rc1798 为编辑菜单补充顺/逆时针 90° 与 180° 选区像素旋转；像素图层内容和选区同一事务更新，扩展图层 backing 以承接旋转后的边界，非等比缩放层禁用 90°。10 项 focused test、发布/CLI/概览契约通过；完整 Release/桌面门槛仍为 rc1800。详见[rc1798 记录](docs/reviews/2026-10-09-rc1798-selected-pixel-rotation.md)。
 - rc1795 增加「编辑 → 水平/垂直翻转选区像素」：翻转选区内的实际像素并同步镜像选区，支持羽化覆盖、多选像素层及单事务 Undo/Redo；测试与状态见[rc1795 验证记录](docs/reviews/2026-10-09-rc1795-selected-pixel-flip.md)。

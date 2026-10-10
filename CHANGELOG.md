@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1800 - 2026-10-11
+
+### Added
+- Added 50% and 200% Edit-menu scaling for selected pixel content, including masked bilinear sampling, transformed selection coverage, multi-layer atomic Undo/Redo, and project round-trip support.
+
+### Changed
+- Use one canvas-space scale transform across selected layers so different layer bounds and resolutions do not derive independent resampling geometry.
+
+### Verification
+- The selected-pixel transform suite passed 14/14 tests; the 40-version Release, signature, desktop smoke, and recoverable `/Applications` installation gate remains open.
+
 ## 2.12.0-rc1799 - 2026-10-10
 
 ### Tests

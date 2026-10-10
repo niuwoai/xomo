@@ -160,8 +160,11 @@ struct XomoEditCommandActions {
     let rotateSelectedPixelsClockwise: () -> Void
     let rotateSelectedPixelsCounterclockwise: () -> Void
     let rotateSelectedPixels180: () -> Void
+    let scaleSelectedPixelsUp: () -> Void
+    let scaleSelectedPixelsDown: () -> Void
     let canFlipSelectedPixels: Bool
     let canRotateSelectedPixelsQuarterTurn: Bool
+    let canScaleSelectedPixels: Bool
     let presentFillDialog: () -> Void
     let canPresentFillDialog: Bool
     let fillSelection: () -> Void
@@ -293,6 +296,17 @@ struct XomoEditMenuItems: View {
             actions?.flipSelectedPixelsVertically()
         }
         .disabled(actions?.canFlipSelectedPixels != true)
+        Menu(L10n.text("imageEditor.menu.selectionPixelScale")) {
+            Button(L10n.text("imageEditor.action.scaleSelectedPixelsUp")) {
+                actions?.scaleSelectedPixelsUp()
+            }
+            .disabled(actions?.canScaleSelectedPixels != true)
+            Button(L10n.text("imageEditor.action.scaleSelectedPixelsDown")) {
+                actions?.scaleSelectedPixelsDown()
+            }
+            .disabled(actions?.canScaleSelectedPixels != true)
+        }
+        .disabled(actions?.canScaleSelectedPixels != true)
         Menu(L10n.text("imageEditor.menu.selectionPixelRotation")) {
             Button(L10n.text("imageEditor.action.rotateSelectedPixelsClockwise")) {
                 actions?.rotateSelectedPixelsClockwise()

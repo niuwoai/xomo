@@ -8,6 +8,13 @@
 import AppKit
 import Foundation
 
+struct ImageEditorSelectionScaleGeometry {
+    let selection: ImageEditorSelection
+    let sourceCanvasBounds: CGRect
+    /// Kept unclipped so pixels at canvas edges still follow the same scale transform.
+    let destinationCanvasBounds: CGRect
+}
+
 extension ImageEditorSelection {
     static func fullCanvas(size: CGSize) -> ImageEditorSelection {
         rectangle(CGRect(origin: .zero, size: size))
@@ -250,11 +257,37 @@ extension ImageEditorSelection {
 
     func scaled(by factor: CGFloat, canvasSize: CGSize) -> ImageEditorSelection? {
         guard factor > 0 else { return self }
-        guard let mask = rasterizedMask(canvasSize: canvasSize),
-              let outputMask = mask.scaled(by: factor),
-              let bounds = outputMask.selectedBounds(in: canvasSize)
+        return scaledWithGeometry(by: factor, canvasSize: canvasSize)?.selection
+    }
+
+    func scaledWithGeometry(by factor: CGFloat, canvasSize: CGSize) -> ImageEditorSelectionScaleGeometry? {
+        guard factor.isFinite, factor > 0,
+              canvasSize.width.isFinite, canvasSize.height.isFinite,
+              canvasSize.width > 0, canvasSize.height > 0,
+              let mask = rasterizedMask(canvasSize: canvasSize),
+              let scaling = mask.scaledWithBounds(by: factor),
+              let bounds = scaling.mask.selectedBounds(in: canvasSize)
         else { return nil }
-        return .raster(mask: outputMask, bounds: bounds)
+
+        let scaleX = canvasSize.width / CGFloat(mask.width)
+        let scaleY = canvasSize.height / CGFloat(mask.height)
+        let sourceCanvasBounds = CGRect(
+            x: CGFloat(scaling.sourcePixelBounds.minX) * scaleX,
+            y: CGFloat(scaling.sourcePixelBounds.minY) * scaleY,
+            width: scaling.sourcePixelBounds.width * scaleX,
+            height: scaling.sourcePixelBounds.height * scaleY
+        )
+        let destinationCanvasBounds = CGRect(
+            x: CGFloat(scaling.destinationPixelBounds.minX) * scaleX,
+            y: CGFloat(scaling.destinationPixelBounds.minY) * scaleY,
+            width: scaling.destinationPixelBounds.width * scaleX,
+            height: scaling.destinationPixelBounds.height * scaleY
+        )
+        return ImageEditorSelectionScaleGeometry(
+            selection: .raster(mask: scaling.mask, bounds: bounds),
+            sourceCanvasBounds: sourceCanvasBounds,
+            destinationCanvasBounds: destinationCanvasBounds
+        )
     }
 
     func fittedToCanvas(canvasSize: CGSize) -> ImageEditorSelection? {
@@ -824,22 +857,54 @@ extension ImageEditorSelectionMask {
     }
 
     func scaled(by factor: CGFloat) -> ImageEditorSelectionMask? {
-        guard width > 0, height > 0, alpha.count == width * height else { return nil }
-        guard let selectedBounds = selectedPixelBounds() else { return nil }
         guard factor > 0 else { return self }
+
+        return scaledWithBounds(by: factor)?.mask
+    }
+
+    func scaledWithBounds(by factor: CGFloat) -> (
+        mask: ImageEditorSelectionMask,
+        sourcePixelBounds: CGRect,
+        destinationPixelBounds: CGRect
+    )? {
+        guard width > 0, height > 0, alpha.count == width * height,
+              factor.isFinite, factor > 0,
+              let selectedBounds = selectedPixelBounds()
+        else { return nil }
 
         let selectionWidth = selectedBounds.maxX - selectedBounds.minX + 1
         let selectionHeight = selectedBounds.maxY - selectedBounds.minY + 1
-        let targetWidth = max(1, Int((CGFloat(selectionWidth) * factor).rounded(.toNearestOrAwayFromZero)))
-        let targetHeight = max(1, Int((CGFloat(selectionHeight) * factor).rounded(.toNearestOrAwayFromZero)))
+        let proposedWidth = (CGFloat(selectionWidth) * factor).rounded(.toNearestOrAwayFromZero)
+        let proposedHeight = (CGFloat(selectionHeight) * factor).rounded(.toNearestOrAwayFromZero)
+        guard proposedWidth.isFinite, proposedHeight.isFinite,
+              proposedWidth < CGFloat(Int.max), proposedHeight < CGFloat(Int.max)
+        else { return nil }
+        let targetWidth = max(1, Int(proposedWidth))
+        let targetHeight = max(1, Int(proposedHeight))
         let centerX = CGFloat(selectedBounds.minX + selectedBounds.maxX) / 2
         let centerY = CGFloat(selectedBounds.minY + selectedBounds.maxY) / 2
-        let targetMinX = Int((centerX - CGFloat(targetWidth - 1) / 2).rounded(.toNearestOrAwayFromZero))
-        let targetMinY = Int((centerY - CGFloat(targetHeight - 1) / 2).rounded(.toNearestOrAwayFromZero))
+        let proposedMinX = (centerX - CGFloat(targetWidth - 1) / 2).rounded(.toNearestOrAwayFromZero)
+        let proposedMinY = (centerY - CGFloat(targetHeight - 1) / 2).rounded(.toNearestOrAwayFromZero)
+        guard proposedMinX.isFinite, proposedMinY.isFinite,
+              proposedMinX > CGFloat(Int.min), proposedMinY > CGFloat(Int.min),
+              proposedMinX < CGFloat(Int.max), proposedMinY < CGFloat(Int.max)
+        else { return nil }
+        let targetMinX = Int(proposedMinX)
+        let targetMinY = Int(proposedMinY)
+        let (targetMaxX, overflowX) = targetMinX.addingReportingOverflow(targetWidth - 1)
+        let (targetMaxY, overflowY) = targetMinY.addingReportingOverflow(targetHeight - 1)
+        guard !overflowX, !overflowY else { return nil }
 
-        return scaledSelection(
+        guard let outputMask = scaledSelection(
             from: selectedBounds,
-            to: (targetMinX, targetMinY, targetMinX + targetWidth - 1, targetMinY + targetHeight - 1)
+            to: (targetMinX, targetMinY, targetMaxX, targetMaxY)
+        ) else { return nil }
+        return (
+            outputMask,
+            CGRect(x: CGFloat(selectedBounds.minX), y: CGFloat(selectedBounds.minY),
+                   width: CGFloat(selectionWidth), height: CGFloat(selectionHeight)),
+            CGRect(x: CGFloat(targetMinX), y: CGFloat(targetMinY),
+                   width: CGFloat(targetWidth), height: CGFloat(targetHeight))
         )
     }
 
