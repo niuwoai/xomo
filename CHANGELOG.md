@@ -1,12 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1802 - 2026-10-12
+
+### Tests
+- Cover selected-pixel scaling at all four canvas edges and verify feathered partial-alpha pixels survive beyond each edge.
+
+### Verification
+- `ImageEditorSelectionPixelTransformTests` 17/17; release contract 10/30, CLI release-build contract 7/24, product-overview archive contract 3/30, and `git diff --check` passed. The rc1800 Release, full suite, desktop smoke, and public readback evidence remains recorded; local installation is blocked because current strict verification reports the rc1801 app signature as modified. The same host also rejects Finder with `CSSMERR_TP_NOT_TRUSTED`, so the artifact/trust-service discrepancy must be diagnosed before installation.
+
 ## 2.12.0-rc1801 - 2026-10-11
 
 ### Fixed
 - Preserve pixels generated beyond the canvas when scaling an edge-touching selection; the expanded layer backing reveals them after a later canvas expansion.
 
 ### Verification
-- The selected-pixel transform suite passes 15/15 and the full suite passes 3,748 tests. The universal Release was signed and notarized; the app and DMG were stapled, the candidate launched successfully for desktop smoke, and GitHub, versioned/latest OSS downloads, and the Sparkle appcast were published and read back. Replacing `/Applications/Xomo.app` is pending because its existing process still has an unnamed canvas open; no window was closed or document discarded.
+- The selected-pixel transform suite passed 15/15 and the full suite passed 3,748 tests. The release log records successful pre-staple app verification, notarization/stapling, DMG assessment, candidate launch, and public readback. A later strict local readback now reports the archived, staged, and DMG-contained app signature as modified, while Finder also returns `CSSMERR_TP_NOT_TRUSTED`; `/Applications` was not replaced. The discrepancy remains unresolved and must be investigated before the install gate can close.
 
 ## 2.12.0-rc1800 - 2026-10-11
 

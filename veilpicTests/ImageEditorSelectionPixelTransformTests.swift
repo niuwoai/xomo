@@ -226,6 +226,119 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(pixel(from: revealedPixels, x: revealedWidth - 1, y: 1, width: revealedWidth)[3] > 0)
     }
 
+    @Test func scalingSelectionAtEveryCanvasEdgeRetainsGeneratedPixelsOutsideCanvas() throws {
+        let canvasSize = CGSize(width: 6, height: 6)
+        let edgeSelections: [(name: String, rect: CGRect, outside: (CGRect) -> Bool)] = [
+            ("left", CGRect(x: 0, y: 2, width: 2, height: 2), { $0.minX < 0 }),
+            ("right", CGRect(x: 4, y: 2, width: 2, height: 2), { $0.maxX > canvasSize.width }),
+            ("top", CGRect(x: 2, y: 0, width: 2, height: 2), { $0.minY < 0 }),
+            ("bottom", CGRect(x: 2, y: 4, width: 2, height: 2), { $0.maxY > canvasSize.height })
+        ]
+
+        for edge in edgeSelections {
+            let viewModel = try scaledSelectionViewModel(
+                canvasSize: canvasSize,
+                selectionRect: edge.rect,
+                feather: 0,
+                sourceName: "scale-\(edge.name)-edge.png"
+            )
+
+            viewModel.scaleSelectedPixelsUp()
+
+            let layer = try #require(viewModel.document.layers.first)
+            #expect(edge.outside(layer.frame), "The \(edge.name) edge should expand beyond the canvas")
+            let width = Int(layer.image.size.width.rounded())
+            let height = Int(layer.image.size.height.rounded())
+            let pixels = try #require(ImageEditorRGBAImage.pixels(from: layer.image, width: width, height: height))
+            #expect(hasVisiblePixelOutsideCanvas(
+                pixels, width: width, height: height, layerFrame: layer.frame, canvasSize: canvasSize
+            ), "The \(edge.name) edge should retain generated pixels outside the canvas")
+        }
+    }
+
+    @Test func featheredSelectionScaleKeepsPartialCoverageAtAllCanvasEdges() throws {
+        let canvasSize = CGSize(width: 6, height: 6)
+        let edgeSelections: [(name: String, rect: CGRect)] = [
+            ("left", CGRect(x: 0, y: 2, width: 2, height: 2)),
+            ("right", CGRect(x: 4, y: 2, width: 2, height: 2)),
+            ("top", CGRect(x: 2, y: 0, width: 2, height: 2)),
+            ("bottom", CGRect(x: 2, y: 4, width: 2, height: 2))
+        ]
+
+        for edge in edgeSelections {
+            let viewModel = try scaledSelectionViewModel(
+                canvasSize: canvasSize,
+                selectionRect: edge.rect,
+                feather: 1,
+                sourceName: "feathered-scale-\(edge.name)-edge.png"
+            )
+
+            viewModel.scaleSelectedPixelsUp()
+
+            let layer = try #require(viewModel.document.layers.first)
+            let width = Int(layer.image.size.width.rounded())
+            let height = Int(layer.image.size.height.rounded())
+            let pixels = try #require(ImageEditorRGBAImage.pixels(from: layer.image, width: width, height: height))
+            #expect(hasPartiallyCoveredPixelOutsideCanvas(
+                pixels, width: width, height: height, layerFrame: layer.frame, canvasSize: canvasSize
+            ), "The feathered \(edge.name) edge should retain partial-alpha pixels beyond the canvas")
+        }
+    }
+
+    private func scaledSelectionViewModel(
+        canvasSize: CGSize, selectionRect: CGRect, feather: CGFloat, sourceName: String
+    ) throws -> ImageEditorViewModel {
+        let width = Int(canvasSize.width)
+        let height = Int(canvasSize.height)
+        let layerImage = try #require(ImageEditorRGBAImage.image(
+            width: width, height: height,
+            pixels: opaquePixels(width: width, height: height), size: canvasSize
+        ))
+        var layer = ImageEditorLayer.blank(name: "Edge", size: canvasSize)
+        layer.image = layerImage
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: sourceName, image: .transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.document.layers = [layer]
+        viewModel.document.selectedLayerID = layer.id
+        viewModel.document.selectedLayerIDs = [layer.id]
+        viewModel.document.selection = .rectangle(selectionRect)
+        viewModel.feather = feather
+        return viewModel
+    }
+
+    private func hasVisiblePixelOutsideCanvas(
+        _ pixels: [UInt8], width: Int, height: Int, layerFrame: CGRect, canvasSize: CGSize
+    ) -> Bool {
+        for y in 0..<height {
+            for x in 0..<width {
+                let canvasX = layerFrame.minX + (CGFloat(x) + 0.5) * layerFrame.width / CGFloat(width)
+                let canvasY = layerFrame.minY + (CGFloat(y) + 0.5) * layerFrame.height / CGFloat(height)
+                guard canvasX < 0 || canvasX >= canvasSize.width || canvasY < 0 || canvasY >= canvasSize.height
+                else { continue }
+                if pixel(from: pixels, x: x, y: y, width: width)[3] > 0 { return true }
+            }
+        }
+        return false
+    }
+
+    private func hasPartiallyCoveredPixelOutsideCanvas(
+        _ pixels: [UInt8], width: Int, height: Int, layerFrame: CGRect, canvasSize: CGSize
+    ) -> Bool {
+        for y in 0..<height {
+            for x in 0..<width {
+                let canvasX = layerFrame.minX + (CGFloat(x) + 0.5) * layerFrame.width / CGFloat(width)
+                let canvasY = layerFrame.minY + (CGFloat(y) + 0.5) * layerFrame.height / CGFloat(height)
+                guard canvasX < 0 || canvasX >= canvasSize.width || canvasY < 0 || canvasY >= canvasSize.height
+                else { continue }
+                let alpha = pixel(from: pixels, x: x, y: y, width: width)[3]
+                if alpha > 0 && alpha < 255 { return true }
+            }
+        }
+        return false
+    }
+
     @Test func selectedPixelScaleIsAtomicAcrossLayersAndUndoRedoProjectRoundTrip() throws {
         let canvasSize = CGSize(width: 12, height: 4)
         let firstSize = CGSize(width: 5, height: 4)
