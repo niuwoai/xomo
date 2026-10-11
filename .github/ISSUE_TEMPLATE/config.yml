@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the illustrated tutorial first
+    url: https://github.com/niuwoai/xomo/blob/main/docs/xomo-tutorial/README.md
+    about: Six chapters covering all 28 tools, layers, channels, history, import/export and shortcuts (中文).
+  - name: Automation / MCP reference
+    url: https://github.com/niuwoai/xomo/blob/main/XOMO_MCP.md
+    about: Every xomo CLI subcommand and automation tool, with its arguments and boundaries (中文).
+  - name: Download the latest signed DMG
+    url: https://github.com/niuwoai/xomo/releases/latest
+    about: Notarized Developer ID build — no account, no sign-in required.

@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Repo contracts (README, release, CLI build)
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: README matches repository facts
+        run: ruby scripts/verify_readme.rb
+      - name: Scripted contracts
+        run: |
+          set -euo pipefail
+          for script in \
+            scripts/test_product_overview_archive.rb \
+            scripts/test_layer_panel_tab_style.rb \
+            scripts/test_run_tests_isolated_contract.rb \
+            scripts/test_release_contract.rb \
+            scripts/test_xomo_cli_release_build.rb \
+            scripts/test_benchmark_normal_blend.rb \
+            scripts/test_benchmark_pixel_selection_move.rb
+          do
+            echo "::group::$script"
+            ruby "$script"
+            echo "::endgroup::"
+          done
+
+  benchmarks:
+    name: Benchmark contracts (these compile, so they are slow)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Selection-mask benchmark contracts
+        run: |
+          set -euo pipefail
+          for script in \
+            scripts/test_benchmark_selection_mask_bounds.rb \
+            scripts/test_benchmark_selection_mask_translation.rb
+          do
+            echo "::group::$script"
+            ruby "$script"
+            echo "::endgroup::"
+          done
+
+  app:
+    name: Build app (Debug, unsigned)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: xcodebuild
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project veilpic.xcodeproj \
+            -scheme veilpic \
+            -configuration Debug \
+            build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+  cli:
+    name: xomo CLI (build + test)
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift build and test
+        run: |
+          set -euo pipefail
+          swift build --package-path xomo-cli
+          swift test --package-path xomo-cli
+
+  tests:
+    name: App tests (isolated runner)
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: ruby scripts/run_tests_isolated.rb
+        run: ruby scripts/run_tests_isolated.rb --jobs 3
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: test-reports/
+          if-no-files-found: ignore
