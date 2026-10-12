@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-12）
 
+- rc1810 将涂抹笔刷每段的覆盖蒙版与像素混合限制到 stroke ROI，保留整图源平移、连续段采样和全尺寸输出；8 项笔刷套件（含不透明/半透明顺序全帧参考）与 1 项真实拖移回归通过，发布/CLI/概览/隔离器合同通过。rc1840 是下一完整门槛。
 - rc1809 将 Blur/Sharpen 笔刷蒙版与源覆盖合成限制到 stroke ROI；完整图像滤镜、画布尺寸与输出透明合成保持原语义。旧 AppKit 像素参考（不透明/半透明）差异不超过 4/255，Blur/Sharpen 可见行为与 tone/airbrush 回归通过；rc1840 为下一完整构建/冒烟/安装门槛。
 - rc1808 将 Dodge/Burn/Sponge 色调笔刷的非气刷蒙版和像素计算限制到 stroke ROI；Full-frame 输出与气刷脉冲路径保持原状。定向像素等价、Undo/Redo、Sponge 与气刷兼容回归及仓库合同通过。详见[rc1808 验证记录](docs/reviews/2026-10-12-rc1808-tone-brush-roi.md)。下一完整门槛仍为 rc1840。
 - rc1807 将压感 Healing/Spot Healing 覆盖计算限制在笔触 ROI，移除“全画布 CGFloat 覆盖 → 全画布 UInt8 → 立即裁剪”的临时分配；新增 ROI 与全画布逐像素等价及分配像素数断言。验证进度见[rc1807 记录](docs/reviews/2026-10-12-rc1807-pressure-healing-mask-roi.md)。下一完整门槛仍为 rc1840；rc1800 系统签名信任异常继续单独跟踪，不绕过。

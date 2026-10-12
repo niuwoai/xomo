@@ -540,13 +540,7 @@ extension NSImage {
             )
 
             let sourceSnapshot = workingSource
-            guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
-                size: size,
-                points: [previous, current],
-                diameter: segmentDiameter,
-                hardness: hardness
-            ),
-            let shiftedSource = NSImage.rendered(size: size, actions: { _ in
+            guard let shiftedSource = NSImage.rendered(size: size, actions: { _ in
                 sourceSnapshot.draw(
                     in: CGRect(x: delta.width, y: -delta.height, width: size.width, height: size.height),
                     from: CGRect(origin: .zero, size: sourceSnapshot.size),
@@ -554,51 +548,33 @@ extension NSImage {
                     fraction: 1
                 )
             }),
-            let clippedSource = NSImage.rendered(size: size, actions: { rect in
-                shiftedSource.draw(
-                    in: rect,
-                    from: CGRect(origin: .zero, size: shiftedSource.size),
-                    operation: .copy,
-                    fraction: 1
-                )
-                strokeMask.draw(
-                    in: rect,
-                    from: CGRect(origin: .zero, size: strokeMask.size),
-                    operation: .destinationIn,
-                    fraction: 1
-                )
-            }),
-            let nextOutput = NSImage.rendered(size: size, actions: { rect in
-                output.draw(
-                    in: rect,
-                    from: CGRect(origin: .zero, size: output.size),
-                    operation: .copy,
-                    fraction: 1
-                )
-                clippedSource.draw(
-                    in: rect,
-                    from: CGRect(origin: .zero, size: clippedSource.size),
-                    operation: .sourceOver,
-                    fraction: clampedOpacity
-                )
-            }) else {
+            let nextOutput = output.mixingBrushSource(
+                shiftedSource,
+                samples: [
+                    ImageEditorBrushStrokeSample(point: previous),
+                    ImageEditorBrushStrokeSample(point: current)
+                ],
+                width: segmentDiameter,
+                opacity: clampedOpacity,
+                hardness: hardness,
+                pressureControlsSize: false,
+                pressureSensitivity: pressureSensitivity
+            ) else {
                 return nil
             }
             if usesIndependentSource {
-                guard let nextWorkingSource = NSImage.rendered(size: size, actions: { rect in
-                    workingSource.draw(
-                        in: rect,
-                        from: CGRect(origin: .zero, size: workingSource.size),
-                        operation: .copy,
-                        fraction: 1
-                    )
-                    clippedSource.draw(
-                        in: rect,
-                        from: CGRect(origin: .zero, size: clippedSource.size),
-                        operation: .sourceOver,
-                        fraction: clampedOpacity
-                    )
-                }) else { return nil }
+                guard let nextWorkingSource = workingSource.mixingBrushSource(
+                    shiftedSource,
+                    samples: [
+                        ImageEditorBrushStrokeSample(point: previous),
+                        ImageEditorBrushStrokeSample(point: current)
+                    ],
+                    width: segmentDiameter,
+                    opacity: clampedOpacity,
+                    hardness: hardness,
+                    pressureControlsSize: false,
+                    pressureSensitivity: pressureSensitivity
+                ) else { return nil }
                 workingSource = nextWorkingSource
             } else {
                 workingSource = nextOutput

@@ -235,6 +235,33 @@ struct ImageEditorToneAirbrushTests {
         try assertBlurAndSharpenMatchLegacy(for: translucentSource, samples: samples)
     }
 
+    @Test func smudgeStrokeROIMixesMatchSequentialFullFrameReference() throws {
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 14)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 14)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 34, y: 14))
+        ]
+        for alpha in [CGFloat(1), 0.6] {
+            let source = coloredPartitionImage(alpha: alpha)
+            let smudged = try #require(source.withSmudgeBrush(
+                samples: samples,
+                width: 12,
+                opacity: 0.8,
+                hardness: 0.7,
+                pressureControlsSize: false,
+                pressureSensitivity: 0.5
+            ))
+            let legacySmudged = try legacySmudgeBrush(
+                source,
+                samples: samples,
+                width: 12,
+                opacity: 0.8,
+                hardness: 0.7
+            )
+            #expect(maximumPixelDifference(smudged, legacySmudged) <= 4.0 / 255)
+        }
+    }
+
     private func assertBlurAndSharpenMatchLegacy(
         for source: NSImage,
         samples: [ImageEditorBrushStrokeSample]
@@ -335,6 +362,17 @@ struct ImageEditorToneAirbrushTests {
         } ?? NSImage.transparent(size: canvasSize)
     }
 
+    private func coloredPartitionImage(alpha: CGFloat) -> NSImage {
+        NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceRed: 0.9, green: 0.1, blue: 0.08, alpha: alpha).setFill()
+            NSRect(x: 0, y: 0, width: rect.width / 3, height: rect.height).fill()
+            NSColor(deviceRed: 0.08, green: 0.85, blue: 0.12, alpha: alpha).setFill()
+            NSRect(x: rect.width / 3, y: 0, width: rect.width / 3, height: rect.height).fill()
+            NSColor(deviceRed: 0.08, green: 0.16, blue: 0.9, alpha: alpha).setFill()
+            NSRect(x: rect.width * 2 / 3, y: 0, width: rect.width / 3, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+    }
+
     private func legacyMixedBrushSource(
         _ source: NSImage,
         brushSource: NSImage,
@@ -383,6 +421,102 @@ struct ImageEditorToneAirbrushTests {
             clippedBrush.draw(
                 in: CGRect(origin: .zero, size: source.size),
                 from: CGRect(origin: .zero, size: clippedBrush.size),
+                operation: .sourceOver,
+                fraction: opacity
+            )
+        })
+    }
+
+    private func legacySmudgeBrush(
+        _ source: NSImage,
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) throws -> NSImage {
+        guard samples.count > 1 else { return source }
+        let strokeOpacity = max(0, min(1, opacity)) * 0.86
+        var workingSource = source
+        var output = source
+        for segmentIndex in 1..<samples.count {
+            let previous = samples[segmentIndex - 1].point
+            let current = samples[segmentIndex].point
+            let delta = CGSize(width: current.x - previous.x, height: current.y - previous.y)
+            let sourceSnapshot = workingSource
+            let mask = try #require(ImageEditorHealingBrushKernel.strokeMaskImage(
+                size: source.size,
+                points: [previous, current],
+                diameter: width,
+                hardness: hardness
+            ))
+            let shiftedSource = try legacyShiftedSmudgeSource(
+                sourceSnapshot,
+                delta: delta
+            )
+            let clippedSource = try legacyClippedSmudgeSource(
+                shiftedSource,
+                mask: mask
+            )
+            let nextOutput = try legacySmudgeOutput(
+                output,
+                clippedSource: clippedSource,
+                opacity: strokeOpacity
+            )
+            output = nextOutput
+            workingSource = nextOutput
+        }
+        return output
+    }
+
+    private func legacyShiftedSmudgeSource(
+        _ source: NSImage,
+        delta: CGSize
+    ) throws -> NSImage {
+        try #require(NSImage.rendered(size: source.size) { _ in
+            source.draw(
+                in: CGRect(x: delta.width, y: -delta.height, width: source.size.width, height: source.size.height),
+                from: CGRect(origin: .zero, size: source.size),
+                operation: .copy,
+                fraction: 1
+            )
+        })
+    }
+
+    private func legacyClippedSmudgeSource(
+        _ shiftedSource: NSImage,
+        mask: NSImage
+    ) throws -> NSImage {
+        try #require(NSImage.rendered(size: shiftedSource.size) { rect in
+            shiftedSource.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: shiftedSource.size),
+                operation: .copy,
+                fraction: 1
+            )
+            mask.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: mask.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        })
+    }
+
+    private func legacySmudgeOutput(
+        _ output: NSImage,
+        clippedSource: NSImage,
+        opacity: CGFloat
+    ) throws -> NSImage {
+        try #require(NSImage.rendered(size: output.size) { rect in
+            output.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: output.size),
+                operation: .copy,
+                fraction: 1
+            )
+            clippedSource.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: clippedSource.size),
                 operation: .sourceOver,
                 fraction: opacity
             )

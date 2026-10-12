@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1810 - 2026-10-12
+
+### Performance
+- Smudge Brush now generates each segment mask and composites the shifted source only inside the stroke ROI, while preserving sequential source translation and full-size output.
+
+### Verification
+- `ImageEditorToneAirbrushTests` 8 项、既有 Smudge 拖移工作流 1 项通过；发布合同（10/30）、CLI 发布构建合同（7/24）、概览归档合同（3/30）及隔离测试器合同通过。rc1840 仍是下一完整构建、冒烟与安装门槛。
+
 ## 2.12.0-rc1809 - 2026-10-12
 
 ### Performance
