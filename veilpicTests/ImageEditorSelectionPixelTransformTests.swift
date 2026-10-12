@@ -112,6 +112,45 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(pixel(from: actual, x: 5, y: 5, width: width) == pixel(from: source, x: 5, y: 5, width: width))
     }
 
+    @Test func nearestNeighborScalePreservesHardPixelBoundaries() throws {
+        let source = [UInt8](repeating: 255, count: 4 * 4)
+        var colors = source
+        colors.replaceSubrange(0..<4, with: [255, 0, 0, 255])
+        colors.replaceSubrange(4..<8, with: [0, 0, 255, 255])
+        let sourceMask = [UInt8](arrayLiteral: 255, 255, 0, 0)
+        let destinationMask = [UInt8](repeating: 255, count: 4)
+        let bounds = CGRect(x: 0, y: 0, width: 2, height: 1)
+        let destination = CGRect(x: 0, y: 0, width: 4, height: 1)
+
+        let crisp = try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: colors,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: 4,
+            height: 1,
+            layerFrame: destination,
+            sourceCanvasBounds: bounds,
+            destinationCanvasBounds: destination,
+            resampling: .nearestNeighbor
+        ))
+        let smooth = try #require(ImageEditorPixelSelectionTransform.scaled(
+            source: colors,
+            sourceMaskAlpha: sourceMask,
+            destinationMaskAlpha: destinationMask,
+            width: 4,
+            height: 1,
+            layerFrame: destination,
+            sourceCanvasBounds: bounds,
+            destinationCanvasBounds: destination
+        ))
+
+        #expect((0..<4).map { pixel(from: crisp, x: $0, y: 0, width: 4) } == [
+            [255, 0, 0, 255], [255, 0, 0, 255], [0, 0, 255, 255], [0, 0, 255, 255]
+        ])
+        #expect(pixel(from: smooth, x: 1, y: 0, width: 4) != pixel(from: crisp, x: 1, y: 0, width: 4))
+        #expect(pixel(from: smooth, x: 2, y: 0, width: 4) != pixel(from: crisp, x: 2, y: 0, width: 4))
+    }
+
     @Test func scalingClippedLayerMaskUsesSharedCanvasTransform() throws {
         let width = 7
         let height = 4
@@ -323,6 +362,55 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(try viewModel.projectData() == originalProject)
         viewModel.redo()
         #expect(try viewModel.projectData() == scaledProject)
+    }
+
+    @Test func customNearestNeighborScaleRecordsModeAndRestoresThroughUndoRedo() throws {
+        let viewModel = try scaledSelectionViewModel(
+            canvasSize: CGSize(width: 6, height: 6),
+            selectionRect: CGRect(x: 2, y: 2, width: 2, height: 2),
+            feather: 0,
+            sourceName: "custom-nearest-scale.png"
+        )
+        let originalProject = try viewModel.projectData()
+
+        viewModel.scaleSelectedPixels(toPercent: 200, resampling: .nearestNeighbor)
+
+        let scaledProject = try viewModel.projectData()
+        let mode = L10n.text(ImageEditorPixelSelectionResampling.nearestNeighbor.titleKey)
+        #expect(viewModel.document.history.last?.title == L10n.format(
+            "imageEditor.history.selectionPixelsScaleCustomResampling",
+            ImageEditorScalePercentage.formatted(200), mode
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.selectionPixelsScaleCustomResampling",
+            ImageEditorScalePercentage.formatted(200), mode
+        ))
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == scaledProject)
+    }
+
+    @Test func customBilinearScaleReportsExplicitMode() throws {
+        let viewModel = try scaledSelectionViewModel(
+            canvasSize: CGSize(width: 6, height: 6),
+            selectionRect: CGRect(x: 2, y: 2, width: 2, height: 2),
+            feather: 0,
+            sourceName: "custom-bilinear-scale.png"
+        )
+
+        viewModel.scaleSelectedPixels(toPercent: 150, resampling: .bilinear)
+
+        let mode = L10n.text(ImageEditorPixelSelectionResampling.bilinear.titleKey)
+        #expect(viewModel.document.history.last?.title == L10n.format(
+            "imageEditor.history.selectionPixelsScaleCustomResampling",
+            ImageEditorScalePercentage.formatted(150), mode
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.selectionPixelsScaleCustomResampling",
+            ImageEditorScalePercentage.formatted(150), mode
+        ))
     }
 
     @Test(arguments: [0.0, 1_000.1, Double.nan, Double.infinity])

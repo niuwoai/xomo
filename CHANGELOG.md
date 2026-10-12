@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1806 - 2026-10-12
+
+### Added
+- Custom selected-pixel scaling now offers nearest-neighbor resampling for crisp pixel art and hard-edged graphics; bilinear remains the default for smooth photographic results. History and status report the chosen mode.
+
+### Verification
+- `ImageEditorSelectionPixelTransformTests`: 22/25 execution groups passed, including both new sampling modes and Undo/Redo coverage. Three parameterized tests are reported by the isolated runner as Xcode-success/0-tests; their `.xcresult` files confirm `totalTestCount=0`, so no assertion failed but those cases remain unverified by this runner. Release contract 10/30, CLI release contract 7/24, product-overview archive contract 3/30, `.strings` lint, and `git diff --check` passed. See [rc1806 verification](docs/reviews/2026-10-12-rc1806-selection-resampling.md). Next full build/smoke/install gate remains rc1840; the rc1800 signing-trust anomaly remains unresolved and is not bypassed.
+
 ## 2.12.0-rc1805 - 2026-10-12
 
 ### Fixed

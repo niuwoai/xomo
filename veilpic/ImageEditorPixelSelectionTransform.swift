@@ -1,5 +1,17 @@
 import CoreGraphics
 
+enum ImageEditorPixelSelectionResampling: Int, CaseIterable {
+    case nearestNeighbor
+    case bilinear
+
+    var titleKey: String {
+        switch self {
+        case .nearestNeighbor: "imageEditor.dialog.selectionPixelScaleResamplingNearest"
+        case .bilinear: "imageEditor.dialog.selectionPixelScaleResamplingBilinear"
+        }
+    }
+}
+
 enum ImageEditorPixelSelectionTransform {
     private static let componentsPerPixel = 4
     private static let maximumComponent: CGFloat = 255
@@ -94,7 +106,8 @@ enum ImageEditorPixelSelectionTransform {
     static func scaled(
         source: [UInt8], sourceMaskAlpha: [UInt8], destinationMaskAlpha: [UInt8],
         width: Int, height: Int, layerFrame: CGRect,
-        sourceCanvasBounds: CGRect, destinationCanvasBounds: CGRect
+        sourceCanvasBounds: CGRect, destinationCanvasBounds: CGRect,
+        resampling: ImageEditorPixelSelectionResampling = .bilinear
     ) -> [UInt8]? {
         guard width > 0, height > 0,
               [layerFrame.minX, layerFrame.minY, layerFrame.width, layerFrame.height,
@@ -136,7 +149,8 @@ enum ImageEditorPixelSelectionTransform {
                         sourceCanvasBounds: sourceCanvasBounds,
                         destinationCanvasBounds: destinationCanvasBounds,
                         targetX: targetX,
-                        targetY: targetY
+                        targetY: targetY,
+                        resampling: resampling
                       )
                 else { continue }
                 composite(sample: sample, coverage: coverage, targetPixel: targetPixel, into: &output)
@@ -271,7 +285,7 @@ enum ImageEditorPixelSelectionTransform {
         source: [UInt8], sourceMaskAlpha: [UInt8], width: Int,
         sourceBounds: ImageEditorPixelMoveCoverageBounds,
         layerFrame: CGRect, sourceCanvasBounds: CGRect, destinationCanvasBounds: CGRect,
-        targetX: Int, targetY: Int
+        targetX: Int, targetY: Int, resampling: ImageEditorPixelSelectionResampling
     ) -> [UInt8]? {
         let height = sourceMaskAlpha.count / width
         let canvasX = layerFrame.minX + (CGFloat(targetX) + 0.5) * layerFrame.width / CGFloat(width)
@@ -290,6 +304,19 @@ enum ImageEditorPixelSelectionTransform {
               sourceY >= CGFloat(sourceBounds.rows.lowerBound) - 0.5,
               sourceY <= CGFloat(sourceBounds.rows.upperBound) - 0.5
         else { return nil }
+
+        if resampling == .nearestNeighbor {
+            let x = max(sourceBounds.columns.lowerBound, min(
+                sourceBounds.columns.upperBound - 1, Int(floor(sourceX + 0.5))
+            ))
+            let y = max(sourceBounds.rows.lowerBound, min(
+                sourceBounds.rows.upperBound - 1, Int(floor(sourceY + 0.5))
+            ))
+            let pixel = y * width + x
+            guard sourceMaskAlpha[pixel] > 0 else { return nil }
+            let offset = pixel * componentsPerPixel
+            return Array(source[offset..<(offset + componentsPerPixel)])
+        }
 
         let x0 = max(sourceBounds.columns.lowerBound, min(sourceBounds.columns.upperBound - 1, Int(floor(sourceX))))
         let y0 = max(sourceBounds.rows.lowerBound, min(sourceBounds.rows.upperBound - 1, Int(floor(sourceY))))

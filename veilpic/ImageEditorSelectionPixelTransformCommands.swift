@@ -163,7 +163,8 @@ extension ImageEditorViewModel {
 
     func scaleSelectedPixels(
         toPercent percentage: Double,
-        anchor: ImageEditorSelectionScaleAnchor = .center
+        anchor: ImageEditorSelectionScaleAnchor = .center,
+        resampling: ImageEditorPixelSelectionResampling? = nil
     ) {
         guard canScaleSelectedPixels else { return }
         guard ImageEditorScalePercentage.isValid(percentage) else {
@@ -172,23 +173,48 @@ extension ImageEditorViewModel {
         }
 
         let formattedPercentage = ImageEditorScalePercentage.formatted(percentage)
+        let selectedResampling = resampling ?? .bilinear
+        let reportsResampling = resampling != nil
+        let resamplingTitle = L10n.text(selectedResampling.titleKey)
         let historyTitle: String
         let statusText: String
-        if anchor == .center {
-            historyTitle = L10n.format("imageEditor.history.selectionPixelsScaleCustom", formattedPercentage)
-            statusText = L10n.format("imageEditor.status.selectionPixelsScaleCustom", formattedPercentage)
+        if reportsResampling {
+            if anchor == .center {
+                historyTitle = L10n.format(
+                    "imageEditor.history.selectionPixelsScaleCustomResampling", formattedPercentage, resamplingTitle
+                )
+                statusText = L10n.format(
+                    "imageEditor.status.selectionPixelsScaleCustomResampling", formattedPercentage, resamplingTitle
+                )
+            } else {
+                let anchorTitle = L10n.text(anchor.titleKey)
+                historyTitle = L10n.format(
+                    "imageEditor.history.selectionPixelsScaleCustomAtAnchorResampling",
+                    formattedPercentage, anchorTitle, resamplingTitle
+                )
+                statusText = L10n.format(
+                    "imageEditor.status.selectionPixelsScaleCustomAtAnchorResampling",
+                    formattedPercentage, anchorTitle, resamplingTitle
+                )
+            }
         } else {
-            let anchorTitle = L10n.text(anchor.titleKey)
-            historyTitle = L10n.format(
-                "imageEditor.history.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
-            )
-            statusText = L10n.format(
-                "imageEditor.status.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
-            )
+            if anchor == .center {
+                historyTitle = L10n.format("imageEditor.history.selectionPixelsScaleCustom", formattedPercentage)
+                statusText = L10n.format("imageEditor.status.selectionPixelsScaleCustom", formattedPercentage)
+            } else {
+                let anchorTitle = L10n.text(anchor.titleKey)
+                historyTitle = L10n.format(
+                    "imageEditor.history.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
+                )
+                statusText = L10n.format(
+                    "imageEditor.status.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
+                )
+            }
         }
         scaleSelectedPixels(
             by: CGFloat(percentage / 100),
             anchor: anchor,
+            resampling: selectedResampling,
             historyTitle: historyTitle,
             statusText: statusText
         )
@@ -210,6 +236,13 @@ extension ImageEditorViewModel {
         }
         anchorPicker.selectItem(withTag: ImageEditorSelectionScaleAnchor.center.rawValue)
         anchorPicker.setAccessibilityIdentifier("image-editor-selection-pixel-scale-anchor")
+        let resamplingPicker = NSPopUpButton(frame: CGRect(x: 0, y: 0, width: 240, height: 26), pullsDown: false)
+        for resampling in ImageEditorPixelSelectionResampling.allCases {
+            resamplingPicker.addItem(withTitle: L10n.text(resampling.titleKey))
+            resamplingPicker.lastItem?.tag = resampling.rawValue
+        }
+        resamplingPicker.selectItem(withTag: ImageEditorPixelSelectionResampling.bilinear.rawValue)
+        resamplingPicker.setAccessibilityIdentifier("image-editor-selection-pixel-scale-resampling")
         let accessoryStack = NSStackView(views: [
             scaleDialogRow(
                 label: L10n.text("imageEditor.dialog.selectionPixelScalePercentage"),
@@ -218,6 +251,10 @@ extension ImageEditorViewModel {
             scaleDialogRow(
                 label: L10n.text("imageEditor.dialog.selectionPixelScaleAnchor"),
                 control: anchorPicker
+            ),
+            scaleDialogRow(
+                label: L10n.text("imageEditor.dialog.selectionPixelScaleResampling"),
+                control: resamplingPicker
             )
         ])
         accessoryStack.orientation = .vertical
@@ -235,7 +272,8 @@ extension ImageEditorViewModel {
             return
         }
         let anchor = ImageEditorSelectionScaleAnchor(rawValue: anchorPicker.selectedTag()) ?? .center
-        scaleSelectedPixels(toPercent: percentage, anchor: anchor)
+        let resampling = ImageEditorPixelSelectionResampling(rawValue: resamplingPicker.selectedTag()) ?? .bilinear
+        scaleSelectedPixels(toPercent: percentage, anchor: anchor, resampling: resampling)
     }
 
     private func scaleDialogRow(label: String, control: NSView) -> NSStackView {
@@ -388,6 +426,7 @@ extension ImageEditorViewModel {
     private func scaleSelectedPixels(
         by factor: CGFloat,
         anchor: ImageEditorSelectionScaleAnchor = .center,
+        resampling: ImageEditorPixelSelectionResampling = .bilinear,
         historyTitle: String,
         statusText: String
     ) {
@@ -424,7 +463,8 @@ extension ImageEditorViewModel {
                 document.layers[index],
                 selection: selection,
                 sourceCanvasBounds: scaling.sourceCanvasBounds,
-                destinationCanvasBounds: scaling.destinationCanvasBounds
+                destinationCanvasBounds: scaling.destinationCanvasBounds,
+                resampling: resampling
             ) else {
                 self.statusText = L10n.text("imageEditor.status.operationFailed")
                 return
@@ -514,7 +554,8 @@ extension ImageEditorViewModel {
         _ layer: ImageEditorLayer,
         selection: ImageEditorSelection,
         sourceCanvasBounds: CGRect,
-        destinationCanvasBounds: CGRect
+        destinationCanvasBounds: CGRect,
+        resampling: ImageEditorPixelSelectionResampling
     ) -> (layer: ImageEditorLayer, pixelDataChanged: Bool)? {
         guard let backingLayer = layer.expandedPixelSelectionTransformBacking(
             selection: selection,
@@ -553,7 +594,8 @@ extension ImageEditorViewModel {
             height: height,
             layerFrame: backingLayer.frame,
             sourceCanvasBounds: sourceCanvasBounds,
-            destinationCanvasBounds: destinationCanvasBounds
+            destinationCanvasBounds: destinationCanvasBounds,
+            resampling: resampling
         ), let image = ImageEditorRGBAImage.image(
             width: width, height: height, pixels: output, size: backingLayer.image.size
         ) else { return nil }

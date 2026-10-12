@@ -2193,6 +2193,8 @@
 "imageEditor.history.selectionPixelsScaleDown" = "Scale Selected Pixels to 50%";
 "imageEditor.history.selectionPixelsScaleCustom" = "Scale Selected Pixels to %@";
 "imageEditor.history.selectionPixelsScaleCustomAtAnchor" = "Scale Selected Pixels to %@ (anchor: %@)";
+"imageEditor.history.selectionPixelsScaleCustomResampling" = "Scale Selected Pixels to %@ (resampling: %@)";
+"imageEditor.history.selectionPixelsScaleCustomAtAnchorResampling" = "Scale Selected Pixels to %@ (anchor: %@, resampling: %@)";
 "imageEditor.history.selectionFlipHorizontal" = "Flip Selection Horizontal";
 "imageEditor.history.selectionFlipVertical" = "Flip Selection Vertical";
 "imageEditor.history.selectionRotateClockwise" = "Rotate Selection Clockwise";
@@ -2601,6 +2603,8 @@
 "imageEditor.status.selectionPixelsScaledDown" = "Scaled selected pixels to 50%";
 "imageEditor.status.selectionPixelsScaleCustom" = "Scaled selected pixels to %@";
 "imageEditor.status.selectionPixelsScaleCustomAtAnchor" = "Scaled selected pixels to %@ (fixed anchor: %@)";
+"imageEditor.status.selectionPixelsScaleCustomResampling" = "Scaled selected pixels to %@ (resampling: %@)";
+"imageEditor.status.selectionPixelsScaleCustomAtAnchorResampling" = "Scaled selected pixels to %@ (fixed anchor: %@, resampling: %@)";
 "imageEditor.status.selectionPixelScaleInvalid" = "Enter a percentage from 1% to 1,000%.";
 "imageEditor.status.selectionFlippedHorizontal" = "Selection flipped horizontally";
 "imageEditor.status.selectionFlippedVertical" = "Selection flipped vertically";
@@ -3172,6 +3176,9 @@
 "imageEditor.dialog.selectionPixelScaleMessage" = "Enter a percentage from 1% to 1,000%. The operation is rejected if the result exceeds the pixel budget.";
 "imageEditor.dialog.selectionPixelScalePercentage" = "Percentage";
 "imageEditor.dialog.selectionPixelScaleAnchor" = "Fixed anchor";
+"imageEditor.dialog.selectionPixelScaleResampling" = "Resampling";
+"imageEditor.dialog.selectionPixelScaleResamplingNearest" = "Nearest Neighbor (crisp edges)";
+"imageEditor.dialog.selectionPixelScaleResamplingBilinear" = "Bilinear (smooth edges)";
 "imageEditor.dialog.selectionScaleAnchorTopLeft" = "Top left";
 "imageEditor.dialog.selectionScaleAnchorTopCenter" = "Top center";
 "imageEditor.dialog.selectionScaleAnchorTopRight" = "Top right";
