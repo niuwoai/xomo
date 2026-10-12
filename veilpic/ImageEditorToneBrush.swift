@@ -106,6 +106,27 @@ extension NSImage {
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
+        if airbrushPulseSamples.isEmpty {
+            guard let mask = retouchStrokeMask(
+                width: pixelWidth,
+                height: pixelHeight,
+                samples: samples,
+                diameter: width,
+                hardness: hardness,
+                pressureControlsSize: pressureControlsSize,
+                pressureSensitivity: pressureSensitivity
+            ) else { return nil }
+            return toneAdjusted(
+                maskAlpha: mask.pixels,
+                maskBounds: mask.bounds,
+                airbrushMaskAlpha: nil,
+                opacity: opacity,
+                burn: burn,
+                range: range,
+                protectTones: protectTones
+            )
+        }
+
         let maskAlpha = retouchStrokeAlpha(
             width: pixelWidth,
             height: pixelHeight,
@@ -135,6 +156,7 @@ extension NSImage {
             )
         return toneAdjusted(
             maskAlpha: maskAlpha,
+            maskBounds: (0, pixelWidth - 1, 0, pixelHeight - 1),
             airbrushMaskAlpha: airbrushMaskAlpha,
             opacity: opacity,
             burn: burn,
@@ -175,7 +197,7 @@ extension NSImage {
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let maskAlpha = retouchStrokeAlpha(
+        guard let mask = retouchStrokeMask(
             width: pixelWidth,
             height: pixelHeight,
             samples: samples,
@@ -183,14 +205,113 @@ extension NSImage {
             hardness: hardness,
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
-        )
-        guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
+        ) else { return nil }
         return saturationAdjusted(
-            maskAlpha: maskAlpha,
+            maskAlpha: mask.pixels,
+            maskBounds: mask.bounds,
             opacity: opacity,
             mode: mode,
             vibrance: vibrance
         )
+    }
+
+    func retouchStrokeMask(
+        width pixelWidth: Int,
+        height pixelHeight: Int,
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> ImageEditorHealingBrushKernel.StrokeMask? {
+        guard pixelWidth > 0, pixelHeight > 0, !samples.isEmpty else { return nil }
+        let hasPressureSamples = pressureControlsSize && samples.contains { $0.pressure != nil }
+        let points = samples.map(\.point)
+        guard let bounds = ImageEditorHealingBrushKernel.strokeBounds(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: maximumRetouchDiameter(
+                samples: samples,
+                diameter: diameter,
+                pressureControlsSize: hasPressureSamples,
+                pressureSensitivity: pressureSensitivity
+            )
+        ) else { return nil }
+
+        guard hasPressureSamples else {
+            return ImageEditorHealingBrushKernel.strokeMask(
+                width: pixelWidth,
+                height: pixelHeight,
+                points: points,
+                diameter: diameter,
+                hardness: hardness,
+                bounds: bounds
+            )
+        }
+        return pressureAwareRetouchStrokeMask(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
+            diameter: diameter,
+            hardness: hardness,
+            pressureSensitivity: pressureSensitivity,
+            bounds: bounds
+        )
+    }
+
+    private func pressureAwareRetouchStrokeMask(
+        width: Int,
+        height: Int,
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        hardness: CGFloat,
+        pressureSensitivity: CGFloat,
+        bounds: ImageEditorHealingBrushKernel.MaskBounds
+    ) -> ImageEditorHealingBrushKernel.StrokeMask? {
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: diameter,
+            hardness: hardness,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.1,
+            pressureControlsSize: true,
+            pressureControlsFlow: false,
+            pressureSensitivity: pressureSensitivity
+        )
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: samples,
+            diameter: settings.diameter,
+            spacing: settings.spacing,
+            canvasSize: CGSize(width: width, height: height)
+        )
+        guard let region = ImageEditorBrushStrokeKernel.coverageRegion(
+            width: width,
+            height: height,
+            stamps: stamps,
+            settings: settings,
+            bounds: bounds
+        ) else { return nil }
+        return ImageEditorHealingBrushKernel.StrokeMask(
+            bounds: bounds,
+            pixels: region.pixels
+        )
+    }
+
+    private func maximumRetouchDiameter(
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> CGFloat {
+        guard pressureControlsSize else { return max(1, diameter) }
+        let maximumScale = samples.map {
+            ImageEditorBrushStrokeKernel.mappedPressure(
+                $0.pressure ?? 1,
+                sensitivity: pressureSensitivity
+            )
+        }.max() ?? 1
+        return max(1, diameter * maximumScale)
     }
 
     func retouchStrokeAlpha(
@@ -580,6 +701,7 @@ extension NSImage {
 
     private func toneAdjusted(
         maskAlpha: [UInt8],
+        maskBounds: ImageEditorHealingBrushKernel.MaskBounds,
         airbrushMaskAlpha: [UInt8]?,
         opacity: CGFloat,
         burn: Bool,
@@ -590,19 +712,26 @@ extension NSImage {
         let height = max(1, Int(size.height.rounded()))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
+        let maskWidth = maskBounds.maxX - maskBounds.minX + 1
+        let maskHeight = maskBounds.maxY - maskBounds.minY + 1
         guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
-              maskAlpha.count == width * height,
-              airbrushMaskAlpha == nil || airbrushMaskAlpha?.count == width * height
+              maskBounds.minX >= 0, maskBounds.minY >= 0,
+              maskBounds.maxX < width, maskBounds.maxY < height,
+              maskWidth > 0, maskHeight > 0,
+              maskAlpha.count == maskWidth * maskHeight,
+              airbrushMaskAlpha == nil || airbrushMaskAlpha?.count == maskAlpha.count
         else {
             return nil
         }
 
         let clampedOpacity = max(0, min(1, opacity))
         let effectScale = ImageEditorRetouchTuning.toneEffectScale
-        for y in 0..<height {
-            for x in 0..<width {
+        for localY in 0..<maskHeight {
+            for localX in 0..<maskWidth {
+                let y = maskBounds.minY + localY
+                let x = maskBounds.minX + localX
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                let maskIndex = y * width + x
+                let maskIndex = localY * maskWidth + localX
                 let maskStrength = CGFloat(maskAlpha[maskIndex]) / 255
                 let red = CGFloat(sourcePixels[offset]) / 255
                 let green = CGFloat(sourcePixels[offset + 1]) / 255
@@ -709,6 +838,7 @@ extension NSImage {
 
     private func saturationAdjusted(
         maskAlpha: [UInt8],
+        maskBounds: ImageEditorHealingBrushKernel.MaskBounds,
         opacity: CGFloat,
         mode: ImageEditorSpongeMode,
         vibrance: Bool
@@ -717,15 +847,22 @@ extension NSImage {
         let height = max(1, Int(size.height.rounded()))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
+        let maskWidth = maskBounds.maxX - maskBounds.minX + 1
+        let maskHeight = maskBounds.maxY - maskBounds.minY + 1
         guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
-              maskAlpha.count == width * height
+              maskBounds.minX >= 0, maskBounds.minY >= 0,
+              maskBounds.maxX < width, maskBounds.maxY < height,
+              maskWidth > 0, maskHeight > 0,
+              maskAlpha.count == maskWidth * maskHeight
         else { return nil }
 
         let clampedOpacity = max(0, min(1, opacity))
-        for y in 0..<height {
-            for x in 0..<width {
+        for localY in 0..<maskHeight {
+            for localX in 0..<maskWidth {
+                let y = maskBounds.minY + localY
+                let x = maskBounds.minX + localX
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                let maskIndex = y * width + x
+                let maskIndex = localY * maskWidth + localX
                 let baseStrength = CGFloat(maskAlpha[maskIndex]) / 255
                     * clampedOpacity
                     * ImageEditorRetouchTuning.spongeEffectScale

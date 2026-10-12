@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1808 - 2026-10-12
+
+### Performance
+- Dodge, Burn, and Sponge now rasterize their stroke masks and process only the affected ROI; airbrush pulse accumulation retains its existing full-frame path.
+
+### Verification
+- `ImageEditorToneAirbrushTests` 6/6, Sponge smoke tests 20/20, and airbrush compatibility tests 3/3 passed; ROI mask pixels matched the legacy full-frame mask at center and canvas edges, and Dodge/Sponge each passed one-step Undo/Redo integration. Release contract 10/30 assertions, CLI release-build contract 7/24, product-overview archive contract 3/30, isolated-test-runner contract, and `git diff --check` passed. rc1840 remains the next full build/smoke/install gate; this incremental version does not replace `/Applications/Xomo.app`.
+
 ## 2.12.0-rc1807 - 2026-10-12
 
 ### Performance
