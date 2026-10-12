@@ -6,7 +6,7 @@
 - Sample-All-Layers Smudge now rasterizes each segment's stroke ROI mask once and reuses it for the active-layer output and independent sampling source.
 
 ### Verification
-- `ImageEditorToneAirbrushTests` 8/8 and `sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer` 1/1 passed; release contract 10/30, CLI release-build contract 7/24, overview archive contract 3/30, isolated-test-runner contract, and `git diff --check` passed. An attempted full-frame source-over pixel oracle for a transparent active layer proved semantically non-equivalent and was removed; it is not counted as a product failure. rc1840 remains the next full build/smoke/install gate.
+- `ImageEditorToneAirbrushTests` 8/8 and `sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer` 1/1 passed; release contract 10/30, CLI release-build contract 7/24, overview archive contract 3/30, isolated-test-runner contract, and `git diff --check` passed. An attempted full-frame source-over pixel oracle for a transparent active layer proved semantically non-equivalent and was removed; it is not counted as a product failure. The overview now reflects the verified `/Applications` rc1803/build1803 state and rc1840 gate. rc1840 remains the next full build/smoke/install gate.
 
 ## 2.12.0-rc1810 - 2026-10-12
 
