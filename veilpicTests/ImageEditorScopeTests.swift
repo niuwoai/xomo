@@ -1193,6 +1193,26 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func brushSizeOptionExposesLocalizedPreciseNumericEntry() throws {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("allowsPreciseValueEntry: true"))
+        #expect(source.contains("format: .number.precision(.fractionLength(0))"))
+        #expect(source.contains(".accessibilityIdentifier(\"image-editor-option-brush-size\")"))
+        #expect(source.contains(".accessibilityLabel(L10n.text(titleKey))"))
+
+        viewModel.brushSize = 257
+        #expect(viewModel.brushSize == 257)
+        viewModel.brushSize = 900
+        #expect(viewModel.brushSize == 512)
+    }
+
+    @MainActor
     @Test func classicBrushHardnessShortcutsClampAndUpdateOptionsStatus() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

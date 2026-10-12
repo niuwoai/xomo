@@ -1401,7 +1401,8 @@ struct ImageEditorView: View {
                         value: $viewModel.brushSize,
                         range: ImageEditorBrushSizeLimits.minimum...ImageEditorBrushSizeLimits.maximum,
                         step: 1,
-                        suffix: "px"
+                        suffix: "px",
+                        allowsPreciseValueEntry: true
                     )
                     if usesBrushHardnessOption {
                         optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
@@ -2913,7 +2914,8 @@ struct ImageEditorView: View {
         range: ClosedRange<CGFloat>,
         step: CGFloat,
         suffix: String,
-        displayMultiplier: CGFloat = 1
+        displayMultiplier: CGFloat = 1,
+        allowsPreciseValueEntry: Bool = false
     ) -> some View {
         HStack(spacing: 6) {
             Text(L10n.text(titleKey))
@@ -2925,10 +2927,31 @@ struct ImageEditorView: View {
                 .frame(width: usesBrushDynamicsOptions ? 76 : 92)
                 .focusable(false)
                 .xomoFocusEffectDisabled()
-            Text(sliderText(value.wrappedValue * displayMultiplier, suffix: suffix))
+            if allowsPreciseValueEntry {
+                TextField(
+                    L10n.text(titleKey),
+                    value: Binding(
+                        get: { Double(value.wrappedValue * displayMultiplier) },
+                        set: { value.wrappedValue = CGFloat($0) / displayMultiplier }
+                    ),
+                    format: .number.precision(.fractionLength(0))
+                )
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
-                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
-                .frame(width: suffix.isEmpty ? 28 : 42, alignment: .leading)
+                .frame(width: suffix.isEmpty ? 28 : 40)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(L10n.text(titleKey))
+                .accessibilityIdentifier("image-editor-option-brush-size")
+                if !suffix.isEmpty {
+                    Text(suffix)
+                        .font(.system(size: 11, weight: .medium).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+                }
+            } else {
+                Text(sliderText(value.wrappedValue * displayMultiplier, suffix: suffix))
+                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                    .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+                    .frame(width: suffix.isEmpty ? 28 : 42, alignment: .leading)
+            }
         }
     }
 

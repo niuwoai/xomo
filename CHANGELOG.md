@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1821 - 2026-10-13
+
+### Changed
+- 画笔选项栏尺寸读数现在可直接输入精确像素直径，保留本地化标签和 px 单位，并经 1–512 px 统一边界规整；其他工具滑块保持只读显示。
+
+### Verification
+- `ImageEditorScopeTests` 200/200、`LocalizationResourceTests` 46/46 通过；发布合同 10/30、CLI Release Build 合同 7/24、产品概览归档合同 3/30 与隔离运行器合同通过。未运行桌面真实键入冒烟、全量 Release 或本机安装；这些仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1820 - 2026-10-13
 
 ### Changed
