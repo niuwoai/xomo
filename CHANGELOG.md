@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1839 - 2026-10-13
+
+### Added
+- Image Size 宽高现可直接键入像素值，同时保留步进微调、比例锁定联动和 8–12,000 px 范围。
+
+### Verification
+- `ImageEditorSliceImageSizeTransformTests` 12/12 实际执行通过，含宽高比例联动、可编辑整数字段接线、范围约束及 Image Size Undo/Redo；发布合同 12/36、CLI 合同 7/24、概览归档合同 3/30、隔离运行器合同通过，三语 `.strings` 均通过 `plutil -lint`。完整 Release、全量回归、桌面冒烟和本机安装仍为 rc1840 门槛。详见[验证记录](docs/reviews/2026-10-13-rc1839-image-size-direct-entry.md)。
+
 ## 2.12.0-rc1838 - 2026-10-13
 
 ### Added

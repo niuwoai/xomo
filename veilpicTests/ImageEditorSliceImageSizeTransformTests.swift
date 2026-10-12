@@ -456,6 +456,24 @@ struct ImageEditorSliceImageSizeTransformTests {
         #expect(try viewModel.projectData() == resizedProject)
     }
 
+    @Test func imageSizeControlsWireEditableIntegerFieldsToProportionalBindings() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("TextField(\"\", value: imageWidthBinding, formatter: imageSizeFormatter)"))
+        #expect(viewSource.contains("TextField(\"\", value: imageHeightBinding, formatter: imageSizeFormatter)"))
+        #expect(viewSource.contains("image-editor-image-size-width"))
+        #expect(viewSource.contains("image-editor-image-size-height"))
+        #expect(viewSource.contains("set: { viewModel.setTargetImageWidth($0) }"))
+        #expect(viewSource.contains("set: { viewModel.setTargetImageHeight($0) }"))
+        #expect(viewSource.contains("formatter.maximumFractionDigits = 0"))
+    }
+
     @Test func imageSizeResamplingPreservesFeatheredActiveAndSavedSelections() throws {
         let source = NSImage.transparent(size: CGSize(width: 8, height: 8))
         let featheredMask = ImageEditorSelectionMask(

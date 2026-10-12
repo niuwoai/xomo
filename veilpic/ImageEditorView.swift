@@ -9431,8 +9431,27 @@ struct ImageEditorView: View {
         return formatter
     }
 
+    private func imageSizeNumberFormatter() -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 0
+        formatter.usesGroupingSeparator = false
+        formatter.isLenient = false
+        return formatter
+    }
+
     private var documentSizeControls: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let imageSizeFormatter = imageSizeNumberFormatter()
+        let imageWidthBinding = Binding(
+            get: { viewModel.targetImageWidth },
+            set: { viewModel.setTargetImageWidth($0) }
+        )
+        let imageHeightBinding = Binding(
+            get: { viewModel.targetImageHeight },
+            set: { viewModel.setTargetImageHeight($0) }
+        )
+        return VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("imageEditor.properties.documentSize"))
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -9447,24 +9466,32 @@ struct ImageEditorView: View {
             .toggleStyle(.checkbox)
             .accessibilityIdentifier("image-editor-image-size-aspect-ratio-lock")
 
-            Stepper(
-                L10n.format("imageEditor.properties.imageWidthValue", Int(viewModel.targetImageWidth.rounded())),
-                value: Binding(
-                    get: { viewModel.targetImageWidth },
-                    set: { viewModel.setTargetImageWidth($0) }
-                ),
+            Stepper(value: imageWidthBinding,
                 in: 8...12_000,
                 step: 1
-            )
-            Stepper(
-                L10n.format("imageEditor.properties.imageHeightValue", Int(viewModel.targetImageHeight.rounded())),
-                value: Binding(
-                    get: { viewModel.targetImageHeight },
-                    set: { viewModel.setTargetImageHeight($0) }
-                ),
+            ) {
+                TextField("", value: imageWidthBinding, formatter: imageSizeFormatter)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 70)
+                    .accessibilityLabel(L10n.format(
+                        "imageEditor.properties.imageWidthValue", Int(viewModel.targetImageWidth.rounded())
+                    ))
+                    .accessibilityIdentifier("image-editor-image-size-width")
+            }
+            Stepper(value: imageHeightBinding,
                 in: 8...12_000,
                 step: 1
-            )
+            ) {
+                TextField("", value: imageHeightBinding, formatter: imageSizeFormatter)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 70)
+                    .accessibilityLabel(L10n.format(
+                        "imageEditor.properties.imageHeightValue", Int(viewModel.targetImageHeight.rounded())
+                    ))
+                    .accessibilityIdentifier("image-editor-image-size-height")
+            }
             Picker(
                 L10n.text("imageEditor.properties.imageSizeResampling"),
                 selection: $viewModel.selectedImageResampling

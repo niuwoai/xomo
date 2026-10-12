@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1839 在 Image Size 宽高控制中提供整数字段直接输入，并保留步进器微调、比例锁定和尺寸约束；`ImageEditorSliceImageSizeTransformTests` 12/12 通过。rc1840 仍为下一全量 Release、回归、桌面冒烟与本机安装门槛。
 - rc1838 为 Image Size 增加默认锁定宽高比的控制：任一尺寸变化会按原画布比例联动，解锁后独立编辑，重新锁定时以当前宽度恢复比例。定向测试结果回填后，rc1840 仍是下一次全量 Release/测试/桌面冒烟/本机安装门槛。
 - rc1837 修复 Image Size 的插值模式未传给活动/已保存栅格选区的问题：平滑模式现在保留羽化覆盖渐变，最近邻仍维持硬边；选区像素与 Undo/Redo 项目往返通过 `ImageEditorSliceImageSizeTransformTests` 10/10。全量 Release/完整回归/桌面冒烟/本机安装仍待 rc1840。
 - rc1836 为 Developer ID Release 导出 `.app` 添加 DMG 创建前的 `codesign --verify --deep --strict`，并移除 stapling 后 Gatekeeper 评估的 `|| true`，避免签名/系统评估失败仍返回成功。契约覆盖先后次序及移除/吞掉检查即失败；未运行 Release archive、全量测试、桌面冒烟或本机安装，rc1840 门槛不变。当前本机签名信任读回异常仍需在完整门槛前复验，不改变 Gatekeeper 或签名策略。
