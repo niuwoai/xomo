@@ -540,6 +540,21 @@ extension NSImage {
             )
 
             let sourceSnapshot = workingSource
+            let segmentSamples = [
+                ImageEditorBrushStrokeSample(point: previous),
+                ImageEditorBrushStrokeSample(point: current)
+            ]
+            let pixelWidth = max(1, Int(size.width.rounded()))
+            let pixelHeight = max(1, Int(size.height.rounded()))
+            guard let segmentMask = retouchStrokeMask(
+                width: pixelWidth,
+                height: pixelHeight,
+                samples: segmentSamples,
+                diameter: segmentDiameter,
+                hardness: hardness,
+                pressureControlsSize: false,
+                pressureSensitivity: pressureSensitivity
+            ) else { return nil }
             guard let shiftedSource = NSImage.rendered(size: size, actions: { _ in
                 sourceSnapshot.draw(
                     in: CGRect(x: delta.width, y: -delta.height, width: size.width, height: size.height),
@@ -550,30 +565,16 @@ extension NSImage {
             }),
             let nextOutput = output.mixingBrushSource(
                 shiftedSource,
-                samples: [
-                    ImageEditorBrushStrokeSample(point: previous),
-                    ImageEditorBrushStrokeSample(point: current)
-                ],
-                width: segmentDiameter,
-                opacity: clampedOpacity,
-                hardness: hardness,
-                pressureControlsSize: false,
-                pressureSensitivity: pressureSensitivity
+                strokeMask: segmentMask,
+                opacity: clampedOpacity
             ) else {
                 return nil
             }
             if usesIndependentSource {
                 guard let nextWorkingSource = workingSource.mixingBrushSource(
                     shiftedSource,
-                    samples: [
-                        ImageEditorBrushStrokeSample(point: previous),
-                        ImageEditorBrushStrokeSample(point: current)
-                    ],
-                    width: segmentDiameter,
-                    opacity: clampedOpacity,
-                    hardness: hardness,
-                    pressureControlsSize: false,
-                    pressureSensitivity: pressureSensitivity
+                    strokeMask: segmentMask,
+                    opacity: clampedOpacity
                 ) else { return nil }
                 workingSource = nextWorkingSource
             } else {
@@ -636,6 +637,16 @@ extension NSImage {
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
         ) else { return nil }
+        return mixingBrushSource(brushSource, strokeMask: mask, opacity: opacity)
+    }
+
+    private func mixingBrushSource(
+        _ brushSource: NSImage,
+        strokeMask mask: ImageEditorHealingBrushKernel.StrokeMask,
+        opacity: CGFloat
+    ) -> NSImage? {
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
         let bounds = mask.bounds
         let maskWidth = mask.width
         let maskHeight = bounds.maxY - bounds.minY + 1

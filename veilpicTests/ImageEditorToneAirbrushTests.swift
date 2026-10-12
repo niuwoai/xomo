@@ -462,8 +462,8 @@ struct ImageEditorToneAirbrushTests {
                 clippedSource: clippedSource,
                 opacity: strokeOpacity
             )
-            output = nextOutput
             workingSource = nextOutput
+            output = nextOutput
         }
         return output
     }
