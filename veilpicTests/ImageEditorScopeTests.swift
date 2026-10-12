@@ -2085,8 +2085,11 @@ struct ImageEditorScopeTests {
             "aiCutout",
             "smartCutout",
             "segmentationModel",
-            "threeDimensional",
-            "threeD"
+            "SceneKit",
+            "RealityKit",
+            "ModelIO",
+            "SCNScene",
+            "MDLMesh"
         ]
         let editorFiles = try FileManager.default.contentsOfDirectory(
             at: Self.repositoryRoot().appendingPathComponent("veilpic"),

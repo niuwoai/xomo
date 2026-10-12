@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1840 首轮测试暴露范围守卫误将 3D `.cube` LUT 视为 3D 场景；rc1841 收窄为具体场景框架入口。全量隔离 XCTest 233/233 组、3,796/3,796 项通过，Universal Release archive/build 1841 与 Developer ID 深度验签通过，CLI Universal 与 2 项 CLI 测试通过，发布相关合同通过。Gatekeeper 因未公证拒绝执行，未绕过/未公证。安装前旧版 rc1803/build1803 正在运行并持有未保存的“未命名画布”，故已取消正常退出；可恢复安装及桌面冒烟待用户保存并关闭该文档后继续。证据见[质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。
 - rc1839 在 Image Size 宽高控制中提供整数字段直接输入，并保留步进器微调、比例锁定和尺寸约束；`ImageEditorSliceImageSizeTransformTests` 12/12 通过。rc1840 仍为下一全量 Release、回归、桌面冒烟与本机安装门槛。
 - rc1838 为 Image Size 增加默认锁定宽高比的控制：任一尺寸变化会按原画布比例联动，解锁后独立编辑，重新锁定时以当前宽度恢复比例。定向测试结果回填后，rc1840 仍是下一次全量 Release/测试/桌面冒烟/本机安装门槛。
 - rc1837 修复 Image Size 的插值模式未传给活动/已保存栅格选区的问题：平滑模式现在保留羽化覆盖渐变，最近邻仍维持硬边；选区像素与 Undo/Redo 项目往返通过 `ImageEditorSliceImageSizeTransformTests` 10/10。全量 Release/完整回归/桌面冒烟/本机安装仍待 rc1840。

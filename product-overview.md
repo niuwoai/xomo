@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1839
+> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1841
 
-rc1839 让 Image Size 的宽、高均可直接键入像素数值，同时保留步进微调、默认比例锁定和 8–12,000 px 范围；Image Size 专项 12/12 通过。rc1838 增加比例锁，Image Size 专项与本地化资源分别为 11/11、46/46；rc1837 确保活动与已保存选区的羽化蒙版跟随最近邻/平滑重采样选择。验证记录在 [CHANGELOG](CHANGELOG.md) 与版本报告中。rc1840 仍是下一完整构建、全量测试、桌面冒烟与本机安装门槛。此前 rc1836 的 Release 签名与 Gatekeeper 检查改为失败即停止；系统签名信任读回仍未解决，不绕过安全校验。
+rc1840 全量门槛首轮被范围守卫误报阻断：ImageEditorModels.swift 的合法 3D `.cube` 色彩查找表被通用 `threeD` 字样命中。rc1841 将规则改为检查 SceneKit、RealityKit、ModelIO 等场景入口；完整隔离回归 233/233 组、3,796/3,796 项通过，Universal Release archive（arm64+x86_64，build 1841）构建成功且 Developer ID 严格验签通过；Universal CLI、2 项 CLI 测试及发布相关合同通过。Gatekeeper 对未公证 archive 的评估为 `rejected / Unnotarized Developer ID`，未绕过安全校验、未提交公证。旧版 `/Applications/Xomo.app` 为 rc1803/build1803 且正在运行；正常退出触发“未保存的未命名画布”提示，已取消退出以保护内容，因此安装及 UI 冒烟待用户保存并关闭旧版后继续。详见[rc1841 本机质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。rc1839 让 Image Size 宽、高均可直接键入像素值，同时保留步进微调、默认比例锁定和 8–12,000 px 范围；rc1838 增加比例锁，rc1837 修正选区插值与羽化覆盖。
 
 rc1828 按 Cube 规范拒绝重复关键字及表数据开始后的 LUT/DOMAIN 元数据，防止重复 `DOMAIN_MIN/MAX` 静默改变 LUT 输入映射。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1828 验证记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。rc1840 仍为完整构建、全量测试、桌面冒烟与本机安装门槛。
 
