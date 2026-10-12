@@ -11,7 +11,7 @@
 - Cover selected-pixel scaling at all four canvas edges and verify feathered partial-alpha pixels survive beyond each edge.
 
 ### Verification
-- `ImageEditorSelectionPixelTransformTests` 17/17; release contract 10/30, CLI release-build contract 7/24, product-overview archive contract 3/30, and `git diff --check` passed. The rc1800 Release, full suite, desktop smoke, and public readback evidence remains recorded; local installation is blocked because current strict verification reports the rc1801 app signature as modified. The same host also rejects Finder with `CSSMERR_TP_NOT_TRUSTED`, so the artifact/trust-service discrepancy must be diagnosed before installation.
+- `ImageEditorSelectionPixelTransformTests` 20/20; the rc1800 full suite completed 233/233 execution groups and 3,753/3,753 tests. Universal GUI Release archive, CLI Release universal build (`arm64` + `x86_64`), and CLI tests 2/2 passed. The installed app launched and the localized custom-scale dialog successfully applied 150%; Undo/Redo controls were exercised. See [rc1800 local quality-gate record](docs/reviews/2026-10-12-rc1800-local-quality-gate.md). Local Gatekeeper/signature trust readback is unresolved, so this is not a notarization or distribution-signing pass; no new GitHub, OSS, or Sparkle publication was performed.
 
 ## 2.12.0-rc1801 - 2026-10-11
 
