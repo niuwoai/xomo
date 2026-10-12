@@ -122,6 +122,72 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(restored.compositedImage, expected) == 0)
     }
 
+    @Test func maskedFilterBlendPreservesTranslucentCoverageAcrossUndoAndProjectReload() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = splitColorImage(
+            size: canvasSize,
+            left: NSColor(calibratedRed: 0.85, green: 0.20, blue: 0.10, alpha: 0.35),
+            right: NSColor(calibratedRed: 0.10, green: 0.20, blue: 0.85, alpha: 0.35)
+        )
+        let mask = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 1, alpha: 0.5))
+        let viewModel = ImageEditorViewModel(sourceName: "masked-filter-blend.png", image: sourceImage) { _ in }
+        viewModel.selectedFilter = .offset
+        viewModel.filterIntensity = 1
+        viewModel.filterOffsetXPixels = 1
+        viewModel.filterOffsetYPixels = 0
+        viewModel.addFilterLayer()
+
+        let filterIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let baseIndex = try #require(viewModel.document.layers.indices.first { index in
+            !viewModel.document.layers[index].isFilter
+        })
+        viewModel.document.layers[filterIndex].mask = mask
+        viewModel.document.layers[filterIndex].opacity = 0.6
+        viewModel.setSelectedLayerBlendMode(.screen)
+
+        let layer = viewModel.document.layers[filterIndex]
+        let filter = try #require(layer.filter)
+        let expected = try #require(sourceImage.applyingFilter(
+            kind: filter.kind,
+            intensity: filter.intensity,
+            settings: layer.filterSettings,
+            mask: mask,
+            opacity: layer.opacity,
+            blendMode: .screen
+        ))
+        let normal = try #require(sourceImage.applyingFilter(
+            kind: filter.kind,
+            intensity: filter.intensity,
+            settings: layer.filterSettings,
+            mask: mask,
+            opacity: layer.opacity
+        ))
+        let merged = try #require(viewModel.mergedFilterLayer(lowerIndex: baseIndex, filterIndex: filterIndex))
+        let sample = try #require(viewModel.currentImage.color(at: CGPoint(x: 16, y: 16))?.usingColorSpace(.deviceRGB))
+        let sourceSample = try #require(sourceImage.color(at: CGPoint(x: 16, y: 16))?.usingColorSpace(.deviceRGB))
+
+        #expect(layer.blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+        #expect(imageEditorMaximumPixelDifference(expected, normal) > 0)
+        #expect(imageEditorMaximumPixelDifference(merged.image, expected) == 0)
+        #expect(abs(sample.alphaComponent - sourceSample.alphaComponent) < 0.025)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[filterIndex].blendMode == .normal)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, normal) == 0)
+        viewModel.redo()
+        #expect(viewModel.document.layers[filterIndex].blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(restored.compositedImage, expected) == 0)
+    }
+
     @Test func smartFilterOpacityBlendsTheCompleteResultAndSupportsUndoRedo() throws {
         let sourceImage = saltAndPepperImage(size: NSSize(width: 48, height: 48))
         let viewModel = ImageEditorViewModel(sourceName: "smart-opacity.png", image: sourceImage) { _ in }

@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1834
+> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1835
 
-rc1834 修复调整层与滤镜层的图层混合模式没有接入实际渲染与合并的问题，并支持属性级 Undo/Redo。验证细节见[rc1834 验证记录](docs/reviews/2026-10-13-rc1834-effect-layer-blend-modes.md)。完整 Release、桌面冒烟与本机安装仍以 rc1840 为门槛。
+rc1835 验证效果层混合模式与半透明图层蒙版/像素的交互，确保局部混合不会改变原图 alpha 覆盖；验证细节见[rc1835 验证记录](docs/reviews/2026-10-13-rc1835-effect-blend-mask-compositing.md)。完整 Release、桌面冒烟与本机安装仍以 rc1840 为门槛。
 
 rc1828 按 Cube 规范拒绝重复关键字及表数据开始后的 LUT/DOMAIN 元数据，防止重复 `DOMAIN_MIN/MAX` 静默改变 LUT 输入映射。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1828 验证记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。rc1840 仍为完整构建、全量测试、桌面冒烟与本机安装门槛。
 
