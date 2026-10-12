@@ -1028,6 +1028,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedPathControlRole: ImageEditorPathControlRole = .anchor
     @Published var targetImageWidth: Double = 0
     @Published var targetImageHeight: Double = 0
+    @Published var isImageSizeAspectRatioLocked = true
     @Published var selectedImageResampling: ImageEditorImageResampling = .smooth
     @Published var targetCanvasWidth: Double = 0
     @Published var targetCanvasHeight: Double = 0

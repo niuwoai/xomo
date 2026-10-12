@@ -3549,6 +3549,7 @@
 "imageEditor.status.layerCompNameInvalid" = "图层复合名称不能为空";
 "imageEditor.status.layerCompNoMatchingLayers" = "这个图层复合没有可匹配的图层";
 "imageEditor.properties.documentSize" = "文档尺寸";
+"imageEditor.properties.imageSizeKeepAspectRatio" = "保持宽高比";
 "imageEditor.properties.transform" = "变换";
 "imageEditor.properties.transformXValue" = "X：%.1f px";
 "imageEditor.properties.transformYValue" = "Y：%.1f px";

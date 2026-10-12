@@ -9437,15 +9437,31 @@ struct ImageEditorView: View {
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
+            Toggle(
+                L10n.text("imageEditor.properties.imageSizeKeepAspectRatio"),
+                isOn: Binding(
+                    get: { viewModel.isImageSizeAspectRatioLocked },
+                    set: { viewModel.setImageSizeAspectRatioLocked($0) }
+                )
+            )
+            .toggleStyle(.checkbox)
+            .accessibilityIdentifier("image-editor-image-size-aspect-ratio-lock")
+
             Stepper(
                 L10n.format("imageEditor.properties.imageWidthValue", Int(viewModel.targetImageWidth.rounded())),
-                value: $viewModel.targetImageWidth,
+                value: Binding(
+                    get: { viewModel.targetImageWidth },
+                    set: { viewModel.setTargetImageWidth($0) }
+                ),
                 in: 8...12_000,
                 step: 1
             )
             Stepper(
                 L10n.format("imageEditor.properties.imageHeightValue", Int(viewModel.targetImageHeight.rounded())),
-                value: $viewModel.targetImageHeight,
+                value: Binding(
+                    get: { viewModel.targetImageHeight },
+                    set: { viewModel.setTargetImageHeight($0) }
+                ),
                 in: 8...12_000,
                 step: 1
             )

@@ -421,6 +421,41 @@ struct ImageEditorSliceImageSizeTransformTests {
         }
     }
 
+    @Test func imageSizeControlsConstrainProportionsUntilUnlocked() throws {
+        let viewModel = makeViewModel()
+        viewModel.document.canvasSize = CGSize(width: 160, height: 80)
+        viewModel.syncSizeControlsFromDocument()
+
+        #expect(viewModel.isImageSizeAspectRatioLocked)
+        viewModel.setTargetImageWidth(240)
+        #expect(viewModel.targetImageWidth == 240)
+        #expect(viewModel.targetImageHeight == 120)
+
+        viewModel.setTargetImageHeight(60)
+        #expect(viewModel.targetImageWidth == 120)
+        #expect(viewModel.targetImageHeight == 60)
+
+        viewModel.setImageSizeAspectRatioLocked(false)
+        viewModel.setTargetImageWidth(200)
+        #expect(viewModel.targetImageWidth == 200)
+        #expect(viewModel.targetImageHeight == 60)
+
+        viewModel.setImageSizeAspectRatioLocked(true)
+        #expect(viewModel.targetImageWidth == 200)
+        #expect(viewModel.targetImageHeight == 100)
+
+        let originalProject = try viewModel.projectData()
+        let undoCount = viewModel.undoStack.count
+        viewModel.resizeImageToControlSize()
+        #expect(viewModel.document.canvasSize == CGSize(width: 200, height: 100))
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        let resizedProject = try viewModel.projectData()
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == resizedProject)
+    }
+
     @Test func imageSizeResamplingPreservesFeatheredActiveAndSavedSelections() throws {
         let source = NSImage.transparent(size: CGSize(width: 8, height: 8))
         let featheredMask = ImageEditorSelectionMask(

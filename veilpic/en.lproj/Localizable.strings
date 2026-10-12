@@ -3549,6 +3549,7 @@
 "imageEditor.status.layerCompNameInvalid" = "Layer comp name cannot be empty";
 "imageEditor.status.layerCompNoMatchingLayers" = "This layer comp has no matching layers";
 "imageEditor.properties.documentSize" = "Document Size";
+"imageEditor.properties.imageSizeKeepAspectRatio" = "Constrain Proportions";
 "imageEditor.properties.transform" = "Transform";
 "imageEditor.properties.transformXValue" = "X: %.1f px";
 "imageEditor.properties.transformYValue" = "Y: %.1f px";

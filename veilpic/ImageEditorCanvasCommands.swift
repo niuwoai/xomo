@@ -76,6 +76,43 @@ extension ImageEditorViewModel {
         )
     }
 
+    func setImageSizeAspectRatioLocked(_ isLocked: Bool) {
+        isImageSizeAspectRatioLocked = isLocked
+        guard isLocked else { return }
+        updateImageSizeHeightForAspectRatio()
+    }
+
+    func setTargetImageWidth(_ width: Double) {
+        targetImageWidth = normalizedImageSizeControl(width, fallback: targetImageWidth)
+        guard isImageSizeAspectRatioLocked else { return }
+        updateImageSizeHeightForAspectRatio()
+    }
+
+    func setTargetImageHeight(_ height: Double) {
+        targetImageHeight = normalizedImageSizeControl(height, fallback: targetImageHeight)
+        guard isImageSizeAspectRatioLocked else { return }
+        let sourceSize = document.canvasSize
+        guard sourceSize.width.isFinite, sourceSize.height.isFinite, sourceSize.height > 0 else { return }
+        targetImageWidth = normalizedImageSizeControl(
+            targetImageHeight * sourceSize.width / sourceSize.height,
+            fallback: targetImageWidth
+        )
+    }
+
+    private func updateImageSizeHeightForAspectRatio() {
+        let sourceSize = document.canvasSize
+        guard sourceSize.width.isFinite, sourceSize.height.isFinite, sourceSize.width > 0 else { return }
+        targetImageHeight = normalizedImageSizeControl(
+            targetImageWidth * sourceSize.height / sourceSize.width,
+            fallback: targetImageHeight
+        )
+    }
+
+    private func normalizedImageSizeControl(_ value: Double, fallback: Double) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(12_000, max(8, value.rounded()))
+    }
+
     func resizeCanvasToControlSize() {
         resizeCanvas(to: CGSize(width: targetCanvasWidth, height: targetCanvasHeight), anchor: selectedCanvasAnchor)
     }

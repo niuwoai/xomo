@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1838 - 2026-10-13
+
+### Added
+- Image Size controls gain a default-on “Constrain Proportions” option; changing either dimension updates the other from the document's original aspect ratio, while unlocked dimensions remain independent.
+
+### Verification
+- `ImageEditorSliceImageSizeTransformTests` 11/11、`LocalizationResourceTests` 46/46 实际执行通过，覆盖默认比例锁、宽/高联动、解锁独立编辑、重新锁定、缩放单步 Undo/Redo 与三语资源一致性；发布合同 12/36、CLI 合同 7/24、概览归档合同 3/30、隔离运行器合同通过，三语 `.strings` 均通过 `plutil -lint`。本次 build-for-testing 成功；完整 Release、全量回归、桌面冒烟和本机安装仍为 rc1840 门槛。详见[验证记录](docs/reviews/2026-10-13-rc1838-image-size-aspect-ratio.md)。
+
 ## 2.12.0-rc1837 - 2026-10-13
 
 ### Fixed
