@@ -479,37 +479,26 @@ extension NSImage {
         var workingSource = sourceImage ?? self
         var output = self
         if let fingerPaintingColor {
-            guard let firstPoint = points.first,
-                  let seededSource = workingSource.withBrushStroke(
-                    points: [firstPoint],
+            if let seedSample = resolvedSamples.first(where: { sample in
+                smudgeDiameter(
+                    baseWidth: width,
+                    pressure: sample.pressure,
+                    controlsSize: usesPressureSize,
+                    sensitivity: pressureSensitivity
+                ) > 0
+            }) {
+                let seedDiameter = smudgeDiameter(
+                    baseWidth: width,
+                    pressure: seedSample.pressure,
+                    controlsSize: usesPressureSize,
+                    sensitivity: pressureSensitivity
+                )
+                let seedPoint = seedSample.point
+                guard let seededSource = workingSource.withBrushStroke(
+                    points: [seedPoint],
                     color: fingerPaintingColor,
                     settings: ImageEditorBrushStrokeSettings(
-                        diameter: smudgeDiameter(
-                            baseWidth: width,
-                            pressure: resolvedSamples.first?.pressure,
-                            controlsSize: usesPressureSize,
-                            sensitivity: pressureSensitivity
-                        ),
-                        hardness: hardness,
-                        opacity: clampedOpacity,
-                        flow: 1,
-                        spacing: 1
-                    ),
-                    erase: false
-                  )
-            else { return nil }
-            workingSource = seededSource
-            if usesIndependentSource {
-                guard let seededOutput = output.withBrushStroke(
-                    points: [firstPoint],
-                    color: fingerPaintingColor,
-                    settings: ImageEditorBrushStrokeSettings(
-                        diameter: smudgeDiameter(
-                            baseWidth: width,
-                            pressure: resolvedSamples.first?.pressure,
-                            controlsSize: usesPressureSize,
-                            sensitivity: pressureSensitivity
-                        ),
+                        diameter: seedDiameter,
                         hardness: hardness,
                         opacity: clampedOpacity,
                         flow: 1,
@@ -517,9 +506,24 @@ extension NSImage {
                     ),
                     erase: false
                 ) else { return nil }
-                output = seededOutput
-            } else {
-                output = seededSource
+                workingSource = seededSource
+                if usesIndependentSource {
+                    guard let seededOutput = output.withBrushStroke(
+                        points: [seedPoint],
+                        color: fingerPaintingColor,
+                        settings: ImageEditorBrushStrokeSettings(
+                            diameter: seedDiameter,
+                            hardness: hardness,
+                            opacity: clampedOpacity,
+                            flow: 1,
+                            spacing: 1
+                        ),
+                        erase: false
+                    ) else { return nil }
+                    output = seededOutput
+                } else {
+                    output = seededSource
+                }
             }
         }
 
@@ -538,6 +542,7 @@ extension NSImage {
                 controlsSize: usesPressureSize,
                 sensitivity: pressureSensitivity
             )
+            guard segmentDiameter > 0 else { continue }
 
             let sourceSnapshot = workingSource
             let segmentSamples = [
@@ -614,7 +619,7 @@ extension NSImage {
             pressure ?? 1,
             sensitivity: sensitivity
         )
-        return max(1, baseWidth * scale)
+        return max(0, baseWidth * scale)
     }
 
     private func mixingBrushSource(

@@ -262,6 +262,67 @@ struct ImageEditorToneAirbrushTests {
         }
     }
 
+    @Test func zeroPressureSmudgeDoesNotMovePixelsOrSeedFingerPaint() throws {
+        let source = coloredPartitionImage(alpha: 1)
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6.5, y: 13.5), pressure: 0),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 19.5, y: 13.5), pressure: 0),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 33.5, y: 13.5), pressure: 0)
+        ]
+
+        let smudged = try #require(source.withSmudgeBrush(
+            samples: samples,
+            width: 12,
+            opacity: 0.8,
+            hardness: 0.7,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5
+        ))
+        let fingerPainted = try #require(source.withSmudgeBrush(
+            samples: samples,
+            width: 12,
+            opacity: 0.8,
+            hardness: 0.7,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5,
+            fingerPaintingColor: .red
+        ))
+
+        #expect(try #require(smudged.qingtuPNGData()) == source.qingtuPNGData())
+        #expect(try #require(fingerPainted.qingtuPNGData()) == source.qingtuPNGData())
+    }
+
+    @Test func smudgeAndFingerPaintResumeAfterPressureLeavesZero() throws {
+        let source = coloredPartitionImage(alpha: 1)
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6.5, y: 13.5), pressure: 0),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 12.5, y: 13.5), pressure: 0),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 19.5, y: 13.5), pressure: 1),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 33.5, y: 13.5), pressure: 1)
+        ]
+
+        let smudged = try #require(source.withSmudgeBrush(
+            samples: samples,
+            width: 12,
+            opacity: 0.8,
+            hardness: 0.7,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5
+        ))
+        let fingerPainted = try #require(source.withSmudgeBrush(
+            samples: samples,
+            width: 12,
+            opacity: 0.8,
+            hardness: 0.7,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5,
+            fingerPaintingColor: .red
+        ))
+
+        #expect(try #require(smudged.qingtuPNGData()) != source.qingtuPNGData())
+        #expect(try #require(fingerPainted.qingtuPNGData()) != source.qingtuPNGData())
+    }
+
     private func assertBlurAndSharpenMatchLegacy(
         for source: NSImage,
         samples: [ImageEditorBrushStrokeSample]
