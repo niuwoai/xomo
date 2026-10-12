@@ -1123,7 +1123,9 @@ extension NSImage {
         green: Int,
         blue: Int
     ) -> (red: Double, green: Double, blue: Double) {
-        let index = ((red * cube.dimension + green) * cube.dimension + blue) * 3
+        // Adobe's .cube files store red as the fastest-changing input axis,
+        // then green, with blue changing slowest (r + N*g + N*N*b).
+        let index = ((blue * cube.dimension + green) * cube.dimension + red) * 3
         guard index + 2 < cube.values.count else { return (0, 0, 0) }
         return (cube.values[index], cube.values[index + 1], cube.values[index + 2])
     }

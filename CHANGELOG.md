@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1824 - 2026-10-13
+
+### Fixed
+- 按 Adobe Cube 规范修正 3D LUT 红、绿、蓝轴的样本存储顺序，避免导入的 LUT 产生错误色彩映射。
+
+### Verification
+- Cube LUT 专项 4/4、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release、桌面冒烟或本机安装，rc1840 完整门槛保持不变。详见[验证记录](docs/reviews/2026-10-13-rc1824-cube-axis-order.md)。
+
 ## 2.12.0-rc1823 - 2026-10-13
 
 ### Added
