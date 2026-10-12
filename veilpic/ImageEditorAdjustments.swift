@@ -1041,9 +1041,9 @@ extension NSImage {
     ) -> (red: Double, green: Double, blue: Double) {
         let dimension = cube.dimension
         let scale = Double(dimension - 1)
-        let redPosition = max(0, min(1, red)) * scale
-        let greenPosition = max(0, min(1, green)) * scale
-        let bluePosition = max(0, min(1, blue)) * scale
+        let redPosition = cubePosition(red, minimum: cube.domainMinimum[0], maximum: cube.domainMaximum[0]) * scale
+        let greenPosition = cubePosition(green, minimum: cube.domainMinimum[1], maximum: cube.domainMaximum[1]) * scale
+        let bluePosition = cubePosition(blue, minimum: cube.domainMinimum[2], maximum: cube.domainMaximum[2]) * scale
 
         let r0 = Int(floor(redPosition))
         let g0 = Int(floor(greenPosition))
@@ -1071,6 +1071,10 @@ extension NSImage {
         let c0 = mix(c00, c10, amount: gt)
         let c1 = mix(c01, c11, amount: gt)
         return mix(c0, c1, amount: bt)
+    }
+
+    private static func cubePosition(_ value: Double, minimum: Double, maximum: Double) -> Double {
+        max(0, min(1, (value - minimum) / (maximum - minimum)))
     }
 
     private static func colorLookupCubeValue(

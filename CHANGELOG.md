@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1822 - 2026-10-13
+
+### Fixed
+- 导入 `.cube` 色彩查找表时按 `DOMAIN_MIN/MAX` 将图像 RGB 映射到 LUT 输入域；自定义域随调整层项目数据保存，旧项目继续使用标准 0–1 域。
+
+### Verification
+- `ImageEditorAdjustmentTests` LUT 域专项 2/2、发布合同 10/30、CLI Release Build 合同 7/24、隔离测试器合同通过；未运行全量 Release、桌面冒烟或本机安装，这些仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1821 - 2026-10-13
 
 ### Changed

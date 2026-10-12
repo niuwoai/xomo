@@ -1685,6 +1685,61 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
     }
 
+    @Test func colorLookupCubeMapsDeclaredDomainAndSurvivesProjectCodableRoundTrip() throws {
+        let cubeText = """
+        TITLE "Narrow identity"
+        LUT_3D_SIZE 2
+        DOMAIN_MIN 0.25 0.25 0.25
+        DOMAIN_MAX 0.75 0.75 0.75
+        0 0 0
+        0 0 1
+        0 1 0
+        0 1 1
+        1 0 0
+        1 0 1
+        1 1 0
+        1 1 1
+        """
+        let cube = try #require(ImageEditorColorLookupCube.parse(cubeText, fallbackName: "domain.cube"))
+        #expect(cube.domainMinimum == [0.25, 0.25, 0.25])
+        #expect(cube.domainMaximum == [0.75, 0.75, 0.75])
+
+        var settings = ImageEditorAdjustmentSettings()
+        settings.colorLookupPreset = .customCube
+        settings.colorLookupCube = cube
+        let encoded = try JSONEncoder().encode(settings)
+        let restored = try JSONDecoder().decode(ImageEditorAdjustmentSettings.self, from: encoded)
+        #expect(restored.colorLookupCube == cube)
+
+        let source = bitmapImage(
+            size: NSSize(width: 8, height: 8),
+            background: NSColor(calibratedRed: 0.5, green: 0.25, blue: 0.75, alpha: 1)
+        )
+        let output = try #require(source.adjusted(kind: .colorLookup, amount: 0, settings: restored))
+        let result = try #require(output.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB))
+        #expect(abs(result.redComponent - 0.5) < 0.04)
+        #expect(result.greenComponent < 0.04)
+        #expect(result.blueComponent > 0.96)
+    }
+
+    @Test func colorLookupCubeRejectsInvalidDomainAndMigratesLegacyProjectData() throws {
+        let invalidCube = """
+        LUT_3D_SIZE 2
+        DOMAIN_MIN 0.5 0 0
+        DOMAIN_MAX 0.5 1 1
+        \(Array(repeating: "0 0 0", count: 8).joined(separator: "\n"))
+        """
+        #expect(ImageEditorColorLookupCube.parse(invalidCube, fallbackName: "invalid.cube") == nil)
+        let incompleteDomainCube = invalidCube.replacingOccurrences(of: "DOMAIN_MAX 0.5 1 1\n", with: "")
+        #expect(ImageEditorColorLookupCube.parse(incompleteDomainCube, fallbackName: "incomplete.cube") == nil)
+
+        let legacyJSON = #"{"name":"Legacy","dimension":2,"values":[0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,0,1,1,1,0,1,1,1]}"#.data(using: .utf8)!
+        let legacyCube = try JSONDecoder().decode(ImageEditorColorLookupCube.self, from: legacyJSON)
+        #expect(legacyCube.isValid)
+        #expect(legacyCube.domainMinimum == [0, 0, 0])
+        #expect(legacyCube.domainMaximum == [1, 1, 1])
+    }
+
     @Test func imageEditorChannelMixerAdjustmentSupportsRGBMatrixAndMonochromeLayerState() async throws {
         let canvasSize = NSSize(width: 90, height: 60)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

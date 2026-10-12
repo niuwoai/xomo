@@ -1193,21 +1193,78 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
     var name: String = ""
     var dimension: Int = 0
     var values: [Double] = []
+    var domainMinimum: [Double] = [0, 0, 0]
+    var domainMaximum: [Double] = [1, 1, 1]
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case dimension
+        case values
+        case domainMinimum
+        case domainMaximum
+    }
+
+    init(
+        name: String = "",
+        dimension: Int = 0,
+        values: [Double] = [],
+        domainMinimum: [Double] = [0, 0, 0],
+        domainMaximum: [Double] = [1, 1, 1]
+    ) {
+        self.name = name
+        self.dimension = dimension
+        self.values = values
+        self.domainMinimum = domainMinimum
+        self.domainMaximum = domainMaximum
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        dimension = try container.decodeIfPresent(Int.self, forKey: .dimension) ?? 0
+        values = try container.decodeIfPresent([Double].self, forKey: .values) ?? []
+        domainMinimum = try container.decodeIfPresent([Double].self, forKey: .domainMinimum) ?? [0, 0, 0]
+        domainMaximum = try container.decodeIfPresent([Double].self, forKey: .domainMaximum) ?? [1, 1, 1]
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(dimension, forKey: .dimension)
+        try container.encode(values, forKey: .values)
+        try container.encode(domainMinimum, forKey: .domainMinimum)
+        try container.encode(domainMaximum, forKey: .domainMaximum)
+    }
 
     var isValid: Bool {
-        dimension >= 2 && values.count == dimension * dimension * dimension * 3
+        dimension >= 2
+            && dimension <= 64
+            && values.count == dimension * dimension * dimension * 3
+            && hasValidDomain
+    }
+
+    private var hasValidDomain: Bool {
+        guard domainMinimum.count == 3, domainMaximum.count == 3 else { return false }
+        return zip(domainMinimum, domainMaximum).allSatisfy { pair in
+            pair.0.isFinite && pair.1.isFinite && pair.1 > pair.0
+        }
     }
 
     func normalized() -> ImageEditorColorLookupCube {
         let safeDimension = max(0, min(64, dimension))
         let expectedCount = safeDimension * safeDimension * safeDimension * 3
-        guard safeDimension >= 2, values.count == expectedCount else {
+        guard safeDimension >= 2,
+              values.count == expectedCount,
+              hasValidDomain
+        else {
             return ImageEditorColorLookupCube(name: name, dimension: 0, values: [])
         }
         return ImageEditorColorLookupCube(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
             dimension: safeDimension,
-            values: values.map { max(0, min(1, $0)) }
+            values: values.map { max(0, min(1, $0)) },
+            domainMinimum: domainMinimum,
+            domainMaximum: domainMaximum
         )
     }
 
@@ -1215,6 +1272,10 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
         var title = fallbackName
         var dimension = 0
         var values: [Double] = []
+        var domainMinimum = [0.0, 0.0, 0.0]
+        var domainMaximum = [1.0, 1.0, 1.0]
+        var hasDomainMinimum = false
+        var hasDomainMaximum = false
 
         for rawLine in text.components(separatedBy: .newlines) {
             let line = rawLine
@@ -1236,6 +1297,24 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
                 dimension = parsedDimension
                 continue
             }
+            if upper == "DOMAIN_MIN" || upper == "DOMAIN_MAX" {
+                guard parts.count == 4,
+                      let red = Double(parts[1]),
+                      let green = Double(parts[2]),
+                      let blue = Double(parts[3]),
+                      red.isFinite,
+                      green.isFinite,
+                      blue.isFinite
+                else { return nil }
+                if upper == "DOMAIN_MIN" {
+                    domainMinimum = [red, green, blue]
+                    hasDomainMinimum = true
+                } else {
+                    domainMaximum = [red, green, blue]
+                    hasDomainMaximum = true
+                }
+                continue
+            }
             if upper.hasPrefix("LUT_") || upper.hasPrefix("DOMAIN_") {
                 continue
             }
@@ -1249,7 +1328,14 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
             values.append(max(0, min(1, blue)))
         }
 
-        let cube = ImageEditorColorLookupCube(name: title, dimension: dimension, values: values).normalized()
+        guard hasDomainMinimum == hasDomainMaximum else { return nil }
+        let cube = ImageEditorColorLookupCube(
+            name: title,
+            dimension: dimension,
+            values: values,
+            domainMinimum: domainMinimum,
+            domainMaximum: domainMaximum
+        ).normalized()
         return cube.isValid ? cube : nil
     }
 }
