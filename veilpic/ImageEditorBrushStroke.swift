@@ -424,6 +424,7 @@ enum ImageEditorBrushStrokeKernel {
                 sizeJitter: settings.sizeJitter,
                 minimumDiameter: settings.minimumDiameter
             )
+            guard !settings.pressureControlsSize || diameterScale > 0 else { continue }
             let pressureFlowScale = settings.pressureControlsFlow
                 ? pressureFlowScale(
                     mappedPressure: mappedPressure,

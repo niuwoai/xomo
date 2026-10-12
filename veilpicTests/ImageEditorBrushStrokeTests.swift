@@ -157,6 +157,54 @@ struct ImageEditorBrushStrokeTests {
         #expect(try #require(result.qingtuPNGData()) == source.qingtuPNGData())
     }
 
+    @Test func zeroStylusPressureDoesNotDepositPaintWhenMinimumDiameterIsZero() throws {
+        let source = NSImage.transparent(size: CGSize(width: 24, height: 24))
+        let result = try #require(source.withBrushStroke(
+            samples: [ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 12, y: 12),
+                pressure: 0
+            )],
+            color: .red,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: 16,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.25,
+                pressureControlsSize: true,
+                pressureSensitivity: 0.5,
+                minimumDiameter: 0
+            ),
+            erase: false
+        ))
+
+        #expect(try #require(result.qingtuPNGData()) == source.qingtuPNGData())
+    }
+
+    @Test func zeroStylusPressureStillHonorsExplicitMinimumDiameter() throws {
+        let source = NSImage.transparent(size: CGSize(width: 24, height: 24))
+        let result = try #require(source.withBrushStroke(
+            samples: [ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 12, y: 12),
+                pressure: 0
+            )],
+            color: .red,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: 16,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.25,
+                pressureControlsSize: true,
+                pressureSensitivity: 0.5,
+                minimumDiameter: 0.25
+            ),
+            erase: false
+        ))
+
+        #expect(try #require(result.qingtuPNGData()) != source.qingtuPNGData())
+    }
+
     @Test func quickAndLayerMaskStrokeMathUsesTheSelectedPaintingBlendMode() throws {
         let base = ImageEditorSelectionMask(
             width: 8,
