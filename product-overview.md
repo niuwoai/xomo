@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1813
+> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1814
+
+rc1814 修正压力映射的零端点：数位笔在零压力且最小不透明度为零时不再落下意外笔迹；绘画、修图与光标沿用同一映射。Brush Stroke 60/60、发布/CLI/概览/隔离器合同通过；rc1840 仍为完整构建、全量测试、桌面冒烟和安装门槛。详见[rc1814 验证记录](docs/reviews/2026-10-12-rc1814-zero-pressure-stroke.md)。
 
 rc1813 为 Brush、Pencil、History Brush 与 Eraser 增加线性、轻触灵敏和重压压力响应曲线；默认线性以兼容既有绘画结果，曲线选择随工作区偏好和自定义笔刷预设持久化。Brush Stroke 59/59、Brush Dynamics Preferences 37/37、Localization Resources 46/46 与发布相关合同通过；完整构建、全量测试、桌面冒烟和安装仍待 rc1840。详见[rc1813 验证记录](docs/reviews/2026-10-12-rc1813-pressure-response-curve.md)。
 

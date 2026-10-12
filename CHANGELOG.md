@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1814 - 2026-10-12
+
+### Fixed
+- 数位笔压力为零且最小不透明度为零时不再留下 5% 的意外笔迹；画笔、修图笔与压力光标共用零端点映射。
+
+### Verification
+- `ImageEditorBrushStrokeTests` 60/60、发布合同 10/30、CLI Release Build 合同 7/24、产品概览归档合同 3/30 与隔离测试器合同通过；`git diff --check` 通过。完整构建、全量测试、桌面冒烟与安装仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1813 - 2026-10-12
 
 ### Added

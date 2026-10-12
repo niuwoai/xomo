@@ -805,8 +805,7 @@ enum ImageEditorBrushStrokeKernel {
         let normalizedPressure = max(0, min(1, pressure))
         let normalizedSensitivity = max(0, min(1, sensitivity))
         let exponent = pow(4, 0.5 - normalizedSensitivity) * responseCurve.exponent
-        let curved = pow(normalizedPressure, exponent)
-        return 0.05 + curved * 0.95
+        return pow(normalizedPressure, exponent)
     }
 
     static func pressureDiameterScale(

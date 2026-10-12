@@ -132,6 +132,31 @@ struct ImageEditorBrushStrokeTests {
         #expect(firmQuickMaskAlpha < linearQuickMaskAlpha)
     }
 
+    @Test func zeroStylusPressureDoesNotDepositPaintWhenMinimumOpacityIsZero() throws {
+        let source = NSImage.transparent(size: CGSize(width: 24, height: 24))
+        let result = try #require(source.withBrushStroke(
+            samples: [ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 12, y: 12),
+                pressure: 0
+            )],
+            color: .red,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: 16,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.25,
+                pressureControlsOpacity: true,
+                pressureSensitivity: 0.5,
+                minimumOpacity: 0
+            ),
+            erase: false
+        ))
+
+        #expect(ImageEditorBrushStrokeKernel.mappedPressure(0, sensitivity: 0.5) == 0)
+        #expect(try #require(result.qingtuPNGData()) == source.qingtuPNGData())
+    }
+
     @Test func quickAndLayerMaskStrokeMathUsesTheSelectedPaintingBlendMode() throws {
         let base = ImageEditorSelectionMask(
             width: 8,
@@ -500,7 +525,7 @@ struct ImageEditorBrushStrokeTests {
 
         #expect(lowSensitivity < neutral)
         #expect(neutral < highSensitivity)
-        #expect(ImageEditorBrushStrokeKernel.mappedPressure(-1, sensitivity: 0.5) == 0.05)
+        #expect(ImageEditorBrushStrokeKernel.mappedPressure(-1, sensitivity: 0.5) == 0)
         #expect(ImageEditorBrushStrokeKernel.mappedPressure(2, sensitivity: 0.5) == 1)
     }
 
@@ -599,7 +624,7 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func pressureCanControlDiameterOpacityAndFlowIndependently() {
         #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
-            mappedPressure: 0.05,
+            mappedPressure: 0,
             minimumDiameter: 0.4
         ) == 0.4)
         #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
@@ -611,7 +636,7 @@ struct ImageEditorBrushStrokeTests {
             minimumDiameter: -1
         ) == 1)
         #expect(ImageEditorBrushStrokeKernel.pressureFlowScale(
-            mappedPressure: 0.05,
+            mappedPressure: 0,
             minimumFlow: 0.4
         ) == 0.4)
         #expect(ImageEditorBrushStrokeKernel.pressureFlowScale(
@@ -623,7 +648,7 @@ struct ImageEditorBrushStrokeTests {
             minimumFlow: -1
         ) == 1)
         #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(
-            mappedPressure: 0.05,
+            mappedPressure: 0,
             minimumOpacity: 0.4
         ) == 0.4)
         #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(
