@@ -651,7 +651,7 @@ extension NSImage {
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let maskAlpha = retouchStrokeAlpha(
+        guard let mask = retouchStrokeMask(
             width: pixelWidth,
             height: pixelHeight,
             samples: samples,
@@ -659,44 +659,72 @@ extension NSImage {
             hardness: hardness,
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
-        )
-        guard let strokeMask = NSImage.alphaMaskImage(
+        ) else { return nil }
+        let bounds = mask.bounds
+        let maskWidth = mask.width
+        let maskHeight = bounds.maxY - bounds.minY + 1
+        let bytesPerPixel = 4
+        let bytesPerRow = pixelWidth * bytesPerPixel
+        guard Int(brushSource.size.width.rounded()) == pixelWidth,
+              Int(brushSource.size.height.rounded()) == pixelHeight,
+              bounds.minX >= 0, bounds.minY >= 0,
+              bounds.maxX < pixelWidth, bounds.maxY < pixelHeight,
+              maskWidth == bounds.maxX - bounds.minX + 1,
+              maskHeight == bounds.maxY - bounds.minY + 1,
+              mask.pixels.count == maskWidth * maskHeight,
+              var destinationPixels = rgbaPixels(
+                width: pixelWidth,
+                height: pixelHeight,
+                bytesPerRow: bytesPerRow
+              ),
+              let sourcePixels = brushSource.rgbaPixels(
+                width: pixelWidth,
+                height: pixelHeight,
+                bytesPerRow: bytesPerRow
+              ) else { return nil }
+
+        let opacityScale = max(0, min(1, opacity))
+        for localY in 0..<maskHeight {
+            for localX in 0..<maskWidth {
+                let sourceScale = CGFloat(mask.pixels[localY * maskWidth + localX])
+                    / 255 * opacityScale
+                guard sourceScale > 0 else { continue }
+
+                let pixelOffset = ((bounds.minY + localY) * pixelWidth + bounds.minX + localX)
+                    * bytesPerPixel
+                let destinationAlpha = CGFloat(destinationPixels[pixelOffset + 3]) / 255
+                let sourceAlpha = CGFloat(sourcePixels[pixelOffset + 3]) / 255 * sourceScale
+                let destinationScale = 1 - sourceAlpha
+                for channel in 0..<3 {
+                    destinationPixels[pixelOffset + channel] = blendedChannel(
+                        source: sourcePixels[pixelOffset + channel],
+                        sourceScale: sourceScale,
+                        destination: destinationPixels[pixelOffset + channel],
+                        destinationScale: destinationScale
+                    )
+                }
+                destinationPixels[pixelOffset + 3] = UInt8(clamping: Int(
+                    ((sourceAlpha + destinationAlpha * destinationScale) * 255).rounded()
+                ))
+            }
+        }
+        return Self.fromRGBA(
+            pixels: destinationPixels,
             width: pixelWidth,
             height: pixelHeight,
-            alpha: maskAlpha
-        ) else { return nil }
+            bytesPerRow: bytesPerRow,
+            size: size
+        )
+    }
 
-        guard let clippedBlur = NSImage.rendered(size: size, actions: { _ in
-            brushSource.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: brushSource.size),
-                operation: .copy,
-                fraction: 1
-            )
-            strokeMask.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: strokeMask.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        }) else {
-            return nil
-        }
-
-        return NSImage.rendered(size: size, actions: { _ in
-            draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: size),
-                operation: .copy,
-                fraction: 1
-            )
-            clippedBlur.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: clippedBlur.size),
-                operation: .sourceOver,
-                fraction: max(0, min(1, opacity))
-            )
-        })
+    private func blendedChannel(
+        source: UInt8,
+        sourceScale: CGFloat,
+        destination: UInt8,
+        destinationScale: CGFloat
+    ) -> UInt8 {
+        UInt8(clamping: Int((CGFloat(source) * sourceScale
+            + CGFloat(destination) * destinationScale).rounded()))
     }
 
     private func toneAdjusted(

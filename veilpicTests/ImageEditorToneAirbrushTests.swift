@@ -212,6 +212,86 @@ struct ImageEditorToneAirbrushTests {
         #expect(spongeViewModel.document.selectedLayer?.image.qingtuPNGData() == spongedPixels)
     }
 
+    @Test func blurAndSharpenROIMixesMatchFullFrameAppKitReference() throws {
+        let opaqueSource = NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceRed: 0.8, green: 0.12, blue: 0.08, alpha: 1).setFill()
+            NSRect(x: 0, y: 0, width: rect.width / 2, height: rect.height).fill()
+            NSColor(deviceRed: 0.08, green: 0.18, blue: 0.82, alpha: 1).setFill()
+            NSRect(x: rect.width / 2, y: 0, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+        let translucentSource = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor(deviceRed: 0.8, green: 0.12, blue: 0.08, alpha: 0.4).setFill()
+            NSRect(x: 0, y: 0, width: rect.width / 2, height: rect.height).fill()
+            NSColor(deviceRed: 0.08, green: 0.18, blue: 0.82, alpha: 0.75).setFill()
+            NSRect(x: rect.width / 2, y: 0, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+        let samples = [
+            ImageEditorBrushStrokeSample(point: .zero),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 16, y: 12))
+        ]
+        try assertBlurAndSharpenMatchLegacy(for: opaqueSource, samples: samples)
+        try assertBlurAndSharpenMatchLegacy(for: translucentSource, samples: samples)
+    }
+
+    private func assertBlurAndSharpenMatchLegacy(
+        for source: NSImage,
+        samples: [ImageEditorBrushStrokeSample]
+    ) throws {
+        let width: CGFloat = 12
+        let opacity: CGFloat = 0.65
+        let hardness: CGFloat = 0.6
+
+        let blurredSource = try #require(source.blurred(radius: 3.5))
+        let blurred = try #require(source.withBlurBrush(
+            samples: samples,
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            radius: 3.5,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        ))
+        let legacyBlur = try legacyMixedBrushSource(
+            source,
+            brushSource: blurredSource,
+            samples: samples,
+            width: width,
+            opacity: opacity,
+            hardness: hardness
+        )
+        #expect(maximumPixelDifference(blurred, legacyBlur) <= 4.0 / 255)
+
+        let intensity = 0.6
+        let firstSharpenPass = try #require(source.filtered(
+            kind: .sharpen,
+            intensity: Double(intensity)
+        ))
+        let sharpenedSource = firstSharpenPass.filtered(
+            kind: .sharpen,
+            intensity: Double(intensity)
+        ) ?? firstSharpenPass
+        let sharpened = try #require(source.withSharpenBrush(
+            samples: samples,
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            intensity: intensity,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        ))
+        let legacySharpen = try legacyMixedBrushSource(
+            source,
+            brushSource: sharpenedSource,
+            samples: samples,
+            width: width,
+            opacity: opacity,
+            hardness: hardness
+        )
+        #expect(maximumPixelDifference(sharpened, legacySharpen) <= 4.0 / 255)
+    }
+
     @Test func airbrushStrokeCommitsAsOneHistoryStepAndDefaultsOff() throws {
         let source = solidImage(gray: 0.5)
         let viewModel = ImageEditorViewModel(
@@ -253,6 +333,84 @@ struct ImageEditorToneAirbrushTests {
             NSColor(deviceRed: 0.76, green: 0.23, blue: 0.16, alpha: 1).setFill()
             rect.fill()
         } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func legacyMixedBrushSource(
+        _ source: NSImage,
+        brushSource: NSImage,
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) throws -> NSImage {
+        let pixelWidth = Int(source.size.width.rounded())
+        let pixelHeight = Int(source.size.height.rounded())
+        let maskAlpha = source.retouchStrokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
+            diameter: width,
+            hardness: hardness,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+        let mask = try #require(NSImage.alphaMaskImage(
+            width: pixelWidth,
+            height: pixelHeight,
+            alpha: maskAlpha
+        ))
+        let clippedBrush = try #require(NSImage.rendered(size: source.size) { _ in
+            brushSource.draw(
+                in: CGRect(origin: .zero, size: source.size),
+                from: CGRect(origin: .zero, size: brushSource.size),
+                operation: .copy,
+                fraction: 1
+            )
+            mask.draw(
+                in: CGRect(origin: .zero, size: source.size),
+                from: CGRect(origin: .zero, size: mask.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        })
+        return try #require(NSImage.rendered(size: source.size) { _ in
+            source.draw(
+                in: CGRect(origin: .zero, size: source.size),
+                from: CGRect(origin: .zero, size: source.size),
+                operation: .copy,
+                fraction: 1
+            )
+            clippedBrush.draw(
+                in: CGRect(origin: .zero, size: source.size),
+                from: CGRect(origin: .zero, size: clippedBrush.size),
+                operation: .sourceOver,
+                fraction: opacity
+            )
+        })
+    }
+
+    private func maximumPixelDifference(_ lhs: NSImage, _ rhs: NSImage) -> CGFloat {
+        guard let leftData = lhs.qingtuPNGData(),
+              let rightData = rhs.qingtuPNGData(),
+              let leftBitmap = NSBitmapImageRep(data: leftData),
+              let rightBitmap = NSBitmapImageRep(data: rightData)
+        else { return .infinity }
+        var maximumDifference: CGFloat = 0
+        for y in 0..<Int(canvasSize.height) {
+            for x in 0..<Int(canvasSize.width) {
+                guard let left = leftBitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB),
+                      let right = rightBitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB)
+                else { return .infinity }
+                let pixelDifference = [
+                    abs(left.redComponent - right.redComponent),
+                    abs(left.greenComponent - right.greenComponent),
+                    abs(left.blueComponent - right.blueComponent),
+                    abs(left.alphaComponent - right.alphaComponent)
+                ].max() ?? 0
+                maximumDifference = max(maximumDifference, pixelDifference)
+            }
+        }
+        return maximumDifference
     }
 
     private func red(in image: NSImage) throws -> CGFloat {

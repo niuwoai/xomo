@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1809 - 2026-10-12
+
+### Performance
+- Blur and Sharpen retain full-image filtering but rasterize their brush mask and composite only within the stroke ROI, avoiding a full-canvas alpha-mask bitmap and two full-canvas AppKit draw passes.
+
+### Verification
+- `ImageEditorToneAirbrushTests` 7/7, Blur local-softening smoke 1/1, and Sharpen edge-enhancement smoke 1/1 passed. The new pixel reference covers opaque and translucent sources at canvas edges; maximum RGBA channel difference from the prior AppKit path was 0.01325 within the 4/255 tolerance. Release/CLI/product-overview/test-runner contracts and `git diff --check` passed. rc1840 remains the next full build/smoke/install gate; this incremental version does not replace `/Applications/Xomo.app`.
+
 ## 2.12.0-rc1808 - 2026-10-12
 
 ### Performance
