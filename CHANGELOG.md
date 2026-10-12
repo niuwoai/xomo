@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1817 - 2026-10-13
+
+### Added
+- 图像尺寸调整新增最近邻与平滑插值选择：像素画可保持硬边，照片和渐变可平滑缩放；图层像素、栅格蒙版及 Alpha 通道遵循同一模式，整次操作仍为单个撤销步骤。
+
+### Verification
+- `ImageEditorSliceImageSizeTransformTests` 9/9、`LocalizationResourceTests` 46/46、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 与隔离运行器合同通过；最近邻像素保持纯色，平滑缩放产生过渡像素，Alpha 通道也按模式重采样，Undo/Redo 往返通过。rc1840 仍为下一完整构建、全量测试、桌面冒烟与安装门槛。
+
 ## 2.12.0-rc1816 - 2026-10-12
 
 ### Fixed

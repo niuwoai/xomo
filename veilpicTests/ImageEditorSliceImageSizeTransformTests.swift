@@ -371,6 +371,56 @@ struct ImageEditorSliceImageSizeTransformTests {
         }
     }
 
+    @Test func imageSizeResamplingKeepsPixelArtCrispAndPhotoEdgesSmoothWithOneUndo() throws {
+        let source = try #require(NSImage.rendered(size: CGSize(width: 8, height: 8)) { _ in
+            NSColor.red.setFill()
+            NSBezierPath(rect: CGRect(x: 0, y: 0, width: 4, height: 8)).fill()
+            NSColor.blue.setFill()
+            NSBezierPath(rect: CGRect(x: 4, y: 0, width: 4, height: 8)).fill()
+        })
+
+        let channelMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: (0..<64).map { $0 % 8 < 4 ? UInt8(0) : UInt8(255) }
+        )
+        for mode in ImageEditorImageResampling.allCases {
+            let viewModel = ImageEditorViewModel(sourceName: "image-size-resampling.png", image: source) { _ in }
+            viewModel.selectedImageResampling = mode
+            viewModel.targetImageWidth = 16
+            viewModel.targetImageHeight = 16
+            viewModel.document.alphaChannels = [ImageEditorAlphaChannel(name: "Edge", mask: channelMask)]
+            let original = try viewModel.projectData()
+            let undoCount = viewModel.undoStack.count
+
+            viewModel.resizeImageToControlSize()
+
+            let resized = try #require(viewModel.document.layers.first?.image)
+            let samples = try (0..<16).map { x -> NSColor in
+                try #require(resized.color(at: CGPoint(x: CGFloat(x) + 0.5, y: 0.5)))
+            }
+            let resizedChannel = try #require(viewModel.document.alphaChannels.first?.mask)
+            let channelSamples = (0..<16).map { resizedChannel.alpha[$0] }
+            #expect(viewModel.undoStack.count == undoCount + 1)
+            if mode == .nearestNeighbor {
+                #expect(samples.allSatisfy {
+                    ($0.redComponent > 0.99 && $0.blueComponent < 0.01)
+                        || ($0.blueComponent > 0.99 && $0.redComponent < 0.01)
+                })
+                #expect(channelSamples.allSatisfy { $0 == 0 || $0 == 255 })
+            } else {
+                #expect(samples.contains { $0.redComponent > 0.05 && $0.blueComponent > 0.05 })
+                #expect(channelSamples.contains { $0 > 0 && $0 < 255 })
+            }
+
+            let resizedProject = try viewModel.projectData()
+            viewModel.undo()
+            #expect(try viewModel.projectData() == original)
+            viewModel.redo()
+            #expect(try viewModel.projectData() == resizedProject)
+        }
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "slice-image-size.png",

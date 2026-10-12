@@ -3183,6 +3183,9 @@
 "imageEditor.dialog.selectionPixelScaleResampling" = "重采样方式";
 "imageEditor.dialog.selectionPixelScaleResamplingNearest" = "最近邻（保留硬边）";
 "imageEditor.dialog.selectionPixelScaleResamplingBilinear" = "双线性（平滑边缘）";
+"imageEditor.properties.imageSizeResampling" = "图像尺寸重采样";
+"imageEditor.imageSizeResampling.nearest" = "最近邻（像素画）";
+"imageEditor.imageSizeResampling.smooth" = "平滑插值（照片与渐变）";
 "imageEditor.dialog.selectionScaleAnchorTopLeft" = "左上角";
 "imageEditor.dialog.selectionScaleAnchorTopCenter" = "上边中点";
 "imageEditor.dialog.selectionScaleAnchorTopRight" = "右上角";

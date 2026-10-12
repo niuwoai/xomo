@@ -8,6 +8,18 @@
 import AppKit
 import Foundation
 
+enum ImageEditorImageResampling: Int, CaseIterable, Hashable {
+    case nearestNeighbor
+    case smooth
+
+    var titleKey: String {
+        switch self {
+        case .nearestNeighbor: "imageEditor.imageSizeResampling.nearest"
+        case .smooth: "imageEditor.imageSizeResampling.smooth"
+        }
+    }
+}
+
 enum ImageEditorCanvasAnchor: String, CaseIterable, Identifiable {
     case topLeft
     case top
@@ -58,14 +70,20 @@ extension ImageEditorViewModel {
     }
 
     func resizeImageToControlSize() {
-        resizeImage(to: CGSize(width: targetImageWidth, height: targetImageHeight))
+        resizeImage(
+            to: CGSize(width: targetImageWidth, height: targetImageHeight),
+            resampling: selectedImageResampling
+        )
     }
 
     func resizeCanvasToControlSize() {
         resizeCanvas(to: CGSize(width: targetCanvasWidth, height: targetCanvasHeight), anchor: selectedCanvasAnchor)
     }
 
-    func resizeImage(to targetSize: CGSize) {
+    func resizeImage(
+        to targetSize: CGSize,
+        resampling: ImageEditorImageResampling = .smooth
+    ) {
         guard let targetSize = normalizedEditorSize(targetSize),
               targetSize != document.canvasSize
         else {
@@ -107,7 +125,7 @@ extension ImageEditorViewModel {
             return
         }
         let transformedLayers = document.layers.map { layer in
-            layer.scaledForImageSize(scaleX: scaleX, scaleY: scaleY)
+            layer.scaledForImageSize(scaleX: scaleX, scaleY: scaleY, resampling: resampling)
         }
         let transformedGuides = scaledGuides(scaleX: scaleX, scaleY: scaleY, targetCanvasSize: targetSize)
         let transformedSelection = document.selection?.scaled(
@@ -124,7 +142,7 @@ extension ImageEditorViewModel {
             ImageEditorAlphaChannel(
                 id: channel.id,
                 name: channel.name,
-                mask: channel.mask.resizedNearest(to: targetSize)
+                mask: channel.mask.resized(to: targetSize, resampling: resampling)
             )
         }
 
@@ -511,13 +529,18 @@ private enum ImageEditorSliceCanvasTransformError: Error {
 }
 
 private extension ImageEditorLayer {
-    func scaledForImageSize(scaleX: CGFloat, scaleY: CGFloat) -> ImageEditorLayer {
+    func scaledForImageSize(
+        scaleX: CGFloat,
+        scaleY: CGFloat,
+        resampling: ImageEditorImageResampling
+    ) -> ImageEditorLayer {
         var layer = self
         layer.frame = frame.scaled(scaleX: scaleX, scaleY: scaleY)
         let targetLayerSize = frame.size.scaled(scaleX: scaleX, scaleY: scaleY)
-        layer.image = image.resized(to: targetLayerSize) ?? NSImage.transparent(size: targetLayerSize)
-        layer.mask = mask?.resized(to: targetLayerSize)
-        layer.postFilterCutoutMask = postFilterCutoutMask?.resized(to: targetLayerSize)
+        layer.image = image.resized(to: targetLayerSize, resampling: resampling)
+            ?? NSImage.transparent(size: targetLayerSize)
+        layer.mask = mask?.resized(to: targetLayerSize, resampling: resampling)
+        layer.postFilterCutoutMask = postFilterCutoutMask?.resized(to: targetLayerSize, resampling: resampling)
         layer.vectorMask = vectorMask?.scaled(scaleX: scaleX, scaleY: scaleY)
         layer.style = style.scaled(by: (scaleX + scaleY) / 2)
 
@@ -705,6 +728,54 @@ extension ImageEditorSelectionMask {
             }
         }
         return ImageEditorSelectionMask(width: targetWidth, height: targetHeight, alpha: output)
+    }
+
+    func resized(
+        to targetSize: CGSize,
+        resampling: ImageEditorImageResampling
+    ) -> ImageEditorSelectionMask {
+        guard resampling == .smooth else { return resizedNearest(to: targetSize) }
+        let targetWidth = max(1, Int(targetSize.width.rounded()))
+        let targetHeight = max(1, Int(targetSize.height.rounded()))
+        guard width > 0, height > 0, alpha.count == width * height else {
+            return ImageEditorSelectionMask(
+                width: targetWidth,
+                height: targetHeight,
+                alpha: [UInt8](repeating: 0, count: targetWidth * targetHeight)
+            )
+        }
+
+        var output = [UInt8](repeating: 0, count: targetWidth * targetHeight)
+        for y in 0..<targetHeight {
+            for x in 0..<targetWidth {
+                output[y * targetWidth + x] = bilinearAlpha(
+                    sourceX: resampledCoordinate(x, sourceLength: width, targetLength: targetWidth),
+                    sourceY: resampledCoordinate(y, sourceLength: height, targetLength: targetHeight)
+                )
+            }
+        }
+        return ImageEditorSelectionMask(width: targetWidth, height: targetHeight, alpha: output)
+    }
+
+    private func resampledCoordinate(_ destination: Int, sourceLength: Int, targetLength: Int) -> CGFloat {
+        min(
+            CGFloat(sourceLength - 1),
+            max(0, (CGFloat(destination) + 0.5) * CGFloat(sourceLength) / CGFloat(targetLength) - 0.5)
+        )
+    }
+
+    private func bilinearAlpha(sourceX: CGFloat, sourceY: CGFloat) -> UInt8 {
+        let lowerX = Int(sourceX.rounded(.down))
+        let lowerY = Int(sourceY.rounded(.down))
+        let upperX = min(width - 1, lowerX + 1)
+        let upperY = min(height - 1, lowerY + 1)
+        let fractionX = sourceX - CGFloat(lowerX)
+        let fractionY = sourceY - CGFloat(lowerY)
+        let top = CGFloat(alpha[lowerY * width + lowerX]) * (1 - fractionX)
+            + CGFloat(alpha[lowerY * width + upperX]) * fractionX
+        let bottom = CGFloat(alpha[upperY * width + lowerX]) * (1 - fractionX)
+            + CGFloat(alpha[upperY * width + upperX]) * fractionX
+        return UInt8((top * (1 - fractionY) + bottom * fractionY).rounded())
     }
 
     func canvasResized(to targetSize: CGSize, oldCanvasSize: CGSize, offset: CGSize) -> ImageEditorSelectionMask {

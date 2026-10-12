@@ -9420,6 +9420,15 @@ struct ImageEditorView: View {
                 in: 8...12_000,
                 step: 1
             )
+            Picker(
+                L10n.text("imageEditor.properties.imageSizeResampling"),
+                selection: $viewModel.selectedImageResampling
+            ) {
+                ForEach(ImageEditorImageResampling.allCases, id: \.rawValue) { resampling in
+                    Text(L10n.text(resampling.titleKey)).tag(resampling)
+                }
+            }
+            .pickerStyle(.menu)
             Button(L10n.text("imageEditor.action.imageResize")) {
                 viewModel.resizeImageToControlSize()
             }

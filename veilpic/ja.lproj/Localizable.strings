@@ -3183,6 +3183,9 @@
 "imageEditor.dialog.selectionPixelScaleResampling" = "補間方式";
 "imageEditor.dialog.selectionPixelScaleResamplingNearest" = "ニアレストネイバー（輪郭を保持）";
 "imageEditor.dialog.selectionPixelScaleResamplingBilinear" = "バイリニア（滑らかな輪郭）";
+"imageEditor.properties.imageSizeResampling" = "画像サイズの補間方式";
+"imageEditor.imageSizeResampling.nearest" = "ニアレストネイバー（ピクセルアート）";
+"imageEditor.imageSizeResampling.smooth" = "滑らか（写真・グラデーション）";
 "imageEditor.dialog.selectionScaleAnchorTopLeft" = "左上";
 "imageEditor.dialog.selectionScaleAnchorTopCenter" = "上中央";
 "imageEditor.dialog.selectionScaleAnchorTopRight" = "右上";

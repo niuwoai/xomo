@@ -1020,6 +1020,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedPathControlRole: ImageEditorPathControlRole = .anchor
     @Published var targetImageWidth: Double = 0
     @Published var targetImageHeight: Double = 0
+    @Published var selectedImageResampling: ImageEditorImageResampling = .smooth
     @Published var targetCanvasWidth: Double = 0
     @Published var targetCanvasHeight: Double = 0
     @Published var selectedCanvasAnchor: ImageEditorCanvasAnchor = .center
@@ -13689,9 +13690,13 @@ extension NSImage {
         return NSImage(cgImage: cgImage, size: size)
     }
 
-    func resized(to targetSize: CGSize) -> NSImage? {
+    func resized(
+        to targetSize: CGSize,
+        resampling: ImageEditorImageResampling = .smooth
+    ) -> NSImage? {
         guard targetSize.width > 0, targetSize.height > 0 else { return nil }
         return rendered(size: targetSize) { _ in
+            NSGraphicsContext.current?.imageInterpolation = resampling == .nearestNeighbor ? .none : .high
             draw(
                 in: CGRect(origin: .zero, size: targetSize),
                 from: CGRect(origin: .zero, size: size),

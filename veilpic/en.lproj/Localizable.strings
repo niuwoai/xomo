@@ -3183,6 +3183,9 @@
 "imageEditor.dialog.selectionPixelScaleResampling" = "Resampling";
 "imageEditor.dialog.selectionPixelScaleResamplingNearest" = "Nearest Neighbor (crisp edges)";
 "imageEditor.dialog.selectionPixelScaleResamplingBilinear" = "Bilinear (smooth edges)";
+"imageEditor.properties.imageSizeResampling" = "Image Size Resampling";
+"imageEditor.imageSizeResampling.nearest" = "Nearest Neighbor (pixel art)";
+"imageEditor.imageSizeResampling.smooth" = "Smooth (photos and gradients)";
 "imageEditor.dialog.selectionScaleAnchorTopLeft" = "Top left";
 "imageEditor.dialog.selectionScaleAnchorTopCenter" = "Top center";
 "imageEditor.dialog.selectionScaleAnchorTopRight" = "Top right";
