@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-12）
 
+- rc1805 修复 rc1804 实际 GUI 冒烟发现的自定义缩放对话框布局：为 NSAlert accessory stack 显式采用内容 fitting size，避免输入框/参考点选择器与说明文字重叠、控件裁切；rc1840 仍是下一完整构建、冒烟和安装门槛。
 - rc1804 在自定义选区像素缩放中增加九宫格固定参考点，默认中心行为不变；选择任一边缘或角点后，缩放围绕该点保持原位，并将非中心锚点写入 History/状态。完整门槛仍为 rc1840；rc1800 的本机签名信任异常单独跟踪，不绕过系统校验。
 - rc1803 为「编辑 → 缩放选区像素」增加可输入百分比的实际编辑入口（1%–1,000%），支持系统小数分隔符并沿用统一画布变换、像素预算拒绝和单事务 Undo/Redo。rc1800 本机质量门槛已执行：完整 GUI 测试 3,753/3,753、Release universal archive、CLI universal Release 构建及 CLI tests 2/2 通过；rc1803 已覆盖安装到 `/Applications/Xomo.app` 并实测启动、自定义 150% 缩放和撤销/重做。原 rc1760 app 保留在 `/private/tmp/xomo-rc1803-full-gate/Backup/`。最终重读时本机对 Calculator、Xcode、Xomo 的签名信任验证都异常，归档与安装包内容比对一致；故不宣称 Gatekeeper/公证通过，也没有进行新的 GitHub、OSS 或 Sparkle 发布。详见[rc1800 本机质量门槛记录](docs/reviews/2026-10-12-rc1800-local-quality-gate.md)。下一完整门槛为 rc1840。
 - rc1802 补充选区像素缩放在画布左/右/上/下四边缘的硬选区覆盖，并验证四个边缘的羽化半透明像素仍保留在画布外；`ImageEditorSelectionPixelTransformTests` 17/17、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过。rc1800 的 Release 日志记录归档打包前 app strict 验签、公证、staple 和 DMG Gatekeeper 通过；当前重读归档、staged app 与 DMG 内 app 均被 strict codesign 判为签名/代码已修改，Finder 的系统签名校验同时返回 `CSSMERR_TP_NOT_TRUSTED`，所以 `/Applications` 未替换。需先调查当前制品与本机信任服务读回差异，不绕过安全策略。Figma 范围不扩张。

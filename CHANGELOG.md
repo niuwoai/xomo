@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1805 - 2026-10-12
+
+### Fixed
+- Size the custom selected-pixel scale dialog's accessory stack from its content so the percentage field and fixed-reference-point picker do not overlap the explanation or clip at the window edge.
+
+### Verification
+- `ImageEditorSelectionPixelTransformTests` 22/22; release contract 10/30 assertions, CLI release contract 7/24, product-overview archive contract 3/30. The rc1805 isolated app dialog was visually checked: all nine anchors were visible/selectable, a 200% top-left operation reported the anchor, and Undo/Redo worked. The temporary blank project was discarded; no `/Applications` install or full release gate was performed. Next full gate remains rc1840.
+
 ## 2.12.0-rc1804 - 2026-10-12
 
 ### Added

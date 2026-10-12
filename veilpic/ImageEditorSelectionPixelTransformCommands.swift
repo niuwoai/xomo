@@ -223,6 +223,7 @@ extension ImageEditorViewModel {
         accessoryStack.orientation = .vertical
         accessoryStack.alignment = .leading
         accessoryStack.spacing = 8
+        accessoryStack.setFrameSize(accessoryStack.fittingSize)
         alert.accessoryView = accessoryStack
         alert.addButton(withTitle: L10n.text("imageEditor.action.selectionPixelScaleApply"))
         alert.addButton(withTitle: L10n.text("button.cancel"))
