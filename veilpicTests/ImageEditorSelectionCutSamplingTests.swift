@@ -729,6 +729,79 @@ struct ImageEditorSelectionCutSamplingTests {
         }
     }
 
+    @Test func featheredCutClipsClipboardAtAllCanvasEdgesAndRemainsOneUndoStep() throws {
+        let edges: [(name: String, point: CGPoint)] = [
+            ("left", CGPoint(x: 0, y: 10)),
+            ("right", CGPoint(x: 23, y: 10)),
+            ("top", CGPoint(x: 12, y: 0)),
+            ("bottom", CGPoint(x: 12, y: 19))
+        ]
+        let canvasBounds = CGRect(origin: .zero, size: canvasSize)
+
+        for edge in edges {
+            let image = try #require(NSImage.rendered(size: canvasSize) { rect in
+                NSColor.red.setFill()
+                rect.fill()
+            })
+            var layer = ImageEditorLayer.blank(name: "Feathered edge cut", size: canvasSize)
+            layer.image = image
+            layer.frame = canvasBounds
+            let model = ImageEditorViewModel(
+                sourceName: "feathered-cut-\(edge.name)-edge.png",
+                image: .transparent(size: canvasSize)
+            ) { _ in }
+            model.document.layers = [layer]
+            model.document.selectedLayerID = layer.id
+            model.document.selectedLayerIDs = [layer.id]
+            var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+            alpha[Int(edge.point.y) * Int(canvasSize.width) + Int(edge.point.x)] = .max
+            model.document.selection = .raster(
+                mask: ImageEditorSelectionMask(
+                    width: Int(canvasSize.width), height: Int(canvasSize.height), alpha: alpha
+                ),
+                bounds: canvasBounds
+            )
+            model.feather = 1
+            let originalProject = try model.projectData()
+            let sourceID = layer.id
+            let undoCount = model.undoStack.count
+            let pasteboard = isolatedPasteboard()
+            defer { pasteboard.clearContents() }
+
+            #expect(model.cutSelectionToClipboard(to: pasteboard), "The feathered \(edge.name) edge should cut")
+
+            let expectedFrame = CGRect(x: edge.point.x, y: edge.point.y, width: 1, height: 1)
+                .insetBy(dx: -3, dy: -3)
+                .intersection(canvasBounds)
+            #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == expectedFrame)
+            let copied = try #require(pasteboard.readImage())
+            let width = Int(expectedFrame.width)
+            let height = Int(expectedFrame.height)
+            let copiedPixels = try #require(imageEditorRGBABytes(copied, width: width, height: height))
+            let sourcePixels = try #require(imageEditorRGBABytes(
+                model.document.compositedImage(includingOnly: [sourceID]), width: 24, height: 20
+            ))
+            #expect((0..<width * height).contains { pixel in
+                let coverage = copiedPixels[pixel * 4 + 3]
+                return coverage > 0 && coverage < .max
+            }, "The feathered \(edge.name) edge should keep partial-alpha pixels inside the canvas")
+            for y in 0..<height {
+                for x in 0..<width {
+                    let coverage = copiedPixels[(y * width + x) * 4 + 3]
+                    let sourceOffset = ((y + Int(expectedFrame.minY)) * 24 + x + Int(expectedFrame.minX)) * 4
+                    #expect(Array(sourcePixels[sourceOffset..<(sourceOffset + 4)]) == [.max - coverage, 0, 0, .max - coverage],
+                            "The \(edge.name) edge source should retain complementary feather coverage")
+                }
+            }
+            #expect(model.undoStack.count == undoCount + 1)
+            let cutProject = try model.projectData()
+            model.undo()
+            #expect(try model.projectData() == originalProject)
+            model.redo()
+            #expect(try model.projectData() == cutProject)
+        }
+    }
+
     private func isolatedPasteboard() -> NSPasteboard {
         let pasteboard = NSPasteboard(name: .init("im.some.xomo.tests.selection-cut.\(UUID())"))
         pasteboard.clearContents()
