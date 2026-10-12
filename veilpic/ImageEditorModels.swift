@@ -1190,6 +1190,8 @@ enum ImageEditorColorLookupPreset: String, CaseIterable, Identifiable, Codable {
 }
 
 struct ImageEditorColorLookupCube: Equatable, Codable {
+    private static let maximumThreeDimensionalDimension = 65
+
     var name: String = ""
     var dimension: Int = 0
     var values: [Double] = []
@@ -1265,7 +1267,7 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
             && oneDimensionalValues.count == oneDimensionalSize * 3
         let threeDimensionalTableIsAbsent = dimension == 0 && values.isEmpty
         let threeDimensionalTableIsValid = dimension >= 2
-            && dimension <= 64
+            && dimension <= Self.maximumThreeDimensionalDimension
             && values.count == dimension * dimension * dimension * 3
         let hasOneTable = oneDimensionalTableIsValid || threeDimensionalTableIsValid
         let hasOnlySupportedTables = (oneDimensionalTableIsValid || oneDimensionalTableIsAbsent)
@@ -1324,7 +1326,7 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
                 continue
             }
             if upper == "LUT_3D_SIZE", parts.count >= 2, let parsedDimension = Int(parts[1]) {
-                guard (2...64).contains(parsedDimension), oneDimensionalSize == 0 else { return nil }
+                guard (2...maximumThreeDimensionalDimension).contains(parsedDimension), oneDimensionalSize == 0 else { return nil }
                 dimension = parsedDimension
                 continue
             }

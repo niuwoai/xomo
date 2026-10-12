@@ -1768,6 +1768,16 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func colorLookupCubeImportsCommon65PointThreeDimensionalLUT() throws {
+        let tableRows = String(repeating: "0 0 0\n", count: 65 * 65 * 65)
+        let cubeText = "LUT_3D_SIZE 65\n" + tableRows
+        let cube = try #require(ImageEditorColorLookupCube.parse(cubeText, fallbackName: "65-point.cube"))
+
+        #expect(cube.dimension == 65)
+        #expect(cube.values.count == 65 * 65 * 65 * 3)
+        #expect(cube.isValid)
+    }
+
     @Test func colorLookupCubeRejectsInvalidDomainAndMigratesLegacyProjectData() throws {
         let invalidCube = """
         LUT_3D_SIZE 2
