@@ -2192,6 +2192,7 @@
 "imageEditor.history.selectionPixelsScaleUp" = "選択ピクセルを 200% に拡大";
 "imageEditor.history.selectionPixelsScaleDown" = "選択ピクセルを 50% に縮小";
 "imageEditor.history.selectionPixelsScaleCustom" = "選択ピクセルを %@ に拡大・縮小";
+"imageEditor.history.selectionPixelsScaleCustomAtAnchor" = "選択ピクセルを %@ に拡大・縮小（基準点：%@）";
 "imageEditor.history.selectionFlipHorizontal" = "選択範囲を水平方向に反転";
 "imageEditor.history.selectionFlipVertical" = "選択範囲を垂直方向に反転";
 "imageEditor.history.selectionRotateClockwise" = "選択範囲を時計回りに回転";
@@ -2599,6 +2600,7 @@
 "imageEditor.status.selectionPixelsScaledUp" = "選択ピクセルを 200% に拡大しました";
 "imageEditor.status.selectionPixelsScaledDown" = "選択ピクセルを 50% に縮小しました";
 "imageEditor.status.selectionPixelsScaleCustom" = "選択ピクセルを %@ に拡大・縮小しました";
+"imageEditor.status.selectionPixelsScaleCustomAtAnchor" = "選択ピクセルを %@ に拡大・縮小しました（固定基準点：%@）";
 "imageEditor.status.selectionPixelScaleInvalid" = "1%～1,000% の範囲で入力してください。";
 "imageEditor.status.selectionFlippedHorizontal" = "選択範囲を水平方向に反転しました";
 "imageEditor.status.selectionFlippedVertical" = "選択範囲を垂直方向に反転しました";
@@ -3168,6 +3170,17 @@
 "imageEditor.action.selectionPixelScaleApply" = "拡大・縮小";
 "imageEditor.dialog.selectionPixelScaleTitle" = "選択ピクセルのカスタム倍率";
 "imageEditor.dialog.selectionPixelScaleMessage" = "1%～1,000% を入力してください。結果がピクセル予算を超える場合、操作は拒否されます。";
+"imageEditor.dialog.selectionPixelScalePercentage" = "倍率";
+"imageEditor.dialog.selectionPixelScaleAnchor" = "固定基準点";
+"imageEditor.dialog.selectionScaleAnchorTopLeft" = "左上";
+"imageEditor.dialog.selectionScaleAnchorTopCenter" = "上中央";
+"imageEditor.dialog.selectionScaleAnchorTopRight" = "右上";
+"imageEditor.dialog.selectionScaleAnchorCenterLeft" = "左中央";
+"imageEditor.dialog.selectionScaleAnchorCenter" = "中央";
+"imageEditor.dialog.selectionScaleAnchorCenterRight" = "右中央";
+"imageEditor.dialog.selectionScaleAnchorBottomLeft" = "左下";
+"imageEditor.dialog.selectionScaleAnchorBottomCenter" = "下中央";
+"imageEditor.dialog.selectionScaleAnchorBottomRight" = "右下";
 "imageEditor.action.selectionScaleUp" = "200% に拡大";
 "imageEditor.action.selectionScaleDown" = "50% に縮小";
 "imageEditor.action.selectionFitCanvas" = "キャンバスに合わせる";

@@ -260,12 +260,16 @@ extension ImageEditorSelection {
         return scaledWithGeometry(by: factor, canvasSize: canvasSize)?.selection
     }
 
-    func scaledWithGeometry(by factor: CGFloat, canvasSize: CGSize) -> ImageEditorSelectionScaleGeometry? {
+    func scaledWithGeometry(
+        by factor: CGFloat,
+        canvasSize: CGSize,
+        anchor: ImageEditorSelectionScaleAnchor = .center
+    ) -> ImageEditorSelectionScaleGeometry? {
         guard factor.isFinite, factor > 0,
               canvasSize.width.isFinite, canvasSize.height.isFinite,
               canvasSize.width > 0, canvasSize.height > 0,
               let mask = rasterizedMask(canvasSize: canvasSize),
-              let scaling = mask.scaledWithBounds(by: factor),
+              let scaling = mask.scaledWithBounds(by: factor, anchor: anchor.unitPoint),
               let bounds = scaling.mask.selectedBounds(in: canvasSize)
         else { return nil }
 
@@ -867,8 +871,18 @@ extension ImageEditorSelectionMask {
         sourcePixelBounds: CGRect,
         destinationPixelBounds: CGRect
     )? {
+        return scaledWithBounds(by: factor, anchor: CGPoint(x: 0.5, y: 0.5))
+    }
+
+    func scaledWithBounds(by factor: CGFloat, anchor: CGPoint) -> (
+        mask: ImageEditorSelectionMask,
+        sourcePixelBounds: CGRect,
+        destinationPixelBounds: CGRect
+    )? {
         guard width > 0, height > 0, alpha.count == width * height,
               factor.isFinite, factor > 0,
+              anchor.x.isFinite, anchor.y.isFinite,
+              (0...1).contains(anchor.x), (0...1).contains(anchor.y),
               let selectedBounds = selectedPixelBounds()
         else { return nil }
 
@@ -881,10 +895,12 @@ extension ImageEditorSelectionMask {
         else { return nil }
         let targetWidth = max(1, Int(proposedWidth))
         let targetHeight = max(1, Int(proposedHeight))
-        let centerX = CGFloat(selectedBounds.minX + selectedBounds.maxX) / 2
-        let centerY = CGFloat(selectedBounds.minY + selectedBounds.maxY) / 2
-        let proposedMinX = (centerX - CGFloat(targetWidth - 1) / 2).rounded(.toNearestOrAwayFromZero)
-        let proposedMinY = (centerY - CGFloat(targetHeight - 1) / 2).rounded(.toNearestOrAwayFromZero)
+        let sourceAnchorX = CGFloat(selectedBounds.minX) + CGFloat(selectionWidth - 1) * anchor.x
+        let sourceAnchorY = CGFloat(selectedBounds.minY) + CGFloat(selectionHeight - 1) * anchor.y
+        let proposedMinX = (sourceAnchorX - CGFloat(targetWidth - 1) * anchor.x)
+            .rounded(.toNearestOrAwayFromZero)
+        let proposedMinY = (sourceAnchorY - CGFloat(targetHeight - 1) * anchor.y)
+            .rounded(.toNearestOrAwayFromZero)
         guard proposedMinX.isFinite, proposedMinY.isFinite,
               proposedMinX > CGFloat(Int.min), proposedMinY > CGFloat(Int.min),
               proposedMinX < CGFloat(Int.max), proposedMinY < CGFloat(Int.max)

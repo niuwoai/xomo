@@ -1,5 +1,35 @@
 import AppKit
 
+enum ImageEditorSelectionScaleAnchor: Int, CaseIterable {
+    case topLeft
+    case topCenter
+    case topRight
+    case centerLeft
+    case center
+    case centerRight
+    case bottomLeft
+    case bottomCenter
+    case bottomRight
+
+    var unitPoint: CGPoint {
+        CGPoint(x: CGFloat(rawValue % 3) / 2, y: CGFloat(rawValue / 3) / 2)
+    }
+
+    var titleKey: String {
+        switch self {
+        case .topLeft: "imageEditor.dialog.selectionScaleAnchorTopLeft"
+        case .topCenter: "imageEditor.dialog.selectionScaleAnchorTopCenter"
+        case .topRight: "imageEditor.dialog.selectionScaleAnchorTopRight"
+        case .centerLeft: "imageEditor.dialog.selectionScaleAnchorCenterLeft"
+        case .center: "imageEditor.dialog.selectionScaleAnchorCenter"
+        case .centerRight: "imageEditor.dialog.selectionScaleAnchorCenterRight"
+        case .bottomLeft: "imageEditor.dialog.selectionScaleAnchorBottomLeft"
+        case .bottomCenter: "imageEditor.dialog.selectionScaleAnchorBottomCenter"
+        case .bottomRight: "imageEditor.dialog.selectionScaleAnchorBottomRight"
+        }
+    }
+}
+
 enum ImageEditorScalePercentage {
     static let allowedRange = 1.0...1_000.0
 
@@ -131,7 +161,10 @@ extension ImageEditorViewModel {
         )
     }
 
-    func scaleSelectedPixels(toPercent percentage: Double) {
+    func scaleSelectedPixels(
+        toPercent percentage: Double,
+        anchor: ImageEditorSelectionScaleAnchor = .center
+    ) {
         guard canScaleSelectedPixels else { return }
         guard ImageEditorScalePercentage.isValid(percentage) else {
             statusText = L10n.text("imageEditor.status.selectionPixelScaleInvalid")
@@ -139,10 +172,25 @@ extension ImageEditorViewModel {
         }
 
         let formattedPercentage = ImageEditorScalePercentage.formatted(percentage)
+        let historyTitle: String
+        let statusText: String
+        if anchor == .center {
+            historyTitle = L10n.format("imageEditor.history.selectionPixelsScaleCustom", formattedPercentage)
+            statusText = L10n.format("imageEditor.status.selectionPixelsScaleCustom", formattedPercentage)
+        } else {
+            let anchorTitle = L10n.text(anchor.titleKey)
+            historyTitle = L10n.format(
+                "imageEditor.history.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
+            )
+            statusText = L10n.format(
+                "imageEditor.status.selectionPixelsScaleCustomAtAnchor", formattedPercentage, anchorTitle
+            )
+        }
         scaleSelectedPixels(
             by: CGFloat(percentage / 100),
-            historyTitle: L10n.format("imageEditor.history.selectionPixelsScaleCustom", formattedPercentage),
-            statusText: L10n.format("imageEditor.status.selectionPixelsScaleCustom", formattedPercentage)
+            anchor: anchor,
+            historyTitle: historyTitle,
+            statusText: statusText
         )
     }
 
@@ -155,7 +203,27 @@ extension ImageEditorViewModel {
         let percentageField = NSTextField(string: "100")
         percentageField.frame = CGRect(x: 0, y: 0, width: 240, height: 24)
         percentageField.setAccessibilityIdentifier("image-editor-selection-pixel-scale-percentage")
-        alert.accessoryView = percentageField
+        let anchorPicker = NSPopUpButton(frame: CGRect(x: 0, y: 0, width: 240, height: 26), pullsDown: false)
+        for anchor in ImageEditorSelectionScaleAnchor.allCases {
+            anchorPicker.addItem(withTitle: L10n.text(anchor.titleKey))
+            anchorPicker.lastItem?.tag = anchor.rawValue
+        }
+        anchorPicker.selectItem(withTag: ImageEditorSelectionScaleAnchor.center.rawValue)
+        anchorPicker.setAccessibilityIdentifier("image-editor-selection-pixel-scale-anchor")
+        let accessoryStack = NSStackView(views: [
+            scaleDialogRow(
+                label: L10n.text("imageEditor.dialog.selectionPixelScalePercentage"),
+                control: percentageField
+            ),
+            scaleDialogRow(
+                label: L10n.text("imageEditor.dialog.selectionPixelScaleAnchor"),
+                control: anchorPicker
+            )
+        ])
+        accessoryStack.orientation = .vertical
+        accessoryStack.alignment = .leading
+        accessoryStack.spacing = 8
+        alert.accessoryView = accessoryStack
         alert.addButton(withTitle: L10n.text("imageEditor.action.selectionPixelScaleApply"))
         alert.addButton(withTitle: L10n.text("button.cancel"))
         alert.window.initialFirstResponder = percentageField
@@ -165,7 +233,16 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionPixelScaleInvalid")
             return
         }
-        scaleSelectedPixels(toPercent: percentage)
+        let anchor = ImageEditorSelectionScaleAnchor(rawValue: anchorPicker.selectedTag()) ?? .center
+        scaleSelectedPixels(toPercent: percentage, anchor: anchor)
+    }
+
+    private func scaleDialogRow(label: String, control: NSView) -> NSStackView {
+        let row = NSStackView(views: [NSTextField(labelWithString: label), control])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 12
+        return row
     }
 
     private func flipSelectedPixels(horizontally: Bool) {
@@ -307,11 +384,20 @@ extension ImageEditorViewModel {
         )
     }
 
-    private func scaleSelectedPixels(by factor: CGFloat, historyTitle: String, statusText: String) {
+    private func scaleSelectedPixels(
+        by factor: CGFloat,
+        anchor: ImageEditorSelectionScaleAnchor = .center,
+        historyTitle: String,
+        statusText: String
+    ) {
         guard canScaleSelectedPixels, factor.isFinite, factor > 0 else { return }
         finishActiveCanvasEditForNewCommand()
         guard let selection = document.selection,
-              let scaling = selection.scaledWithGeometry(by: factor, canvasSize: document.canvasSize)
+              let scaling = selection.scaledWithGeometry(
+                by: factor,
+                canvasSize: document.canvasSize,
+                anchor: anchor
+              )
         else {
             self.statusText = L10n.text("imageEditor.status.operationFailed")
             return

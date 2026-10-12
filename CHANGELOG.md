@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1804 - 2026-10-12
+
+### Added
+- Custom selected-pixel scaling now offers a nine-point fixed anchor; center remains the default, and non-center operations record the chosen anchor in History and status.
+
+### Verification
+- `ImageEditorSelectionPixelTransformTests` 22/22; release contract 10/30 assertions, CLI release contract 7/24, product-overview archive contract 3/30. Localized `.strings` files pass `plutil -lint`. No GUI launch or `/Applications` installation was performed for this small version; the next full build/install gate remains rc1840.
+
 ## 2.12.0-rc1803 - 2026-10-12
 
 ### Added

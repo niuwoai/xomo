@@ -270,6 +270,61 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(try viewModel.projectData() == scaledProject)
     }
 
+    @Test func scaleGeometryKeepsEverySelectedNinePointAnchorFixed() throws {
+        let canvasSize = CGSize(width: 8, height: 8)
+        let selection = ImageEditorSelection.rectangle(CGRect(x: 3, y: 3, width: 2, height: 2))
+
+        for anchor in ImageEditorSelectionScaleAnchor.allCases {
+            let geometry = try #require(selection.scaledWithGeometry(
+                by: 2,
+                canvasSize: canvasSize,
+                anchor: anchor
+            ))
+            let unit = anchor.unitPoint
+            let sourceAnchor = CGPoint(
+                x: geometry.sourceCanvasBounds.minX + (geometry.sourceCanvasBounds.width - 1) * unit.x,
+                y: geometry.sourceCanvasBounds.minY + (geometry.sourceCanvasBounds.height - 1) * unit.y
+            )
+            let destinationAnchor = CGPoint(
+                x: geometry.destinationCanvasBounds.minX
+                    + (geometry.destinationCanvasBounds.width - 1) * unit.x,
+                y: geometry.destinationCanvasBounds.minY
+                    + (geometry.destinationCanvasBounds.height - 1) * unit.y
+            )
+
+            #expect(destinationAnchor == sourceAnchor, "The \(anchor) reference point must remain fixed")
+        }
+    }
+
+    @Test func customScaleAtTopLeftAnchorCommitsOneUndoRedoTransaction() throws {
+        let canvasSize = CGSize(width: 6, height: 6)
+        let viewModel = try scaledSelectionViewModel(
+            canvasSize: canvasSize,
+            selectionRect: CGRect(x: 2, y: 2, width: 2, height: 2),
+            feather: 0,
+            sourceName: "custom-scale-anchor.png"
+        )
+        let originalProject = try viewModel.projectData()
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.scaleSelectedPixels(toPercent: 200, anchor: .topLeft)
+
+        let scaledProject = try viewModel.projectData()
+        let scaledBounds = try #require(viewModel.document.selection?.effectiveSelectedBounds(in: canvasSize))
+        #expect(scaledBounds == CGRect(x: 2, y: 2, width: 4, height: 4))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.format(
+            "imageEditor.history.selectionPixelsScaleCustomAtAnchor",
+            ImageEditorScalePercentage.formatted(200),
+            L10n.text(ImageEditorSelectionScaleAnchor.topLeft.titleKey)
+        ))
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == scaledProject)
+    }
+
     @Test(arguments: [0.0, 1_000.1, Double.nan, Double.infinity])
     func invalidCustomScaleLeavesDocumentUntouched(percentage: Double) throws {
         let viewModel = try scaledSelectionViewModel(

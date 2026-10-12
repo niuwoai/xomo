@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1803
+> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1804
+
+rc1804 为「编辑 → 缩放选区像素 → 自定义比例」增加九宫格固定参考点。中心仍为默认；固定角点或边缘中点后缩放，选区与像素内容共用同一画布空间变换，撤销历史会记录所选参考点。三语界面同步更新。RC1800 周期门槛的全量测试与本机 GUI/CLI 构建及安装冒烟状态见[质量门槛记录](docs/reviews/2026-10-12-rc1800-local-quality-gate.md)；签名信任系统范围异常仍未解决，未进行新的公证或公开发布。
 
 rc1803 在「编辑 → 缩放选区像素」增加自定义百分比入口，支持系统本地化小数格式，比例非法时不改文档；成功操作继续使用单步 Undo/Redo，超出图层像素预算时整体拒绝。rc1800 的完整测试、通用 GUI/CLI Release 构建与 `/Applications` 覆盖安装已执行：3,753 项 GUI 测试、2 项 CLI 测试通过；安装版实测启动并完成 150% 选区像素缩放及 Undo/Redo。当前 `/Applications/Xomo.app` 为 rc1803/build1803，原 rc1760 已保留在 `/private/tmp/xomo-rc1803-full-gate/Backup/`。但本机最终代码签名读回异常：Calculator、Xcode 与 Xomo 的系统信任验证均失败，不能据此宣称 Gatekeeper/公证通过；未进行公证及新的 GitHub、OSS 或 Sparkle 发布。完整证据见[rc1800 本机质量门槛记录](docs/reviews/2026-10-12-rc1800-local-quality-gate.md)。下一完整门槛为 rc1840。
 
