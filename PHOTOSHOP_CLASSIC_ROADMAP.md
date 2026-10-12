@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-12）
 
+- rc1803 为「编辑 → 缩放选区像素」增加可输入百分比的实际编辑入口（1%–1,000%），支持系统小数分隔符并沿用统一画布变换、像素预算拒绝和单事务 Undo/Redo。rc1800 的 40 版本安装验收仍阻塞：登录钥匙串当前没有可枚举的有效 Developer ID 身份，系统与第三方签名读回也异常；不安装未验证制品、不绕过 Gatekeeper。验证记录见[rc1803 记录](docs/reviews/2026-10-12-rc1803-custom-selection-pixel-scale.md)。
 - rc1802 补充选区像素缩放在画布左/右/上/下四边缘的硬选区覆盖，并验证四个边缘的羽化半透明像素仍保留在画布外；`ImageEditorSelectionPixelTransformTests` 17/17、发布合同 10/30、CLI 合同 7/24、概览归档合同 3/30 通过。rc1800 的 Release 日志记录归档打包前 app strict 验签、公证、staple 和 DMG Gatekeeper 通过；当前重读归档、staged app 与 DMG 内 app 均被 strict codesign 判为签名/代码已修改，Finder 的系统签名校验同时返回 `CSSMERR_TP_NOT_TRUSTED`，所以 `/Applications` 未替换。需先调查当前制品与本机信任服务读回差异，不绕过安全策略。Figma 范围不扩张。
 - rc1800 新增选区像素 50%/200% 缩放：以预乘 RGBA 双线性采样把选中像素写入缩放后的蒙版覆盖，多个像素层共用画布空间缩放映射，选区与像素在一个 Undo/Redo 事务中提交。rc1801 修复贴画布边缘放大时目标像素被裁掉的问题，并实测后续扩画布可重新显露像素。选区变换 suite 15/15、完整测试 3,748 项通过；Release 日志与当前 strict 签名重读结果存在差异，安装门槛尚未关闭。Figma 范围不扩张。
 - rc1799 补充缩放/偏移像素图层上的 Smart Filter 蒙版笔刷选区坐标回归：14 项蒙版测试、发布/CLI/概览契约通过；不改生产算法，锁定画布选区到图层像素的行为。完整 Release/桌面门槛仍为 rc1800，详见[验证记录](docs/reviews/2026-10-10-rc1799-scaled-smart-filter-mask-selection.md)。

@@ -1,5 +1,55 @@
 import AppKit
 
+enum ImageEditorScalePercentage {
+    static let allowedRange = 1.0...1_000.0
+
+    static func parse(_ text: String, locale: Locale = .current) -> Double? {
+        var value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasSuffix("%") {
+            value.removeLast()
+            value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        guard !value.isEmpty else { return nil }
+
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        let separator = formatter.decimalSeparator ?? "."
+        var normalized = ""
+        var foundDecimalSeparator = false
+        for character in value {
+            if let scalar = character.unicodeScalars.first,
+               character.unicodeScalars.count == 1,
+               scalar.value >= 48, scalar.value <= 57 {
+                normalized.unicodeScalars.append(scalar)
+            } else if String(character) == separator, !foundDecimalSeparator {
+                normalized.append(".")
+                foundDecimalSeparator = true
+            } else {
+                return nil
+            }
+        }
+
+        guard let percentage = Double(normalized), percentage.isFinite,
+              allowedRange.contains(percentage)
+        else { return nil }
+        return percentage
+    }
+
+    static func isValid(_ percentage: Double) -> Bool {
+        percentage.isFinite && allowedRange.contains(percentage)
+    }
+
+    static func formatted(_ percentage: Double, locale: Locale = .current) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return "\(formatter.string(from: NSNumber(value: percentage)) ?? String(percentage))%"
+    }
+}
+
 extension ImageEditorViewModel {
     var canScaleSelectedPixels: Bool {
         canFlipSelectedPixels
@@ -79,6 +129,43 @@ extension ImageEditorViewModel {
             historyKey: "imageEditor.history.selectionPixelsScaleDown",
             statusKey: "imageEditor.status.selectionPixelsScaledDown"
         )
+    }
+
+    func scaleSelectedPixels(toPercent percentage: Double) {
+        guard canScaleSelectedPixels else { return }
+        guard ImageEditorScalePercentage.isValid(percentage) else {
+            statusText = L10n.text("imageEditor.status.selectionPixelScaleInvalid")
+            return
+        }
+
+        let formattedPercentage = ImageEditorScalePercentage.formatted(percentage)
+        scaleSelectedPixels(
+            by: CGFloat(percentage / 100),
+            historyTitle: L10n.format("imageEditor.history.selectionPixelsScaleCustom", formattedPercentage),
+            statusText: L10n.format("imageEditor.status.selectionPixelsScaleCustom", formattedPercentage)
+        )
+    }
+
+    func presentSelectedPixelScaleDialog() {
+        guard canScaleSelectedPixels else { return }
+
+        let alert = NSAlert()
+        alert.messageText = L10n.text("imageEditor.dialog.selectionPixelScaleTitle")
+        alert.informativeText = L10n.text("imageEditor.dialog.selectionPixelScaleMessage")
+        let percentageField = NSTextField(string: "100")
+        percentageField.frame = CGRect(x: 0, y: 0, width: 240, height: 24)
+        percentageField.setAccessibilityIdentifier("image-editor-selection-pixel-scale-percentage")
+        alert.accessoryView = percentageField
+        alert.addButton(withTitle: L10n.text("imageEditor.action.selectionPixelScaleApply"))
+        alert.addButton(withTitle: L10n.text("button.cancel"))
+        alert.window.initialFirstResponder = percentageField
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard let percentage = ImageEditorScalePercentage.parse(percentageField.stringValue) else {
+            statusText = L10n.text("imageEditor.status.selectionPixelScaleInvalid")
+            return
+        }
+        scaleSelectedPixels(toPercent: percentage)
     }
 
     private func flipSelectedPixels(horizontally: Bool) {
@@ -213,12 +300,20 @@ extension ImageEditorViewModel {
     }
 
     private func scaleSelectedPixels(by factor: CGFloat, historyKey: String, statusKey: String) {
+        scaleSelectedPixels(
+            by: factor,
+            historyTitle: L10n.text(historyKey),
+            statusText: L10n.text(statusKey)
+        )
+    }
+
+    private func scaleSelectedPixels(by factor: CGFloat, historyTitle: String, statusText: String) {
         guard canScaleSelectedPixels, factor.isFinite, factor > 0 else { return }
         finishActiveCanvasEditForNewCommand()
         guard let selection = document.selection,
               let scaling = selection.scaledWithGeometry(by: factor, canvasSize: document.canvasSize)
         else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
+            self.statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
         let scaledSelection = scaling.selection
@@ -244,7 +339,7 @@ extension ImageEditorViewModel {
                 sourceCanvasBounds: scaling.sourceCanvasBounds,
                 destinationCanvasBounds: scaling.destinationCanvasBounds
             ) else {
-                statusText = L10n.text("imageEditor.status.operationFailed")
+                self.statusText = L10n.text("imageEditor.status.operationFailed")
                 return
             }
             if result.pixelDataChanged {
@@ -254,7 +349,7 @@ extension ImageEditorViewModel {
         }
 
         guard pixelDataChanged || selectionCoverageChanged else {
-            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            self.statusText = L10n.text("imageEditor.status.selectionUnchanged")
             return
         }
         var updatedDocument = document
@@ -262,8 +357,8 @@ extension ImageEditorViewModel {
         updatedDocument.selection = selectionCoverageChanged ? scaledSelection : selection
         pushUndo()
         document = updatedDocument
-        appendHistory(L10n.text(historyKey))
-        statusText = L10n.text(statusKey)
+        appendHistory(historyTitle)
+        self.statusText = statusText
     }
 
     private func flippedLayer(

@@ -2191,6 +2191,7 @@
 "imageEditor.history.selectionPixelsRotate180" = "Rotate Selected Pixels 180 Degrees";
 "imageEditor.history.selectionPixelsScaleUp" = "Scale Selected Pixels to 200%";
 "imageEditor.history.selectionPixelsScaleDown" = "Scale Selected Pixels to 50%";
+"imageEditor.history.selectionPixelsScaleCustom" = "Scale Selected Pixels to %@";
 "imageEditor.history.selectionFlipHorizontal" = "Flip Selection Horizontal";
 "imageEditor.history.selectionFlipVertical" = "Flip Selection Vertical";
 "imageEditor.history.selectionRotateClockwise" = "Rotate Selection Clockwise";
@@ -2597,6 +2598,8 @@
 "imageEditor.status.selectionPixelsRotated180" = "Rotated selected pixels 180 degrees";
 "imageEditor.status.selectionPixelsScaledUp" = "Scaled selected pixels to 200%";
 "imageEditor.status.selectionPixelsScaledDown" = "Scaled selected pixels to 50%";
+"imageEditor.status.selectionPixelsScaleCustom" = "Scaled selected pixels to %@";
+"imageEditor.status.selectionPixelScaleInvalid" = "Enter a percentage from 1% to 1,000%.";
 "imageEditor.status.selectionFlippedHorizontal" = "Selection flipped horizontally";
 "imageEditor.status.selectionFlippedVertical" = "Selection flipped vertically";
 "imageEditor.status.selectionRotatedClockwise" = "Selection rotated clockwise";
@@ -3161,6 +3164,10 @@
 "imageEditor.action.rotateSelectedPixels180" = "Rotate 180°";
 "imageEditor.action.scaleSelectedPixelsUp" = "Scale to 200%";
 "imageEditor.action.scaleSelectedPixelsDown" = "Scale to 50%";
+"imageEditor.action.scaleSelectedPixelsCustom" = "Custom Scale…";
+"imageEditor.action.selectionPixelScaleApply" = "Scale";
+"imageEditor.dialog.selectionPixelScaleTitle" = "Custom Selected Pixel Scale";
+"imageEditor.dialog.selectionPixelScaleMessage" = "Enter a percentage from 1% to 1,000%. The operation is rejected if the result exceeds the pixel budget.";
 "imageEditor.action.selectionScaleUp" = "Scale to 200%";
 "imageEditor.action.selectionScaleDown" = "Scale to 50%";
 "imageEditor.action.selectionFitCanvas" = "Fit to Canvas";

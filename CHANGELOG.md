@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc1803 - 2026-10-12
+
+### Added
+- Added a localized custom percentage command for scaling selected pixels, with input validation and the existing atomic Undo/Redo workflow.
+
 ## 2.12.0-rc1802 - 2026-10-12
 
 ### Tests

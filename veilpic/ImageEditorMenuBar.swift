@@ -247,6 +247,7 @@ extension ImageEditorView {
             rotateSelectedPixels180: { viewModel.rotateSelectedPixels180() },
             scaleSelectedPixelsUp: { viewModel.scaleSelectedPixelsUp() },
             scaleSelectedPixelsDown: { viewModel.scaleSelectedPixelsDown() },
+            presentSelectedPixelScaleDialog: { viewModel.presentSelectedPixelScaleDialog() },
             canFlipSelectedPixels: viewModel.canFlipSelectedPixels,
             canRotateSelectedPixelsQuarterTurn: viewModel.canRotateSelectedPixelsQuarterTurn,
             canScaleSelectedPixels: viewModel.canScaleSelectedPixels,

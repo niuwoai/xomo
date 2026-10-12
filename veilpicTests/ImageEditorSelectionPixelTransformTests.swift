@@ -226,6 +226,68 @@ struct ImageEditorSelectionPixelTransformTests {
         #expect(pixel(from: revealedPixels, x: revealedWidth - 1, y: 1, width: revealedWidth)[3] > 0)
     }
 
+    @Test func customScalePercentageParsesLocalizedDecimalsAndRejectsInvalidInput() {
+        #expect(ImageEditorScalePercentage.parse("150%", locale: Locale(identifier: "en_US")) == 150)
+        #expect(ImageEditorScalePercentage.parse("12,5 %", locale: Locale(identifier: "de_DE")) == 12.5)
+        #expect(ImageEditorScalePercentage.parse("1,000%", locale: Locale(identifier: "en_US")) == nil)
+
+        for invalidInput in ["", "0", "-25", "1,001", "nan", "1e2", "50%%"] {
+            #expect(ImageEditorScalePercentage.parse(invalidInput, locale: Locale(identifier: "en_US")) == nil)
+        }
+    }
+
+    @Test func customScaleScalesSelectedPixelsInOneUndoRedoTransaction() throws {
+        let canvasSize = CGSize(width: 6, height: 6)
+        let viewModel = try scaledSelectionViewModel(
+            canvasSize: canvasSize,
+            selectionRect: CGRect(x: 2, y: 2, width: 2, height: 2),
+            feather: 0,
+            sourceName: "custom-scale.png"
+        )
+        let originalProject = try viewModel.projectData()
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.scaleSelectedPixels(toPercent: 150)
+
+        let scaledProject = try viewModel.projectData()
+        let scaledBounds = try #require(
+            viewModel.document.selection?.effectiveSelectedBounds(in: canvasSize)
+        )
+        #expect(scaledBounds.size == CGSize(width: 3, height: 3))
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.format(
+            "imageEditor.history.selectionPixelsScaleCustom",
+            ImageEditorScalePercentage.formatted(150)
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.selectionPixelsScaleCustom",
+            ImageEditorScalePercentage.formatted(150)
+        ))
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProject)
+        viewModel.redo()
+        #expect(try viewModel.projectData() == scaledProject)
+    }
+
+    @Test(arguments: [0.0, 1_000.1, Double.nan, Double.infinity])
+    func invalidCustomScaleLeavesDocumentUntouched(percentage: Double) throws {
+        let viewModel = try scaledSelectionViewModel(
+            canvasSize: CGSize(width: 6, height: 6),
+            selectionRect: CGRect(x: 2, y: 2, width: 2, height: 2),
+            feather: 0,
+            sourceName: "invalid-custom-scale.png"
+        )
+        let originalProject = try viewModel.projectData()
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.scaleSelectedPixels(toPercent: percentage)
+
+        #expect(try viewModel.projectData() == originalProject)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPixelScaleInvalid"))
+    }
+
     @Test func scalingSelectionAtEveryCanvasEdgeRetainsGeneratedPixelsOutsideCanvas() throws {
         let canvasSize = CGSize(width: 6, height: 6)
         let edgeSelections: [(name: String, rect: CGRect, outside: (CGRect) -> Bool)] = [
