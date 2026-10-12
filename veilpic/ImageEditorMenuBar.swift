@@ -1856,7 +1856,7 @@ extension ImageEditorView {
                 }
             }
             Menu(L10n.text("imageEditor.menu.window.options.size")) {
-                ForEach([1, 4, 12, 24, 48, 96], id: \.self) { size in
+                ForEach(ImageEditorBrushSizePresets.values, id: \.self) { size in
                     Button(L10n.format("imageEditor.option.sizePreset", size)) {
                         viewModel.applyOptionsBrushSizePreset(size)
                     }

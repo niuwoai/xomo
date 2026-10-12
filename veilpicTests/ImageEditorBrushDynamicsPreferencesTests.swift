@@ -13,6 +13,14 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorBrushDynamicsPreferencesTests {
+    @Test func brushSizePresetsCoverTheExpandedRangeInUsefulSteps() {
+        #expect(ImageEditorBrushSizePresets.values == [1, 4, 12, 24, 48, 96, 192, 384, 512])
+        #expect(ImageEditorBrushSizePresets.values.allSatisfy {
+            CGFloat($0) >= ImageEditorBrushSizeLimits.minimum
+                && CGFloat($0) <= ImageEditorBrushSizeLimits.maximum
+        })
+    }
+
     @Test func preferencesRoundTripClampAndRecoverFromInvalidData() {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

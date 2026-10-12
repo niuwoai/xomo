@@ -8,7 +8,7 @@ require 'open3'
 require 'tmpdir'
 
 class XomoCLIReleaseBuildTest < Minitest::Test
-  VERSION = '2.12.0-rc1819'
+  VERSION = '2.12.0-rc1820'
   SCRIPT = File.expand_path('build_xomo_cli_release.sh', __dir__)
 
   def test_uses_reported_output_instead_of_stale_legacy_binary

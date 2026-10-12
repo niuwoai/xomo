@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1820 - 2026-10-13
+
+### Changed
+- 扩展“窗口 → 选项 → 尺寸”快捷预设，新增 192、384、512 px 大画笔档位；尺寸清单集中定义并复用选项栏设置入口。
+
+### Verification
+- `ImageEditorScopeTests` 199/199、`ImageEditorBrushDynamicsPreferencesTests` 38/38 通过；发布合同 10/30、CLI Release Build 合同 7/24、产品概览归档合同 3/30 和隔离运行器合同通过。新增预设表边界与菜单生产接线回归覆盖 192/384/512 px。完整构建、全量测试、桌面冒烟与本机安装仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1819 - 2026-10-13
 
 ### Changed

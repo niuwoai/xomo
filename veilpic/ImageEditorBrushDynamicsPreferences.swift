@@ -17,6 +17,10 @@ enum ImageEditorBrushSizeLimits {
     }
 }
 
+enum ImageEditorBrushSizePresets {
+    static let values = [1, 4, 12, 24, 48, 96, 192, 384, 512]
+}
+
 enum ImageEditorBrushPressureCurve: String, Codable, CaseIterable {
     case linear
     case soft

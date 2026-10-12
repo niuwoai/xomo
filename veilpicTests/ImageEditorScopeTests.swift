@@ -1166,6 +1166,33 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func largeBrushSizePresetsAreWiredToOptionsMenu() throws {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(
+            source.range(of: "Menu(L10n.text(\"imageEditor.menu.window.options.size\"))")
+        )
+        let menuEnd = try #require(
+            source[menuStart.upperBound...].range(
+                of: "Menu(L10n.text(\"imageEditor.menu.window.options.opacity\"))"
+            )
+        )
+        let sizeMenuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+        #expect(sizeMenuSource.contains("ForEach(ImageEditorBrushSizePresets.values"))
+        #expect(sizeMenuSource.contains("viewModel.applyOptionsBrushSizePreset(size)"))
+
+        for size in [192, 384, 512] {
+            viewModel.applyOptionsBrushSizePreset(size)
+            #expect(viewModel.brushSize == CGFloat(size))
+            #expect(viewModel.statusText == viewModel.optionsPanelSummaryText)
+        }
+    }
+
+    @MainActor
     @Test func classicBrushHardnessShortcutsClampAndUpdateOptionsStatus() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
