@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1811
+> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1812
+
+rc1812 为 P3 导入与像素选区编辑闭环补充羽化变体：半透明边缘覆盖经移动、撤销/重做、项目重开和 sRGB PNG 导出保持一致。`ImageEditorP3PixelEditExportWorkflowTests` 2/2 及发布、CLI、概览和测试运行器合同通过；完整构建、全量测试、桌面冒烟与可恢复安装门槛仍为 rc1840。详见[rc1812 验证记录](docs/reviews/2026-10-12-rc1812-feathered-p3-pixel-workflow.md)。
 
 rc1811 针对 Sample All Layers 涂抹：每个拖动段的 stroke ROI 蒙版只生成一次，并复用于活动层和独立采样源，避免重复栅格化。涂抹笔刷测试 8/8、可见合成取样/仅写活动层/History/Undo/Redo 工作流回归 1/1，以及发布/CLI/概览/隔离测试器合同均通过。透明活动层的全帧 source-over 对照与当前 straight-RGBA 混合语义不等价，已从测试中移除；本版没有量化整体性能收益。详见[rc1811 验证记录](docs/reviews/2026-10-12-rc1811-smudge-sample-mask-reuse.md)。完整构建、冒烟与安装门槛为 rc1840。
 
@@ -118,7 +120,7 @@ Xomo 是面向 macOS 的经典图像编辑器，优先保证像素选区、绘�
 
 - 阶段 A 快速蒙版已完成；后续改动须维护常见选区来源、预览、画笔/橡皮编辑、退出及 Undo/Redo 工作流。
 - 像素选区移动已有软覆盖、羽化、缩放/越界图层、预览复用、Undo 边界和项目重载回归；窄内核测试不能替代真实素材完整任务。
-- `/Applications/Xomo.app` 当前实读 Info.plist 为 `2.12.0-rc1803` / build `1803`。2026-10-12 对该安装版执行 `codesign --verify --deep --strict` 仍返回 invalid signature；rc1800 门槛记录指出同机 Calculator、Xcode、Xomo 的系统信任验证异常，因此不能把此结果归因于 rc1811，也不绕过系统校验。rc1811 尚未覆盖安装；下一完整构建、全量回归、桌面冒烟与可恢复安装门槛为 rc1840。
+- `/Applications/Xomo.app` 当前实读 Info.plist 为 `2.12.0-rc1803` / build `1803`。2026-10-12 对该安装版执行 `codesign --verify --deep --strict` 仍返回 invalid signature；rc1800 门槛记录指出同机 Calculator、Xcode、Xomo 的系统信任验证异常，因此不能把此结果归因于 rc1812，也不绕过系统校验。rc1812 尚未覆盖安装；下一完整构建、全量回归、桌面冒烟与可恢复安装门槛为 rc1840。
 - 历史版本说明只描述当时状态，不能覆盖当前门槛或安装版状态。rc1728/rc1729 门槛证据见[全量门槛审查](docs/reviews/2026-10-07-rc1728-full-gate.md)。
 
 rc1727 修正 LayerComp 测试拆分后的源码读取边界，保留四项旧键盘断言，增加五项调用接线检查与真实搜索框 Coordinator 的八场景单测；不修改生产交互逻辑。版本契约 10 项／30 断言、双架构测试编译／严格签名、九相关套件 373 方法／885 次运行和新增八个内部场景通过；真实 Universal CLI 与两项 Release CLI 测试通过，不代表原生全量或 GUI 验收。仍是同一 rc1720 完整门槛，迟到数值／同属性会话、真实光标、全量、正常候选与可恢复安装未完成，安装 rc1680，不扩张 Figma。见[验证记录](docs/reviews/2026-10-04-rc1727-layer-comp-search.md)。

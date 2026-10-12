@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1812 - 2026-10-12
+
+### Changed
+- 羽化选区的 P3 像素编辑闭环新增集成回归，覆盖选区移动、撤销/重做、项目保存重开与 sRGB PNG 导出，锁定软边覆盖在整条工作流中的一致性。
+
+### Verification
+- `ImageEditorP3PixelEditExportWorkflowTests` 2/2 通过：羽化覆盖包含半透明边缘，移动、Undo/Redo、项目重开后像素一致；重开项目导出 sRGB PNG 与当前合成像素逐字节一致，导出不新增历史。发布合同 10/30、CLI 发布构建合同 7/24、概览归档合同 3/30、隔离测试器合同及 `git diff --check` 均通过。rc1840 仍为下一完整构建、全量测试、桌面冒烟和可恢复安装门槛。
+
 ## 2.12.0-rc1811 - 2026-10-12
 
 ### Performance

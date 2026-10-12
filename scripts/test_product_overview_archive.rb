@@ -40,6 +40,6 @@ class ProductOverviewArchiveTest < Minitest::Test
     assert_includes overview, '2.12.0-rc1803'
     assert_includes overview, 'build `1803`'
     assert_includes overview, '下一完整构建、全量回归、桌面冒烟与可恢复安装门槛为 rc1840'
-    assert_includes overview, 'rc1811 尚未覆盖安装'
+    assert_includes overview, 'rc1812 尚未覆盖安装'
   end
 end

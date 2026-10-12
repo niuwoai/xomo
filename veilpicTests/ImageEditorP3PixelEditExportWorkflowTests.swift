@@ -7,6 +7,62 @@ import UniformTypeIdentifiers
 
 @MainActor
 struct ImageEditorP3PixelEditExportWorkflowTests {
+    @Test func featheredP3SelectionMoveUndoRedoProjectReloadAndPNGExportStayConsistent() throws {
+        let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let source = try #require(NSImage(data: p3PNGData(colorSpace: sourceSpace)))
+        let model = ImageEditorViewModel(
+            sourceName: "p3-feathered-selection-workflow.png",
+            image: .transparent(size: CGSize(width: 1, height: 1))
+        ) { _ in }
+        model.loadExternalImageDocument(
+            XomoExternalImageDocumentFactory.make(sourceName: "p3-feathered-selection-workflow.png", image: source)
+        )
+        model.selectedTool = .move
+        model.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 2, height: 2))
+        model.featherSelection(radius: 2)
+
+        let featheredSelection = try #require(model.document.selection)
+        let featherMask = try #require(featheredSelection.rasterMask)
+        #expect(featherMask.alpha.contains { $0 > 0 && $0 < 255 })
+        let featheredProject = try model.projectData()
+        let beforeMove = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 8, height: 8))
+
+        #expect(model.beginPixelSelectionMove(at: CGPoint(x: 2.5, y: 2.5)))
+        model.updatePixelSelectionMove(by: CGSize(width: 2, height: 1))
+        model.finishPixelSelectionMove()
+        let movedProject = try model.projectData()
+        let movedPixels = try #require(imageEditorRGBABytes(model.document.compositedImage, width: 8, height: 8))
+        #expect(movedPixels != beforeMove)
+
+        model.undo()
+        #expect(try model.projectData() == featheredProject)
+        model.redo()
+        #expect(try model.projectData() == movedProject)
+
+        let reopened = ImageEditorViewModel(
+            sourceName: "placeholder.png",
+            image: .transparent(size: CGSize(width: 1, height: 1))
+        ) { _ in }
+        try reopened.loadProjectData(movedProject)
+        #expect(try #require(imageEditorRGBABytes(
+            reopened.document.compositedImage,
+            width: 8,
+            height: 8
+        )) == movedPixels)
+
+        let historyBeforeExport = reopened.document.history
+        let pngData = try #require(reopened.exportData(settings: .init(format: .png, scope: .composited)))
+        let pngSource = try #require(CGImageSourceCreateWithData(pngData as CFData, nil))
+        let exportedImage = try #require(CGImageSourceCreateImageAtIndex(pngSource, 0, nil))
+        #expect(exportedImage.colorSpace?.name == CGColorSpace.sRGB)
+        #expect(try #require(imageEditorRGBABytes(
+            NSImage(cgImage: exportedImage, size: CGSize(width: 8, height: 8)),
+            width: 8,
+            height: 8
+        )) == movedPixels)
+        #expect(reopened.document.history == historyBeforeExport)
+    }
+
     @Test func p3PNGOpenSelectionMoveUndoRedoProjectReloadAndPNGAndPDFExportsStayConsistent() throws {
         let sourceSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
         let sourceData = try p3PNGData(colorSpace: sourceSpace)
