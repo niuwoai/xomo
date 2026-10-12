@@ -16722,7 +16722,7 @@ struct ImageEditorView: View {
         return L10n.format(
             "imageEditor.colorLookup.cubeLoaded",
             viewModel.selectedColorLookupCube.name,
-            viewModel.selectedColorLookupCube.dimension
+            viewModel.selectedColorLookupCube.dimensionDescription
         )
     }
 

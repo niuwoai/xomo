@@ -1517,8 +1517,10 @@
 "imageEditor.colorLookup.preset.customCube" = "Custom Cube LUT";
 "imageEditor.action.colorLookupImportCube" = "Import .cube";
 "imageEditor.colorLookup.cubeMissing" = "No Cube LUT imported";
-"imageEditor.colorLookup.cubeLoaded" = "%@ · %d³";
-"imageEditor.status.colorLookupCubeImported" = "Imported LUT: %@ (%d³)";
+"imageEditor.colorLookup.cubeLoaded" = "%@ · %@";
+"imageEditor.status.colorLookupCubeImported" = "Imported LUT: %@ (%@)";
+"imageEditor.colorLookup.cubeDimension.oneD" = "1D · %d points";
+"imageEditor.colorLookup.cubeDimension.threeD" = "3D · %d³";
 "imageEditor.status.colorLookupCubeImportFailed" = "Could not import this .cube LUT";
 "imageEditor.selectiveColor.range" = "Colors";
 "imageEditor.selectiveColor.range.reds" = "Reds";

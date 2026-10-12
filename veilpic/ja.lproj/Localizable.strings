@@ -1517,8 +1517,10 @@
 "imageEditor.colorLookup.preset.customCube" = "カスタム Cube LUT";
 "imageEditor.action.colorLookupImportCube" = ".cube を読み込み";
 "imageEditor.colorLookup.cubeMissing" = "Cube LUT 未読み込み";
-"imageEditor.colorLookup.cubeLoaded" = "%@・%d³";
-"imageEditor.status.colorLookupCubeImported" = "LUT を読み込みました：%@（%d³）";
+"imageEditor.colorLookup.cubeLoaded" = "%@・%@";
+"imageEditor.status.colorLookupCubeImported" = "LUT を読み込みました：%@（%@）";
+"imageEditor.colorLookup.cubeDimension.oneD" = "1D・%d ポイント";
+"imageEditor.colorLookup.cubeDimension.threeD" = "3D・%d³";
 "imageEditor.status.colorLookupCubeImportFailed" = "この .cube LUT を読み込めません";
 "imageEditor.selectiveColor.range" = "カラー";
 "imageEditor.selectiveColor.range.reds" = "レッド";

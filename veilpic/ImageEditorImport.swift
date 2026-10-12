@@ -642,7 +642,7 @@ extension ImageEditorViewModel {
                     self.statusText = L10n.format(
                         "imageEditor.status.colorLookupCubeImported",
                         self.selectedColorLookupCube.name,
-                        self.selectedColorLookupCube.dimension
+                        self.selectedColorLookupCube.dimensionDescription
                     )
                 } catch {
                     self.statusText = L10n.text("imageEditor.status.colorLookupCubeImportFailed")

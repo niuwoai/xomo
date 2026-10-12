@@ -1039,6 +1039,46 @@ extension NSImage {
         green: Double,
         blue: Double
     ) -> (red: Double, green: Double, blue: Double) {
+        guard cube.oneDimensionalSize > 0 else {
+            return colorLookup3DCubeColor(cube: cube, red: red, green: green, blue: blue)
+        }
+        return colorLookup1DCubeColor(cube: cube, red: red, green: green, blue: blue)
+    }
+
+    private static func colorLookup1DCubeColor(
+        cube: ImageEditorColorLookupCube,
+        red: Double,
+        green: Double,
+        blue: Double
+    ) -> (red: Double, green: Double, blue: Double) {
+        return (
+            colorLookup1DChannel(cube: cube, value: red, channel: 0),
+            colorLookup1DChannel(cube: cube, value: green, channel: 1),
+            colorLookup1DChannel(cube: cube, value: blue, channel: 2)
+        )
+    }
+
+    private static func colorLookup1DChannel(
+        cube: ImageEditorColorLookupCube,
+        value: Double,
+        channel: Int
+    ) -> Double {
+        let scale = Double(cube.oneDimensionalSize - 1)
+        let position = cubePosition(value, minimum: cube.domainMinimum[channel], maximum: cube.domainMaximum[channel]) * scale
+        let lowerIndex = Int(floor(position))
+        let upperIndex = min(cube.oneDimensionalSize - 1, lowerIndex + 1)
+        let fraction = position - Double(lowerIndex)
+        let lowerValue = cube.oneDimensionalValues[lowerIndex * 3 + channel]
+        let upperValue = cube.oneDimensionalValues[upperIndex * 3 + channel]
+        return lowerValue + (upperValue - lowerValue) * fraction
+    }
+
+    private static func colorLookup3DCubeColor(
+        cube: ImageEditorColorLookupCube,
+        red: Double,
+        green: Double,
+        blue: Double
+    ) -> (red: Double, green: Double, blue: Double) {
         let dimension = cube.dimension
         let scale = Double(dimension - 1)
         let redPosition = cubePosition(red, minimum: cube.domainMinimum[0], maximum: cube.domainMaximum[0]) * scale

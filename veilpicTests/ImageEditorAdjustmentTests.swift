@@ -1731,13 +1731,52 @@ struct ImageEditorAdjustmentTests {
         """
         #expect(ImageEditorColorLookupCube.parse(invalidCube, fallbackName: "invalid.cube") == nil)
         let incompleteDomainCube = invalidCube.replacingOccurrences(of: "DOMAIN_MAX 0.5 1 1\n", with: "")
-        #expect(ImageEditorColorLookupCube.parse(incompleteDomainCube, fallbackName: "incomplete.cube") == nil)
+        #expect(ImageEditorColorLookupCube.parse(incompleteDomainCube, fallbackName: "incomplete.cube") != nil)
 
         let legacyJSON = #"{"name":"Legacy","dimension":2,"values":[0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,0,1,1,1,0,1,1,1]}"#.data(using: .utf8)!
         let legacyCube = try JSONDecoder().decode(ImageEditorColorLookupCube.self, from: legacyJSON)
         #expect(legacyCube.isValid)
         #expect(legacyCube.domainMinimum == [0, 0, 0])
         #expect(legacyCube.domainMaximum == [1, 1, 1])
+    }
+
+    @Test func colorLookupCubeImportsOneDimensionalTableAndMapsEachChannelDomain() async throws {
+        let cubeText = """
+        TITLE "Channel Curves"
+        LUT_1D_SIZE 3
+        DOMAIN_MAX 1 2 0.75
+        0 0 0
+        0.5 1 0.25
+        1 0 1
+        """
+        let cube = try #require(ImageEditorColorLookupCube.parse(cubeText, fallbackName: "curves.cube"))
+        #expect(cube.dimension == 0)
+        #expect(cube.oneDimensionalSize == 3)
+        #expect(cube.dimensionDescription == L10n.format("imageEditor.colorLookup.cubeDimension.oneD", 3))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: bitmapImage(size: NSSize(width: 8, height: 8), background: .black)
+        ) { _ in }
+        #expect(viewModel.importColorLookupCube(name: "Channel Curves", contents: cubeText))
+        #expect(viewModel.selectedColorLookupPreset == .customCube)
+        #expect(viewModel.selectedColorLookupCube == cube)
+
+        var settings = ImageEditorAdjustmentSettings()
+        settings.colorLookupPreset = .customCube
+        settings.colorLookupCube = cube
+        let restored = try JSONDecoder().decode(
+            ImageEditorAdjustmentSettings.self,
+            from: JSONEncoder().encode(settings)
+        )
+        let source = bitmapImage(
+            size: NSSize(width: 8, height: 8),
+            background: NSColor(calibratedRed: 0.25, green: 0.5, blue: 0.75, alpha: 1)
+        )
+        let output = try #require(source.adjusted(kind: .colorLookup, amount: 0, settings: restored))
+        let result = try #require(output.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB))
+        #expect(abs(result.redComponent - 0.25) < 0.04)
+        #expect(abs(result.greenComponent - 0.5) < 0.04)
+        #expect(result.blueComponent > 0.96)
     }
 
     @Test func imageEditorChannelMixerAdjustmentSupportsRGBMatrixAndMonochromeLayerState() async throws {

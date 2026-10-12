@@ -1517,8 +1517,10 @@
 "imageEditor.colorLookup.preset.customCube" = "自定义 Cube LUT";
 "imageEditor.action.colorLookupImportCube" = "导入 .cube";
 "imageEditor.colorLookup.cubeMissing" = "未导入 Cube LUT";
-"imageEditor.colorLookup.cubeLoaded" = "%@ · %d³";
-"imageEditor.status.colorLookupCubeImported" = "已导入 LUT：%@（%d³）";
+"imageEditor.colorLookup.cubeLoaded" = "%@ · %@";
+"imageEditor.status.colorLookupCubeImported" = "已导入 LUT：%@（%@）";
+"imageEditor.colorLookup.cubeDimension.oneD" = "1D · %d 个采样点";
+"imageEditor.colorLookup.cubeDimension.threeD" = "3D · %d³";
 "imageEditor.status.colorLookupCubeImportFailed" = "无法导入该 .cube LUT";
 "imageEditor.selectiveColor.range" = "颜色";
 "imageEditor.selectiveColor.range.reds" = "红色";

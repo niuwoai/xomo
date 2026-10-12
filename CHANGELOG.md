@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1823 - 2026-10-13
+
+### Added
+- 支持导入并应用 Adobe Cube 格式 1D `.cube` LUT，按通道域线性插值，调整层项目数据持久化并显示正确的 1D 采样点信息。
+
+### Fixed
+- 允许 `.cube` 文件分别省略 `DOMAIN_MIN` 或 `DOMAIN_MAX`，对缺失项应用标准默认域。
+
+### Verification
+- `ImageEditorAdjustmentTests` 1D LUT 专项 3/3、既有 3D LUT 回归 2/2，`LocalizationResourceTests` 46/46、发布合同 10/30、CLI Release Build 合同 7/24 与隔离器合同通过；未运行全量 Release、桌面冒烟或本机安装，仍按 rc1840 执行完整门槛。
+
 ## 2.12.0-rc1822 - 2026-10-13
 
 ### Fixed
