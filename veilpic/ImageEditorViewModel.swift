@@ -12088,9 +12088,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func canSetLayerBlendMode(_ layer: ImageEditorLayer, to blendMode: ImageEditorBlendMode) -> Bool {
-        !layer.isAdjustment
-            && !layer.isFilter
-            && !document.isEffectivelyLocked(layer)
+        !document.isEffectivelyLocked(layer)
             && (layer.isGroup || blendMode != .passThrough)
     }
 
@@ -12526,7 +12524,8 @@ final class ImageEditorViewModel: ObservableObject {
                 amount: adjustment.amount,
                 settings: adjustmentLayer.adjustmentSettings,
                 mask: document.localEffectMask(forLayerAt: adjustmentIndex),
-                opacity: adjustmentLayer.opacity
+                opacity: adjustmentLayer.opacity,
+                blendMode: adjustmentLayer.blendMode
               )
         else { return nil }
 
@@ -12566,7 +12565,8 @@ final class ImageEditorViewModel: ObservableObject {
                 intensity: filter.intensity,
                 settings: filterLayer.filterSettings,
                 mask: document.localEffectMask(forLayerAt: filterIndex),
-                opacity: filterLayer.opacity
+                opacity: filterLayer.opacity,
+                blendMode: filterLayer.blendMode
               )
         else { return nil }
 

@@ -67,6 +67,61 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(smartViewModel.currentImage, smartPreviewBefore) == 0)
     }
 
+    @Test func filterLayerBlendModeAffectsCanvasMergeAndUndoRedo() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = gradientImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "filter-layer-blend.png", image: sourceImage) { _ in }
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 1
+        viewModel.filterGaussianBlurRadius = 5
+        viewModel.addFilterLayer()
+
+        let filterIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let baseIndex = try #require(viewModel.document.layers.indices.first { index in
+            !viewModel.document.layers[index].isFilter
+        })
+        viewModel.setSelectedLayerBlendMode(.screen)
+
+        let layer = viewModel.document.layers[filterIndex]
+        let filter = try #require(layer.filter)
+        let expected = try #require(sourceImage.applyingFilter(
+            kind: filter.kind,
+            intensity: filter.intensity,
+            settings: layer.filterSettings,
+            mask: nil,
+            opacity: layer.opacity,
+            blendMode: .screen
+        ))
+        let normal = try #require(sourceImage.applyingFilter(
+            kind: filter.kind,
+            intensity: filter.intensity,
+            settings: layer.filterSettings,
+            mask: nil,
+            opacity: layer.opacity
+        ))
+        let merged = try #require(viewModel.mergedFilterLayer(lowerIndex: baseIndex, filterIndex: filterIndex))
+
+        #expect(layer.blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+        #expect(imageEditorMaximumPixelDifference(expected, normal) > 0)
+        #expect(imageEditorMaximumPixelDifference(merged.image, viewModel.currentImage) == 0)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[filterIndex].blendMode == .normal)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, normal) == 0)
+        viewModel.redo()
+        #expect(viewModel.document.layers[filterIndex].blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.blendMode == .screen)
+        #expect(imageEditorMaximumPixelDifference(restored.compositedImage, expected) == 0)
+    }
+
     @Test func smartFilterOpacityBlendsTheCompleteResultAndSupportsUndoRedo() throws {
         let sourceImage = saltAndPepperImage(size: NSSize(width: 48, height: 48))
         let viewModel = ImageEditorViewModel(sourceName: "smart-opacity.png", image: sourceImage) { _ in }

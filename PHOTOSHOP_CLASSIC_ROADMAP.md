@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1834 修复调整层与滤镜层混合模式“面板可选但写入被拒、渲染不接线”的断层：混合模式参与画布合成与合并层结果，并作为单步属性事务支持 Undo/Redo。四十版本完整 Release、全量测试、桌面冒烟与本机安装仍为 rc1840。详见[验证记录](docs/reviews/2026-10-13-rc1834-effect-layer-blend-modes.md)。
 - rc1833 统一逐像素颜色调整契约：像素回调处理直通 RGB，公共写回路径负责预乘输出 alpha；目标是使半透明图层的颜色调整与相同直通色的全不透明图层一致。覆盖反相、阈值、Levels、Curves、亮度对比度、曝光、色相饱和度、阴影高光、通道混合、Color Lookup 与渐变映射。完整 Release、桌面冒烟与本机安装仍留到 rc1840。详见[验证记录](docs/reviews/2026-10-13-rc1833-straight-rgb-adjustments.md)。
 - rc1832 为 `.cube` LUT 增加真实调整层工作流验收：透明底上的半透明像素经 LUT 调整、项目保存重开后颜色与 alpha 保持，导出 PNG 的逐像素 RGBA 与画布一致且不新增 History。Cube 相关专项 9/9；发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过。此版补齐集成证据，不改生产算法；未运行完整 Release/桌面冒烟/安装，rc1840 仍为完整门槛。详见[验证记录](docs/reviews/2026-10-13-rc1832-cube-workflow.md)。
 - rc1831 修复自定义 1D/3D `.cube` Color Lookup 对半透明像素错误地以预乘 RGB 查表的问题：先还原直通色值，查表后按原 alpha 重新预乘；零 alpha 仍为透明黑。修复前回归实际失败，修复后 LUT 专项 7/7 通过。未运行全量 Release/桌面冒烟/安装，rc1840 仍为完整门槛。详见[验证记录](docs/reviews/2026-10-13-rc1831-cube-alpha.md)。

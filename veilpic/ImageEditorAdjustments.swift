@@ -61,13 +61,20 @@ extension NSImage {
         amount: Double,
         settings: ImageEditorAdjustmentSettings = ImageEditorAdjustmentSettings(),
         mask: NSImage?,
-        opacity: Double = 1
+        opacity: Double = 1,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         let normalizedOpacity = max(0, min(1, opacity))
         guard normalizedOpacity > 0 else { return self }
         guard let adjusted = adjusted(kind: kind, amount: amount, settings: settings) else { return nil }
-        guard mask != nil || normalizedOpacity < 1 else { return adjusted }
-        return blendingEditedImage(adjusted, with: mask, opacity: normalizedOpacity) ?? self
+        let normalizedBlendMode = blendMode == .passThrough ? ImageEditorBlendMode.normal : blendMode
+        guard mask != nil || normalizedOpacity < 1 || normalizedBlendMode != .normal else { return adjusted }
+        return blendingEditedImage(
+            adjusted,
+            with: mask,
+            opacity: normalizedOpacity,
+            blendMode: normalizedBlendMode
+        ) ?? self
     }
 
     func autoLeveled() -> NSImage? {

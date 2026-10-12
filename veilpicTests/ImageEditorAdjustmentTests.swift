@@ -564,6 +564,64 @@ struct ImageEditorAdjustmentTests {
         #expect(imageEditorMaximumPixelDifference(merged.image, viewModel.currentImage) == 0)
     }
 
+    @Test func adjustmentLayerBlendModeAffectsCanvasMergeAndUndoRedo() throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.82, green: 0.18, blue: 0.36, alpha: 1),
+            fills: [(CGRect(x: 8, y: 0, width: 8, height: 16), NSColor(calibratedRed: 0.22, green: 0.64, blue: 0.91, alpha: 1))]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "adjustment-layer-blend.png", image: sourceImage) { _ in }
+        viewModel.selectedAdjustment = .invert
+        viewModel.adjustmentValue = 1
+        viewModel.addAdjustmentLayer()
+
+        let adjustmentIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let baseIndex = try #require(viewModel.document.layers.indices.first { index in
+            !viewModel.document.layers[index].isAdjustment
+        })
+        viewModel.setSelectedLayerBlendMode(.multiply)
+
+        let layer = viewModel.document.layers[adjustmentIndex]
+        let adjustment = try #require(layer.adjustment)
+        let expected = try #require(sourceImage.applyingAdjustment(
+            kind: adjustment.kind,
+            amount: adjustment.amount,
+            settings: layer.adjustmentSettings,
+            mask: nil,
+            opacity: layer.opacity,
+            blendMode: .multiply
+        ))
+        let normal = try #require(sourceImage.applyingAdjustment(
+            kind: adjustment.kind,
+            amount: adjustment.amount,
+            settings: layer.adjustmentSettings,
+            mask: nil,
+            opacity: layer.opacity
+        ))
+        let merged = try #require(viewModel.mergedAdjustmentLayer(lowerIndex: baseIndex, adjustmentIndex: adjustmentIndex))
+
+        #expect(layer.blendMode == .multiply)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+        #expect(imageEditorMaximumPixelDifference(expected, normal) > 0)
+        #expect(imageEditorMaximumPixelDifference(merged.image, viewModel.currentImage) == 0)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[adjustmentIndex].blendMode == .normal)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, normal) == 0)
+        viewModel.redo()
+        #expect(viewModel.document.layers[adjustmentIndex].blendMode == .multiply)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expected) == 0)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.blendMode == .multiply)
+        #expect(imageEditorMaximumPixelDifference(restored.compositedImage, expected) == 0)
+    }
+
     @Test func imageEditorDesaturatesSelectedLayerWithClassicCommand() throws {
         let canvasSize = NSSize(width: 20, height: 20)
         let sourceImage = bitmapImage(

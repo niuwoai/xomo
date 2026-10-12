@@ -1523,7 +1523,8 @@ struct ImageEditorDocument {
                 amount: adjustment.amount,
                 settings: layer.adjustmentSettings,
                 mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveCompositingFilterMask, groupMask: groupMask),
-                opacity: layer.opacity * groupOpacity
+                opacity: layer.opacity * groupOpacity,
+                blendMode: layer.blendMode
             ) ?? canvas
         }
         if let filter = layer.filter {
@@ -1532,7 +1533,8 @@ struct ImageEditorDocument {
                 intensity: filter.intensity,
                 settings: layer.filterSettings,
                 mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveCompositingFilterMask, groupMask: groupMask),
-                opacity: layer.opacity * groupOpacity
+                opacity: layer.opacity * groupOpacity,
+                blendMode: layer.blendMode
             ) ?? canvas
         }
 
