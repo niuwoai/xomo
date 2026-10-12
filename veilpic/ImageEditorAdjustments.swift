@@ -560,12 +560,8 @@ extension NSImage {
     private func leveled(settings: ImageEditorAdjustmentSettings) -> NSImage? {
         let settings = settings.normalized()
         return pixelMapped { red, green, blue, alpha in
-            guard alpha > 0 else { return (0, 0, 0, alpha) }
-            let sourceRed = max(0, min(1, red / alpha))
-            let sourceGreen = max(0, min(1, green / alpha))
-            let sourceBlue = max(0, min(1, blue / alpha))
             let rgbRed = Self.mapLevelIfNeeded(
-                sourceRed,
+                red,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
                 white: settings.levelsWhitePoint,
@@ -573,7 +569,7 @@ extension NSImage {
                 outputWhite: settings.levelsOutputWhitePoint
             )
             let rgbGreen = Self.mapLevelIfNeeded(
-                sourceGreen,
+                green,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
                 white: settings.levelsWhitePoint,
@@ -581,7 +577,7 @@ extension NSImage {
                 outputWhite: settings.levelsOutputWhitePoint
             )
             let rgbBlue = Self.mapLevelIfNeeded(
-                sourceBlue,
+                blue,
                 black: settings.levelsBlackPoint,
                 gamma: settings.levelsGamma,
                 white: settings.levelsWhitePoint,
@@ -596,7 +592,7 @@ extension NSImage {
                     white: settings.levelsRedWhitePoint,
                     outputBlack: settings.levelsRedOutputBlackPoint,
                     outputWhite: settings.levelsRedOutputWhitePoint
-                ) * alpha,
+                ),
                 Self.mapLevelIfNeeded(
                     rgbGreen,
                     black: settings.levelsGreenBlackPoint,
@@ -604,7 +600,7 @@ extension NSImage {
                     white: settings.levelsGreenWhitePoint,
                     outputBlack: settings.levelsGreenOutputBlackPoint,
                     outputWhite: settings.levelsGreenOutputWhitePoint
-                ) * alpha,
+                ),
                 Self.mapLevelIfNeeded(
                     rgbBlue,
                     black: settings.levelsBlueBlackPoint,
@@ -612,7 +608,7 @@ extension NSImage {
                     white: settings.levelsBlueWhitePoint,
                     outputBlack: settings.levelsBlueOutputBlackPoint,
                     outputWhite: settings.levelsBlueOutputWhitePoint
-                ) * alpha,
+                ),
                 alpha
             )
         }
@@ -645,14 +641,10 @@ extension NSImage {
             customPoints: settings.curvesBlueControlPoints
         )
         return pixelMapped { red, green, blue, alpha in
-            guard alpha > 0 else { return (0, 0, 0, alpha) }
-            let sourceRed = max(0, min(1, red / alpha))
-            let sourceGreen = max(0, min(1, green / alpha))
-            let sourceBlue = max(0, min(1, blue / alpha))
             return (
-                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceRed, points: rgbCurve), points: redCurve) * alpha,
-                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceGreen, points: rgbCurve), points: greenCurve) * alpha,
-                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(sourceBlue, points: rgbCurve), points: blueCurve) * alpha,
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(red, points: rgbCurve), points: redCurve),
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(green, points: rgbCurve), points: greenCurve),
+                ImageEditorCurvesMapping.map(ImageEditorCurvesMapping.map(blue, points: rgbCurve), points: blueCurve),
                 alpha
             )
         }
@@ -899,17 +891,13 @@ extension NSImage {
     private func colorLookuped(settings: ImageEditorAdjustmentSettings) -> NSImage? {
         let settings = settings.normalized()
         return pixelMapped { red, green, blue, alpha in
-            guard alpha > 0 else { return (0, 0, 0, alpha) }
-            let straightRed = max(0, min(1, red / alpha))
-            let straightGreen = max(0, min(1, green / alpha))
-            let straightBlue = max(0, min(1, blue / alpha))
             let output = Self.colorLookupColor(
                 settings: settings,
-                red: straightRed,
-                green: straightGreen,
-                blue: straightBlue
+                red: red,
+                green: green,
+                blue: blue
             )
-            return (output.red * alpha, output.green * alpha, output.blue * alpha, alpha)
+            return (output.red, output.green, output.blue, alpha)
         }
     }
 
@@ -1501,6 +1489,7 @@ extension NSImage {
         }
     }
 
+    // Pixel transforms use straight RGB; this adapter owns both alpha conversions for the premultiplied buffer.
     private func pixelMappedByCoordinate(
         _ transform: (_ x: Int, _ y: Int, _ red: Double, _ green: Double, _ blue: Double, _ alpha: Double) -> (Double, Double, Double, Double)
     ) -> NSImage? {
@@ -1527,18 +1516,23 @@ extension NSImage {
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
+                let inputAlpha = Double(pixels[offset + 3]) / 255
+                let sourceRed = inputAlpha > 0 ? min(1, Double(pixels[offset]) / 255 / inputAlpha) : 0
+                let sourceGreen = inputAlpha > 0 ? min(1, Double(pixels[offset + 1]) / 255 / inputAlpha) : 0
+                let sourceBlue = inputAlpha > 0 ? min(1, Double(pixels[offset + 2]) / 255 / inputAlpha) : 0
                 let (red, green, blue, alpha) = transform(
                     x,
                     y,
-                    Double(pixels[offset]) / 255,
-                    Double(pixels[offset + 1]) / 255,
-                    Double(pixels[offset + 2]) / 255,
-                    Double(pixels[offset + 3]) / 255
+                    sourceRed,
+                    sourceGreen,
+                    sourceBlue,
+                    inputAlpha
                 )
-                pixels[offset] = Self.byte(red)
-                pixels[offset + 1] = Self.byte(green)
-                pixels[offset + 2] = Self.byte(blue)
-                pixels[offset + 3] = Self.byte(alpha)
+                let outputAlpha = Self.byte(alpha)
+                pixels[offset] = Self.premultipliedChannel(red, alpha: outputAlpha)
+                pixels[offset + 1] = Self.premultipliedChannel(green, alpha: outputAlpha)
+                pixels[offset + 2] = Self.premultipliedChannel(blue, alpha: outputAlpha)
+                pixels[offset + 3] = outputAlpha
             }
         }
 

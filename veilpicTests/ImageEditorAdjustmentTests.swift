@@ -229,6 +229,55 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func pixelAdjustmentsUseStraightRGBAndPreserveTranslucentColor() throws {
+        let size = NSSize(width: 2, height: 2)
+        let color = NSColor(calibratedRed: 0.52, green: 0.27, blue: 0.73, alpha: 1)
+        let opaque = bitmapImage(size: size, background: color)
+        let translucent = bitmapImage(size: size, background: color.withAlphaComponent(0.5))
+        var levels = ImageEditorAdjustmentSettings()
+        levels.levelsGamma = 1.8
+        var curves = ImageEditorAdjustmentSettings()
+        curves.curvesMidtones = 0.35
+        var brightnessContrast = ImageEditorAdjustmentSettings()
+        brightnessContrast.brightnessContrastBrightness = 0.12
+        brightnessContrast.brightnessContrastContrast = 0.3
+        var exposure = ImageEditorAdjustmentSettings()
+        exposure.exposureEV = 0.7
+        var hueSaturation = ImageEditorAdjustmentSettings()
+        hueSaturation.hueSaturationHue = 45
+        hueSaturation.hueSaturationSaturation = 0.3
+        var shadowsHighlights = ImageEditorAdjustmentSettings()
+        shadowsHighlights.shadowsHighlightsShadows = 0.4
+        var channelMixer = ImageEditorAdjustmentSettings()
+        channelMixer.channelMixerRedRed = 0.2
+        channelMixer.channelMixerRedGreen = 0.8
+        let cases: [(String, ImageEditorAdjustment, Double, ImageEditorAdjustmentSettings)] = [
+            ("invert", .invert, 0.4, ImageEditorAdjustmentSettings()),
+            ("threshold", .threshold, 0, ImageEditorAdjustmentSettings()),
+            ("levels", .levels, 0, levels),
+            ("curves", .curves, 0, curves),
+            ("brightness-contrast", .brightnessContrast, 0, brightnessContrast),
+            ("exposure", .exposure, 0, exposure),
+            ("hue-saturation", .hueSaturation, 0, hueSaturation),
+            ("shadows-highlights", .shadowsHighlights, 0, shadowsHighlights),
+            ("channel-mixer", .channelMixer, 0, channelMixer),
+            ("color-lookup", .colorLookup, 0, ImageEditorAdjustmentSettings()),
+            ("gradient-map", .gradientMap, 0, ImageEditorAdjustmentSettings())
+        ]
+
+        for (name, kind, amount, settings) in cases {
+            let expectedImage = try #require(opaque.adjusted(kind: kind, amount: amount, settings: settings), "\(name) opaque")
+            let actualImage = try #require(translucent.adjusted(kind: kind, amount: amount, settings: settings), "\(name) translucent")
+            let point = CGPoint(x: 1, y: 1)
+            let expected = try #require(expectedImage.color(at: point)?.usingColorSpace(.deviceRGB))
+            let actual = try #require(actualImage.color(at: point)?.usingColorSpace(.deviceRGB))
+            #expect(abs(actual.redComponent - expected.redComponent) < 0.04, "\(name) red")
+            #expect(abs(actual.greenComponent - expected.greenComponent) < 0.04, "\(name) green")
+            #expect(abs(actual.blueComponent - expected.blueComponent) < 0.04, "\(name) blue")
+            #expect(abs(actual.alphaComponent - 0.5) < 0.03, "\(name) alpha")
+        }
+    }
+
     @Test func automaticToneCorrectionsIgnoreIsolatedHistogramOutliers() throws {
         let size = NSSize(width: 100, height: 100)
         let image = bitmapImage(
