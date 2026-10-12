@@ -1191,6 +1191,7 @@ enum ImageEditorColorLookupPreset: String, CaseIterable, Identifiable, Codable {
 
 struct ImageEditorColorLookupCube: Equatable, Codable {
     private static let maximumThreeDimensionalDimension = 65
+    private static let maximumTableValueMagnitude = 1e37
 
     var name: String = ""
     var dimension: Int = 0
@@ -1265,10 +1266,12 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
         let oneDimensionalTableIsAbsent = oneDimensionalSize == 0 && oneDimensionalValues.isEmpty
         let oneDimensionalTableIsValid = (2...65_536).contains(oneDimensionalSize)
             && oneDimensionalValues.count == oneDimensionalSize * 3
+            && oneDimensionalValues.allSatisfy(Self.isSupportedTableValue)
         let threeDimensionalTableIsAbsent = dimension == 0 && values.isEmpty
         let threeDimensionalTableIsValid = dimension >= 2
             && dimension <= Self.maximumThreeDimensionalDimension
             && values.count == dimension * dimension * dimension * 3
+            && values.allSatisfy(Self.isSupportedTableValue)
         let hasOneTable = oneDimensionalTableIsValid || threeDimensionalTableIsValid
         let hasOnlySupportedTables = (oneDimensionalTableIsValid || oneDimensionalTableIsAbsent)
             && (threeDimensionalTableIsValid || threeDimensionalTableIsAbsent)
@@ -1283,6 +1286,10 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
         }
     }
 
+    private static func isSupportedTableValue(_ value: Double) -> Bool {
+        value.isFinite && abs(value) <= maximumTableValueMagnitude
+    }
+
     func normalized() -> ImageEditorColorLookupCube {
         guard hasValidTables,
               hasValidDomain
@@ -1292,9 +1299,9 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
         return ImageEditorColorLookupCube(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
             dimension: dimension,
-            values: values.map { max(0, min(1, $0)) },
+            values: values,
             oneDimensionalSize: oneDimensionalSize,
-            oneDimensionalValues: oneDimensionalValues.map { max(0, min(1, $0)) },
+            oneDimensionalValues: oneDimensionalValues,
             domainMinimum: domainMinimum,
             domainMaximum: domainMaximum
         )
@@ -1357,12 +1364,13 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
             guard parts.count >= 3,
                   let red = Double(parts[0]),
                   let green = Double(parts[1]),
-                  let blue = Double(parts[2]),
-                  red.isFinite,
-                  green.isFinite,
-                  blue.isFinite
+                  let blue = Double(parts[2])
             else { continue }
-            let rowValues = [red, green, blue].map { max(0, min(1, $0)) }
+            guard isSupportedTableValue(red),
+                  isSupportedTableValue(green),
+                  isSupportedTableValue(blue)
+            else { return nil }
+            let rowValues = [red, green, blue]
             if oneDimensionalSize > 0,
                oneDimensionalValues.count < oneDimensionalSize * 3 {
                 oneDimensionalValues.append(contentsOf: rowValues)

@@ -1778,6 +1778,68 @@ struct ImageEditorAdjustmentTests {
         #expect(cube.isValid)
     }
 
+    @Test func colorLookupCubePreservesHDRTableValuesThroughPersistenceAndSampling() throws {
+        let oneDimensionalText = """
+        TITLE "HDR 1D"
+        LUT_1D_SIZE 2
+        0 0 0
+        2 1.5 1
+        """
+        let oneDimensionalCube = try #require(
+            ImageEditorColorLookupCube.parse(oneDimensionalText, fallbackName: "hdr-1d.cube")
+        )
+        #expect(oneDimensionalCube.oneDimensionalValues == [0, 0, 0, 2, 1.5, 1])
+
+        var oneDimensionalSettings = ImageEditorAdjustmentSettings()
+        oneDimensionalSettings.colorLookupPreset = .customCube
+        oneDimensionalSettings.colorLookupCube = oneDimensionalCube
+        let encodedSettings = try JSONEncoder().encode(oneDimensionalSettings)
+        let restoredSettings = try JSONDecoder().decode(ImageEditorAdjustmentSettings.self, from: encodedSettings)
+        #expect(restoredSettings.normalized().colorLookupCube.oneDimensionalValues == [0, 0, 0, 2, 1.5, 1])
+
+        let source = bitmapImage(
+            size: NSSize(width: 8, height: 8),
+            background: NSColor(calibratedRed: 0.5, green: 0.5, blue: 0.5, alpha: 1)
+        )
+        let oneDimensionalOutput = try #require(
+            source.adjusted(kind: .colorLookup, amount: 0, settings: restoredSettings)
+        )
+        let oneDimensionalResult = try #require(
+            oneDimensionalOutput.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(oneDimensionalResult.redComponent > 0.96)
+        #expect(abs(oneDimensionalResult.greenComponent - 0.75) < 0.04)
+        #expect(abs(oneDimensionalResult.blueComponent - 0.5) < 0.04)
+
+        let threeDimensionalText = """
+        TITLE "HDR 3D"
+        LUT_3D_SIZE 2
+        0 0 0
+        2 0 0
+        0 0 0
+        2 0 0
+        0 0 0
+        2 0 0
+        0 0 0
+        2 0 0
+        """
+        let threeDimensionalCube = try #require(
+            ImageEditorColorLookupCube.parse(threeDimensionalText, fallbackName: "hdr-3d.cube")
+        )
+        var threeDimensionalSettings = ImageEditorAdjustmentSettings()
+        threeDimensionalSettings.colorLookupPreset = .customCube
+        threeDimensionalSettings.colorLookupCube = threeDimensionalCube
+        let threeDimensionalOutput = try #require(
+            source.adjusted(kind: .colorLookup, amount: 0, settings: threeDimensionalSettings)
+        )
+        let threeDimensionalResult = try #require(
+            threeDimensionalOutput.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(threeDimensionalResult.redComponent > 0.96)
+        #expect(threeDimensionalResult.greenComponent < 0.04)
+        #expect(threeDimensionalResult.blueComponent < 0.04)
+    }
+
     @Test func colorLookupCubeRejectsInvalidDomainAndMigratesLegacyProjectData() throws {
         let invalidCube = """
         LUT_3D_SIZE 2
@@ -1788,6 +1850,14 @@ struct ImageEditorAdjustmentTests {
         #expect(ImageEditorColorLookupCube.parse(invalidCube, fallbackName: "invalid.cube") == nil)
         let incompleteDomainCube = invalidCube.replacingOccurrences(of: "DOMAIN_MAX 0.5 1 1\n", with: "")
         #expect(ImageEditorColorLookupCube.parse(incompleteDomainCube, fallbackName: "incomplete.cube") != nil)
+
+        let outOfRangeValueCube = """
+        LUT_1D_SIZE 2
+        0 0 0
+        1e38 0 0
+        1 1 1
+        """
+        #expect(ImageEditorColorLookupCube.parse(outOfRangeValueCube, fallbackName: "out-of-range.cube") == nil)
 
         let legacyJSON = #"{"name":"Legacy","dimension":2,"values":[0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,0,1,1,1,0,1,1,1]}"#.data(using: .utf8)!
         let legacyCube = try JSONDecoder().decode(ImageEditorColorLookupCube.self, from: legacyJSON)
