@@ -47,6 +47,91 @@ struct ImageEditorBrushStrokeTests {
         #expect(screenOverTransparency[3] == 255)
     }
 
+    @Test func brushPressureResponseCurveShapesPressureAndPreservesLinearDefaults() throws {
+        let pressure: CGFloat = 0.25
+        let linear = ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5
+        )
+        let soft = ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5,
+            responseCurve: .soft
+        )
+        let firm = ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5,
+            responseCurve: .firm
+        )
+
+        #expect(linear == ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5,
+            responseCurve: .linear
+        ))
+        #expect(soft > linear)
+        #expect(firm < linear)
+        #expect(soft > firm)
+
+        let sample = ImageEditorBrushStrokeSample(
+            point: CGPoint(x: 12, y: 12),
+            pressure: pressure
+        )
+        func centerCoverage(curve: ImageEditorBrushPressureCurve) -> UInt8 {
+            let settings = ImageEditorBrushStrokeSettings(
+                diameter: 16,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.25,
+                pressureControlsOpacity: true,
+                pressureSensitivity: 0.5,
+                pressureCurve: curve
+            )
+            return ImageEditorBrushStrokeKernel.coverage(
+                width: 24,
+                height: 24,
+                stamps: [sample],
+                settings: settings
+            )[12 * 24 + 12]
+        }
+
+        #expect(centerCoverage(curve: .soft) > centerCoverage(curve: .linear))
+        #expect(centerCoverage(curve: .firm) < centerCoverage(curve: .linear))
+
+        let emptyMask = ImageEditorSelectionMask(
+            width: 24,
+            height: 24,
+            alpha: [UInt8](repeating: 0, count: 24 * 24)
+        )
+        func quickMaskCenterAlpha(curve: ImageEditorBrushPressureCurve) throws -> UInt8 {
+            let settings = ImageEditorBrushStrokeSettings(
+                diameter: 16,
+                hardness: 1,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.25,
+                pressureControlsOpacity: true,
+                pressureSensitivity: 0.5,
+                pressureCurve: curve
+            )
+            let painted = try #require(emptyMask.paintedByBrushStroke(
+                samples: [sample],
+                canvasSize: CGSize(width: 24, height: 24),
+                settings: settings,
+                targetAlpha: .max,
+                blendMode: .normal
+            ))
+            return painted.alpha[12 * 24 + 12]
+        }
+
+        let softQuickMaskAlpha = try quickMaskCenterAlpha(curve: .soft)
+        let linearQuickMaskAlpha = try quickMaskCenterAlpha(curve: .linear)
+        let firmQuickMaskAlpha = try quickMaskCenterAlpha(curve: .firm)
+        #expect(softQuickMaskAlpha > linearQuickMaskAlpha)
+        #expect(firmQuickMaskAlpha < linearQuickMaskAlpha)
+    }
+
     @Test func quickAndLayerMaskStrokeMathUsesTheSelectedPaintingBlendMode() throws {
         let base = ImageEditorSelectionMask(
             width: 8,

@@ -751,6 +751,10 @@
 "imageEditor.option.minimumFlow" = "Minimum Flow";
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
+"imageEditor.option.pressureCurve" = "Pressure response";
+"imageEditor.option.pressureCurve.linear" = "Linear";
+"imageEditor.option.pressureCurve.soft" = "Soft";
+"imageEditor.option.pressureCurve.firm" = "Firm";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size, opacity, and flow";
 "imageEditor.option.pressureLiveHelp" = "Shows live stylus pressure; an ordinary mouse remains undetected";
 "imageEditor.option.pressureNotDetected" = "No pen pressure detected";

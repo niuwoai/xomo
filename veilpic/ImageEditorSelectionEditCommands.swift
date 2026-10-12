@@ -742,6 +742,7 @@ extension ImageEditorViewModel {
                 pressureControlsOpacity: brushPressureControlsOpacity,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
+                pressureCurve: brushPressureCurve,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,

@@ -198,6 +198,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsOpacity = false
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var brushPressureCurve: ImageEditorBrushPressureCurve = .linear
     @Published var brushSizeJitter: CGFloat = 0
     @Published var brushAngleJitter: CGFloat = 0
     @Published var brushAngleFollowsStrokeDirection = false
@@ -1205,6 +1206,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushPressureCurve = brushDynamicsPreferences.pressureCurve
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushAngleFollowsStrokeDirection = brushDynamicsPreferences.angleFollowsStrokeDirection
@@ -1287,6 +1289,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushPressureCurve = brushDynamicsPreferences.pressureCurve
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushAngleFollowsStrokeDirection = brushDynamicsPreferences.angleFollowsStrokeDirection
@@ -4438,6 +4441,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
+            pressureCurve: brushPressureCurve,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -4629,6 +4633,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = preset.pressureControlsOpacity
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
+        brushPressureCurve = preset.pressureCurve
         brushSizeJitter = max(0, min(100, preset.sizeJitter))
         brushAngleJitter = max(0, min(100, preset.angleJitter))
         brushAngleFollowsStrokeDirection = preset.angleFollowsStrokeDirection
@@ -4914,6 +4919,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
+            pressureCurve: brushPressureCurve,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -5828,6 +5834,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
+            pressureCurve: brushPressureCurve,
             sizeJitter: Double(brushSizeJitter),
             angleJitter: Double(brushAngleJitter),
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -5911,6 +5918,12 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, sensitivity))
         guard brushPressureSensitivity != normalized else { return }
         brushPressureSensitivity = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushPressureCurve(_ curve: ImageEditorBrushPressureCurve) {
+        guard brushPressureCurve != curve else { return }
+        brushPressureCurve = curve
         persistBrushDynamicsPreferences()
     }
 
@@ -8455,6 +8468,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
+            pressureCurve: brushPressureCurve,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -11062,6 +11076,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
+            pressureCurve: brushPressureCurve,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -11183,6 +11198,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
+            pressureCurve: brushPressureCurve,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
             angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
@@ -13583,6 +13599,7 @@ extension NSImage {
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
+        pressureCurve: ImageEditorBrushPressureCurve = .linear,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -13606,6 +13623,7 @@ extension NSImage {
                 pressureControlsOpacity: pressureControlsOpacity,
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
+                pressureCurve: pressureCurve,
                 minimumDiameter: minimumDiameter,
                 minimumOpacity: minimumOpacity,
                 minimumFlow: minimumFlow,

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1813 - 2026-10-12
+
+### Added
+- Brush、Pencil、History Brush 与 Eraser 新增线性、轻触灵敏和重压响应曲线；旧偏好默认为线性，自定义笔刷预设会保存该选择。
+
+### Verification
+- Brush Stroke 59/59、Brush Dynamics Preferences 37/37、Localization Resources 46/46；发布合同 10/30、CLI Release Build 合同 7/24、Product Overview 归档合同 3/30、隔离测试运行器合同及 `git diff --check` 通过。完整构建、全量测试、桌面冒烟与安装仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1812 - 2026-10-12
 
 ### Changed

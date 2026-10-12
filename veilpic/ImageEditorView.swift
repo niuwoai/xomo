@@ -2442,6 +2442,17 @@ struct ImageEditorView: View {
                         .tag(sensitivity)
                 }
             }
+            Picker(
+                L10n.text("imageEditor.option.pressureCurve"),
+                selection: Binding(
+                    get: { viewModel.brushPressureCurve },
+                    set: { viewModel.setBrushPressureCurve($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushPressureCurve.allCases, id: \.self) { curve in
+                    Text(curve.title).tag(curve)
+                }
+            }
         } label: {
             Label(
                 L10n.text("imageEditor.option.stylusDynamics"),
@@ -4923,7 +4934,8 @@ struct ImageEditorView: View {
                         retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
                         brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
                         brushMinimumDiameter: viewModel.brushMinimumDiameter / 100,
-                        retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
+                        retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100,
+                        brushPressureCurve: viewModel.brushPressureCurve
                     )
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
@@ -6282,7 +6294,8 @@ struct ImageEditorView: View {
                 ? ImageEditorBrushStrokeKernel.pressureDiameterScale(
                     mappedPressure: ImageEditorBrushStrokeKernel.mappedPressure(
                         paintAirbrushStroke.currentPressure ?? 1,
-                        sensitivity: viewModel.brushPressureSensitivity / 100
+                        sensitivity: viewModel.brushPressureSensitivity / 100,
+                        responseCurve: viewModel.brushPressureCurve
                     ),
                     minimumDiameter: viewModel.brushMinimumDiameter / 100
                 )
@@ -7877,7 +7890,8 @@ struct ImageEditorView: View {
             retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
             brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
             brushMinimumDiameter: viewModel.brushMinimumDiameter / 100,
-            retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
+            retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100,
+            brushPressureCurve: viewModel.brushPressureCurve
         )
         ImageEditorCanvasCursor.cursor(
             for: viewModel.selectedLeftSidebarTab,
@@ -17588,19 +17602,26 @@ enum ImageEditorCanvasCursor {
         retouchPressureControlsSize: Bool,
         brushPressureSensitivity: CGFloat,
         brushMinimumDiameter: CGFloat = 0,
-        retouchPressureSensitivity: CGFloat
+        retouchPressureSensitivity: CGFloat,
+        brushPressureCurve: ImageEditorBrushPressureCurve = .linear
     ) -> CGFloat {
         guard let pressure else { return baseDiameter }
-        let settings: (isEnabled: Bool, sensitivity: CGFloat, minimumDiameter: CGFloat)
+        let settings: (
+            isEnabled: Bool,
+            sensitivity: CGFloat,
+            minimumDiameter: CGFloat,
+            pressureCurve: ImageEditorBrushPressureCurve
+        )
         switch tool {
         case .brush, .pencil, .historyBrush, .eraser:
             settings = (
                 brushPressureControlsSize,
                 brushPressureSensitivity,
-                brushMinimumDiameter
+                brushMinimumDiameter,
+                brushPressureCurve
             )
         case .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
-            settings = (retouchPressureControlsSize, retouchPressureSensitivity, 0)
+            settings = (retouchPressureControlsSize, retouchPressureSensitivity, 0, .linear)
         default:
             return baseDiameter
         }
@@ -17610,7 +17631,8 @@ enum ImageEditorCanvasCursor {
             baseDiameter * ImageEditorBrushStrokeKernel.pressureDiameterScale(
                 mappedPressure: ImageEditorBrushStrokeKernel.mappedPressure(
                     pressure,
-                    sensitivity: settings.sensitivity
+                    sensitivity: settings.sensitivity,
+                    responseCurve: settings.pressureCurve
                 ),
                 minimumDiameter: settings.minimumDiameter
             )

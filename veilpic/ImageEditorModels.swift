@@ -50,6 +50,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureControlsOpacity: Bool
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
+    let pressureCurve: ImageEditorBrushPressureCurve
     let sizeJitter: CGFloat
     let angleJitter: CGFloat
     let angleFollowsStrokeDirection: Bool
@@ -83,6 +84,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
+        pressureCurve: ImageEditorBrushPressureCurve = .linear,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
         angleFollowsStrokeDirection: Bool = false,
@@ -115,6 +117,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.pressureCurve = pressureCurve
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
@@ -149,6 +152,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureControlsOpacity
         case pressureControlsFlow
         case pressureSensitivity
+        case pressureCurve
         case sizeJitter
         case angleJitter
         case angleFollowsStrokeDirection
@@ -196,6 +200,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             CGFloat.self,
             forKey: .pressureSensitivity
         )
+        pressureCurve = try values.decodeIfPresent(
+            ImageEditorBrushPressureCurve.self,
+            forKey: .pressureCurve
+        ) ?? .linear
         sizeJitter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .sizeJitter
@@ -296,6 +304,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: pressureSensitivity,
+            pressureCurve: pressureCurve,
             sizeJitter: sizeJitter,
             angleJitter: angleJitter,
             angleFollowsStrokeDirection: angleFollowsStrokeDirection,
@@ -334,6 +343,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
+            pressureCurve: pressureCurve,
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
             angleFollowsStrokeDirection: angleFollowsStrokeDirection,
@@ -367,6 +377,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsOpacity: Bool,
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
+        pressureCurve: ImageEditorBrushPressureCurve = .linear,
         sizeJitter: CGFloat,
         angleJitter: CGFloat,
         angleFollowsStrokeDirection: Bool,
@@ -397,6 +408,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.pressureControlsOpacity == pressureControlsOpacity
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
+            && self.pressureCurve == pressureCurve
             && abs(self.sizeJitter - sizeJitter) < tolerance
             && abs(self.angleJitter - angleJitter) < tolerance
             && self.angleFollowsStrokeDirection == angleFollowsStrokeDirection

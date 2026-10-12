@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-12）
 
+- rc1813 为绘画笔刷增加线性、轻触灵敏和重压三种压力响应曲线，覆盖 Brush/Pencil/History Brush/Eraser、快速蒙版与压感光标预览；线性默认保留历史行为，设置写入工作区偏好与自定义笔刷预设。Brush Stroke 59/59、Brush Dynamics Preferences 37/37、Localization Resources 46/46，以及发布/CLI/概览/隔离器合同通过。完整构建、全量测试、桌面冒烟与安装仍为 rc1840。
 - rc1812 为 P3 全流程增加羽化选区变体：实际确认半透明边缘覆盖，并贯穿移动、Undo/Redo、项目重开与 sRGB PNG 导出；P3 工作流套件 2/2、发布/CLI/概览/隔离器合同通过。该集成回归覆盖经典像素编辑闭环，不增加 Figma 范围；rc1840 仍为下一完整门槛。
 - rc1811 让 Sample All Layers 涂抹笔刷每段只栅格化一次 stroke ROI 蒙版，再共享给活动层输出与独立采样源合成；两路源像素和顺序仍各自保留。`ImageEditorToneAirbrushTests` 8/8 与可见合成取样、仅写活动层、History/Undo/Redo 回归 1/1 通过。曾尝试的透明层全帧 source-over 参考与笔刷 straight-RGBA 合成语义不等价，已移除且不作为功能失败。rc1840 为下一完整门槛。
 - rc1810 将涂抹笔刷每段的覆盖蒙版与像素混合限制到 stroke ROI，保留整图源平移、连续段采样和全尺寸输出；8 项笔刷套件（含不透明/半透明顺序全帧参考）与 1 项真实拖移回归通过，发布/CLI/概览/隔离器合同通过。rc1840 是下一完整门槛。

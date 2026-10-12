@@ -751,6 +751,10 @@
 "imageEditor.option.minimumFlow" = "最小流量";
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";
+"imageEditor.option.pressureCurve" = "压力响应曲线";
+"imageEditor.option.pressureCurve.linear" = "线性";
+"imageEditor.option.pressureCurve.soft" = "轻触更灵敏";
+"imageEditor.option.pressureCurve.firm" = "重压更灵敏";
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小、不透明度和流量";
 "imageEditor.option.pressureLiveHelp" = "实时显示数位笔当前压力；普通鼠标保持未检测状态";
 "imageEditor.option.pressureNotDetected" = "未检测到笔压";

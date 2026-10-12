@@ -25,6 +25,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 140,
+            pressureCurve: .firm,
             sizeJitter: 140,
             angleJitter: 140,
             angleFollowsStrokeDirection: true,
@@ -59,6 +60,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.pressureControlsOpacity)
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
+        #expect(loaded.pressureCurve == .firm)
         #expect(loaded.sizeJitter == 100)
         #expect(loaded.angleJitter == 100)
         #expect(loaded.angleFollowsStrokeDirection)
@@ -90,6 +92,36 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(ImageEditorBrushDynamicsPreferences.load(from: defaults) == .defaultValue)
     }
 
+    @Test func olderBrushDynamicsDataDefaultsPressureCurveToLinear() throws {
+        let encoded = try JSONEncoder().encode(ImageEditorBrushDynamicsPreferences.defaultValue)
+        var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "pressureCurve")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let restored = try JSONDecoder().decode(
+            ImageEditorBrushDynamicsPreferences.self,
+            from: legacyData
+        )
+
+        #expect(restored.pressureCurve == .linear)
+    }
+
+    @Test func olderBrushPresetsDefaultPressureCurveToLinear() throws {
+        let preset = ImageEditorBrushPreset(
+            id: "legacy-brush",
+            size: 18,
+            isBuiltIn: false
+        )
+        let encoded = try JSONEncoder().encode(preset)
+        var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object.removeValue(forKey: "pressureCurve")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let restored = try JSONDecoder().decode(ImageEditorBrushPreset.self, from: legacyData)
+
+        #expect(restored.pressureCurve == .linear)
+    }
+
     @Test func viewModelRestoresBrushAndPencilOptionsAcrossEditorSessions() {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -107,6 +139,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsOpacity(true)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushPressureCurve(.soft)
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
         first.setBrushAngleFollowsStrokeDirection(true)
@@ -349,6 +382,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 180,
+            pressureCurve: .soft,
             sizeJitter: 140,
             angleJitter: 140,
             roundnessJitter: 140,
@@ -381,6 +415,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.spacing == 1)
         #expect(preset.pressureControlsOpacity)
         #expect(preset.pressureSensitivity == 100)
+        #expect(preset.pressureCurve == .soft)
         #expect(preset.sizeJitter == 100)
         #expect(preset.angleJitter == 100)
         #expect(preset.roundnessJitter == 100)
@@ -417,6 +452,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsOpacity(true)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushPressureCurve(.soft)
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
         first.setBrushAngleFollowsStrokeDirection(true)
@@ -442,6 +478,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!created.isBuiltIn)
         #expect(first.activeBrushPreset?.id == created.id)
         #expect(first.customBrushPresets.count == 1)
+        #expect(created.pressureCurve == .soft)
 
         let restored = makeViewModel(defaults: defaults)
         let restoredPreset = try #require(restored.customBrushPresets.first)
@@ -454,6 +491,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureControlsOpacity)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
+        #expect(restored.brushPressureCurve == .soft)
         #expect(restored.brushSizeJitter == 58)
         #expect(restored.brushAngleJitter == 63)
         #expect(restored.brushAngleFollowsStrokeDirection)

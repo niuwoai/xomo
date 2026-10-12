@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-10-09 13:00:06 +0800",
+  "generated_at": "2026-10-12 20:54:46 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 8,
-  "passed_tests": 8,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorSmartFilterMaskTests",
-      "method": null,
-      "identifier": "veilpicTests/ImageEditorSmartFilterMaskTests",
-      "file": "ImageEditorSmartFilterMaskTests.swift",
-      "test_count": 8,
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow()",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "test_count": 1,
       "passed": true,
-      "duration": 6.502,
+      "duration": 5.434,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSmartFilterMaskTests.log"
+      "log": "ImageEditorCanvasCursorTests.pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow.log"
     }
   ]
 }

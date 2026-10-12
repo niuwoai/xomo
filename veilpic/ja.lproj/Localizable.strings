@@ -751,6 +751,10 @@
 "imageEditor.option.minimumFlow" = "最小流量";
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
+"imageEditor.option.pressureCurve" = "筆圧カーブ";
+"imageEditor.option.pressureCurve.linear" = "リニア";
+"imageEditor.option.pressureCurve.soft" = "軽い筆圧向け";
+"imageEditor.option.pressureCurve.firm" = "強い筆圧向け";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズ、不透明度、流量を制御します";
 "imageEditor.option.pressureLiveHelp" = "現在のペン圧をリアルタイム表示します。通常のマウスは未検出のままです";
 "imageEditor.option.pressureNotDetected" = "筆圧は検出されていません";

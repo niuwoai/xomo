@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1812
+> 最后更新：2026-10-12 | 当前版本：v2.12.0-rc1813
+
+rc1813 为 Brush、Pencil、History Brush 与 Eraser 增加线性、轻触灵敏和重压压力响应曲线；默认线性以兼容既有绘画结果，曲线选择随工作区偏好和自定义笔刷预设持久化。Brush Stroke 59/59、Brush Dynamics Preferences 37/37、Localization Resources 46/46 与发布相关合同通过；完整构建、全量测试、桌面冒烟和安装仍待 rc1840。详见[rc1813 验证记录](docs/reviews/2026-10-12-rc1813-pressure-response-curve.md)。
 
 rc1812 为 P3 导入与像素选区编辑闭环补充羽化变体：半透明边缘覆盖经移动、撤销/重做、项目重开和 sRGB PNG 导出保持一致。`ImageEditorP3PixelEditExportWorkflowTests` 2/2 及发布、CLI、概览和测试运行器合同通过；完整构建、全量测试、桌面冒烟与可恢复安装门槛仍为 rc1840。详见[rc1812 验证记录](docs/reviews/2026-10-12-rc1812-feathered-p3-pixel-workflow.md)。
 

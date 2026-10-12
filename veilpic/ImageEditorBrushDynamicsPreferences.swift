@@ -7,6 +7,24 @@
 
 import Foundation
 
+enum ImageEditorBrushPressureCurve: String, Codable, CaseIterable {
+    case linear
+    case soft
+    case firm
+
+    var exponent: CGFloat {
+        switch self {
+        case .linear: 1
+        case .soft: 0.7
+        case .firm: 1.4
+        }
+    }
+
+    var title: String {
+        L10n.text("imageEditor.option.pressureCurve.\(rawValue)")
+    }
+}
+
 enum ImageEditorPressureSensitivityPresets {
     static let values: [CGFloat] = [0, 25, 50, 75, 100]
 }
@@ -74,6 +92,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsOpacity: false,
         pressureControlsFlow: true,
         pressureSensitivity: 50,
+        pressureCurve: .linear,
         sizeJitter: 0,
         angleJitter: 0,
         angleFollowsStrokeDirection: false,
@@ -108,6 +127,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pressureControlsOpacity: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
+    var pressureCurve: ImageEditorBrushPressureCurve
     var sizeJitter: Double
     var angleJitter: Double
     var angleFollowsStrokeDirection: Bool
@@ -142,6 +162,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
+        pressureCurve: ImageEditorBrushPressureCurve = .linear,
         sizeJitter: Double = 0,
         angleJitter: Double = 0,
         angleFollowsStrokeDirection: Bool = false,
@@ -175,6 +196,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.pressureCurve = pressureCurve
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
@@ -210,6 +232,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureControlsOpacity
         case pressureControlsFlow
         case pressureSensitivity
+        case pressureCurve
         case sizeJitter
         case angleJitter
         case angleFollowsStrokeDirection
@@ -249,6 +272,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         ) ?? false
         pressureControlsFlow = try values.decode(Bool.self, forKey: .pressureControlsFlow)
         pressureSensitivity = try values.decode(Double.self, forKey: .pressureSensitivity)
+        pressureCurve = try values.decodeIfPresent(
+            ImageEditorBrushPressureCurve.self,
+            forKey: .pressureCurve
+        ) ?? .linear
         sizeJitter = try values.decodeIfPresent(Double.self, forKey: .sizeJitter) ?? 0
         angleJitter = try values.decodeIfPresent(Double.self, forKey: .angleJitter) ?? 0
         angleFollowsStrokeDirection = try values.decodeIfPresent(
@@ -333,6 +360,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
+            pressureCurve: pressureCurve,
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
             angleFollowsStrokeDirection: angleFollowsStrokeDirection,

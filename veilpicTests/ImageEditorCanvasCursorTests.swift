@@ -401,6 +401,17 @@ struct ImageEditorCanvasCursorTests {
             retouchPressureSensitivity: 0.5
         )
         #expect(abs(brushDiameter - expectedBrushDiameter) < 0.001)
+        let softCurveDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .brush,
+            pressure: pressure,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: false,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5,
+            brushPressureCurve: .soft
+        )
+        #expect(softCurveDiameter > brushDiameter)
 
         let minimumDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
             baseDiameter: baseDiameter,

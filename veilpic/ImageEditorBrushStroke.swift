@@ -73,6 +73,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsOpacity: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
+    var pressureCurve: ImageEditorBrushPressureCurve
     var sizeJitter: CGFloat
     var angleJitter: CGFloat
     var angleFollowsStrokeDirection: Bool
@@ -105,6 +106,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
+        pressureCurve: ImageEditorBrushPressureCurve = .linear,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
         angleFollowsStrokeDirection: Bool = false,
@@ -136,6 +138,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.pressureCurve = pressureCurve
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
@@ -170,6 +173,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
+            pressureCurve: pressureCurve,
             sizeJitter: max(0, min(1, sizeJitter)),
             angleJitter: max(0, min(1, angleJitter)),
             angleFollowsStrokeDirection: angleFollowsStrokeDirection,
@@ -410,7 +414,8 @@ enum ImageEditorBrushStrokeKernel {
             let stampIndex = renderedStamp.dynamicIndex
             let mappedPressure = mappedPressure(
                 stamp.pressure ?? 1,
-                sensitivity: settings.pressureSensitivity
+                sensitivity: settings.pressureSensitivity,
+                responseCurve: settings.pressureCurve
             )
             let diameterScale = resolvedDiameterScale(
                 mappedPressure: mappedPressure,
@@ -792,10 +797,14 @@ enum ImageEditorBrushStrokeKernel {
         )
     }
 
-    static func mappedPressure(_ pressure: CGFloat, sensitivity: CGFloat) -> CGFloat {
+    static func mappedPressure(
+        _ pressure: CGFloat,
+        sensitivity: CGFloat,
+        responseCurve: ImageEditorBrushPressureCurve = .linear
+    ) -> CGFloat {
         let normalizedPressure = max(0, min(1, pressure))
         let normalizedSensitivity = max(0, min(1, sensitivity))
-        let exponent = pow(4, 0.5 - normalizedSensitivity)
+        let exponent = pow(4, 0.5 - normalizedSensitivity) * responseCurve.exponent
         let curved = pow(normalizedPressure, exponent)
         return 0.05 + curved * 0.95
     }
