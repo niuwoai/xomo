@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1829 - 2026-10-13
+
+### Fixed
+- 为带智能滤镜的羽化选区剪切补齐四边缘回归，核验剪贴图与滤镜后源图逐像素 alpha 守恒、一次 Undo/Redo 及项目重开；不改变生产算法。
+
+### Verification
+- `ImageEditorSelectionCutSamplingTests` 21/21（含四边缘滤镜剪切）；发布合同、CLI 合同和隔离测试器合同通过。未运行全量 Release、桌面冒烟或本机安装；rc1840 完整门槛不变。详见[验证记录](docs/reviews/2026-10-13-rc1829-filtered-feather-edge-cut.md)。
+
 ## 2.12.0-rc1828 - 2026-10-13
 
 ### Fixed

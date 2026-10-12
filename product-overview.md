@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1828
+> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1829
+
+rc1829 为带高斯智能滤镜的羽化选区剪切补齐左/右/上/下画布边缘回归，确保剪贴输出与滤镜后源图 alpha 守恒且撤销、重做、项目重开一致；仅增加专项回归，不改变生产算法。`ImageEditorSelectionCutSamplingTests` 21/21、发布合同、CLI 合同与隔离测试器合同通过。详见[rc1829 验证记录](docs/reviews/2026-10-13-rc1829-filtered-feather-edge-cut.md)。未运行完整 Release、桌面冒烟或安装；rc1840 仍为下一完整门槛。
 
 rc1828 按 Cube 规范拒绝重复关键字及表数据开始后的 LUT/DOMAIN 元数据，防止重复 `DOMAIN_MIN/MAX` 静默改变 LUT 输入映射。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1828 验证记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。rc1840 仍为完整构建、全量测试、桌面冒烟与本机安装门槛。
 

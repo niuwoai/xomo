@@ -8,6 +8,18 @@ enum FilteredCutMaskVariation: CaseIterable {
     case unlinked
 }
 
+struct FeatheredCutCanvasEdge: CaseIterable {
+    let name: String
+    let point: CGPoint
+
+    static let allCases = [
+        Self(name: "left", point: CGPoint(x: 0, y: 10)),
+        Self(name: "right", point: CGPoint(x: 23, y: 10)),
+        Self(name: "top", point: CGPoint(x: 12, y: 0)),
+        Self(name: "bottom", point: CGPoint(x: 12, y: 19))
+    ]
+}
+
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSelectionCutSamplingTests {
@@ -311,6 +323,111 @@ struct ImageEditorSelectionCutSamplingTests {
         let reopened = try fixture()
         try reopened.loadProjectData(cutProject)
         #expect(try #require(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20)) == after)
+    }
+
+    @Test(arguments: FeatheredCutCanvasEdge.allCases)
+    func featheredFilteredCutConservesCoverageAtEveryCanvasEdge(edge: FeatheredCutCanvasEdge) throws {
+        let context = try featheredFilteredCutFixture(edge: edge)
+        let originalProject = try context.model.projectData()
+        let original = try #require(imageEditorRGBABytes(context.model.document.compositedImage, width: 24, height: 20))
+        let undoCount = context.model.undoStack.count
+        let pasteboard = isolatedPasteboard()
+        defer { pasteboard.clearContents() }
+
+        #expect(context.model.cutSelectionToClipboard(to: pasteboard), "The filtered \(edge.name) edge should cut")
+
+        let expectedFrame = featheredClipboardFrame(at: edge.point)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == expectedFrame)
+        let copied = try #require(pasteboard.readImage())
+        let copiedPixels = try #require(imageEditorRGBABytes(
+            copied, width: Int(expectedFrame.width), height: Int(expectedFrame.height)
+        ))
+        let after = try #require(imageEditorRGBABytes(context.model.document.compositedImage, width: 24, height: 20))
+        let source = try #require(context.model.document.layers.first { $0.id == context.sourceID })
+        #expect(source.smartFilters == [context.filter])
+        #expect(source.postFilterCutoutMask != nil)
+        #expect(copiedPixels.enumerated().contains { offset, value in
+            offset % 4 == 3 && value > 0 && value < .max
+        }, "The filtered \(edge.name) edge should retain feathered clipboard alpha")
+        assertFeatheredCutAlphaConservation(original: original, after: after,
+                                            copied: copiedPixels, frame: expectedFrame, edge: edge)
+
+        #expect(context.model.undoStack.count == undoCount + 1)
+        let cutProject = try context.model.projectData()
+        context.model.undo()
+        #expect(try context.model.projectData() == originalProject)
+        context.model.redo()
+        #expect(try context.model.projectData() == cutProject)
+        let reopened = try fixture()
+        try reopened.loadProjectData(cutProject)
+        #expect(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20) == after)
+    }
+
+    private func featheredFilteredCutFixture(
+        edge: FeatheredCutCanvasEdge
+    ) throws -> (model: ImageEditorViewModel, filter: ImageEditorSmartFilter, sourceID: UUID) {
+        let image = try #require(NSImage.rendered(size: canvasSize) { rect in
+            NSColor.red.setFill()
+            rect.fill()
+        })
+        var layer = ImageEditorLayer.blank(name: "Filtered edge cut", size: canvasSize)
+        layer.image = image
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        let filter = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 1,
+            settings: .init(gaussianBlurRadius: 2)
+        )
+        layer.smartFilters = [filter]
+        let model = ImageEditorViewModel(
+            sourceName: "filtered-feathered-cut-\(edge.name).png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        model.document.layers = [layer]
+        model.document.selectedLayerID = layer.id
+        model.document.selectedLayerIDs = [layer.id]
+        var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        alpha[Int(edge.point.y) * Int(canvasSize.width) + Int(edge.point.x)] = .max
+        model.document.selection = .raster(
+            mask: ImageEditorSelectionMask(
+                width: Int(canvasSize.width), height: Int(canvasSize.height), alpha: alpha
+            ),
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        model.feather = 1
+        return (model, filter, layer.id)
+    }
+
+    private func featheredClipboardFrame(at point: CGPoint) -> CGRect {
+        CGRect(x: point.x, y: point.y, width: 1, height: 1)
+            .insetBy(dx: -3, dy: -3)
+            .intersection(CGRect(origin: .zero, size: canvasSize))
+    }
+
+    private func assertFeatheredCutAlphaConservation(
+        original: [UInt8], after: [UInt8], copied: [UInt8], frame: CGRect, edge: FeatheredCutCanvasEdge
+    ) {
+        let canvasWidth = Int(canvasSize.width)
+        let canvasHeight = Int(canvasSize.height)
+        let clipboardWidth = Int(frame.width)
+
+        for y in 0..<canvasHeight {
+            for x in 0..<canvasWidth {
+                let canvasOffset = (y * canvasWidth + x) * 4 + 3
+                let copiedAlpha = clipboardAlpha(copied, x: x, y: y, frame: frame, width: clipboardWidth)
+                let conservedAlpha = Int(copiedAlpha) + Int(after[canvasOffset])
+                #expect(abs(conservedAlpha - Int(original[canvasOffset])) <= 1,
+                        "Filtered \(edge.name) edge alpha should be conserved at (\(x), \(y))")
+            }
+        }
+    }
+
+    private func clipboardAlpha(_ pixels: [UInt8], x: Int, y: Int, frame: CGRect, width: Int) -> UInt8 {
+        guard CGFloat(x) >= frame.minX, CGFloat(x) < frame.maxX,
+              CGFloat(y) >= frame.minY, CGFloat(y) < frame.maxY else { return 0 }
+        let localX = x - Int(frame.minX)
+        let localY = y - Int(frame.minY)
+        return pixels[(localY * width + localX) * 4 + 3]
     }
 
     @Test func filteredClippingLayerCutPreservesBaseRelationAndComposite() throws {
