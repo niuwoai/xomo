@@ -899,13 +899,17 @@ extension NSImage {
     private func colorLookuped(settings: ImageEditorAdjustmentSettings) -> NSImage? {
         let settings = settings.normalized()
         return pixelMapped { red, green, blue, alpha in
+            guard alpha > 0 else { return (0, 0, 0, alpha) }
+            let straightRed = max(0, min(1, red / alpha))
+            let straightGreen = max(0, min(1, green / alpha))
+            let straightBlue = max(0, min(1, blue / alpha))
             let output = Self.colorLookupColor(
                 settings: settings,
-                red: red,
-                green: green,
-                blue: blue
+                red: straightRed,
+                green: straightGreen,
+                blue: straightBlue
             )
-            return (output.red, output.green, output.blue, alpha)
+            return (output.red * alpha, output.green * alpha, output.blue * alpha, alpha)
         }
     }
 

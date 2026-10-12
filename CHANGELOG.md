@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1831 - 2026-10-13
+
+### Fixed
+- 自定义 `.cube` LUT 对半透明像素按直通 RGB 采样后再恢复预乘 alpha，避免结果颜色因像素透明度而变暗或产生无效预乘颜色。
+
+### Verification
+- 修复前新增像素回归失败；修复后 `ImageEditorAdjustmentTests` 中 LUT 专项 7/7 通过。未运行全量 Release、桌面冒烟或本机安装；rc1840 完整门槛不变。详见[rc1831 验证记录](docs/reviews/2026-10-13-rc1831-cube-alpha.md)。
+
 ## 2.12.0-rc1830 - 2026-10-13
 
 ### Changed

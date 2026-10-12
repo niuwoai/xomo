@@ -1768,6 +1768,49 @@ struct ImageEditorAdjustmentTests {
         }
     }
 
+    @Test func colorLookupCubeMapsStraightRGBForTranslucentPixels() throws {
+        let cubeText = """
+        LUT_3D_SIZE 2
+        1 1 1
+        0 1 1
+        1 0 1
+        0 0 1
+        1 1 0
+        0 1 0
+        1 0 0
+        0 0 0
+        """
+        let cube = try #require(ImageEditorColorLookupCube.parse(cubeText, fallbackName: "invert.cube"))
+        var settings = ImageEditorAdjustmentSettings()
+        settings.colorLookupPreset = .customCube
+        settings.colorLookupCube = cube
+
+        let sourceColor = NSColor(calibratedRed: 0.5, green: 0.25, blue: 0.75, alpha: 1)
+        let opaqueSource = bitmapImage(size: NSSize(width: 2, height: 2), background: sourceColor)
+        let translucentSource = bitmapImage(
+            size: NSSize(width: 2, height: 2),
+            background: sourceColor.withAlphaComponent(0.5)
+        )
+        let opaqueAdjusted = try #require(opaqueSource.adjusted(kind: .colorLookup, amount: 0, settings: settings))
+        let opaqueResult = try #require(
+            opaqueAdjusted.color(at: CGPoint(x: 1, y: 1))?.usingColorSpace(.deviceRGB)
+        )
+        let translucentAdjusted = try #require(
+            translucentSource.adjusted(kind: .colorLookup, amount: 0, settings: settings)
+        )
+        let translucentResult = try #require(
+            translucentAdjusted.color(at: CGPoint(x: 1, y: 1))?.usingColorSpace(.deviceRGB)
+        )
+
+        #expect(abs(opaqueResult.redComponent - 0.5) < 0.04)
+        #expect(abs(opaqueResult.greenComponent - 0.75) < 0.04)
+        #expect(abs(opaqueResult.blueComponent - 0.25) < 0.04)
+        #expect(abs(translucentResult.redComponent - opaqueResult.redComponent) < 0.04)
+        #expect(abs(translucentResult.greenComponent - opaqueResult.greenComponent) < 0.04)
+        #expect(abs(translucentResult.blueComponent - opaqueResult.blueComponent) < 0.04)
+        #expect(abs(translucentResult.alphaComponent - 0.5) < 0.03)
+    }
+
     @Test func colorLookupCubeImportsCommon65PointThreeDimensionalLUT() throws {
         let tableRows = String(repeating: "0 0 0\n", count: 65 * 65 * 65)
         let cubeText = "LUT_3D_SIZE 65\n" + tableRows
