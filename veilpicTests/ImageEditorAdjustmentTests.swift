@@ -1851,6 +1851,22 @@ struct ImageEditorAdjustmentTests {
         let incompleteDomainCube = invalidCube.replacingOccurrences(of: "DOMAIN_MAX 0.5 1 1\n", with: "")
         #expect(ImageEditorColorLookupCube.parse(incompleteDomainCube, fallbackName: "incomplete.cube") != nil)
 
+        let duplicateDomainCube = """
+        LUT_3D_SIZE 2
+        DOMAIN_MIN 0 0 0
+        DOMAIN_MIN 0.25 0.25 0.25
+        \(Array(repeating: "0 0 0", count: 8).joined(separator: "\n"))
+        """
+        #expect(ImageEditorColorLookupCube.parse(duplicateDomainCube, fallbackName: "duplicate-domain.cube") == nil)
+
+        let keywordAfterTableCube = """
+        LUT_1D_SIZE 2
+        0 0 0
+        1 1 1
+        DOMAIN_MIN 0 0 0
+        """
+        #expect(ImageEditorColorLookupCube.parse(keywordAfterTableCube, fallbackName: "late-domain.cube") == nil)
+
         let outOfRangeValueCube = """
         LUT_1D_SIZE 2
         0 0 0

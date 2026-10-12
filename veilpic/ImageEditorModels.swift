@@ -1315,6 +1315,8 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
         var oneDimensionalValues: [Double] = []
         var domainMinimum = [0.0, 0.0, 0.0]
         var domainMaximum = [1.0, 1.0, 1.0]
+        var hasStartedTableData = false
+        var seenKeywords = Set<String>()
 
         for rawLine in text.components(separatedBy: .newlines) {
             let line = rawLine
@@ -1328,22 +1330,37 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
             let upper = first.uppercased()
 
             if upper == "TITLE" {
+                guard !hasStartedTableData, seenKeywords.insert(upper).inserted else { return nil }
                 let rawTitle = line.dropFirst(first.count).trimmingCharacters(in: .whitespacesAndNewlines)
                 title = rawTitle.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
                 continue
             }
-            if upper == "LUT_3D_SIZE", parts.count >= 2, let parsedDimension = Int(parts[1]) {
-                guard (2...maximumThreeDimensionalDimension).contains(parsedDimension), oneDimensionalSize == 0 else { return nil }
+            if upper == "LUT_3D_SIZE" {
+                guard !hasStartedTableData,
+                      seenKeywords.insert(upper).inserted,
+                      parts.count == 2,
+                      let parsedDimension = Int(parts[1]),
+                      (2...maximumThreeDimensionalDimension).contains(parsedDimension),
+                      oneDimensionalSize == 0
+                else { return nil }
                 dimension = parsedDimension
                 continue
             }
-            if upper == "LUT_1D_SIZE", parts.count >= 2, let parsedSize = Int(parts[1]) {
-                guard (2...65_536).contains(parsedSize), dimension == 0 else { return nil }
+            if upper == "LUT_1D_SIZE" {
+                guard !hasStartedTableData,
+                      seenKeywords.insert(upper).inserted,
+                      parts.count == 2,
+                      let parsedSize = Int(parts[1]),
+                      (2...65_536).contains(parsedSize),
+                      dimension == 0
+                else { return nil }
                 oneDimensionalSize = parsedSize
                 continue
             }
             if upper == "DOMAIN_MIN" || upper == "DOMAIN_MAX" {
-                guard parts.count == 4,
+                guard !hasStartedTableData,
+                      seenKeywords.insert(upper).inserted,
+                      parts.count == 4,
                       let red = Double(parts[1]),
                       let green = Double(parts[2]),
                       let blue = Double(parts[3]),
@@ -1359,17 +1376,22 @@ struct ImageEditorColorLookupCube: Equatable, Codable {
                 continue
             }
             if upper.hasPrefix("LUT_") || upper.hasPrefix("DOMAIN_") {
+                guard !hasStartedTableData, seenKeywords.insert(upper).inserted else { return nil }
                 continue
             }
-            guard parts.count >= 3,
+            guard parts.count == 3,
                   let red = Double(parts[0]),
                   let green = Double(parts[1]),
                   let blue = Double(parts[2])
-            else { continue }
+            else {
+                guard !hasStartedTableData else { return nil }
+                continue
+            }
             guard isSupportedTableValue(red),
                   isSupportedTableValue(green),
                   isSupportedTableValue(blue)
             else { return nil }
+            hasStartedTableData = true
             let rowValues = [red, green, blue]
             if oneDimensionalSize > 0,
                oneDimensionalValues.count < oneDimensionalSize * 3 {

@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1828 收紧 Cube 关键字解析：TITLE、尺寸和 DOMAIN 元数据最多出现一次且必须在采样数据之前；重复元数据或表后关键字不再静默覆盖。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。
 - rc1827 修正 LUT 输出范围处理：保留 Adobe Cube 允许的 0–1 外有效采样值，项目往返保留，并在最终 8-bit 输出处裁切；新增真实 1D/3D HDR 像素回归。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1827-cube-hdr-range.md)。
 - rc1826 将 3D `.cube` LUT 上限扩至 65，接受常见 65³ 表；回归解析完整 274,625 个 RGB 样本。Cube LUT 专项 6/6、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1826-cube-65.md)。
 - rc1825 将 3D `.cube` LUT 从三线性改为四面体插值；新增非线性像素回归覆盖立方体中心及 RGB 六种分量顺序。Cube LUT 专项 5/5、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1825-tetrahedral-cube-lut.md)。
