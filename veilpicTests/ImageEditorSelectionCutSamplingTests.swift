@@ -430,6 +430,54 @@ struct ImageEditorSelectionCutSamplingTests {
         return pixels[(localY * width + localX) * 4 + 3]
     }
 
+    @Test(arguments: FeatheredCutCanvasEdge.allCases)
+    func filteredFeatheredCutToLayerConservesCoverageAtEveryCanvasEdge(
+        edge: FeatheredCutCanvasEdge
+    ) throws {
+        let context = try featheredFilteredCutFixture(edge: edge)
+        let originalProject = try context.model.projectData()
+        let originalPixels = try #require(imageEditorRGBABytes(
+            context.model.document.compositedImage, width: 24, height: 20
+        ))
+        let undoCount = context.model.undoStack.count
+
+        context.model.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(context.model.document.selectedLayer)
+        let source = try #require(context.model.document.layers.first { $0.id == context.sourceID })
+        let expectedFrame = featheredClipboardFrame(at: edge.point)
+        #expect(cutLayer.frame == expectedFrame)
+        #expect(cutLayer.smartFilters.isEmpty)
+        #expect(source.smartFilters == [context.filter])
+        #expect(source.postFilterCutoutMask != nil)
+        let copiedPixels = try #require(imageEditorRGBABytes(
+            cutLayer.image, width: Int(expectedFrame.width), height: Int(expectedFrame.height)
+        ))
+        #expect(copiedPixels.enumerated().contains { offset, value in
+            offset % 4 == 3 && value > 0 && value < .max
+        }, "The filtered \(edge.name) edge should retain feathered cut-layer alpha")
+        let sourcePixels = try #require(imageEditorRGBABytes(
+            context.model.document.compositedImage(includingOnly: [context.sourceID]), width: 24, height: 20
+        ))
+        assertFeatheredCutAlphaConservation(
+            original: originalPixels, after: sourcePixels, copied: copiedPixels,
+            frame: expectedFrame, edge: edge
+        )
+        #expect(context.model.undoStack.count == undoCount + 1)
+
+        let cutProject = try context.model.projectData()
+        let afterPixels = try #require(imageEditorRGBABytes(
+            context.model.document.compositedImage, width: 24, height: 20
+        ))
+        context.model.undo()
+        #expect(try context.model.projectData() == originalProject)
+        context.model.redo()
+        #expect(try context.model.projectData() == cutProject)
+        let reopened = try fixture()
+        try reopened.loadProjectData(cutProject)
+        #expect(imageEditorRGBABytes(reopened.document.compositedImage, width: 24, height: 20) == afterPixels)
+    }
+
     @Test func filteredClippingLayerCutPreservesBaseRelationAndComposite() throws {
         let model = try fixture()
         let sourceID = try #require(model.document.selectedLayerID)

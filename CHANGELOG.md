@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1830 - 2026-10-13
+
+### Changed
+- 为带高斯智能滤镜的羽化选区“剪切到新图层”补齐四边缘回归，验证切出层与源层的 alpha 覆盖守恒、边缘裁切，以及单步 Undo/Redo 和项目重开；不改变既有羽化切割语义或生产算法。
+
+### Verification
+- `ImageEditorSelectionCutSamplingTests` 22/22，含四边缘 filtered feather cut-to-layer；发布合同、CLI 合同、隔离测试器合同通过。未运行全量 Release、桌面冒烟或本机安装；rc1840 完整门槛不变。详见[验证记录](docs/reviews/2026-10-13-rc1830-filtered-feather-cut-layer.md)。
+
 ## 2.12.0-rc1829 - 2026-10-13
 
 ### Fixed

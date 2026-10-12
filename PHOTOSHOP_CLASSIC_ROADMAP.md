@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1830 为带高斯智能滤镜的羽化选区“剪切到新图层”补齐左、右、上、下边缘回归，验证源层与切出层 alpha 覆盖守恒、羽化尾裁切、单步 Undo/Redo 与项目重开一致；不额外断言两层普通 alpha-over 后保持原合成画面不变，也不修改生产算法。剪切采样套件 22/22；未运行完整 Release/桌面/安装，rc1840 仍为完整门槛。详见[验证记录](docs/reviews/2026-10-13-rc1830-filtered-feather-cut-layer.md)。
 - rc1829 扩展四边缘羽化剪切验收到带高斯智能滤镜的路径：剪贴像素与滤镜后源图逐像素 alpha 守恒，滤镜及 post-filter cutout 保留，单步 Undo/Redo 和项目重开一致；`ImageEditorSelectionCutSamplingTests` 21/21。此版加固回归、不改生产算法；未运行完整 Release/桌面/安装，rc1840 仍为完整门槛。详见[验证记录](docs/reviews/2026-10-13-rc1829-filtered-feather-edge-cut.md)。
 - rc1828 收紧 Cube 关键字解析：TITLE、尺寸和 DOMAIN 元数据最多出现一次且必须在采样数据之前；重复元数据或表后关键字不再静默覆盖。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。
 - rc1827 修正 LUT 输出范围处理：保留 Adobe Cube 允许的 0–1 外有效采样值，项目往返保留，并在最终 8-bit 输出处裁切；新增真实 1D/3D HDR 像素回归。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release/桌面/安装，rc1840 仍为完整门槛。详见[记录](docs/reviews/2026-10-13-rc1827-cube-hdr-range.md)。
