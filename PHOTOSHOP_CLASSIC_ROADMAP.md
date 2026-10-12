@@ -2,6 +2,7 @@
 
 ## 当前状态（2026-10-13）
 
+- rc1836 为 Developer ID Release 导出 `.app` 添加 DMG 创建前的 `codesign --verify --deep --strict`，并移除 stapling 后 Gatekeeper 评估的 `|| true`，避免签名/系统评估失败仍返回成功。契约覆盖先后次序及移除/吞掉检查即失败；未运行 Release archive、全量测试、桌面冒烟或本机安装，rc1840 门槛不变。当前本机签名信任读回异常仍需在完整门槛前复验，不改变 Gatekeeper 或签名策略。
 - rc1835 验证调整层与滤镜层在半透明源像素、半透明图层蒙版、图层不透明度及非普通混合模式并用时的真实颜色和 alpha；覆盖画布、合并、Undo/Redo 与项目重开。详见[验证记录](docs/reviews/2026-10-13-rc1835-effect-blend-mask-compositing.md)。完整 Release、桌面冒烟和本机安装仍为 rc1840。
 - rc1834 修复调整层与滤镜层混合模式“面板可选但写入被拒、渲染不接线”的断层：混合模式参与画布合成与合并层结果，并作为单步属性事务支持 Undo/Redo。四十版本完整 Release、全量测试、桌面冒烟与本机安装仍为 rc1840。详见[验证记录](docs/reviews/2026-10-13-rc1834-effect-layer-blend-modes.md)。
 - rc1833 统一逐像素颜色调整契约：像素回调处理直通 RGB，公共写回路径负责预乘输出 alpha；目标是使半透明图层的颜色调整与相同直通色的全不透明图层一致。覆盖反相、阈值、Levels、Curves、亮度对比度、曝光、色相饱和度、阴影高光、通道混合、Color Lookup 与渐变映射。完整 Release、桌面冒烟与本机安装仍留到 rc1840。详见[验证记录](docs/reviews/2026-10-13-rc1833-straight-rgb-adjustments.md)。

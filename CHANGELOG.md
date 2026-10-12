@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1836 - 2026-10-13
+
+### Fixed
+- Release 流程在创建 DMG 前严格验证导出的 `.app` 签名，并在 stapling 后让 Gatekeeper 评估失败时以非零状态结束；不再把验签或系统评估失败误报为成功。
+
+### Verification
+- 发布契约 12/12 runs（36 assertions）、CLI 契约 7/7（24 assertions）、概览归档 3/3（30 assertions）、隔离测试器契约、Ruby/Bash 语法与差异检查通过；负向夹具证明移除导出应用验签或吞掉 Gatekeeper 失败都会使契约失败。未运行 Release archive、全量测试、桌面冒烟或本机安装，周期门槛仍为 rc1840。
+
 ## 2.12.0-rc1835 - 2026-10-13
 
 ### Added

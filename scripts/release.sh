@@ -144,6 +144,10 @@ if [[ ! -d "$APP_PATH" ]]; then
   exit 1
 fi
 
+echo ""
+echo "[2.1/7] 严格验证导出的应用签名 ..."
+codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
 # ----- Step 3: 打包 DMG -----------------------------------------------------
 echo ""
 echo "[3/7] 打包 DMG ..."
@@ -207,7 +211,7 @@ xcrun stapler validate "$DMG_PATH"
 # ----- Step 7: Gatekeeper 自检 ----------------------------------------------
 echo ""
 echo "[7/7] spctl 自检 ..."
-spctl --assess --type open --context context:primary-signature --verbose "$DMG_PATH" || true
+spctl --assess --type open --context context:primary-signature --verbose "$DMG_PATH"
 
 echo ""
 echo "✅ 完成"

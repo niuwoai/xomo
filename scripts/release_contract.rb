@@ -33,6 +33,13 @@ module XomoReleaseContract
     deployment_targets = project.scan(/MACOSX_DEPLOYMENT_TARGET = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     user_script_sandboxing = project.scan(/ENABLE_USER_SCRIPT_SANDBOXING = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     expected_build_version = app_version&.match(/-rc(\d+)\z/)&.[](1)
+    exported_app_signature_check = 'codesign --verify --deep --strict --verbose=2 "$APP_PATH"'
+    exported_app_check_index = release.index(exported_app_signature_check)
+    exported_app_guard_index = release.index('if [[ ! -d "$APP_PATH" ]]')
+    dmg_packaging_index = release.index('echo "[3/7] 打包 DMG ..."')
+    gatekeeper_assessment = 'spctl --assess --type open --context context:primary-signature --verbose "$DMG_PATH"'
+    gatekeeper_assessment_index = release.index(gatekeeper_assessment)
+    stapler_validation_index = release.index('xcrun stapler validate "$DMG_PATH"')
     app_release_settings = project.scan(/buildSettings = \{\n(.*?)\n\s*\};/m).flatten.find do |settings|
       settings.include?("CODE_SIGN_ENTITLEMENTS = veilpic/Release.entitlements;")
     end
@@ -55,6 +62,12 @@ module XomoReleaseContract
       "minimum_macos_13" => !deployment_targets.empty? && deployment_targets.all? { |value| Gem::Version.new(value) >= MINIMUM_MACOS_VERSION },
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
+      "release_exported_app_is_strictly_verified_before_dmg_packaging" =>
+        !exported_app_check_index.nil? && !exported_app_guard_index.nil? && !dmg_packaging_index.nil? &&
+        exported_app_check_index > exported_app_guard_index && exported_app_check_index < dmg_packaging_index,
+      "release_gatekeeper_assessment_fails_closed_after_staple" =>
+        release.include?("set -euo pipefail") && !gatekeeper_assessment_index.nil? && !stapler_validation_index.nil? &&
+        gatekeeper_assessment_index > stapler_validation_index && !release.include?("#{gatekeeper_assessment} || true"),
       "isolated_test_entrypoint_present" => isolated_tests.include?("build-for-testing") && isolated_tests.include?("test-without-building"),
       "signing_script_has_required_file_access" => user_script_sandboxing == ["NO"],
       "ui_test_runner_signing_is_left_to_xcode" =>

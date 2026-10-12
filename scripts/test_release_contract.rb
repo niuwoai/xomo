@@ -11,11 +11,13 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc1835", result["version"]
-    assert_equal ["2.12.0-rc1835"], result["project_versions"]
-    assert_equal ["1835"], result["build_versions"]
+    assert_equal "2.12.0-rc1836", result["version"]
+    assert_equal ["2.12.0-rc1836"], result["project_versions"]
+    assert_equal ["1836"], result["build_versions"]
     assert result["checks"]["test_target_compilation_is_incremental"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
+    assert result["checks"]["release_exported_app_is_strictly_verified_before_dmg_packaging"]
+    assert result["checks"]["release_gatekeeper_assessment_fails_closed_after_staple"]
     assert result["checks"]["release_entitlements_are_hardened"]
     assert result["checks"]["signing_script_has_required_file_access"]
     assert result["checks"]["ui_test_runner_signing_is_left_to_xcode"]
@@ -89,6 +91,24 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_missing_exported_app_signature_check_fails_the_contract
+    with_fixture(verify_exported_app: false) do |root|
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["release_exported_app_is_strictly_verified_before_dmg_packaging"]
+    end
+  end
+
+  def test_gatekeeper_assessment_must_not_suppress_failure
+    with_fixture(suppress_gatekeeper_failure: true) do |root|
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["release_gatekeeper_assessment_fails_closed_after_staple"]
+    end
+  end
+
   def test_missing_ui_test_runner_signing_guard_fails_the_contract
     with_fixture do |root|
       write_fixture(root, ui_test_runner_guard: false)
@@ -141,7 +161,9 @@ class ReleaseContractTest < Minitest::Test
     chinese_brand: "Xomo",
     user_script_sandboxing: false,
     ui_test_runner_guard: true,
-    test_compilation_strategy: true
+    test_compilation_strategy: true,
+    verify_exported_app: true,
+    suppress_gatekeeper_failure: false
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
@@ -167,7 +189,17 @@ class ReleaseContractTest < Minitest::Test
       };
     PBX
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
-    File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")
+    verification_step = if verify_exported_app
+                          "if [[ ! -d \"$APP_PATH\" ]]; then\nfi\ncodesign --verify --deep --strict --verbose=2 \"$APP_PATH\"\necho \"[3/7] 打包 DMG ...\"\n"
+                        else
+                          "if [[ ! -d \"$APP_PATH\" ]]; then\nfi\necho \"[3/7] 打包 DMG ...\"\n"
+                        end
+    gatekeeper_suffix = suppress_gatekeeper_failure ? " || true" : ""
+    gatekeeper_step = "xcrun stapler validate \"$DMG_PATH\"\nspctl --assess --type open --context context:primary-signature --verbose \"$DMG_PATH\"#{gatekeeper_suffix}\n"
+    File.write(
+      File.join(root, "scripts/release.sh"),
+      "set -euo pipefail\nxcodebuild archive\nxcodebuild -exportArchive\n#{verification_step}#{gatekeeper_step}"
+    )
     File.write(File.join(root, "scripts/run_tests_isolated.rb"), "build-for-testing\ntest-without-building\n")
     File.write(
       File.join(root, "scripts/adhoc_sign_debug_product.sh"),
