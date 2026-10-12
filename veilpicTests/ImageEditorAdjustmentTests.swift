@@ -1811,6 +1811,55 @@ struct ImageEditorAdjustmentTests {
         #expect(abs(translucentResult.alphaComponent - 0.5) < 0.03)
     }
 
+    @Test func translucentCubeAdjustmentLayerSurvivesProjectReloadAndPNGExport() throws {
+        let cubeText = """
+        LUT_3D_SIZE 2
+        1 1 1
+        0 1 1
+        1 0 1
+        0 0 1
+        1 1 0
+        0 1 0
+        1 0 0
+        0 0 0
+        """
+        let source = bitmapImage(
+            size: NSSize(width: 8, height: 8),
+            background: .clear,
+            fills: [(
+                CGRect(x: 0, y: 0, width: 8, height: 8),
+                NSColor(calibratedRed: 0.5, green: 0.25, blue: 0.75, alpha: 0.5)
+            )]
+        )
+        let viewModel = editableRasterViewModel(image: source)
+        #expect(viewModel.importColorLookupCube(name: "Invert", contents: cubeText))
+        viewModel.addAdjustmentLayer()
+
+        let projectData = try viewModel.projectData()
+        let reopened = ImageEditorViewModel(
+            sourceName: "placeholder.png",
+            image: .transparent(size: CGSize(width: 1, height: 1))
+        ) { _ in }
+        try reopened.loadProjectData(projectData)
+        let reopenedColor = try #require(
+            reopened.currentImage.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(reopenedColor.redComponent - 0.5) < 0.04)
+        #expect(abs(reopenedColor.greenComponent - 0.75) < 0.04)
+        #expect(abs(reopenedColor.blueComponent - 0.25) < 0.04)
+        #expect(abs(reopenedColor.alphaComponent - 0.5) < 0.03)
+
+        let historyBeforeExport = reopened.document.history
+        let reopenedPixels = try #require(imageEditorRGBABytes(reopened.currentImage, width: 8, height: 8))
+        let pngData = try #require(
+            reopened.exportData(settings: .init(format: .png, scope: .composited))
+        )
+        let exportedImage = try #require(NSImage(data: pngData))
+        let exportedPixels = try #require(imageEditorRGBABytes(exportedImage, width: 8, height: 8))
+        #expect(exportedPixels == reopenedPixels)
+        #expect(reopened.document.history == historyBeforeExport)
+    }
+
     @Test func colorLookupCubeImportsCommon65PointThreeDimensionalLUT() throws {
         let tableRows = String(repeating: "0 0 0\n", count: 65 * 65 * 65)
         let cubeText = "LUT_3D_SIZE 65\n" + tableRows

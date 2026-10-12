@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1832 - 2026-10-13
+
+### Changed
+- 补齐自定义 Cube LUT 在非破坏性调整层中的端到端回归：半透明输入经过项目保存重开与 PNG 导出后逐像素一致，且导出不改变 History。
+
+### Verification
+- Cube 相关专项 9/9、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过。未运行全量 Release、桌面冒烟或本机安装；rc1840 完整门槛不变。详见[rc1832 验证记录](docs/reviews/2026-10-13-rc1832-cube-workflow.md)。
+
 ## 2.12.0-rc1831 - 2026-10-13
 
 ### Fixed
