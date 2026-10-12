@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1837 - 2026-10-13
+
+### Fixed
+- Image Size 按所选的最近邻或平滑模式缩放活动栅格选区及已保存选区，避免平滑缩放图像时羽化覆盖仍被最近邻放大成阶梯。
+
+### Verification
+- `ImageEditorSliceImageSizeTransformTests` 10/10 通过；新增覆盖两类选区、两种插值模式及项目数据 Undo/Redo 往返。测试宿主 build-for-testing 成功；完整 Release/全量回归/桌面冒烟/本机安装仍待 rc1840。
+
 ## 2.12.0-rc1836 - 2026-10-13
 
 ### Fixed

@@ -421,6 +421,49 @@ struct ImageEditorSliceImageSizeTransformTests {
         }
     }
 
+    @Test func imageSizeResamplingPreservesFeatheredActiveAndSavedSelections() throws {
+        let source = NSImage.transparent(size: CGSize(width: 8, height: 8))
+        let featheredMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: (0..<64).map { x in
+                [UInt8(0), 0, 0, 0, 64, 192, 255, 255][x % 8]
+            }
+        )
+
+        for mode in ImageEditorImageResampling.allCases {
+            let viewModel = ImageEditorViewModel(sourceName: "selection-resampling.png", image: source) { _ in }
+            let selection = ImageEditorSelection.raster(
+                mask: featheredMask,
+                bounds: CGRect(x: 0, y: 0, width: 8, height: 8)
+            )
+            viewModel.document.selection = selection
+            viewModel.document.savedSelection = selection
+            let originalProject = try viewModel.projectData()
+
+            viewModel.resizeImage(to: CGSize(width: 16, height: 16), resampling: mode)
+
+            let activeMask = try #require(viewModel.document.selection?.rasterMask)
+            let savedMask = try #require(viewModel.document.savedSelection?.rasterMask)
+            #expect(activeMask.width == 16)
+            #expect(savedMask.width == 16)
+            if mode == .nearestNeighbor {
+                #expect(activeMask.alpha[7] == 0 && activeMask.alpha[8] == 64)
+                #expect(savedMask.alpha[7] == 0 && savedMask.alpha[8] == 64)
+            } else {
+                #expect(activeMask.alpha[7] > 0 && activeMask.alpha[7] < 64)
+                #expect(activeMask.alpha[8] > 0 && activeMask.alpha[8] < 64)
+                #expect(savedMask.alpha == activeMask.alpha)
+            }
+
+            let resizedProject = try viewModel.projectData()
+            viewModel.undo()
+            #expect(try viewModel.projectData() == originalProject)
+            viewModel.redo()
+            #expect(try viewModel.projectData() == resizedProject)
+        }
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "slice-image-size.png",

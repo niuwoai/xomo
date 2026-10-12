@@ -131,12 +131,14 @@ extension ImageEditorViewModel {
         let transformedSelection = document.selection?.scaled(
             scaleX: scaleX,
             scaleY: scaleY,
-            targetSize: targetSize
+            targetSize: targetSize,
+            resampling: resampling
         )
         let transformedSavedSelection = document.savedSelection?.scaled(
             scaleX: scaleX,
             scaleY: scaleY,
-            targetSize: targetSize
+            targetSize: targetSize,
+            resampling: resampling
         )
         let transformedAlphaChannels = document.alphaChannels.map { channel in
             ImageEditorAlphaChannel(
@@ -692,10 +694,15 @@ extension ImageEditorLayerStyle {
 }
 
 private extension ImageEditorSelection {
-    func scaled(scaleX: CGFloat, scaleY: CGFloat, targetSize: CGSize) -> ImageEditorSelection {
+    func scaled(
+        scaleX: CGFloat,
+        scaleY: CGFloat,
+        targetSize: CGSize,
+        resampling: ImageEditorImageResampling
+    ) -> ImageEditorSelection {
         var selection = self
         selection.points = points.map { $0.scaled(scaleX: scaleX, scaleY: scaleY) }
-        selection.rasterMask = rasterMask?.resizedNearest(to: targetSize)
+        selection.rasterMask = rasterMask?.resized(to: targetSize, resampling: resampling)
         return selection
     }
 
