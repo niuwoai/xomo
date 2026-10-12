@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1819 - 2026-10-13
+
+### Changed
+- 将画笔尺寸上限从 96 px 提升到 512 px；滑块、快捷键、自动化设置、偏好、自定义笔刷预设和画布光标共用同一范围，扩大画笔可用直径且保持光标与实际笔迹一致。
+
+### Verification
+- `ImageEditorBrushStrokeTests` 63/63、`ImageEditorBrushDynamicsPreferencesTests` 37/37、`ImageEditorCanvasCursorTests` 130/130、`ImageEditorScopeTests` 198/198 通过；发布合同 10/30、CLI Release Build 合同 7/24、产品概览归档合同 3/30 通过。未运行全量 Release、桌面冒烟或本机安装；这些仍以 rc1840 为门槛。
+
 ## 2.12.0-rc1818 - 2026-10-13
 
 ### Changed

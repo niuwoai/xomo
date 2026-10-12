@@ -2017,6 +2017,41 @@ struct ImageEditorBrushStrokeTests {
         #expect(undone.alphaComponent < 0.03)
     }
 
+    @Test func maximumBrushSizePaintsExpectedFootprintAndPersistsAcrossUndoRedo() throws {
+        let canvasSize = CGSize(width: 600, height: 600)
+        let suiteName = "ImageEditorBrushStrokeTests.maximumBrushSize.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "large-brush.png",
+            image: NSImage.transparent(size: canvasSize),
+            preferencesDefaults: defaults
+        ) { _ in }
+        viewModel.foregroundColor = .systemRed
+        viewModel.applyOptionsBrushSizePreset(512)
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+        viewModel.brushSpacing = 25
+
+        #expect(viewModel.brushSize == 512)
+        viewModel.drawBrush(points: [CGPoint(x: 300, y: 300)])
+
+        let paintedData = try #require(viewModel.currentImage.qingtuPNGData())
+        let paintedImage = try #require(viewModel.document.selectedLayer?.image)
+        let insideExpandedFootprint = try #require(paintedImage.color(at: CGPoint(x: 500, y: 300)))
+        let outsideFootprint = try #require(paintedImage.color(at: CGPoint(x: 560, y: 300)))
+        #expect(insideExpandedFootprint.alphaComponent > 0.95)
+        #expect(outsideFootprint.alphaComponent < 0.03)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
+        #expect(ImageEditorBrushDynamicsPreferences.load(from: defaults).brushSize == 512)
+
+        viewModel.undo()
+        #expect(viewModel.currentImage.qingtuPNGData() == NSImage.transparent(size: canvasSize).qingtuPNGData())
+        viewModel.redo()
+        #expect(viewModel.currentImage.qingtuPNGData() == paintedData)
+    }
+
     @Test func zeroOpacityPaintToolsSkipHistoryAndReportNoChange() throws {
         let tools: [(String, (ImageEditorViewModel) -> Void)] = [
             ("brush", { $0.drawBrush(points: [CGPoint(x: 10, y: 10), CGPoint(x: 40, y: 18)]) }),

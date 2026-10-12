@@ -149,7 +149,7 @@ enum ImageEditorStylusProximity: Equatable {
 
 struct ImageEditorBrushCursorFootprint: Equatable {
     static let minimumDiameter: CGFloat = 3
-    static let maximumDiameter: CGFloat = 256
+    static let maximumDiameter: CGFloat = ImageEditorBrushSizeLimits.maximum
 
     let majorDiameter: CGFloat
     let minorDiameter: CGFloat

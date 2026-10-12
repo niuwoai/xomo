@@ -7,6 +7,16 @@
 
 import Foundation
 
+enum ImageEditorBrushSizeLimits {
+    static let minimum: CGFloat = 1
+    static let maximum: CGFloat = 512
+
+    static func normalized(_ size: CGFloat) -> CGFloat {
+        guard size.isFinite else { return minimum }
+        return max(minimum, min(maximum, size))
+    }
+}
+
 enum ImageEditorBrushPressureCurve: String, Codable, CaseIterable {
     case linear
     case soft
@@ -352,7 +362,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
 
     var normalized: ImageEditorBrushDynamicsPreferences {
         ImageEditorBrushDynamicsPreferences(
-            brushSize: max(1, min(96, brushSize)),
+            brushSize: ImageEditorBrushSizeLimits.normalized(brushSize),
             brushHardness: max(0, min(1, brushHardness)),
             brushFlow: max(1, min(100, brushFlow)),
             brushSpacing: max(1, min(200, brushSpacing)),

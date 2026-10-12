@@ -335,7 +335,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         return ImageEditorBrushPreset(
             id: id.isEmpty ? UUID().uuidString : id,
             name: normalizedName,
-            size: max(1, min(96, size)),
+            size: ImageEditorBrushSizeLimits.normalized(size),
             hardness: max(0, min(1, hardness)),
             flow: max(1, min(100, flow)),
             spacing: max(1, min(200, spacing)),

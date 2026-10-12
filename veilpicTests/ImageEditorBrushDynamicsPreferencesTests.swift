@@ -17,7 +17,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         ImageEditorBrushDynamicsPreferences(
-            brushSize: 999,
+            brushSize: 9_999,
             brushHardness: -1,
             brushFlow: 0,
             brushSpacing: 999,
@@ -52,7 +52,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
-        #expect(loaded.brushSize == 96)
+        #expect(loaded.brushSize == 512)
         #expect(loaded.brushHardness == 0)
         #expect(loaded.brushFlow == 1)
         #expect(loaded.brushSpacing == 200)
@@ -374,7 +374,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let invalid = ImageEditorBrushPreset(
             id: "duplicate",
             name: "  Detail Brush  ",
-            size: 180,
+            size: 9_999,
             hardness: -1,
             flow: 140,
             spacing: 0,
@@ -409,7 +409,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let preset = try #require(loaded.presets.first)
         #expect(loaded.presets.count == 1)
         #expect(preset.name == "Detail Brush")
-        #expect(preset.size == 96)
+        #expect(preset.size == 512)
         #expect(preset.hardness == 0)
         #expect(preset.flow == 100)
         #expect(preset.spacing == 1)

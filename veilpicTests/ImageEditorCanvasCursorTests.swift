@@ -540,6 +540,19 @@ struct ImageEditorCanvasCursorTests {
             #expect(circular.aspectRatio == 1)
             #expect(circular.rotationDegrees == 0)
         }
+
+        let maximum = ImageEditorBrushCursorFootprint(
+            diameter: ImageEditorBrushSizeLimits.maximum,
+            tilt: nil,
+            tiltControlsShape: false
+        )
+        let oversized = ImageEditorBrushCursorFootprint(
+            diameter: ImageEditorBrushSizeLimits.maximum + 100,
+            tilt: nil,
+            tiltControlsShape: false
+        )
+        #expect(maximum.majorDiameter == 512)
+        #expect(oversized.majorDiameter == 512)
     }
 
     @Test func tiltChangesOnlyBrushAndEraserFootprintCursors() {

@@ -1155,9 +1155,14 @@ struct ImageEditorScopeTests {
         viewModel.adjustBrushSizeShortcut(by: -1)
         #expect(viewModel.brushSize == 1)
 
-        viewModel.brushSize = 96
+        viewModel.brushSize = 512
         viewModel.adjustBrushSizeShortcut(by: 1)
-        #expect(viewModel.brushSize == 96)
+        #expect(viewModel.brushSize == 512)
+
+        viewModel.brushSize = 9_999
+        #expect(viewModel.brushSize == 512)
+        viewModel.brushSize = 0
+        #expect(viewModel.brushSize == 1)
     }
 
     @MainActor

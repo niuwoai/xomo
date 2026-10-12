@@ -1396,7 +1396,13 @@ struct ImageEditorView: View {
                 .focusable(false)
             } else {
                 if usesBrushOptions {
-                    optionSlider(titleKey: "imageEditor.option.size", value: $viewModel.brushSize, range: 1...96, step: 1, suffix: "px")
+                    optionSlider(
+                        titleKey: "imageEditor.option.size",
+                        value: $viewModel.brushSize,
+                        range: ImageEditorBrushSizeLimits.minimum...ImageEditorBrushSizeLimits.maximum,
+                        step: 1,
+                        suffix: "px"
+                    )
                     if usesBrushHardnessOption {
                         optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
                     }

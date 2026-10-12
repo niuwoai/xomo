@@ -180,7 +180,15 @@ final class ImageEditorViewModel: ObservableObject {
     private var magnifyBaseZoom: CGFloat?
     private var magnifyBaseOffset: CGSize?
     @Published var brushSize: CGFloat = 18 {
-        didSet { persistBrushDynamicsPreferencesIfReady() }
+        didSet {
+            let normalizedSize = ImageEditorBrushSizeLimits.normalized(brushSize)
+            guard normalizedSize != brushSize else {
+                persistBrushDynamicsPreferencesIfReady()
+                return
+            }
+            brushSize = normalizedSize
+            persistBrushDynamicsPreferencesIfReady()
+        }
     }
     @Published var opacity: CGFloat = 1
     @Published var eraserErasesToHistory = false
@@ -4626,7 +4634,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func applyBrushSettings(_ preset: ImageEditorBrushPreset) {
-        brushSize = max(1, min(96, preset.size))
+        brushSize = ImageEditorBrushSizeLimits.normalized(preset.size)
         hardness = max(0, min(1, preset.hardness))
         brushFlow = max(1, min(100, preset.flow))
         brushSpacing = max(1, min(200, preset.spacing))
@@ -4963,12 +4971,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func applyOptionsBrushSizePreset(_ size: Int) {
-        brushSize = CGFloat(max(1, min(96, size)))
+        brushSize = ImageEditorBrushSizeLimits.normalized(CGFloat(size))
         statusText = optionsPanelSummaryText
     }
 
     func adjustBrushSizeShortcut(by delta: CGFloat) {
-        brushSize = max(1, min(96, brushSize + delta))
+        brushSize = ImageEditorBrushSizeLimits.normalized(brushSize + delta)
         statusText = optionsPanelSummaryText
     }
 
