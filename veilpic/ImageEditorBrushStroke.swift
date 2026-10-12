@@ -200,6 +200,13 @@ enum ImageEditorBrushStrokeKernel {
     private static let maximumSmoothingRadius = 8
     private static let maximumScatterCount = 16
 
+    typealias CoverageBounds = (minX: Int, maxX: Int, minY: Int, maxY: Int)
+
+    struct CoverageRegion {
+        let bounds: CoverageBounds
+        let pixels: [UInt8]
+    }
+
     static func stampCenters(
         points: [CGPoint],
         diameter: CGFloat,
@@ -343,6 +350,49 @@ enum ImageEditorBrushStrokeKernel {
         settings: ImageEditorBrushStrokeSettings
     ) -> [UInt8] {
         guard width > 0, height > 0, !stamps.isEmpty else { return [] }
+        return coverageRegion(
+            width: width,
+            height: height,
+            stamps: stamps,
+            settings: settings,
+            bounds: (0, width - 1, 0, height - 1),
+            appliesWetEdges: true
+        )?.pixels ?? []
+    }
+
+    static func coverageRegion(
+        width: Int,
+        height: Int,
+        stamps: [ImageEditorBrushStrokeSample],
+        settings: ImageEditorBrushStrokeSettings,
+        bounds: CoverageBounds
+    ) -> CoverageRegion? {
+        guard !settings.normalized.wetEdgesEnabled else { return nil }
+        return coverageRegion(
+            width: width,
+            height: height,
+            stamps: stamps,
+            settings: settings,
+            bounds: bounds,
+            appliesWetEdges: false
+        )
+    }
+
+    private static func coverageRegion(
+        width: Int,
+        height: Int,
+        stamps: [ImageEditorBrushStrokeSample],
+        settings: ImageEditorBrushStrokeSettings,
+        bounds: CoverageBounds,
+        appliesWetEdges: Bool
+    ) -> CoverageRegion? {
+        guard width > 0, height > 0, !stamps.isEmpty,
+              bounds.minX >= 0, bounds.minY >= 0,
+              bounds.maxX < width, bounds.maxY < height,
+              bounds.minX <= bounds.maxX, bounds.minY <= bounds.maxY
+        else { return nil }
+        guard appliesWetEdges || !settings.normalized.wetEdgesEnabled else { return nil }
+
         let settings = settings.normalized
         let maximumSafeCoordinate = CGFloat(max(width, height)) * 1_000_000
         let boundedStamps = stamps.filter { sample in
@@ -351,7 +401,9 @@ enum ImageEditorBrushStrokeKernel {
                 && abs(sample.point.x) <= maximumSafeCoordinate
                 && abs(sample.point.y) <= maximumSafeCoordinate
         }
-        var accumulated = [CGFloat](repeating: 0, count: width * height)
+        let regionWidth = bounds.maxX - bounds.minX + 1
+        let regionHeight = bounds.maxY - bounds.minY + 1
+        var accumulated = [CGFloat](repeating: 0, count: regionWidth * regionHeight)
 
         for renderedStamp in renderedStamps(from: boundedStamps, settings: settings) {
             let stamp = renderedStamp.sample
@@ -407,10 +459,10 @@ enum ImageEditorBrushStrokeKernel {
                 tilt: stamp.tilt,
                 tiltControlsShape: settings.tiltControlsShape
             )
-            let minX = max(0, Int(floor(stamp.point.x - radius - 1)))
-            let maxX = min(width - 1, Int(ceil(stamp.point.x + radius + 1)))
-            let minY = max(0, Int(floor(stamp.point.y - radius - 1)))
-            let maxY = min(height - 1, Int(ceil(stamp.point.y + radius + 1)))
+            let minX = max(bounds.minX, max(0, Int(floor(stamp.point.x - radius - 1))))
+            let maxX = min(bounds.maxX, min(width - 1, Int(ceil(stamp.point.x + radius + 1))))
+            let minY = max(bounds.minY, max(0, Int(floor(stamp.point.y - radius - 1))))
+            let maxY = min(bounds.maxY, min(height - 1, Int(ceil(stamp.point.y + radius + 1))))
             guard minX <= maxX, minY <= maxY else { continue }
 
             for y in minY...maxY {
@@ -437,7 +489,7 @@ enum ImageEditorBrushStrokeKernel {
                         )
                         : baseStampCoverage
                     guard stampCoverage > 0 else { continue }
-                    let index = y * width + x
+                    let index = (y - bounds.minY) * regionWidth + x - bounds.minX
                     let deposited = stampCoverage * settings.flow * pressureFlowScale
                         * flowJitterScale(
                             stampIndex: stampIndex,
@@ -452,10 +504,13 @@ enum ImageEditorBrushStrokeKernel {
             }
         }
 
-        let resolvedCoverage = settings.wetEdgesEnabled
-            ? wetEdgeCoverage(accumulated, width: width, height: height)
+        let resolvedCoverage = appliesWetEdges && settings.wetEdgesEnabled
+            ? wetEdgeCoverage(accumulated, width: regionWidth, height: regionHeight)
             : accumulated
-        return resolvedCoverage.map { UInt8(($0 * 255).rounded()) }
+        return CoverageRegion(
+            bounds: bounds,
+            pixels: resolvedCoverage.map { UInt8(($0 * 255).rounded()) }
+        )
     }
 
     /// Adds stable, per-tip grain without mutable RNG state. The multiplier

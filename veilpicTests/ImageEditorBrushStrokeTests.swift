@@ -634,6 +634,76 @@ struct ImageEditorBrushStrokeTests {
         #expect(minimumFlowed[20 * 80 + 55] == flowed[20 * 80 + 55])
     }
 
+    @Test func pressureCoverageRegionMatchesFullCanvasWithoutAllocatingCanvasPixels() throws {
+        let width = 1024
+        let height = 768
+        let strokeScenarios = [
+            [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 480, y: 360), pressure: 0.2),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 520, y: 365), pressure: 0.65),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 560, y: 370), pressure: 1)
+            ],
+            [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 0, y: 0), pressure: 0.2),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 24, y: 16), pressure: 0.65),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 48, y: 32), pressure: 1)
+            ]
+        ]
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: 24,
+            hardness: 0.7,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.1,
+            pressureControlsSize: true,
+            pressureControlsFlow: false,
+            pressureSensitivity: 0.5,
+            noiseEnabled: true
+        )
+        for samples in strokeScenarios {
+            let rasterizedStamps = ImageEditorBrushStrokeKernel.stampSamples(
+                samples: samples,
+                diameter: settings.diameter,
+                spacing: settings.spacing,
+                canvasSize: CGSize(width: width, height: height)
+            )
+            let fullCanvas = ImageEditorBrushStrokeKernel.coverage(
+                width: width,
+                height: height,
+                stamps: rasterizedStamps,
+                settings: settings
+            )
+            let bounds = try #require(ImageEditorHealingBrushKernel.strokeBounds(
+                width: width,
+                height: height,
+                points: samples.map(\.point),
+                diameter: settings.diameter
+            ))
+            let region = try #require(ImageEditorBrushStrokeKernel.coverageRegion(
+                width: width,
+                height: height,
+                stamps: rasterizedStamps,
+                settings: settings,
+                bounds: bounds
+            ))
+            let regionWidth = bounds.maxX - bounds.minX + 1
+            let regionHeight = bounds.maxY - bounds.minY + 1
+
+            #expect(region.bounds.minX == bounds.minX)
+            #expect(region.bounds.maxX == bounds.maxX)
+            #expect(region.bounds.minY == bounds.minY)
+            #expect(region.bounds.maxY == bounds.maxY)
+            #expect(region.pixels.count == regionWidth * regionHeight)
+            #expect(region.pixels.count < fullCanvas.count / 100)
+            for y in bounds.minY...bounds.maxY {
+                let fullRowStart = y * width + bounds.minX
+                let regionRowStart = (y - bounds.minY) * regionWidth
+                #expect(Array(region.pixels[regionRowStart..<(regionRowStart + regionWidth)])
+                    == Array(fullCanvas[fullRowStart..<(fullRowStart + regionWidth)]))
+            }
+        }
+    }
+
     @Test func sizeJitterIsDeterministicAndZeroRemainsPixelCompatible() {
         let stamps = (0..<8).map {
             ImageEditorBrushStrokeSample(point: CGPoint(x: 8 + $0 * 8, y: 16))

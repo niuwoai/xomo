@@ -274,20 +274,31 @@ extension NSImage {
         guard let bounds else { return nil }
         let hasPressureSamples = pressureControlsSize && samples.contains { $0.pressure != nil }
         if hasPressureSamples {
-            let fullFrameAlpha = retouchStrokeAlpha(
-                width: width,
-                height: height,
-                samples: samples,
+            let settings = ImageEditorBrushStrokeSettings(
                 diameter: diameter,
                 hardness: hardness,
-                pressureControlsSize: pressureControlsSize,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.1,
+                pressureControlsSize: true,
+                pressureControlsFlow: false,
                 pressureSensitivity: pressureSensitivity
             )
-            return ImageEditorHealingBrushKernel.compactStrokeMask(
-                alpha: fullFrameAlpha,
+            guard let coverage = ImageEditorBrushStrokeKernel.coverageRegion(
                 width: width,
                 height: height,
+                stamps: ImageEditorBrushStrokeKernel.stampSamples(
+                    samples: samples,
+                    diameter: settings.diameter,
+                    spacing: settings.spacing,
+                    canvasSize: CGSize(width: width, height: height)
+                ),
+                settings: settings,
                 bounds: bounds
+            ) else { return nil }
+            return ImageEditorHealingBrushKernel.StrokeMask(
+                bounds: bounds,
+                pixels: coverage.pixels
             )
         }
         return ImageEditorHealingBrushKernel.strokeMask(

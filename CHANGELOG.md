@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1807 - 2026-10-12
+
+### Performance
+- Rasterize pressure-aware Healing Brush and Spot Healing masks directly into the stroke ROI instead of allocating a full-canvas floating-point coverage buffer first.
+
+### Verification
+- `ImageEditorHealingBrushTests` 27/27 and the new ROI/full-canvas byte-equivalence test 1/1 passed for center and canvas-edge strokes with deterministic noise. The regression also confirms the ROI buffer is under 1% of canvas pixels; release contract 10/30, CLI release contract 7/24, overview archive contract 3/30, and `git diff --check` passed. rc1840 remains the next full build/smoke/install gate.
+
 ## 2.12.0-rc1806 - 2026-10-12
 
 ### Added
