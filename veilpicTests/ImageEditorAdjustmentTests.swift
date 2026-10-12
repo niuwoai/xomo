@@ -1722,6 +1722,52 @@ struct ImageEditorAdjustmentTests {
         #expect(result.blueComponent > 0.96)
     }
 
+    @Test func colorLookupCubeUsesTetrahedralInterpolationForNonlinearLUT() throws {
+        let cubeText = """
+        TITLE "Pairwise channel products"
+        LUT_3D_SIZE 2
+        0 0 0
+        0 0 0
+        0 0 0
+        1 0 0
+        0 0 0
+        0 0 1
+        0 1 0
+        1 1 1
+        """
+        let cube = try #require(ImageEditorColorLookupCube.parse(cubeText, fallbackName: "nonlinear.cube"))
+        var settings = ImageEditorAdjustmentSettings()
+        settings.colorLookupPreset = .customCube
+        settings.colorLookupCube = cube
+
+        let samples: [(input: (Double, Double, Double), expected: (Double, Double, Double))] = [
+            ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ((0.75, 0.5, 0.25), (0.5, 0.25, 0.25)),
+            ((0.75, 0.25, 0.5), (0.25, 0.25, 0.5)),
+            ((0.5, 0.25, 0.75), (0.25, 0.25, 0.5)),
+            ((0.5, 0.75, 0.25), (0.5, 0.25, 0.25)),
+            ((0.25, 0.75, 0.5), (0.25, 0.5, 0.25)),
+            ((0.25, 0.5, 0.75), (0.25, 0.5, 0.25))
+        ]
+        for sample in samples {
+            let source = bitmapImage(
+                size: NSSize(width: 8, height: 8),
+                background: NSColor(
+                    calibratedRed: sample.input.0,
+                    green: sample.input.1,
+                    blue: sample.input.2,
+                    alpha: 1
+                )
+            )
+            let output = try #require(source.adjusted(kind: .colorLookup, amount: 0, settings: settings))
+            let result = try #require(output.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB))
+
+            #expect(abs(result.redComponent - sample.expected.0) < 0.04)
+            #expect(abs(result.greenComponent - sample.expected.1) < 0.04)
+            #expect(abs(result.blueComponent - sample.expected.2) < 0.04)
+        }
+    }
+
     @Test func colorLookupCubeRejectsInvalidDomainAndMigratesLegacyProjectData() throws {
         let invalidCube = """
         LUT_3D_SIZE 2

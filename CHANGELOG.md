@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1825 - 2026-10-13
+
+### Fixed
+- 3D Cube LUT 改用四面体插值，贴合 Adobe Cube 的色彩采样建议，避免非线性 LUT 的三线性结果偏差。
+
+### Verification
+- Cube LUT 专项 5/5（含六种四面体分区和非线性中心采样）、发布合同 10/30、CLI 合同 7/24、隔离测试器合同通过；未运行全量 Release、桌面冒烟或本机安装，rc1840 完整门槛保持不变。详见[验证记录](docs/reviews/2026-10-13-rc1825-tetrahedral-cube-lut.md)。
+
 ## 2.12.0-rc1824 - 2026-10-13
 
 ### Fixed

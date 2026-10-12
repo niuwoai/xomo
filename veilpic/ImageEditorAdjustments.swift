@@ -1104,13 +1104,22 @@ extension NSImage {
         let c011 = colorLookupCubeValue(cube: cube, red: r0, green: g1, blue: b1)
         let c111 = colorLookupCubeValue(cube: cube, red: r1, green: g1, blue: b1)
 
-        let c00 = mix(c000, c100, amount: rt)
-        let c10 = mix(c010, c110, amount: rt)
-        let c01 = mix(c001, c101, amount: rt)
-        let c11 = mix(c011, c111, amount: rt)
-        let c0 = mix(c00, c10, amount: gt)
-        let c1 = mix(c01, c11, amount: gt)
-        return mix(c0, c1, amount: bt)
+        if rt >= gt {
+            if gt >= bt {
+                return weightedColor(c000, 1 - rt, c100, rt - gt, c110, gt - bt, c111, bt)
+            }
+            if rt >= bt {
+                return weightedColor(c000, 1 - rt, c100, rt - bt, c101, bt - gt, c111, gt)
+            }
+            return weightedColor(c000, 1 - bt, c001, bt - rt, c101, rt - gt, c111, gt)
+        }
+        if rt >= bt {
+            return weightedColor(c000, 1 - gt, c010, gt - rt, c110, rt - bt, c111, bt)
+        }
+        if gt >= bt {
+            return weightedColor(c000, 1 - gt, c010, gt - bt, c011, bt - rt, c111, rt)
+        }
+        return weightedColor(c000, 1 - bt, c001, bt - gt, c011, gt - rt, c111, rt)
     }
 
     private static func cubePosition(_ value: Double, minimum: Double, maximum: Double) -> Double {
@@ -1140,6 +1149,19 @@ extension NSImage {
             first.red + (second.red - first.red) * amount,
             first.green + (second.green - first.green) * amount,
             first.blue + (second.blue - first.blue) * amount
+        )
+    }
+
+    private static func weightedColor(
+        _ first: (red: Double, green: Double, blue: Double), _ firstWeight: Double,
+        _ second: (red: Double, green: Double, blue: Double), _ secondWeight: Double,
+        _ third: (red: Double, green: Double, blue: Double), _ thirdWeight: Double,
+        _ fourth: (red: Double, green: Double, blue: Double), _ fourthWeight: Double
+    ) -> (red: Double, green: Double, blue: Double) {
+        (
+            first.red * firstWeight + second.red * secondWeight + third.red * thirdWeight + fourth.red * fourthWeight,
+            first.green * firstWeight + second.green * secondWeight + third.green * thirdWeight + fourth.green * fourthWeight,
+            first.blue * firstWeight + second.blue * secondWeight + third.blue * thirdWeight + fourth.blue * fourthWeight
         )
     }
 
