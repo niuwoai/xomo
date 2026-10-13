@@ -1,8 +1,8 @@
-# rc1841 四十版本完整门槛记录（安装待续）
+# rc1841 四十版本完整门槛记录（本机安装与启动冒烟完成）
 
 ## 基线与范围
 
-- 目标门槛：rc1840（覆盖 rc1801–rc1839 的四十个小版本）；首轮全量测试发现既有范围守卫误报后，依仓库版本规则修正并在 `2.12.0-rc1841` 重验。
+- 目标门槛：rc1840（覆盖 rc1801–rc1840 共四十个小版本）；首轮全量测试发现既有范围守卫误报后，依仓库版本规则修正并在 `2.12.0-rc1841` 重验。
 - 本地 `main` 基线：`7fd0506e5b77257cb3ca1be79ad9d1a25ddff7e3`（rc1839）；仓库没有 `develop` 分支。
 - 验证期间生产代码仅含 rc1838/1839 Image Size 修改；rc1841 调整的是 `ImageEditorScopeTests` 的重型 3D 场景静态范围守卫和版本/记录文件。
 - 验证窗口：2026-10-13 06:53–07:36（Asia/Shanghai）；Xcode/Swift 构建串行运行，使用 `/private/tmp/veilpic-build.lock`。
@@ -20,14 +20,15 @@
 - CLI Universal Release 构建成功；实际产物 `dist/xomo-macos-universal` 架构 `x86_64 arm64`，`xomo version` 输出 `2.12.0-rc1841`；CLI XCTest 2/2 通过。SwiftPM 提示 macOS 27.0 部署目标的 x86_64 架构已弃用，未阻断当前构建。
 - 发布合同 12 runs/36 assertions，CLI 合同 7/24，概览合同 3/30，隔离运行器合同通过；版本合同报告 `passed: true`，App/CLI/Xcode 版本和 build 一致；zh-Hans/en/ja `.strings` 全部 `plutil -lint` 通过，`git diff --check` 通过。
 
-## `/Applications` 安装与 UI 冒烟（待用户保存/关闭）
+## `/Applications` 安装与 UI 冒烟（本机通过；Gatekeeper 评估未通过）
 
 - 安装前读回 `/Applications/Xomo.app` 为 `2.12.0-rc1803` / build `1803`；旧包 `codesign --verify --deep --strict` 有效，旧应用进程 PID `85712` 正在运行。
 - 使用正常 Cmd+Q 尝试退出时，Xomo 明确提示关闭前需要保存“未命名画布”的更改。已选择“取消”并保留原应用与画布；没有强制退出、丢弃内容、替换 `/Applications` 或启动未公证的新包。
-- 因当前应用仍承载未保存文档，本轮没有进行 staged install、启动新版本或 Image Size UI 冒烟。恢复后先由用户保存并关闭旧文档，再复制校验旧版备份、安装 rc1841 并以正常方式启动；若 Gatekeeper 仍拒绝，停止在系统提示处，不绕过安全策略。
+- 用户随后确认旧 App 已退出。2026-10-14 在覆盖前把 rc1803 留存于 `/Applications/Xomo.app.backup-2.12.0-rc1803-build1803` 和 `/Applications/Xomo.app.rollback-rc1841`；两份旧版均可恢复。rc1841 暂存副本及最终 `/Applications/Xomo.app` 均读回版本 `2.12.0-rc1841` / build `1841`、架构 `x86_64 arm64`，`codesign --verify --deep --strict` 通过。
+- `/Applications/Xomo.app` 的 `spctl --assess --type execute --verbose=4` 仍返回 `rejected / Unnotarized Developer ID`；没有执行公证、移除隔离标记、重签或修改 Gatekeeper。随后用普通 `open -a /Applications/Xomo.app` 启动成功，当前进程来自该安装路径。可访问性树与屏幕读回显示 1440×900 画布、工具栏、图层面板和“就绪”状态，启动/主编辑工作区冒烟通过；本次未执行实际像素编辑、导入/导出流程。
 
 ## 当前结论与下一步
 
-- 已完成：修正范围守卫误报、全量 XCTest、Universal Release archive 与严格 Developer ID 验签、Universal CLI 与 CLI XCTest、版本/发布合同。
-- 未完成：Gatekeeper 接受/公证（本轮不执行公证）、`/Applications` 可恢复替换安装及安装版真实 UI 冒烟。rc1840/1841 周期门槛暂不记为完整通过，当前旧版仍为 rc1803/build1803。
-- 旧版文档保存并关闭后继续本机安装验收；届时重读 Gatekeeper 和签名状态。下一四十版本门槛只有在本轮安装验收闭环后才记为 rc1880。
+- 已完成：修正范围守卫误报、全量 XCTest、Universal Release archive 与严格 Developer ID 验签、Universal CLI 与 CLI XCTest、版本/发布合同、`/Applications` 可恢复替换安装及启动/主编辑工作区冒烟。
+- 未完成：Gatekeeper 接受/公证。虽然本机普通启动成功，策略评估仍明确拒绝未公证 Developer ID 包；因此本机安装验收与分发信任验收分别记录，不宣称包已公证或 Gatekeeper 接受。
+- 下一四十版本门槛为 rc1880；在继续依赖 Gatekeeper 的公开分发前，先补齐公证与 Gatekeeper 验收，禁止通过移除隔离标记或关闭系统保护替代。

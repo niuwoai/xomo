@@ -6,7 +6,7 @@
 - 修正图像编辑器范围守卫将合法 3D `.cube` 色彩查找表误判为重型 3D 场景能力；改为检查 SceneKit、RealityKit 与 ModelIO 场景入口。
 
 ### Verification
-- rc1840 首轮全量回归为 232/233 组：`ImageEditorScopeTests` 把合法 `.cube` 3D LUT 字段误判为重型 3D 场景；修正规则后 rc1841 全量隔离测试 233/233 组、3,796/3,796 项通过，Universal Release archive 为 arm64+x86_64、build 1841，Developer ID 严格验签通过，Universal CLI 与 2 项 CLI XCTest 通过，发布/CLI/概览/隔离器合同及三语 `.strings` lint 通过。Gatekeeper 以 `Unnotarized Developer ID` 拒绝该未公证 archive；未绕过或公证。`/Applications` 安装与 UI 冒烟因旧版 Xomo 存在未保存的“未命名画布”而暂停，详见[门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。
+- rc1840 首轮全量回归为 232/233 组：`ImageEditorScopeTests` 把合法 `.cube` 3D LUT 字段误判为重型 3D 场景；修正规则后 rc1841 全量隔离测试 233/233 组、3,796/3,796 项通过，Universal Release archive 为 arm64+x86_64、build 1841，Developer ID 严格验签通过，Universal CLI 与 2 项 CLI XCTest 通过，发布/CLI/概览/隔离器合同及三语 `.strings` lint 通过。rc1841 已备份旧版并安装至 `/Applications/Xomo.app`，普通启动和主编辑工作区冒烟通过；Gatekeeper 仍因 `Unnotarized Developer ID` 拒绝评估，未绕过或公证。详见[门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。
 
 ## 2.12.0-rc1840 - 2026-10-13
 

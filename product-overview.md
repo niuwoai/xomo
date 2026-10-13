@@ -1,12 +1,12 @@
 # Xomo 产品概览
 
-> 最后更新：2026-10-13 | 当前版本：v2.12.0-rc1841
+> 最后更新：2026-10-14 | 当前版本：v2.12.0-rc1841
 
-rc1840 全量门槛首轮被范围守卫误报阻断：ImageEditorModels.swift 的合法 3D `.cube` 色彩查找表被通用 `threeD` 字样命中。rc1841 将规则改为检查 SceneKit、RealityKit、ModelIO 等场景入口；完整隔离回归 233/233 组、3,796/3,796 项通过，Universal Release archive（arm64+x86_64，build 1841）构建成功且 Developer ID 严格验签通过；Universal CLI、2 项 CLI 测试及发布相关合同通过。Gatekeeper 对未公证 archive 的评估为 `rejected / Unnotarized Developer ID`，未绕过安全校验、未提交公证。旧版 `/Applications/Xomo.app` 为 rc1803/build1803 且正在运行；正常退出触发“未保存的未命名画布”提示，已取消退出以保护内容，因此安装及 UI 冒烟待用户保存并关闭旧版后继续。详见[rc1841 本机质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。rc1839 让 Image Size 宽、高均可直接键入像素值，同时保留步进微调、默认比例锁定和 8–12,000 px 范围；rc1838 增加比例锁，rc1837 修正选区插值与羽化覆盖。
+rc1840 全量门槛首轮被范围守卫误报阻断：ImageEditorModels.swift 的合法 3D `.cube` 色彩查找表被通用 `threeD` 字样命中。rc1841 将规则改为检查 SceneKit、RealityKit、ModelIO 等场景入口；完整隔离回归 233/233 组、3,796/3,796 项通过，Universal Release archive（arm64+x86_64，build 1841）构建成功且 Developer ID 严格验签通过；Universal CLI、2 项 CLI 测试及发布相关合同通过。rc1841 已保留 rc1803 回滚备份并安装至 `/Applications/Xomo.app`，普通启动及主编辑工作区冒烟通过。Gatekeeper 对该未公证包的评估仍为 `rejected / Unnotarized Developer ID`；没有绕过安全校验或提交公证。详见[rc1841 本机质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。rc1839 让 Image Size 宽、高均可直接键入像素值，同时保留步进微调、默认比例锁定和 8–12,000 px 范围；rc1838 增加比例锁，rc1837 修正选区插值与羽化覆盖。
 
-rc1828 按 Cube 规范拒绝重复关键字及表数据开始后的 LUT/DOMAIN 元数据，防止重复 `DOMAIN_MIN/MAX` 静默改变 LUT 输入映射。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1828 验证记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。rc1840 仍为完整构建、全量测试、桌面冒烟与本机安装门槛。
+rc1828 按 Cube 规范拒绝重复关键字及表数据开始后的 LUT/DOMAIN 元数据，防止重复 `DOMAIN_MIN/MAX` 静默改变 LUT 输入映射。Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1828 验证记录](docs/reviews/2026-10-13-rc1828-cube-keyword-order.md)。
 
-rc1827 修正 `.cube` LUT 对 HDR 输出范围的处理：解析、项目持久化和 1D/3D 插值保留 0–1 外合法数值，只在最终 8-bit 像素输出时按图像存储范围裁切。HDR 1D/3D 像素与序列化回归、Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1827 验证记录](docs/reviews/2026-10-13-rc1827-cube-hdr-range.md)。rc1840 仍为完整构建、全量测试、桌面冒烟与本机安装门槛。
+rc1827 修正 `.cube` LUT 对 HDR 输出范围的处理：解析、项目持久化和 1D/3D 插值保留 0–1 外合法数值，只在最终 8-bit 像素输出时按图像存储范围裁切。HDR 1D/3D 像素与序列化回归、Cube LUT 专项 7/7、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1827 验证记录](docs/reviews/2026-10-13-rc1827-cube-hdr-range.md)。
 
 rc1826 将 3D `.cube` 导入上限从 64 提高到 65，覆盖常见 65³ LUT；完整 274,625 样本导入回归通过。Cube LUT 专项 6/6、发布合同 10/30、CLI 合同 7/24、隔离器合同通过；未运行完整 Release、桌面冒烟或安装。详见[rc1826 验证记录](docs/reviews/2026-10-13-rc1826-cube-65.md)。rc1840 仍为下一完整构建、全量测试、桌面冒烟与本机安装门槛。
 

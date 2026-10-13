@@ -1,11 +1,11 @@
 # Xomo 经典 Photoshop 能力路线图
 
-## 当前状态（2026-10-13）
+## 当前状态（2026-10-14）
 
-- rc1840 首轮测试暴露范围守卫误将 3D `.cube` LUT 视为 3D 场景；rc1841 收窄为具体场景框架入口。全量隔离 XCTest 233/233 组、3,796/3,796 项通过，Universal Release archive/build 1841 与 Developer ID 深度验签通过，CLI Universal 与 2 项 CLI 测试通过，发布相关合同通过。Gatekeeper 因未公证拒绝执行，未绕过/未公证。安装前旧版 rc1803/build1803 正在运行并持有未保存的“未命名画布”，故已取消正常退出；可恢复安装及桌面冒烟待用户保存并关闭该文档后继续。证据见[质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。
-- rc1839 在 Image Size 宽高控制中提供整数字段直接输入，并保留步进器微调、比例锁定和尺寸约束；`ImageEditorSliceImageSizeTransformTests` 12/12 通过。rc1840 仍为下一全量 Release、回归、桌面冒烟与本机安装门槛。
-- rc1838 为 Image Size 增加默认锁定宽高比的控制：任一尺寸变化会按原画布比例联动，解锁后独立编辑，重新锁定时以当前宽度恢复比例。定向测试结果回填后，rc1840 仍是下一次全量 Release/测试/桌面冒烟/本机安装门槛。
-- rc1837 修复 Image Size 的插值模式未传给活动/已保存栅格选区的问题：平滑模式现在保留羽化覆盖渐变，最近邻仍维持硬边；选区像素与 Undo/Redo 项目往返通过 `ImageEditorSliceImageSizeTransformTests` 10/10。全量 Release/完整回归/桌面冒烟/本机安装仍待 rc1840。
+- rc1840 首轮测试暴露范围守卫误将 3D `.cube` LUT 视为 3D 场景；rc1841 收窄为具体场景框架入口。全量隔离 XCTest 233/233 组、3,796/3,796 项通过，Universal Release archive/build 1841 与 Developer ID 深度验签通过，CLI Universal 与 2 项 CLI 测试通过，发布相关合同通过。rc1841 已替换安装至 `/Applications/Xomo.app`，普通启动及 1440×900 主编辑工作区冒烟通过；`spctl` 仍以 `Unnotarized Developer ID` 拒绝，未公证、未绕过。旧版 rc1803 可从保留备份恢复。证据见[质量门槛记录](docs/reviews/2026-10-13-rc1841-local-quality-gate.md)。rc1840/1841 的本机门槛已完成，公开分发信任仍待公证验收。
+- rc1839 在 Image Size 宽高控制中提供整数字段直接输入，并保留步进器微调、比例锁定和尺寸约束；`ImageEditorSliceImageSizeTransformTests` 12/12 通过。
+- rc1838 为 Image Size 增加默认锁定宽高比的控制：任一尺寸变化会按原画布比例联动，解锁后独立编辑，重新锁定时以当前宽度恢复比例；定向测试通过。
+- rc1837 修复 Image Size 的插值模式未传给活动/已保存栅格选区的问题：平滑模式现在保留羽化覆盖渐变，最近邻仍维持硬边；选区像素与 Undo/Redo 项目往返通过 `ImageEditorSliceImageSizeTransformTests` 10/10。
 - rc1836 为 Developer ID Release 导出 `.app` 添加 DMG 创建前的 `codesign --verify --deep --strict`，并移除 stapling 后 Gatekeeper 评估的 `|| true`，避免签名/系统评估失败仍返回成功。契约覆盖先后次序及移除/吞掉检查即失败；未运行 Release archive、全量测试、桌面冒烟或本机安装，rc1840 门槛不变。当前本机签名信任读回异常仍需在完整门槛前复验，不改变 Gatekeeper 或签名策略。
 - rc1835 验证调整层与滤镜层在半透明源像素、半透明图层蒙版、图层不透明度及非普通混合模式并用时的真实颜色和 alpha；覆盖画布、合并、Undo/Redo 与项目重开。详见[验证记录](docs/reviews/2026-10-13-rc1835-effect-blend-mask-compositing.md)。完整 Release、桌面冒烟和本机安装仍为 rc1840。
 - rc1834 修复调整层与滤镜层混合模式“面板可选但写入被拒、渲染不接线”的断层：混合模式参与画布合成与合并层结果，并作为单步属性事务支持 Undo/Redo。四十版本完整 Release、全量测试、桌面冒烟与本机安装仍为 rc1840。详见[验证记录](docs/reviews/2026-10-13-rc1834-effect-layer-blend-modes.md)。
