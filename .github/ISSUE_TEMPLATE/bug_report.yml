@@ -1,0 +1,92 @@
+name: Bug report
+description: Something behaves differently from what the docs, the README or the compatibility report says.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time — a reproducible report is the fastest path to a fix.
+
+        **English or 中文 both fine, use whichever you are comfortable in.**
+        If the problem is in the `xomo` CLI or an MCP tool call, please paste the exact command and JSON arguments.
+
+  - type: input
+    id: version
+    attributes:
+      label: Xomo version
+      description: Xomo menu → About, or the DMG file name you installed.
+      placeholder: "2.12.0-rc840"
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description:  → About This Mac, or `sw_vers -productVersion`.
+      placeholder: "14.5 (23F79)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does it happen?
+      options:
+        - Canvas / UI interaction
+        - xomo CLI
+        - MCP tool call from an AI agent
+        - PSD import or export
+        - Figma import / design tokens
+        - Component library
+        - Building from source / Xcode project
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps. Include the document preset or the source file if the content matters.
+      placeholder: |
+        1. xomo call xomo.document.create '{"preset":"socialSquare","background":"white"}'
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+      description: Paste the error text or CLI output verbatim — do not retype it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: |
+        Screenshot or screen recording, a minimal `.psd` / `.xomoproject`, or the raw CLI output.
+        Drag files into this box to attach them. Large files: a download link is fine.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I checked the tutorial and `XOMO_MCP.md` first.
+          required: true
+        - label: This is not a PSD feature Photoshop has but Xomo reports as unsupported in the compatibility report.
+          required: false
